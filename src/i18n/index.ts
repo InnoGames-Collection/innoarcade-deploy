@@ -46,6 +46,9 @@ const en = {
   'bb.controls': 'Use arrow keys ◀ ▶ to move paddle · tap Space to launch ball',
   'bb.levelClear': 'Level clear!',
   'bb.next': 'Next level',
+  'fs.controls': 'Swipe or tap to slice fruit · avoid bombs',
+  'sh.controls': 'Use arrow keys ◀ ▶ to move · jump on platforms · avoid enemies',
+  'bp.controls': 'Use arrow keys ◀ ▶ to rotate cannon · tap Space to shoot bubbles',
 } as const;
 
 export type I18nKey = keyof typeof en;
@@ -94,6 +97,9 @@ const am: Dict = {
   'bb.controls': 'ፓዲል ለመንቀሳቀስ ◀ ▶ የቀስት ቁልፎችን ይጠቀሙ · ኳስ ለማስጀመር Space ይንኩ',
   'bb.levelClear': 'ደረጃ ተጠናቀቀ!',
   'bb.next': 'ቀጣይ ደረጃ',
+  'fs.controls': 'ፍራፍሬውን ለመቁረጥ በጣት ይንኩ ወይም ይንሸራተቱ · ቦምቦቹን ይጠንቀቁ',
+  'sh.controls': 'ለመንቀሳቀስ ◀ ▶ የቀስት ቁልፎችን ይጠቀሙ · በመድረክ ላይ ዝላይ · ጠላትን ይጠንቀቁ',
+  'bp.controls': 'ጠመንጃን ለማዞር ◀ ▶ የቀስት ቁልፎችን ይጠቀሙ · አረፋዎች ለመተኮስ Space ይንኩ',
 };
 
 const dicts: Record<Lang, Dict> = { en, am };

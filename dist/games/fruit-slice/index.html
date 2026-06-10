@@ -3,36 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚇</text></svg>" />
-    <title>Metro Rush — InnoArcade</title>
-    <script type="module" crossorigin src="../../assets/metroRush-CGsJGxqI.js"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍉</text></svg>" />
+    <title>Fruit Slice — InnoArcade</title>
+    <script type="module" crossorigin src="../../assets/fruitSlice-DJvgPjPP.js"></script>
     <link rel="modulepreload" crossorigin href="../../assets/index-DvCUX34d.js">
     <link rel="modulepreload" crossorigin href="../../assets/storage-CqGhCfyM.js">
     <link rel="stylesheet" crossorigin href="../../assets/index-HPgZI6Yo.css">
-    <link rel="stylesheet" crossorigin href="../../assets/metroRush-Dpm5ajHc.css">
+    <link rel="stylesheet" crossorigin href="../../assets/fruitSlice-BDnhG8c2.css">
   </head>
   <body>
     <div id="stage">
       <canvas id="game" width="480" height="720"></canvas>
 
       <div id="hud">
-        <div class="hud-stats">
-          <div class="stat"><span data-i18n="td.score">Score</span><strong id="scoreVal">0</strong></div>
-          <div class="stat"><span data-i18n="mr.tokens">Tokens</span><strong id="tokensVal">0</strong></div>
-          <div class="stat"><span data-i18n="td.best">Best</span><strong id="bestVal">0</strong></div>
-        </div>
-        <div class="hud-buttons">
-          <button id="muteBtn" aria-label="Sound">🔊</button>
-          <button id="pauseBtn" aria-label="Pause">⏸</button>
-        </div>
+        <button id="muteBtn" aria-label="Sound">🔊</button>
+        <button id="pauseBtn" aria-label="Pause">⏸</button>
       </div>
 
       <div id="menuOverlay" class="overlay">
         <div class="panel">
-          <h1>Metro Rush</h1>
-          <p class="controls" data-i18n="mr.controls"></p>
+          <h1>Fruit Slice</h1>
+          <p class="subtitle" data-i18n="game.fruitSlice.desc"></p>
+          <p class="controls" data-i18n="fs.controls"></p>
           <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
-          <p class="hint" data-i18n="mr.start"></p>
           <div class="lang-switch" role="group" aria-label="Language">
             <button id="langEn" class="lang-btn">EN</button>
             <button id="langAm" class="lang-btn">አማ</button>
@@ -53,12 +46,8 @@
       <div id="overOverlay" class="overlay hidden">
         <div class="panel">
           <h2 data-i18n="td.gameOver">Game over</h2>
+          <p id="finalScore" class="score"></p>
           <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
-          <div class="final">
-            <div class="stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
-            <div class="stat"><span data-i18n="mr.tokens">Tokens</span><strong id="finalTokens">0</strong></div>
-            <div class="stat"><span data-i18n="td.best">Best</span><strong id="finalBest">0</strong></div>
-          </div>
           <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
           <a class="back" href="../../" data-i18n="td.back">All games</a>
         </div>

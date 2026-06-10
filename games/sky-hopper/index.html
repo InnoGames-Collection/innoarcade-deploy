@@ -3,13 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔵</text></svg>" />
-    <title>Dot Link — InnoArcade</title>
-    <script type="module" crossorigin src="../../assets/dotLink-CfpVhHyK.js"></script>
-    <link rel="modulepreload" crossorigin href="../../assets/index-DvCUX34d.js">
-    <link rel="modulepreload" crossorigin href="../../assets/storage-CqGhCfyM.js">
-    <link rel="stylesheet" crossorigin href="../../assets/index-HPgZI6Yo.css">
-    <link rel="stylesheet" crossorigin href="../../assets/dotLink-OZM5RDLa.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☁️</text></svg>" />
+    <title>Sky Hopper — InnoArcade</title>
   </head>
   <body>
     <div id="stage">
@@ -22,9 +17,9 @@
 
       <div id="menuOverlay" class="overlay">
         <div class="panel">
-          <h1>Dot Link</h1>
-          <p class="subtitle" data-i18n="dl.tagline"></p>
-          <p class="controls" data-i18n="dl.controls"></p>
+          <h1>Sky Hopper</h1>
+          <p class="subtitle" data-i18n="game.skyHopper.desc"></p>
+          <p class="controls" data-i18n="sh.controls"></p>
           <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
           <div class="lang-switch" role="group" aria-label="Language">
             <button id="langEn" class="lang-btn">EN</button>
@@ -43,18 +38,9 @@
         </div>
       </div>
 
-      <div id="levelClearOverlay" class="overlay hidden">
-        <div class="panel">
-          <h2 data-i18n="dl.levelClear">Level clear!</h2>
-          <p id="levelScore" class="score"></p>
-          <button id="nextBtn" class="btn primary" data-i18n="dl.next">Next level</button>
-          <a class="back" href="../../" data-i18n="td.back">All games</a>
-        </div>
-      </div>
-
       <div id="overOverlay" class="overlay hidden">
         <div class="panel">
-          <h2 data-i18n="dl.allClear">Puzzle master!</h2>
+          <h2 data-i18n="td.gameOver">Game over</h2>
           <p id="finalScore" class="score"></p>
           <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
           <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
@@ -63,5 +49,6 @@
       </div>
     </div>
 
+    <script type="module" src="/src/games/sky-hopper/main.ts"></script>
   </body>
 </html>
