@@ -30,6 +30,9 @@ const en = {
   'td.gameOver': 'Game over',
   'td.newBest': 'New high score!',
   'td.back': 'All games',
+  'mr.tokens': 'Tokens',
+  'mr.start': 'Tap or press Space to start',
+  'mr.controls': 'Swipe or use arrow keys · ◀ ▶ change lane · ▲ jump · ▼ slide',
 } as const;
 
 export type I18nKey = keyof typeof en;
@@ -62,6 +65,9 @@ const am: Dict = {
   'td.gameOver': 'ጨዋታው አበቃ',
   'td.newBest': 'አዲስ ከፍተኛ ነጥብ!',
   'td.back': 'ሁሉም ጨዋታዎች',
+  'mr.tokens': 'ቶከን',
+  'mr.start': 'ለመጀመር ይንኩ ወይም Space ይጫኑ',
+  'mr.controls': 'ያንሸራትቱ ወይም የቀስት ቁልፎችን ይጠቀሙ · ◀ ▶ መስመር · ▲ ዝላይ · ▼ መንሸራተት',
 };
 
 const dicts: Record<Lang, Dict> = { en, am };
