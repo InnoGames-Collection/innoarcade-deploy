@@ -1,0 +1,91 @@
+// Lightweight i18n for InnoArcade — English + Amharic.
+// Page text is tagged with data-i18n="key"; applyTranslations() swaps it in place.
+
+export type Lang = 'en' | 'am';
+
+const en = {
+  'app.title': 'InnoArcade',
+  'app.tagline': 'Free HTML5 arcade games — play instantly, no downloads.',
+  'hub.phase1': 'Play now',
+  'hub.phase2': 'Phase 2 — in the workshop',
+  'hub.play': 'Play',
+  'hub.soon': 'Coming soon',
+  'hub.footer': 'Built by InnoSphere Technologies',
+  'game.templeDash.desc': 'Race down the ancient temple path — dodge, jump and slide past the ruins.',
+  'game.metroRush.desc': 'Weave between trains in a three-lane subway sprint.',
+  'game.candyCrunch.desc': 'Swap candies and chain sweet cascades to clear each level.',
+  'game.dotLink.desc': 'Connect every pair of dots without crossing the lines.',
+  'game.brickBlitz.desc': 'Smash through brick walls with ball and paddle.',
+  'game.fruitSlice.desc': 'Slice flying fruit with a swipe — mind the bombs.',
+  'game.skyHopper.desc': 'Bounce from platform to platform, ever higher.',
+  'game.bubblePop.desc': 'Shoot and match bubbles before they reach the bottom.',
+  'td.score': 'Score',
+  'td.coins': 'Coins',
+  'td.best': 'Best',
+  'td.start': 'Tap or press Space to start',
+  'td.controls': 'Swipe or use arrow keys · ◀ ▶ change lane · ▲ jump · ▼ slide',
+  'td.paused': 'Paused',
+  'td.resume': 'Resume',
+  'td.restart': 'Play again',
+  'td.gameOver': 'Game over',
+  'td.newBest': 'New high score!',
+  'td.back': 'All games',
+} as const;
+
+export type I18nKey = keyof typeof en;
+type Dict = Record<I18nKey, string>;
+
+const am: Dict = {
+  'app.title': 'ኢኖአርኬድ',
+  'app.tagline': 'ነፃ የHTML5 አርኬድ ጨዋታዎች — ያለ ማውረድ ወዲያውኑ ይጫወቱ።',
+  'hub.phase1': 'አሁን ይጫወቱ',
+  'hub.phase2': 'ምዕራፍ 2 — በዝግጅት ላይ',
+  'hub.play': 'ተጫወት',
+  'hub.soon': 'በቅርብ ቀን',
+  'hub.footer': 'በኢኖስፌር ቴክኖሎጂስ የተሰራ',
+  'game.templeDash.desc': 'በጥንታዊው ቤተ መቅደስ መንገድ ይሩጡ — ያምልጡ፣ ይዝለሉ፣ ይንሸራተቱ።',
+  'game.metroRush.desc': 'በሦስት መስመር የምድር ባቡር ሩጫ ባቡሮችን አልፈው ይሩጡ።',
+  'game.candyCrunch.desc': 'ከረሜላዎችን እየቀያየሩ ደረጃዎቹን ያጠናቅቁ።',
+  'game.dotLink.desc': 'መስመሮቹ ሳይነካኩ እያንዳንዱን ጥንድ ነጥብ ያገናኙ።',
+  'game.brickBlitz.desc': 'በኳስና በመምቻ የጡብ ግድግዳዎችን ይስበሩ።',
+  'game.fruitSlice.desc': 'የሚበሩ ፍራፍሬዎችን በጣት ይቁረጡ — ቦምቦቹን ይጠንቀቁ።',
+  'game.skyHopper.desc': 'ከመድረክ ወደ መድረክ እየዘለሉ ወደ ላይ ይውጡ።',
+  'game.bubblePop.desc': 'ተመሳሳይ ቀለም ያላቸውን አረፋዎች መትተው ያፈንዱ።',
+  'td.score': 'ነጥብ',
+  'td.coins': 'ሳንቲም',
+  'td.best': 'ምርጥ',
+  'td.start': 'ለመጀመር ይንኩ ወይም Space ይጫኑ',
+  'td.controls': 'ያንሸራትቱ ወይም የቀስት ቁልፎችን ይጠቀሙ · ◀ ▶ መስመር · ▲ ዝላይ · ▼ መንሸራተት',
+  'td.paused': 'ቆሟል',
+  'td.resume': 'ቀጥል',
+  'td.restart': 'እንደገና ተጫወት',
+  'td.gameOver': 'ጨዋታው አበቃ',
+  'td.newBest': 'አዲስ ከፍተኛ ነጥብ!',
+  'td.back': 'ሁሉም ጨዋታዎች',
+};
+
+const dicts: Record<Lang, Dict> = { en, am };
+const STORAGE_KEY = 'innoarcade.lang';
+
+let lang: Lang = (localStorage.getItem(STORAGE_KEY) as Lang | null) ?? 'en';
+
+export function getLang(): Lang {
+  return lang;
+}
+
+export function setLang(next: Lang): void {
+  lang = next;
+  localStorage.setItem(STORAGE_KEY, next);
+  document.documentElement.lang = next;
+  applyTranslations();
+}
+
+export function t(key: I18nKey): string {
+  return dicts[lang][key] ?? en[key];
+}
+
+export function applyTranslations(root: ParentNode = document): void {
+  root.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
+    el.textContent = t(el.dataset.i18n as I18nKey);
+  });
+}
