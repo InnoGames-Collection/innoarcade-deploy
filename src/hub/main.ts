@@ -83,11 +83,15 @@ function renderTournaments(): void {
   }).join('');
 }
 
-// --- Games grid -------------------------------------------------------------
-function renderGames(): void {
-  const host = $('#gameGrid');
-  // Show every game; tournament titles are playable for free too.
-  host.innerHTML = CATALOG.map((g) => `
+// --- Games grid, grouped into category rows ---------------------------------
+const AM_CAT: Record<string, string> = {
+  Arcade: 'አርኬድ', Puzzle: 'እንቆቅልሽ', Runner: 'ሩጫ', Skill: 'ክህሎት', Casual: 'ቀላል',
+};
+function catKey(g: GameMeta): string { return g.genreEn.split('·')[0].trim(); }
+function catLabel(key: string): string { return lang() === 'am' ? (AM_CAT[key] ?? key) : key; }
+
+function gameCard(g: GameMeta): string {
+  return `
     <a class="game-card" href="${g.route}">
       <div class="gc-thumb" style="${thumbStyle(g)}">
         <span class="gc-glyph">${g.icon}</span>
@@ -97,6 +101,44 @@ function renderGames(): void {
         <h4>${escapeHtml(name(g))}</h4>
         <p>${escapeHtml(genre(g))}</p>
       </div>
+    </a>`;
+}
+
+function renderGames(): void {
+  const host = $('#gameGrid');
+  const cats = new Map<string, GameMeta[]>();
+  for (const g of CATALOG) {
+    const k = catKey(g);
+    if (!cats.has(k)) cats.set(k, []);
+    cats.get(k)!.push(g);
+  }
+  host.innerHTML = [...cats.entries()].map(([key, list]) => `
+    <div class="cat-block">
+      <div class="cat-head"><h3>${escapeHtml(catLabel(key))}</h3></div>
+      <div class="cat-grid">${list.map(gameCard).join('')}</div>
+    </div>`).join('');
+}
+
+// --- LexiQuest brain-games category (links into the LexiQuest app) -----------
+interface BrainGame { id: string; nameEn: string; nameAm: string; icon: string; thumb: [string, string]; }
+const LEXIQUEST: BrainGame[] = [
+  { id: 'spell', nameEn: 'Spell It', nameAm: 'ፊደል ቃላት', icon: '🔤', thumb: ['#6a4cff', '#34238f'] },
+  { id: 'vocab', nameEn: 'Vocabulary', nameAm: 'መዝገበ ቃላት', icon: '📖', thumb: ['#2aa9d6', '#13627e'] },
+  { id: 'rhyme', nameEn: 'Rhyme Time', nameAm: 'ግጥም', icon: '🎵', thumb: ['#e25aa0', '#8e2c63'] },
+  { id: 'sudoku', nameEn: 'Sudoku', nameAm: 'ሱዶኩ', icon: '🔢', thumb: ['#34b38a', '#176049'] },
+  { id: 'target24', nameEn: 'Target 24', nameAm: 'ኢላማ 24', icon: '🎯', thumb: ['#f0a832', '#9c6310'] },
+  { id: 'crosssum', nameEn: 'Cross Sum', nameAm: 'ድምር', icon: '➕', thumb: ['#5b8cff', '#27468f'] },
+  { id: 'logic', nameEn: 'Logic Grid', nameAm: 'ሎጂክ', icon: '🧩', thumb: ['#ff7a59', '#a83b22'] },
+  { id: 'sequence', nameEn: 'Sequence', nameAm: 'ቅደም ተከተል', icon: '🔗', thumb: ['#7a6cff', '#3d2f9e'] },
+];
+function renderBrain(): void {
+  const host = $('#brainGrid');
+  host.innerHTML = LEXIQUEST.map((g) => `
+    <a class="game-card" href="../lexiquest/#/g/${g.id}">
+      <div class="gc-thumb" style="background:linear-gradient(145deg, ${g.thumb[0]}, ${g.thumb[1]});">
+        <span class="gc-glyph">${g.icon}</span>
+      </div>
+      <div class="gc-body"><h4>${escapeHtml(lang() === 'am' ? g.nameAm : g.nameEn)}</h4></div>
     </a>`).join('');
 }
 
@@ -128,6 +170,7 @@ function renderAll(): void {
   renderFeatured();
   renderTournaments();
   renderGames();
+  renderBrain();
   applyTranslations();
   tickCountdowns();
 }
@@ -143,7 +186,7 @@ langEn.addEventListener('click', () => pick('en'));
 langAm.addEventListener('click', () => pick('am'));
 
 // Nav active-state on scroll.
-const sections = ['dashboard', 'tournaments', 'games'];
+const sections = ['dashboard', 'tournaments', 'games', 'brain'];
 window.addEventListener('scroll', () => {
   let current = sections[0];
   for (const id of sections) {

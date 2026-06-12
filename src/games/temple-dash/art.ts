@@ -13,7 +13,7 @@ const urls = import.meta.glob('./kenney/*.png', {
   import: 'default',
 }) as Record<string, string>;
 
-export const WALK_FRAMES = 3; // run0/run1/run2
+export const WALK_FRAMES = 1; // front-facing run uses one pose + procedural sway
 
 export interface Skin {
   id: string; // sprite-name prefix (scout|jade|royal)

@@ -538,15 +538,18 @@ export class TempleDash {
       : sliding
         ? `${this.skinId}_slide`
         : `${this.skinId}_walk${(Math.floor(this.walkPhase) % WALK_FRAMES) + 1}`;
-    const h = sliding ? charH * 0.66 : charH;
-    // Run juice: a forward lean and a vertical bob synced to the stride.
-    const bob = running ? Math.abs(Math.sin(this.walkPhase * Math.PI)) * 7 * pr : 0;
-    const lean = running ? -0.07 : jumping ? -0.12 : 0;
+    const h = sliding ? charH * 0.62 : charH;
+    const w = sliding ? charW * 1.15 : charW; // dive pose is wider than tall
+    // Front-facing run juice: a vertical bob plus a left-right torso sway, so the
+    // character reads as sprinting toward the camera while showing its face.
+    const stride = this.walkPhase * Math.PI;
+    const bob = running ? Math.abs(Math.sin(stride)) * 8 * pr : 0;
+    const sway = running ? Math.sin(stride) * 0.06 : 0;
 
     ctx.save();
     ctx.translate(x, groundY - lift - bob);
-    if (lean) ctx.rotate(lean);
-    this.assets.draw(ctx, pose, 0, -charW / 2, -h, charW, h);
+    if (sway) ctx.rotate(sway);
+    this.assets.draw(ctx, pose, 0, -w / 2, -h, w, h);
     ctx.restore();
   }
 }
