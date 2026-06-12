@@ -17,7 +17,9 @@ export class GameLoop {
     this.last = performance.now();
     const tick = (now: number) => {
       if (!this.running) return;
-      const dt = Math.min((now - this.last) / 1000, 0.05);
+      // Clamp to [0, 0.05]: a background tab can produce a huge step, and an rAF
+      // timestamp can trail the performance.now() baseline (negative step).
+      const dt = Math.max(0, Math.min((now - this.last) / 1000, 0.05));
       this.last = now;
       this.update(dt);
       this.render();

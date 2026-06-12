@@ -1,127 +1,239 @@
-.hub-header {
+/* InnoArcade hub — an enterprise-grade dark storefront that serves both the
+   tournament ladder and the free-play catalogue. */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 1.1rem 1.4rem;
-  max-width: 1080px;
-  margin: 0 auto;
+  gap: 1rem;
+  padding: 0.75rem clamp(1rem, 4vw, 2.5rem);
+  background: rgba(13, 17, 38, 0.82);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
+  font-weight: 800;
+  font-size: 1.15rem;
 }
+.brand-icon { font-size: 1.5rem; }
 
-.brand-icon {
-  font-size: 1.6rem;
+.topnav {
+  display: flex;
+  gap: 0.35rem;
+  margin-inline: auto;
 }
-
-.brand h1 {
-  font-size: 1.4rem;
-  letter-spacing: 0.02em;
+.nav-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  transition: color 0.15s, background 0.15s;
+}
+.nav-link:hover { color: var(--text); }
+.nav-link.active {
+  color: var(--text);
+  background: rgba(91, 140, 255, 0.16);
 }
 
 .hub-main {
   max-width: 1080px;
   margin: 0 auto;
-  padding: 0 1.4rem 2rem;
-}
-
-.tagline {
-  color: var(--muted);
-  margin: 0.2rem 0 1.8rem;
+  padding: clamp(1.25rem, 4vw, 2.5rem) clamp(1rem, 4vw, 2.5rem) 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
 }
 
 .section-title {
-  font-size: 1.05rem;
-  color: var(--accent);
-  margin: 1.8rem 0 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 1rem;
-}
-
-.card {
-  display: flex;
-  flex-direction: column;
-  background: var(--card);
-  border-radius: 14px;
-  overflow: hidden;
-  text-decoration: none;
-  color: var(--text);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  transition: transform 0.12s ease, border-color 0.12s ease;
-}
-
-a.card:hover {
-  transform: translateY(-3px);
-  border-color: var(--accent);
-}
-
-.card.soon {
-  opacity: 0.65;
-}
-
-.thumb {
+  font-size: 1.35rem;
+  margin-bottom: 1rem;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 3.2rem;
-  height: 120px;
+  gap: 0.5rem;
 }
 
-.thumb-temple { background: linear-gradient(135deg, #5d3a2e, #c97b3d); }
-.thumb-metro  { background: linear-gradient(135deg, #1f2d50, #3e6c93); }
-.thumb-candy  { background: linear-gradient(135deg, #7c2d5e, #e2563a); }
-.thumb-dots   { background: linear-gradient(135deg, #1d4350, #2e8b8b); }
-.thumb-brick  { background: linear-gradient(135deg, #6e3a2e, #a85432); }
-.thumb-fruit  { background: linear-gradient(135deg, #2e5d3a, #7bc043); }
-.thumb-sky    { background: linear-gradient(135deg, #2e4a7c, #6fa8dc); }
-.thumb-bubble { background: linear-gradient(135deg, #3a2e6e, #8362c9); }
-
-.card-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  padding: 0.9rem 1rem 1.1rem;
-  flex: 1;
+/* ---- Featured tournament hero ---- */
+.featured-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr;
+  gap: 1.5rem;
+  min-height: 280px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
 }
-
-.card-body h3 {
-  font-size: 1.05rem;
+.featured-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(8, 10, 24, 0.78) 0%, rgba(8, 10, 24, 0.35) 55%, rgba(8, 10, 24, 0.15) 100%);
 }
+.fc-info, .fc-board { position: relative; z-index: 2; }
 
-.card-body p {
-  color: var(--muted);
-  font-size: 0.86rem;
-  line-height: 1.45;
-  flex: 1;
-}
-
-.badge {
-  align-self: flex-start;
+.fc-badge {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
   padding: 0.3rem 0.8rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+}
+.fc-title {
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  margin: 0.6rem 0 0.1rem;
+  line-height: 1.05;
+}
+.fc-genre { color: rgba(255, 255, 255, 0.7); font-size: 0.9rem; }
+.fc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  margin: 1.1rem 0;
+}
+.fc-countdown { font-size: 1rem; }
+.cd-label { color: rgba(255, 255, 255, 0.65); font-size: 0.8rem; }
+.cd-val { font-weight: 800; font-size: 1.25rem; color: var(--accent); }
+.fc-prize { font-size: 0.9rem; color: rgba(255, 255, 255, 0.85); }
+.fc-prize strong { color: var(--accent); }
+.fc-cta { margin-top: 0.3rem; }
+
+.fc-board {
+  background: rgba(8, 10, 24, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1rem;
+  align-self: center;
+}
+.fc-board-head {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   color: var(--muted);
-  font-size: 0.78rem;
+  margin-bottom: 0.5rem;
+}
+.fc-yourrank { margin-top: 0.6rem; font-size: 0.85rem; color: var(--muted); }
+.fc-yourrank strong { color: var(--accent); font-size: 1.05rem; }
+
+.fc-glyph {
+  position: absolute;
+  right: -0.5rem;
+  bottom: -1.5rem;
+  font-size: 10rem;
+  opacity: 0.18;
+  z-index: 1;
+  pointer-events: none;
 }
 
-.card .btn {
-  align-self: flex-start;
-  padding: 0.45rem 1.3rem;
-  font-size: 0.9rem;
+/* leaderboard rows (shared with in-game) */
+.leader-list { list-style: none; display: flex; flex-direction: column; gap: 0.18rem; }
+.leader-row {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.32rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
 }
+.leader-row.me { background: var(--accent); color: #221a08; font-weight: 700; }
+.lr-rank { color: var(--muted); text-align: center; }
+.leader-row.me .lr-rank { color: #221a08; }
+.lr-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lr-score { font-variant-numeric: tabular-nums; }
+.muted-small { color: var(--muted); font-size: 0.82rem; }
+
+/* ---- Tournament cards ---- */
+.tournament-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+.tour-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 0.85rem;
+}
+.tc-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+.tc-body { flex: 1; min-width: 0; }
+.live-dot { color: #e2563a; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; }
+.tc-body h4 { font-size: 1rem; margin: 0.1rem 0; }
+.tc-game { color: var(--muted); font-size: 0.82rem; }
+.tc-count { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
+.tc-count strong { color: var(--accent); }
+.tc-cta { padding: 0.5rem 1.1rem; font-size: 0.88rem; flex-shrink: 0; }
+
+/* ---- Games grid ---- */
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+.game-card {
+  text-decoration: none;
+  color: inherit;
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+.game-card:hover { transform: translateY(-4px); border-color: rgba(91, 140, 255, 0.4); }
+.gc-thumb {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  display: grid;
+  place-items: center;
+}
+.gc-glyph { font-size: 2.8rem; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.4)); }
+.gc-tag {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 700;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+}
+.gc-body { padding: 0.7rem 0.8rem 0.85rem; }
+.gc-body h4 { font-size: 0.98rem; }
+.gc-body p { color: var(--muted); font-size: 0.78rem; margin-top: 0.1rem; }
 
 .hub-footer {
   text-align: center;
   color: var(--muted);
-  font-size: 0.82rem;
-  padding: 1.6rem 0 2rem;
+  font-size: 0.85rem;
+  padding: 2rem 1rem 3rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 720px) {
+  .topnav { display: none; }
+  .featured-card { grid-template-columns: 1fr; }
+  .fc-glyph { font-size: 7rem; }
 }

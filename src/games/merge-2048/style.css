@@ -1,0 +1,128 @@
+#stage {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: max(0.75rem, env(safe-area-inset-top)) 0.75rem 1.5rem;
+}
+
+#hud {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.back-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.scores {
+  display: flex;
+  gap: 0.6rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.score-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--card);
+  border-radius: 12px;
+  padding: 0.35rem 1.1rem;
+  min-width: 80px;
+}
+
+.score-box span {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.score-box strong {
+  font-size: 1.4rem;
+  color: var(--text);
+}
+
+#muteBtn {
+  background: var(--card);
+  border: none;
+  color: var(--text);
+  font-size: 1.2rem;
+  border-radius: 10px;
+  width: 2.4rem;
+  height: 2.4rem;
+  cursor: pointer;
+}
+
+#game {
+  width: min(480px, calc(100vw - 1.5rem));
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border-radius: 18px;
+  touch-action: none;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+  max-width: 480px;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 10, 24, 0.82);
+  backdrop-filter: blur(6px);
+  padding: 1rem;
+  z-index: 10;
+}
+
+.panel {
+  background: var(--panel);
+  border-radius: 22px;
+  padding: 2rem 1.75rem;
+  text-align: center;
+  max-width: 360px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.game-icon { font-size: 3rem; }
+.panel h1 { font-size: 1.9rem; }
+.panel h2 { font-size: 1.6rem; }
+.tagline { color: var(--muted); font-size: 0.95rem; }
+
+.new-best {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.final {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.back {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}

@@ -1,0 +1,1 @@
+const r="innoarcade.";function n(t){return Number(localStorage.getItem(`${r}${t}.best`))||0}function o(t,e){return e<=n(t)?!1:(localStorage.setItem(`${r}${t}.best`,String(e)),!0)}export{n as g,o as s};

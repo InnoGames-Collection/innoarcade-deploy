@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔢</text></svg>" />
+    <title>Merge 2048 — InnoArcade</title>
+    <script type="module" crossorigin src="../../assets/merge2048-DrRXKjNs.js"></script>
+    <link rel="modulepreload" crossorigin href="../../assets/index-CQyVNW2z.js">
+    <link rel="modulepreload" crossorigin href="../../assets/audio-D-c7ZnkG.js">
+    <link rel="modulepreload" crossorigin href="../../assets/input-CKS5NiBw.js">
+    <link rel="modulepreload" crossorigin href="../../assets/profile-BEtZopPg.js">
+    <link rel="stylesheet" crossorigin href="../../assets/index-HPgZI6Yo.css">
+    <link rel="stylesheet" crossorigin href="../../assets/merge2048-DIGfFOex.css">
+  </head>
+  <body>
+    <div id="stage">
+      <header id="hud">
+        <a class="back-link" href="../../" data-i18n="m2.back">All games</a>
+        <div class="scores">
+          <div class="score-box">
+            <span data-i18n="m2.score">Score</span>
+            <strong id="scoreVal">0</strong>
+          </div>
+          <div class="score-box">
+            <span data-i18n="m2.best">Best</span>
+            <strong id="bestVal">0</strong>
+          </div>
+        </div>
+        <button id="muteBtn" aria-label="Sound">🔊</button>
+      </header>
+
+      <canvas id="game" width="480" height="480"></canvas>
+
+      <p class="hint" data-i18n="m2.controls"></p>
+
+      <div id="menuOverlay" class="overlay">
+        <div class="panel">
+          <div class="game-icon">🔢</div>
+          <h1>Merge 2048</h1>
+          <p class="tagline" data-i18n="m2.tagline"></p>
+          <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
+          <div class="lang-switch" role="group" aria-label="Language">
+            <button id="langEn" class="lang-btn">EN</button>
+            <button id="langAm" class="lang-btn">አማ</button>
+          </div>
+          <a class="back" href="../../" data-i18n="m2.back">All games</a>
+        </div>
+      </div>
+
+      <div id="overOverlay" class="overlay hidden">
+        <div class="panel">
+          <h2 data-i18n="m2.gameOver">Game over</h2>
+          <p id="newBest" class="new-best hidden" data-i18n="m2.newBest"></p>
+          <div class="final">
+            <div class="score-box">
+              <span data-i18n="m2.score">Score</span>
+              <strong id="finalScore">0</strong>
+            </div>
+            <div class="score-box">
+              <span data-i18n="m2.best">Best</span>
+              <strong id="finalBest">0</strong>
+            </div>
+          </div>
+          <button id="againBtn" class="btn primary" data-i18n="m2.restart">Play again</button>
+          <a class="back" href="../../" data-i18n="m2.back">All games</a>
+        </div>
+      </div>
+    </div>
+
+  </body>
+</html>

@@ -1,1 +1,0 @@
-import{g as t,a as l,s as o}from"./index-DvCUX34d.js";const e=document.querySelector("#langEn"),a=document.querySelector("#langAm");function c(){const n=t();e.classList.toggle("active",n==="en"),a.classList.toggle("active",n==="am")}function s(n){o(n),c()}e.addEventListener("click",()=>s("en"));a.addEventListener("click",()=>s("am"));document.documentElement.lang=t();l();c();
