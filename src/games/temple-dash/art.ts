@@ -13,7 +13,7 @@ const urls = import.meta.glob('./kenney/*.png', {
   import: 'default',
 }) as Record<string, string>;
 
-export const WALK_FRAMES = 6;
+export const WALK_FRAMES = 3; // run0/run1/run2
 
 export interface Skin {
   id: string; // sprite-name prefix (scout|jade|royal)
@@ -22,12 +22,12 @@ export interface Skin {
   cost: number;
 }
 
-// Kenney's three player characters: p1 (green), p2 (blue), p3 (pink) — names
-// chosen to match each sprite's colour.
+// Kenney "Toon Characters 1" human runners: Male Adventurer, Female Adventurer,
+// Zombie — each with a real 3-frame run cycle plus jump and duck poses.
 export const SKINS: Skin[] = [
-  { id: 'scout', nameEn: 'Fern', nameAm: 'ቅጠል', cost: 0 },
-  { id: 'jade', nameEn: 'Sky', nameAm: 'ሰማይ', cost: 250 },
-  { id: 'royal', nameEn: 'Rosa', nameAm: 'ሮዝ', cost: 600 },
+  { id: 'scout', nameEn: 'Max', nameAm: 'ማክስ', cost: 0 },
+  { id: 'jade', nameEn: 'Mia', nameAm: 'ሚያ', cost: 250 },
+  { id: 'royal', nameEn: 'Zombie', nameAm: 'ዞምቢ', cost: 600 },
 ];
 
 // Map every vendored PNG to a single-frame sheet (whole image = frame 0).

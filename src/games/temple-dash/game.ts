@@ -27,10 +27,10 @@ const PLAYER_Z = 2;
 const VIEW_Z = 60;
 const HIT_RANGE = 0.7;
 
-const BASE_SPEED = 13;
-const MAX_SPEED = 32;
-const ACCEL = 0.24;
-const LANE_LERP = 9;
+const BASE_SPEED = 19;
+const MAX_SPEED = 44;
+const ACCEL = 0.34;
+const LANE_LERP = 11;
 
 const JUMP_DURATION = 0.55;
 const JUMP_HEIGHT = 150;
@@ -88,7 +88,8 @@ export class TempleDash {
 
   private particles = new Particles(500);
   private fx = new ScreenFx();
-  private walkPhase = 0; // advances with speed; drives the walk-cycle frame
+  private walkPhase = 0; // advances with speed; drives the run-cycle frame
+  private lastFrame = -1; // last run frame, for per-stride foot dust
 
   private time = 0;
   private elapsed = 0;
@@ -159,7 +160,26 @@ export class TempleDash {
     this.elapsed += dt;
     this.speed = Math.min(MAX_SPEED, BASE_SPEED + this.elapsed * ACCEL);
     this.dist += this.speed * dt;
-    this.walkPhase += dt * (this.speed / BASE_SPEED) * 10;
+    this.walkPhase += dt * (this.speed / BASE_SPEED) * 14;
+
+    // Kick up a puff of dust each time a foot plants (run frame changes) while
+    // grounded — a big part of selling speed.
+    if (this.jumpT < 0 && this.slideT < 0) {
+      const frame = Math.floor(this.walkPhase) % WALK_FRAMES;
+      if (frame !== this.lastFrame) {
+        this.lastFrame = frame;
+        const fx = this.sx(this.laneF, PLAYER_Z);
+        const fy = this.sy(PLAYER_Z);
+        for (let i = 0; i < 3; i++) {
+          this.particles.emit({
+            x: fx + (Math.random() * 18 - 9), y: fy - 2,
+            vx: -50 - Math.random() * 90, vy: -30 - Math.random() * 40,
+            life: 0.4 + Math.random() * 0.2, size: 7 + Math.random() * 4,
+            color: 'rgba(225,214,188,0.85)', gravity: 120, drag: 0.88,
+          });
+        }
+      }
+    }
 
     if (this.invuln > 0) this.invuln -= dt;
     if (this.magnetT > 0) this.magnetT -= dt;
@@ -306,9 +326,32 @@ export class TempleDash {
     this.drawSky(ctx);
     this.drawGround(ctx);
     this.drawScene(ctx);
+    if (this.state === 'playing') this.drawSpeedLines(ctx);
     this.drawPlayer(ctx);
     this.particles.render(ctx);
     this.fx.postRender(ctx, W, H);
+  }
+
+  // Radial motion streaks from the vanishing point — intensity rises with speed.
+  private drawSpeedLines(ctx: CanvasRenderingContext2D): void {
+    const k = (this.speed - BASE_SPEED) / (MAX_SPEED - BASE_SPEED);
+    if (k <= 0.08) return;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.strokeStyle = `rgba(255,255,255,${0.14 * k})`;
+    ctx.lineWidth = 2;
+    const cx = W / 2, cy = HORIZON_Y - 6;
+    const N = 12;
+    for (let i = 0; i < N; i++) {
+      const ang = (i / N) * TAU + i * 1.7;
+      const r0 = 70 + ((this.time * 1100 + i * 137) % 340);
+      const r1 = r0 + 50 + 80 * k;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(ang) * r0, cy + Math.sin(ang) * r0 * 0.8);
+      ctx.lineTo(cx + Math.cos(ang) * r1, cy + Math.sin(ang) * r1 * 0.8);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   private drawSky(ctx: CanvasRenderingContext2D): void {
@@ -459,8 +502,8 @@ export class TempleDash {
     const sliding = this.slideT >= 0;
     const jp = jumping ? this.jumpT / JUMP_DURATION : 0;
     const lift = jumping ? Math.sin(Math.PI * jp) * JUMP_HEIGHT * pr : 0;
-    const charH = 150 * pr;
-    const charW = charH * 0.74; // Kenney player ~72x97
+    const charH = 172 * pr;
+    const charW = charH * 0.75; // Kenney toon character ~96x128
 
     // Shadow.
     ctx.fillStyle = `rgba(0,0,0,${0.3 - 0.15 * Math.sin(Math.PI * jp)})`;
@@ -489,13 +532,22 @@ export class TempleDash {
     const blink = this.invuln > 0 && Math.floor(this.time * 18) % 2 === 0;
     if (blink) return;
 
+    const running = !jumping && !sliding;
     const pose = jumping
       ? `${this.skinId}_jump`
       : sliding
         ? `${this.skinId}_slide`
         : `${this.skinId}_walk${(Math.floor(this.walkPhase) % WALK_FRAMES) + 1}`;
-    const h = sliding ? charH * 0.7 : charH;
-    this.assets.draw(ctx, pose, 0, x - charW / 2, groundY - lift - h, charW, h);
+    const h = sliding ? charH * 0.66 : charH;
+    // Run juice: a forward lean and a vertical bob synced to the stride.
+    const bob = running ? Math.abs(Math.sin(this.walkPhase * Math.PI)) * 7 * pr : 0;
+    const lean = running ? -0.07 : jumping ? -0.12 : 0;
+
+    ctx.save();
+    ctx.translate(x, groundY - lift - bob);
+    if (lean) ctx.rotate(lean);
+    this.assets.draw(ctx, pose, 0, -charW / 2, -h, charW, h);
+    ctx.restore();
   }
 }
 
