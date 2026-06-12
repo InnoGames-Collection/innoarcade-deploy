@@ -8,6 +8,8 @@ import {
   featuredTournament, submitScore, leaderboard, tournamentGame,
   countdown, type LeaderEntry,
 } from '../../platform/tournaments';
+import { backendReady, submitScoreRemote, leaderboardRemote } from '../../platform/backend';
+import { currentUser } from '../../platform/auth';
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
@@ -72,17 +74,39 @@ game.onGameOver = (score, record) => {
   $('#finalBest').textContent = String(game.best);
   $('#newBest').classList.toggle('hidden', !record);
   if (tourney) {
+    // Instant local standing for responsive UI…
     const result = submitScore(tourney.id, score);
     $('#rankVal').textContent = `#${result.rank}`;
     $('#rankTotal').textContent = `/ ${result.total}`;
-    // Show the player plus a window of nearby rivals.
     const board = leaderboard(tourney.id);
     const meIdx = board.findIndex((e) => e.isPlayer);
     const startN = Math.max(0, Math.min(meIdx - 2, board.length - 5));
     renderLeaderboard(board.slice(startN, startN + 5), '#leaderList2');
     $('#overTournament').classList.remove('hidden');
+    // …then persist the authoritative score to the server (if signed in).
+    void syncRemoteScore(tourney.id, score);
   }
 };
+
+// Submit the score through the validated Edge Function and, on success, replace
+// the local standing with the real server leaderboard. No-ops (keeping the local
+// view) when the backend is off or the player isn't signed in.
+async function syncRemoteScore(tournamentId: string, score: number): Promise<void> {
+  if (!backendReady() || !(await currentUser())) return;
+  try {
+    const res = await submitScoreRemote(tournamentId, score);
+    $('#rankVal').textContent = `#${res.rank}`;
+    $('#rankTotal').textContent = `/ ${res.total}`;
+    const board = await leaderboardRemote(tournamentId);
+    if (board.length) {
+      const meIdx = board.findIndex((e) => e.isPlayer);
+      const startN = Math.max(0, Math.min(meIdx - 2, board.length - 5));
+      renderLeaderboard(board.slice(startN, startN + 5), '#leaderList2');
+    }
+  } catch {
+    /* network/auth hiccup — the local standing stays on screen */
+  }
+}
 
 // --- Pointer aiming ---------------------------------------------------------
 function toCanvas(e: PointerEvent): [number, number] {

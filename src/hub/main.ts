@@ -1,6 +1,7 @@
 import '../styles/base.css';
 import './hub.css';
 import { applyTranslations, getLang, setLang, t, type Lang } from '../i18n';
+import { mountSignIn } from './signin';
 import { CATALOG, type GameMeta } from '../platform/catalog';
 import {
   activeTournaments, featuredTournament, tournamentGame, leaderboard,
@@ -201,4 +202,5 @@ window.addEventListener('scroll', () => {
 document.documentElement.lang = getLang();
 syncLangButtons();
 renderAll();
+mountSignIn();
 setInterval(tickCountdowns, 1000);

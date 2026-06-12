@@ -1,0 +1,12 @@
+# Supabase CLI project config. Lets `supabase functions deploy …` work from this
+# folder without `supabase init`. Project ref is the subdomain of your API URL.
+project_id = "aopmkdefqykctrxhflaq"
+
+# Score gate — called by signed-in players, so the user JWT must be verified.
+[functions.submit-score]
+verify_jwt = true
+
+# Send-SMS auth hook — called by Supabase Auth itself (not a user), so JWT
+# verification is off; it authenticates via the hook secret instead.
+[functions.send-sms]
+verify_jwt = false
