@@ -1,3 +1,7 @@
+// @ts-nocheck — Deno Edge Function; not part of the Node/Vite app build. The
+// ts-nocheck stops the Node TypeScript server from flagging Deno globals and URL
+// imports it can't resolve. Runs fine on Supabase's Deno runtime.
+//
 // Edge Function: submit-score — the server-authoritative score gate.
 //
 // The frontend NEVER writes the scores table directly. It calls this function,
