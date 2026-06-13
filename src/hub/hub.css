@@ -8,23 +8,43 @@
    otherwise --text/--accent can flip to the dark-theme values and render cream
    text on white. */
 html:root {
-  --bg: #eef1f8;
+  --bg: #f4f6fc;
   --bg-2: #ffffff;
   --card: #ffffff;
-  --text: #16203a;
-  --muted: #6b7691;
-  --line: #e6e9f2;
-  --accent: #5b6cff;
-  --accent-2: #ff7a59;
-  --good: #18b187;
+  --text: #131a30;
+  --muted: #6a748f;
+  --line: #e7eaf3;
+  --accent: #4f5bff;
+  --accent-2: #ff6a3d;
+  --good: #16a673;
+  --gold: #f5b53d;
+  /* brand gradient for hero / logo / accents */
+  --brand-1: #5b6cff;
+  --brand-2: #8b5cf6;
+  --brand-3: #2563eb;
+  --grad-brand: linear-gradient(135deg, #5b6cff 0%, #8b5cf6 55%, #6366f1 100%);
+  --grad-hero: radial-gradient(120% 140% at 12% 10%, #2b3a8f 0%, #161d4d 45%, #0c1234 100%);
+  --shadow-sm: 0 2px 8px rgba(31, 41, 80, 0.06);
+  --shadow-md: 0 10px 30px rgba(31, 41, 80, 0.10);
+  --shadow-lg: 0 22px 50px rgba(31, 41, 80, 0.18);
+  --radius: 18px;
 }
 
-/* Primary buttons on the hub are blue → white text (base.css uses dark text,
-   which is for its gold theme and reads poorly on blue). */
-.btn.primary { color: #fff; }
+/* Primary buttons: brand gradient + white text, with a soft lift on hover. */
+.btn.primary {
+  color: #fff;
+  background: var(--grad-brand);
+  border-color: transparent;
+  box-shadow: 0 6px 16px rgba(91, 108, 255, 0.30);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+.btn.primary:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(91, 108, 255, 0.38); filter: brightness(1.03); }
 
 body {
-  background: var(--bg);
+  background:
+    radial-gradient(60% 50% at 100% 0%, rgba(139, 92, 246, 0.10) 0%, transparent 60%),
+    radial-gradient(50% 40% at 0% 0%, rgba(91, 108, 255, 0.10) 0%, transparent 55%),
+    var(--bg);
   color: var(--text);
 }
 
@@ -36,13 +56,18 @@ body {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.7rem clamp(1rem, 4vw, 2.5rem);
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
+  padding: 0.6rem clamp(1rem, 4vw, 2.5rem);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: saturate(160%) blur(14px);
   border-bottom: 1px solid var(--line);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.6), 0 6px 20px rgba(31, 41, 80, 0.05);
 }
-.brand { display: flex; align-items: center; gap: 0.5rem; font-weight: 800; font-size: 1.15rem; }
-.brand-icon { font-size: 1.5rem; }
+.brand { display: flex; align-items: center; gap: 0.6rem; font-weight: 800; font-size: 1.18rem; letter-spacing: -0.01em; }
+.brand-icon {
+  font-size: 1.15rem; width: 2rem; height: 2rem; display: grid; place-items: center;
+  background: var(--grad-brand); border-radius: 10px; box-shadow: 0 6px 14px rgba(91, 108, 255, 0.35);
+}
+.brand-name { background: var(--grad-brand); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .topnav { display: flex; gap: 0.3rem; margin-inline: auto; }
 .nav-link {
   color: var(--muted);
@@ -69,26 +94,39 @@ body {
   flex-direction: column;
   gap: 2.5rem;
 }
-.section-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+.section-title { font-size: clamp(1.3rem, 2.4vw, 1.7rem); font-weight: 800; margin-bottom: 1rem; letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.5rem; }
+/* small uppercase eyebrow above a section title for an enterprise feel */
+.section-eyebrow { display: block; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.35rem; }
 
 /* ---- featured tournament hero ---- */
 .featured-card {
   position: relative;
   overflow: hidden;
-  border-radius: 22px;
-  padding: clamp(1.5rem, 4vw, 2.4rem);
+  border-radius: 24px;
+  padding: clamp(1.6rem, 4vw, 2.6rem);
   display: grid;
   grid-template-columns: 1.2fr 0.9fr;
   gap: 1.5rem;
-  min-height: 270px;
+  min-height: 290px;
   color: #fff;
-  box-shadow: 0 18px 40px rgba(40, 50, 90, 0.18);
+  box-shadow: var(--shadow-lg);
 }
 .featured-card::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(120deg, rgba(10, 14, 34, 0.74) 0%, rgba(10, 14, 34, 0.3) 55%, rgba(10, 14, 34, 0.08) 100%);
+  background: linear-gradient(115deg, rgba(8, 11, 30, 0.82) 0%, rgba(8, 11, 30, 0.42) 52%, rgba(8, 11, 30, 0.10) 100%);
+}
+/* soft brand glow bleeding from the top-right of the hero */
+.featured-card::before {
+  content: '';
+  position: absolute;
+  top: -40%; right: -10%;
+  width: 60%; height: 140%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.55) 0%, transparent 60%);
+  filter: blur(20px);
+  z-index: 1;
+  pointer-events: none;
 }
 .fc-info, .fc-board { position: relative; z-index: 2; }
 .fc-badge {
@@ -204,3 +242,45 @@ body {
 .entry-need { font-size: 0.85rem; color: #9a6b12; font-weight: 700; margin: 0; text-align: center; }
 .entry-joined { text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; padding: 8px; }
 .ej-burst { font-size: 3rem; }
+
+/* ====================================================================== */
+/* Enterprise polish layer                                                */
+/* ====================================================================== */
+
+/* --- stats strip (KPIs under the hero) --- */
+.stats-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+@media (max-width: 760px) { .stats-strip { grid-template-columns: repeat(2, 1fr); } }
+.stat {
+  position: relative; background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 1.1rem 1.2rem; box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.stat::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--grad-brand); }
+.stat-icon { font-size: 1.3rem; }
+.stat-value { font-size: 1.7rem; font-weight: 900; letter-spacing: -0.02em; margin-top: 0.25rem; }
+.stat-label { color: var(--muted); font-size: 0.82rem; font-weight: 600; }
+
+/* --- live pulse dot --- */
+.live-dot { display: inline-flex; align-items: center; gap: 0.32rem; }
+.live-dot::before {
+  content: ''; width: 0.45rem; height: 0.45rem; border-radius: 50%; background: var(--accent-2);
+  box-shadow: 0 0 0 0 rgba(255, 106, 61, 0.6); animation: livePulse 1.8s infinite;
+}
+@keyframes livePulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 106, 61, 0.55); }
+  70% { box-shadow: 0 0 0 0.5rem rgba(255, 106, 61, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 106, 61, 0); }
+}
+
+/* --- richer card surfaces + hover --- */
+.tour-card { box-shadow: var(--shadow-sm); transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease; }
+.tour-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: #d9deef; }
+.tc-thumb { box-shadow: 0 8px 18px rgba(31, 41, 80, 0.18); }
+.game-card { box-shadow: var(--shadow-sm); }
+.game-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+.gc-thumb::after { content: ''; position: absolute; inset: 0; background: radial-gradient(120% 100% at 50% 0%, rgba(255,255,255,0.18), transparent 60%); }
+.gc-tag { backdrop-filter: blur(4px); background: rgba(17, 24, 48, 0.55); }
+
+/* --- footer --- */
+.hub-footer { background: var(--bg-2); }
+.hub-footer p { font-weight: 600; }

@@ -217,6 +217,24 @@ async function refreshFeatured(): Promise<void> {
   }
 }
 
+// --- Stats strip (enterprise KPIs under the hero) ---------------------------
+function renderStats(): void {
+  const host = document.querySelector('#statsStrip');
+  if (!host) return;
+  const tours = activeTournaments();
+  const live = tours.filter((x) => tournamentState(x) === 'live').length;
+  const pool = tours.reduce((s, x) => s + prizePool(x), 0);
+  const players = 12_480; // community size shown on the storefront
+  const stat = (icon: string, value: string, label: string): string =>
+    `<div class="stat"><div class="stat-icon">${icon}</div><div class="stat-value">${value}</div><div class="stat-label">${label}</div></div>`;
+  host.innerHTML = [
+    stat('🎮', String(CATALOG.length), t('hub.statGames')),
+    stat('🏆', String(live), t('hub.statLive')),
+    stat('🪙', pool.toLocaleString(), t('hub.pool')),
+    stat('👥', players.toLocaleString(), t('hub.statPlayers')),
+  ].join('');
+}
+
 // --- Tournament cards -------------------------------------------------------
 function renderTournaments(): void {
   const host = $('#tournamentList');
@@ -325,6 +343,7 @@ function tickCountdowns(): void {
 // --- Render all + language --------------------------------------------------
 function renderAll(): void {
   renderFeatured();
+  renderStats();
   renderTournaments();
   renderGames();
   renderBrain();

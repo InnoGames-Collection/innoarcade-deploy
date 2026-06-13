@@ -68,19 +68,28 @@ export const esc = (s: string): string =>
 export const num = (n: number): string => n.toLocaleString();
 export const etb = (n: number): string => `${n.toLocaleString()} ETB`;
 
-// A minimal inline-SVG bar chart. Returns an <svg> string scaled to the data.
-export function barChart(values: number[], color = '#5b6cff'): string {
+// A minimal inline-SVG bar chart with a gradient fill and a baseline. Returns an
+// <svg> string scaled to the data; sized via CSS (.bar-chart).
+export function barChart(values: number[]): string {
   if (!values.length) return '';
-  const w = 320, h = 120, pad = 8;
+  const w = 560, h = 200, padX = 10, padTop = 16, padBottom = 22;
   const max = Math.max(1, ...values);
-  const bw = (w - pad * 2) / values.length;
+  const slot = (w - padX * 2) / values.length;
+  const bw = Math.min(46, slot * 0.62);
+  const baseline = h - padBottom;
   const bars = values.map((v, i) => {
-    const bh = Math.round(((h - pad * 2) * v) / max);
-    const x = pad + i * bw + bw * 0.15;
-    const y = h - pad - bh;
-    return `<rect x="${x.toFixed(1)}" y="${y}" width="${(bw * 0.7).toFixed(1)}" height="${bh}" rx="3" fill="${color}"></rect>`;
+    const bh = Math.max(2, Math.round(((h - padTop - padBottom) * v) / max));
+    const x = padX + i * slot + (slot - bw) / 2;
+    const y = baseline - bh;
+    return `<rect x="${x.toFixed(1)}" y="${y}" width="${bw.toFixed(1)}" height="${bh}" rx="6" fill="url(#barGrad)"></rect>`;
   }).join('');
-  return `<svg viewBox="0 0 ${w} ${h}" class="bar-chart" preserveAspectRatio="none">${bars}</svg>`;
+  return `<svg viewBox="0 0 ${w} ${h}" class="bar-chart" role="img" aria-label="Revenue chart">
+    <defs><linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7c8bff"/><stop offset="100%" stop-color="#4f5bff"/>
+    </linearGradient></defs>
+    <line x1="${padX}" y1="${baseline}" x2="${w - padX}" y2="${baseline}" stroke="#e7eaf3" stroke-width="1.5"/>
+    ${bars}
+  </svg>`;
 }
 
 export const dateShort = (ms: number): string =>

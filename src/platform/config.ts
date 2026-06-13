@@ -9,6 +9,32 @@
 // so prices and fees change without a redeploy.
 
 import { isConfigured, supabase } from './supabase';
+import { isSignedIn } from './auth';
+
+// The coin economy (wallet, purchases, paid entry) talks to the server only when
+// it is *explicitly* enabled AND the player is signed in. It defaults OFF so the
+// platform always runs as a fully-working LOCAL experience — no dependency on the
+// economy Edge Functions being deployed — which is what makes demos reliable.
+// Flip VITE_ECONOMY_ONLINE=true once those functions are deployed to go
+// server-authoritative.
+const ECONOMY_BACKEND = import.meta.env.VITE_ECONOMY_ONLINE === 'true';
+
+/** True when coin operations should hit the server (enabled + configured + signed in). */
+export function economyOnline(): boolean {
+  return ECONOMY_BACKEND && isConfigured() && isSignedIn();
+}
+
+/** True when the server economy is enabled but the user must sign in first. */
+export function economyNeedsAuth(): boolean {
+  return ECONOMY_BACKEND && isConfigured() && !isSignedIn();
+}
+
+/** True when the economy/admin backend is live (enabled + configured), regardless
+ *  of sign-in. The admin console uses this to pick server vs local/demo data and
+ *  to decide whether to enforce the admin-role gate. Off → open demo mode. */
+export function economyBackendLive(): boolean {
+  return ECONOMY_BACKEND && isConfigured();
+}
 
 export interface CoinPackage {
   id: string;

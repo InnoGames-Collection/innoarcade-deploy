@@ -134,6 +134,10 @@ const en = {
   'hub.prizeSplit': 'Prize split',
   'hub.joined': "You're in! Good luck.",
   'hub.entryFailed': "Couldn't join — please try again.",
+  'hub.heroEyebrow': 'Compete & win',
+  'hub.statGames': 'Games',
+  'hub.statLive': 'Live tournaments',
+  'hub.statPlayers': 'Players',
 } as const;
 
 export type I18nKey = keyof typeof en;
@@ -270,6 +274,10 @@ const am: Dict = {
   'hub.prizeSplit': 'የሽልማት ክፍፍል',
   'hub.joined': 'ገብተዋል! መልካም ዕድል።',
   'hub.entryFailed': 'መግባት አልተቻለም — እንደገና ይሞክሩ።',
+  'hub.heroEyebrow': 'ተወዳደሩ እና ያሸንፉ',
+  'hub.statGames': 'ጨዋታዎች',
+  'hub.statLive': 'ቀጥታ ውድድሮች',
+  'hub.statPlayers': 'ተጫዋቾች',
 };
 
 const dicts: Record<Lang, Dict> = { en, am };

@@ -16,13 +16,9 @@
 // `payment-callback` Edge Functions (request signing + webhook verification);
 // nothing in this file or the UI changes.
 
-import { isConfigured, supabase } from './supabase';
-import { isSignedIn } from './auth';
-import { packageById, type CoinPackage } from './config';
+import { supabase } from './supabase';
+import { packageById, economyOnline as online, type CoinPackage } from './config';
 import { mockApply } from './wallet';
-
-// Server checkout only for authenticated users; guests use the local sandbox.
-const online = (): boolean => isConfigured() && isSignedIn();
 
 export type PayMethod = 'telebirr' | 'topup';
 export type OrderStatus = 'pending' | 'paid' | 'failed' | 'expired';

@@ -11,12 +11,8 @@
 // Edge Function would. `mockApply()` throws when Supabase IS configured, so the
 // boundary can never be crossed by accident in a real deployment.
 
-import { isConfigured, supabase } from './supabase';
-import { isSignedIn } from './auth';
-
-// Server-backed only for authenticated users; anonymous players (even with a
-// backend configured) use the local guest wallet so the app is always usable.
-const online = (): boolean => isConfigured() && isSignedIn();
+import { supabase } from './supabase';
+import { economyOnline as online } from './config';
 
 export interface LedgerEntry {
   id: string;

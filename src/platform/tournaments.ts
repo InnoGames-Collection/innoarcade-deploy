@@ -12,12 +12,8 @@
 
 import { getGame, tournamentGames, type GameMeta } from './catalog';
 import { isConfigured, supabase } from './supabase';
-import { isSignedIn } from './auth';
-import { config, defaultEntryFee } from './config';
+import { config, defaultEntryFee, economyOnline as online } from './config';
 import { mockApply, balanceSync } from './wallet';
-
-// Entry fees / entries are per-account: server path only for signed-in users.
-const online = (): boolean => isConfigured() && isSignedIn();
 
 /** free = open entry, prizes funded by the house; paid = coin entry fee, pooled. */
 export type TournamentType = 'free' | 'paid';

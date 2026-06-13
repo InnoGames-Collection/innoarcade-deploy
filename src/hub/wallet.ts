@@ -4,17 +4,16 @@
 // wallet / payments / config modules. Strings are inline EN/AM.
 
 import { getLang } from '../i18n';
-import { isConfigured } from '../platform/supabase';
-import { isSignedIn, onAuthChange } from '../platform/auth';
+import { onAuthChange } from '../platform/auth';
 import { openSignIn } from './signin';
 import { balance, balanceSync, onWalletChange } from '../platform/wallet';
-import { loadConfig, coinPackages, paymentMethodsEnabled, isMaintenance, type CoinPackage } from '../platform/config';
+import { loadConfig, coinPackages, paymentMethodsEnabled, isMaintenance, economyNeedsAuth, type CoinPackage } from '../platform/config';
 import { startCheckout, pollOrder, PAY_METHOD_LABEL, type PayMethod } from '../platform/payments';
 
-// Real coins require an account: with a backend configured, buying is gated
-// behind sign-in. Without a backend (pure local dev) it's an open guest demo.
+// When the server economy is enabled, buying requires sign-in. In local/demo
+// mode (economy backend off) it's an open guest experience so the demo flows.
 export function needsSignInToBuy(): boolean {
-  return isConfigured() && !isSignedIn();
+  return economyNeedsAuth();
 }
 
 const STR = {

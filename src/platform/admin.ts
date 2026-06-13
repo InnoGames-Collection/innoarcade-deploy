@@ -8,8 +8,8 @@
 // like a live operation in the demo — the same "stable simulated field" trick
 // tournaments.ts uses for leaderboards.
 
-import { isConfigured, supabase } from './supabase';
-import { config, saveConfigLocal, type AppConfig } from './config';
+import { supabase } from './supabase';
+import { config, saveConfigLocal, economyBackendLive as serverMode, type AppConfig } from './config';
 import { myOrders, type Order } from './payments';
 import {
   activeTournaments, loadTournaments, tournamentState, prizePool,
@@ -42,7 +42,7 @@ export interface Metrics {
 // --- Role gate --------------------------------------------------------------
 
 export async function isAdmin(): Promise<boolean> {
-  if (!isConfigured()) return true; // demo console is open offline
+  if (!serverMode()) return true; // demo console is open offline
   try {
     const sb = supabase();
     const me = (await sb.auth.getUser()).data.user?.id;
@@ -97,7 +97,7 @@ export async function metrics(): Promise<Metrics> {
   const live = tours.filter((t) => tournamentState(t) === 'live').length;
   const pending = tours.filter((t) => tournamentState(t) === 'ended').length;
 
-  if (!isConfigured()) {
+  if (!serverMode()) {
     const orders = await myOrders(100);
     const paid = orders.filter((o) => o.status === 'paid');
     // Real local activity + a believable baseline so the demo looks operational.
@@ -162,12 +162,12 @@ export async function listTournaments(): Promise<AdminTournament[]> {
 }
 
 export async function saveTournament(t: Tournament): Promise<void> {
-  if (!isConfigured()) { saveTournamentLocal(t); return; }
+  if (!serverMode()) { saveTournamentLocal(t); return; }
   await adminAction('saveTournament', { tournament: t });
 }
 
 export async function settleTournament(id: string): Promise<{ won: number }> {
-  if (!isConfigured()) return { won: settleLocal(id) };
+  if (!serverMode()) return { won: settleLocal(id) };
   const { error } = await supabase().functions.invoke('settle-tournament', { body: { tournamentId: id } });
   if (error) throw error;
   return { won: 0 };
@@ -176,7 +176,7 @@ export async function settleTournament(id: string): Promise<{ won: number }> {
 // --- Player management ------------------------------------------------------
 
 export async function listPlayers(query = ''): Promise<AdminPlayer[]> {
-  if (!isConfigured()) {
+  if (!serverMode()) {
     const all = syntheticPlayers();
     return query ? all.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()) || p.phone.includes(query)) : all;
   }
@@ -191,19 +191,19 @@ export async function listPlayers(query = ''): Promise<AdminPlayer[]> {
 }
 
 export async function adjustCoins(userId: string, delta: number, reason = 'admin_adjust'): Promise<void> {
-  if (!isConfigured()) return; // synthetic roster offline — no-op on others
+  if (!serverMode()) return; // synthetic roster offline — no-op on others
   await adminAction('adjustCoins', { userId, delta, reason });
 }
 
 export async function setRole(userId: string, role: Role): Promise<void> {
-  if (!isConfigured()) return;
+  if (!serverMode()) return;
   await adminAction('setRole', { userId, role });
 }
 
 // --- Payments ---------------------------------------------------------------
 
 export async function listOrders(limit = 100): Promise<Order[]> {
-  if (!isConfigured()) return myOrders(limit);
+  if (!serverMode()) return myOrders(limit);
   const { data } = await supabase()
     .from('payment_orders')
     .select('id, package_id, coins, amount_etb, method, status, created_at')
@@ -218,7 +218,7 @@ export async function listOrders(limit = 100): Promise<Order[]> {
 // --- Config -----------------------------------------------------------------
 
 export async function saveConfig(next: Partial<AppConfig>): Promise<AppConfig> {
-  if (!isConfigured()) return saveConfigLocal(next);
+  if (!serverMode()) return saveConfigLocal(next);
   await adminAction('saveConfig', { config: next });
   return { ...config(), ...next };
 }
