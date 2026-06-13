@@ -11,17 +11,48 @@
 // the bodies behind fetch().
 
 import { getGame, tournamentGames, type GameMeta } from './catalog';
+import { isConfigured, supabase } from './supabase';
+import { config, defaultEntryFee } from './config';
+import { mockApply, balanceSync } from './wallet';
+
+/** free = open entry, prizes funded by the house; paid = coin entry fee, pooled. */
+export type TournamentType = 'free' | 'paid';
+/** sponsored = fixed prize set by the operator; pool = sum of entry fees (minus rake). */
+export type PrizeModel = 'sponsored' | 'pool';
+export type TournamentState = 'upcoming' | 'live' | 'ended' | 'settling' | 'settled';
+
+/** How the prize pool is split, e.g. [{rank:1,pct:50},{rank:2,pct:30},{rank:3,pct:20}]. */
+export interface PrizeTier { rank: number; pct: number; }
 
 export interface Tournament {
   id: string;
   gameId: string;
   titleEn: string;
   titleAm: string;
+  type: TournamentType;
+  /** Coins to enter a paid tournament; 0 for free. */
+  entryFeeCoins: number;
+  prizeModel: PrizeModel;
+  /** Fixed prize when prizeModel === 'sponsored'. */
+  sponsoredPrize: number;
+  prizeTiers: PrizeTier[];
+  /** Headline prize coins (computed pool) — kept for back-compat with the hub. */
   prizeCoins: number;
   /** Epoch ms. */
   startsAt: number;
   endsAt: number;
 }
+
+export interface TournamentEntry {
+  tournamentId: string;
+  feePaid: number;
+  prizeWon: number;
+  enteredAt: number;
+}
+
+const DEFAULT_TIERS: PrizeTier[] = [
+  { rank: 1, pct: 50 }, { rank: 2, pct: 30 }, { rank: 3, pct: 20 },
+];
 
 export interface LeaderEntry {
   rank: number;
@@ -60,30 +91,107 @@ function endOfWeek(now = Date.now()): number {
   return monday.getTime() + 7 * 864e5;
 }
 
-export function activeTournaments(now = Date.now()): Tournament[] {
+// Operator overrides keyed by tournament id (admin edits to the derived events),
+// and fully custom tournaments the admin created. Offline both live in
+// localStorage; online the `tournaments` table is the source (see loadTournaments).
+const OVERRIDE_KEY = 'innoarcade.tournaments.overrides.v1';
+const CUSTOM_KEY = 'innoarcade.tournaments.custom.v1';
+
+type Override = Partial<Pick<Tournament,
+  'type' | 'entryFeeCoins' | 'prizeModel' | 'sponsoredPrize' | 'prizeTiers' | 'titleEn' | 'titleAm'>>;
+
+function readOverrides(): Record<string, Override> {
+  try { return JSON.parse(localStorage.getItem(OVERRIDE_KEY) || '{}'); } catch { return {}; }
+}
+function readCustom(): Tournament[] {
+  try { return JSON.parse(localStorage.getItem(CUSTOM_KEY) || '[]'); } catch { return []; }
+}
+
+// A derived event's shipped defaults: the monthly is a paid, pooled championship;
+// the weekly is a free, house-sponsored cup. Admin overrides layer on top.
+function deriveDefaults(id: string): Override & { titleEn: string; titleAm: string } {
+  if (id.endsWith('monthly')) {
+    return {
+      titleEn: 'Monthly Championship', titleAm: 'ወርሃዊ ሻምፒዮና',
+      type: 'paid', entryFeeCoins: defaultEntryFee(), prizeModel: 'pool', prizeTiers: DEFAULT_TIERS,
+    };
+  }
+  return {
+    titleEn: 'Weekly Cup', titleAm: 'ሳምንታዊ ዋንጫ',
+    type: 'free', entryFeeCoins: 0, prizeModel: 'sponsored', sponsoredPrize: 1000, prizeTiers: DEFAULT_TIERS,
+  };
+}
+
+function buildTournament(id: string, gameId: string, startsAt: number, endsAt: number): Tournament {
+  const d = deriveDefaults(id);
+  const o = readOverrides()[id] ?? {};
+  const type = o.type ?? d.type ?? 'free';
+  const t: Tournament = {
+    id, gameId,
+    titleEn: o.titleEn ?? d.titleEn,
+    titleAm: o.titleAm ?? d.titleAm,
+    type,
+    entryFeeCoins: o.entryFeeCoins ?? d.entryFeeCoins ?? 0,
+    prizeModel: o.prizeModel ?? d.prizeModel ?? 'sponsored',
+    sponsoredPrize: o.sponsoredPrize ?? d.sponsoredPrize ?? 0,
+    prizeTiers: o.prizeTiers ?? d.prizeTiers ?? DEFAULT_TIERS,
+    prizeCoins: 0,
+    startsAt, endsAt,
+  };
+  t.prizeCoins = prizePool(t);
+  return t;
+}
+
+// Online cache filled by loadTournaments(); when null we use the local derivation.
+let remoteCache: Tournament[] | null = null;
+
+function localTournaments(now: number): Tournament[] {
   const list: Tournament[] = [];
-  const flagship = tournamentGames();
-  for (const game of flagship) {
-    list.push({
-      id: `${game.id}-monthly`,
-      gameId: game.id,
-      titleEn: 'Monthly Championship',
-      titleAm: 'ወርሃዊ ሻምፒዮና',
-      prizeCoins: 5000,
-      startsAt: startOfMonth(now),
-      endsAt: endOfMonth(now),
-    });
-    list.push({
-      id: `${game.id}-weekly`,
-      gameId: game.id,
-      titleEn: 'Weekly Cup',
-      titleAm: 'ሳምንታዊ ዋንጫ',
-      prizeCoins: 1000,
-      startsAt: endOfWeek(now) - 7 * 864e5,
-      endsAt: endOfWeek(now),
-    });
+  for (const game of tournamentGames()) {
+    list.push(buildTournament(`${game.id}-monthly`, game.id, startOfMonth(now), endOfMonth(now)));
+    list.push(buildTournament(`${game.id}-weekly`, game.id, endOfWeek(now) - 7 * 864e5, endOfWeek(now)));
+  }
+  // Custom tournaments still in their window (or recently ended, for settlement).
+  for (const c of readCustom()) {
+    if (now < c.endsAt + 7 * 864e5) list.push({ ...c, prizeCoins: prizePool(c) });
   }
   return list;
+}
+
+export function activeTournaments(now = Date.now()): Tournament[] {
+  return remoteCache ?? localTournaments(now);
+}
+
+// Refresh the tournament list from the backend (online) into the sync cache so
+// the hub's instant render can be patched with authoritative config.
+export async function loadTournaments(): Promise<Tournament[]> {
+  if (!isConfigured()) { remoteCache = null; return activeTournaments(); }
+  try {
+    const { data, error } = await supabase()
+      .from('tournaments')
+      .select('id, game_id, title_en, title_am, type, entry_fee_coins, prize_model, sponsored_prize, prize_tiers, starts_at, ends_at')
+      .order('starts_at', { ascending: false });
+    if (error) throw error;
+    remoteCache = (data ?? []).map((r) => {
+      const t: Tournament = {
+        id: String(r.id), gameId: String(r.game_id),
+        titleEn: String(r.title_en), titleAm: String(r.title_am),
+        type: r.type as TournamentType,
+        entryFeeCoins: Number(r.entry_fee_coins ?? 0),
+        prizeModel: r.prize_model as PrizeModel,
+        sponsoredPrize: Number(r.sponsored_prize ?? 0),
+        prizeTiers: (r.prize_tiers as PrizeTier[]) ?? DEFAULT_TIERS,
+        prizeCoins: 0,
+        startsAt: new Date(r.starts_at as string).getTime(),
+        endsAt: new Date(r.ends_at as string).getTime(),
+      };
+      t.prizeCoins = prizePool(t);
+      return t;
+    });
+  } catch {
+    remoteCache = null; // offline → fall back to local derivation
+  }
+  return activeTournaments();
 }
 
 export function getTournament(id: string, now = Date.now()): Tournament | undefined {
@@ -243,4 +351,193 @@ export function countdown(endsAt: number, now = Date.now()): Countdown {
   const minutes = Math.floor(ms / 6e4); ms -= minutes * 6e4;
   const seconds = Math.floor(ms / 1000);
   return { days, hours, minutes, seconds, done: endsAt <= now };
+}
+
+// --- Prize pools ------------------------------------------------------------
+// A sponsored tournament pays a fixed operator-funded prize. A pooled tournament
+// pays out the collected entry fees minus the house rake. Offline there is no
+// real entrant table, so the entrant count is estimated deterministically from
+// the tournament id (stable across reloads, same trick as the rival field) — a
+// believable, non-random pool that grows with the entry fee.
+function estimatedEntrants(t: Tournament): number {
+  const rng = mulberry32(hashString(t.id + ':entrants'));
+  return 40 + Math.floor(rng() * 90); // 40–130 players
+}
+
+export function prizePool(t: Tournament): number {
+  if (t.prizeModel === 'sponsored') return t.sponsoredPrize;
+  const gross = t.entryFeeCoins * estimatedEntrants(t);
+  const rake = config().houseRakePct / 100;
+  return Math.round((gross * (1 - rake)) / 10) * 10;
+}
+
+export interface PrizeSlot { rank: number; pct: number; coins: number; }
+
+export function prizeBreakdown(t: Tournament): PrizeSlot[] {
+  const pool = prizePool(t);
+  return t.prizeTiers.map((tier) => ({
+    rank: tier.rank, pct: tier.pct, coins: Math.round((pool * tier.pct) / 100),
+  }));
+}
+
+// --- Tournament state -------------------------------------------------------
+
+const SETTLED_KEY = 'innoarcade.tournaments.settled.v1';
+function readSettled(): Record<string, number> {
+  try { return JSON.parse(localStorage.getItem(SETTLED_KEY) || '{}'); } catch { return {}; }
+}
+
+export function tournamentState(t: Tournament, now = Date.now()): TournamentState {
+  if (readSettled()[t.id]) return 'settled';
+  if (now < t.startsAt) return 'upcoming';
+  if (now < t.endsAt) return 'live';
+  return 'ended';
+}
+
+export function isPaid(t: Tournament): boolean {
+  return t.type === 'paid' && t.entryFeeCoins > 0;
+}
+
+// --- Entry / registration ---------------------------------------------------
+
+const ENTRIES_KEY = 'innoarcade.tournament.entries.v1';
+
+function readEntries(): Record<string, TournamentEntry> {
+  try { return JSON.parse(localStorage.getItem(ENTRIES_KEY) || '{}'); } catch { return {}; }
+}
+function writeEntries(e: Record<string, TournamentEntry>): void {
+  localStorage.setItem(ENTRIES_KEY, JSON.stringify(e));
+}
+
+// A synchronous "am I in?" set for instant card rendering; seeded from local
+// storage immediately and refreshed from the server by loadMyEntries().
+const enteredCache = new Set<string>(Object.keys(readEntries()));
+
+export function isEntered(tournamentId: string): boolean {
+  return enteredCache.has(tournamentId);
+}
+
+export class InsufficientCoinsError extends Error {
+  constructor() { super('insufficient coins'); this.name = 'InsufficientCoinsError'; }
+}
+
+// Register the player for a tournament, debiting the entry fee for paid events.
+// Offline this moves local coins; online it calls the enter-tournament Edge
+// Function (the server is authoritative over the fee debit and the entry row).
+export async function enterTournament(tournamentId: string): Promise<TournamentEntry> {
+  const t = getTournament(tournamentId);
+  if (!t) throw new Error('unknown tournament');
+
+  if (!isConfigured()) {
+    const entries = readEntries();
+    if (entries[tournamentId]) return entries[tournamentId];
+    const fee = isPaid(t) ? t.entryFeeCoins : 0;
+    if (fee > 0) {
+      if (balanceSync() < fee) throw new InsufficientCoinsError();
+      mockApply(-fee, 'entry_fee', tournamentId);
+    }
+    const entry: TournamentEntry = { tournamentId, feePaid: fee, prizeWon: 0, enteredAt: Date.now() };
+    entries[tournamentId] = entry;
+    writeEntries(entries);
+    enteredCache.add(tournamentId);
+    return entry;
+  }
+
+  const { data, error } = await supabase().functions.invoke('enter-tournament', {
+    body: { tournamentId },
+  });
+  if (error) {
+    // Surface the affordability case so the UI can prompt a top-up.
+    const msg = (error as { context?: { status?: number } }).context?.status;
+    if (msg === 402) throw new InsufficientCoinsError();
+    throw error;
+  }
+  enteredCache.add(tournamentId);
+  return data as TournamentEntry;
+}
+
+// The player's entries. Offline reads localStorage; online fetches the table and
+// refreshes the sync cache used by isEntered().
+export async function myEntries(): Promise<TournamentEntry[]> {
+  if (!isConfigured()) return Object.values(readEntries());
+  try {
+    const sb = supabase();
+    const me = (await sb.auth.getUser()).data.user?.id;
+    if (!me) return [];
+    const { data } = await sb
+      .from('tournament_entries')
+      .select('tournament_id, fee_paid, prize_won, entered_at')
+      .eq('user_id', me);
+    enteredCache.clear();
+    const list = (data ?? []).map((r) => {
+      enteredCache.add(String(r.tournament_id));
+      return {
+        tournamentId: String(r.tournament_id),
+        feePaid: Number(r.fee_paid),
+        prizeWon: Number(r.prize_won),
+        enteredAt: new Date(r.entered_at as string).getTime(),
+      };
+    });
+    return list;
+  } catch { return []; }
+}
+
+/** Convenience: pre-warm the entered-set so cards render correctly online. */
+export async function loadMyEntries(): Promise<void> {
+  await myEntries();
+}
+
+// --- Settlement (offline demo path) -----------------------------------------
+// Online, settlement is the settle-tournament Edge Function (admin/cron). Offline
+// we settle the only wallet that exists — the local player's — crediting their
+// prize if they placed in a paying rank. Returns the prize won (0 if none).
+export function settleLocal(tournamentId: string): number {
+  const t = getTournament(tournamentId);
+  if (!t) return 0;
+  const settled = readSettled();
+  if (settled[tournamentId]) return 0;
+
+  let won = 0;
+  const me = playerStanding(tournamentId);
+  if (me) {
+    const slot = prizeBreakdown(t).find((s) => s.rank === me.rank);
+    if (slot) {
+      won = slot.coins;
+      mockApply(won, 'prize', tournamentId);
+      const entries = readEntries();
+      if (entries[tournamentId]) { entries[tournamentId].prizeWon = won; writeEntries(entries); }
+    }
+  }
+  settled[tournamentId] = Date.now();
+  localStorage.setItem(SETTLED_KEY, JSON.stringify(settled));
+  return won;
+}
+
+// --- Admin mutations (offline store) ----------------------------------------
+// The admin module calls these in mock mode; online the equivalent goes through
+// the admin-action Edge Function. Kept here because they touch the same stores.
+export function saveTournamentLocal(t: Tournament): void {
+  // Derived monthly/weekly ids store an override; everything else is custom.
+  const isDerived = /-(monthly|weekly)$/.test(t.id);
+  if (isDerived) {
+    const ov = readOverrides();
+    ov[t.id] = {
+      type: t.type, entryFeeCoins: t.entryFeeCoins, prizeModel: t.prizeModel,
+      sponsoredPrize: t.sponsoredPrize, prizeTiers: t.prizeTiers,
+      titleEn: t.titleEn, titleAm: t.titleAm,
+    };
+    localStorage.setItem(OVERRIDE_KEY, JSON.stringify(ov));
+  } else {
+    const custom = readCustom().filter((c) => c.id !== t.id);
+    custom.push(t);
+    localStorage.setItem(CUSTOM_KEY, JSON.stringify(custom));
+  }
+}
+
+export function deleteCustomTournamentLocal(id: string): void {
+  localStorage.setItem(CUSTOM_KEY, JSON.stringify(readCustom().filter((c) => c.id !== id)));
+}
+
+export function newCustomTournamentId(gameId: string): string {
+  return `${gameId}-custom-${Date.now().toString(36)}`;
 }

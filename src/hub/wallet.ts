@@ -1,0 +1,188 @@
+// Wallet widget for the hub topbar: a live coin-balance chip plus the coin
+// store and checkout flow (TeleBirr / airtime top-up). Self-contained like
+// signin.ts — injects its own markup + styles and speaks only to the platform
+// wallet / payments / config modules. Strings are inline EN/AM.
+
+import { getLang } from '../i18n';
+import { balance, balanceSync, onWalletChange } from '../platform/wallet';
+import { loadConfig, coinPackages, paymentMethodsEnabled, isMaintenance, type CoinPackage } from '../platform/config';
+import { startCheckout, pollOrder, PAY_METHOD_LABEL, type PayMethod } from '../platform/payments';
+
+const STR = {
+  en: {
+    buy: 'Buy coins', store: 'Coin store', coins: 'coins', bonus: 'bonus', popular: 'Best value',
+    pay: 'Pay with', payNow: 'Pay', processing: 'Processing payment…', success: 'Coins added!',
+    failed: "Payment didn't complete. Try again.", close: 'Close', sandbox: 'Demo mode — no real charge',
+    maintenance: 'The store is briefly unavailable.', total: 'You get', price: 'Price',
+  },
+  am: {
+    buy: 'ሳንቲም ይግዙ', store: 'የሳንቲም መደብር', coins: 'ሳንቲሞች', bonus: 'ጉርሻ', popular: 'ምርጥ ዋጋ',
+    pay: 'ይክፈሉ በ', payNow: 'ይክፈሉ', processing: 'ክፍያ በመከናወን ላይ…', success: 'ሳንቲሞች ታክለዋል!',
+    failed: 'ክፍያው አልተጠናቀቀም። እንደገና ይሞክሩ።', close: 'ዝጋ', sandbox: 'የማሳያ ሁነታ — ክፍያ የለም',
+    maintenance: 'መደብሩ ለጊዜው አይገኝም።', total: 'ያገኛሉ', price: 'ዋጋ',
+  },
+};
+const t = (k: keyof typeof STR.en): string => (STR[getLang()] ?? STR.en)[k];
+
+let chip: HTMLElement | null = null;
+
+export async function mountWallet(): Promise<void> {
+  injectStyles();
+  const bar = document.querySelector('.topbar');
+  if (!bar) return;
+  chip = document.createElement('button');
+  chip.className = 'coin-chip';
+  bar.insertBefore(chip, bar.querySelector('.lang-switch'));
+  chip.addEventListener('click', openStore);
+  renderChip();
+  onWalletChange(renderChip);
+  await loadConfig();
+  await balance();
+  renderChip();
+}
+
+function renderChip(): void {
+  if (!chip) return;
+  chip.innerHTML = `<span class="cc-icon">🪙</span><span class="cc-bal">${balanceSync().toLocaleString()}</span><span class="cc-plus">+</span>`;
+}
+
+// --- store ------------------------------------------------------------------
+
+function shell(inner: string, wide = false): HTMLElement {
+  document.querySelector('.wallet-modal')?.remove();
+  const m = document.createElement('div');
+  m.className = 'wallet-modal';
+  m.innerHTML = `<div class="wallet-scrim"></div><div class="wallet-card${wide ? ' wide' : ''}">${inner}</div>`;
+  document.body.appendChild(m);
+  m.querySelector('.wallet-scrim')!.addEventListener('click', () => m.remove());
+  return m;
+}
+
+export function openStore(): void {
+  if (isMaintenance()) { shell(`<h3>${t('store')}</h3><p class="wallet-hint">${t('maintenance')}</p>`); return; }
+  const pkgs = coinPackages();
+  const m = shell(`
+    <h3>🪙 ${t('store')}</h3>
+    <div class="store-grid">
+      ${pkgs.map((p) => `
+        <button class="pkg${p.popular ? ' popular' : ''}" data-id="${p.id}">
+          ${p.popular ? `<span class="pkg-tag">${t('popular')}</span>` : ''}
+          <span class="pkg-coins">${(p.coins + p.bonus).toLocaleString()}</span>
+          <span class="pkg-unit">${t('coins')}</span>
+          ${p.bonus ? `<span class="pkg-bonus">+${p.bonus} ${t('bonus')}</span>` : '<span class="pkg-bonus"> </span>'}
+          <span class="pkg-price">${p.priceEtb} ETB</span>
+        </button>`).join('')}
+    </div>`, true);
+  m.querySelectorAll<HTMLButtonElement>('.pkg').forEach((b) => {
+    b.addEventListener('click', () => openCheckout(pkgs.find((p) => p.id === b.dataset.id)!));
+  });
+}
+
+function openCheckout(pkg: CoinPackage): void {
+  const methods = paymentMethodsEnabled();
+  const avail = (['telebirr', 'topup'] as PayMethod[]).filter((mth) => methods[mth]);
+  let chosen: PayMethod = avail[0] ?? 'telebirr';
+  const total = pkg.coins + pkg.bonus;
+  const m = shell(`
+    <h3>${t('pay')}</h3>
+    <div class="checkout-sum">
+      <span class="cs-total">🪙 ${total.toLocaleString()} ${t('coins')}</span>
+      <span class="cs-price">${pkg.priceEtb} ETB</span>
+    </div>
+    <div class="method-list">
+      ${avail.map((mth, i) => {
+        const lab = PAY_METHOD_LABEL[mth];
+        return `<button class="method${i === 0 ? ' sel' : ''}" data-m="${mth}">
+          <span class="m-icon">${lab.icon}</span><span>${getLang() === 'am' ? lab.am : lab.en}</span>
+        </button>`;
+      }).join('')}
+    </div>
+    <p class="wallet-err" id="err"></p>
+    <button class="wallet-primary" id="pay">${t('payNow')} ${pkg.priceEtb} ETB</button>
+    <p class="wallet-sandbox">${t('sandbox')}</p>`);
+  m.querySelectorAll<HTMLButtonElement>('.method').forEach((b) => {
+    b.addEventListener('click', () => {
+      m.querySelectorAll('.method').forEach((x) => x.classList.remove('sel'));
+      b.classList.add('sel');
+      chosen = b.dataset.m as PayMethod;
+    });
+  });
+  const pay = m.querySelector<HTMLButtonElement>('#pay')!;
+  pay.addEventListener('click', async () => {
+    pay.disabled = true;
+    pay.textContent = t('processing');
+    try {
+      const { order, sandbox } = await startCheckout(pkg.id, chosen);
+      if (!sandbox && order.redirectUrl) { window.location.href = order.redirectUrl; return; }
+      await pollOrder(order.id);
+      await balance();
+      showSuccess(m, total);
+    } catch {
+      m.querySelector('#err')!.textContent = t('failed');
+      pay.disabled = false;
+      pay.textContent = `${t('payNow')} ${pkg.priceEtb} ETB`;
+    }
+  });
+}
+
+function showSuccess(m: HTMLElement, coins: number): void {
+  m.querySelector('.wallet-card')!.innerHTML = `
+    <div class="wallet-success">
+      <div class="ws-burst">🎉</div>
+      <h3>${t('success')}</h3>
+      <p class="ws-coins">+${coins.toLocaleString()} 🪙</p>
+      <button class="wallet-primary" id="done">${t('close')}</button>
+    </div>`;
+  m.querySelector('#done')!.addEventListener('click', () => m.remove());
+  // Pulse the topbar chip.
+  chip?.classList.add('bump');
+  setTimeout(() => chip?.classList.remove('bump'), 600);
+}
+
+function injectStyles(): void {
+  if (document.getElementById('wallet-styles')) return;
+  const s = document.createElement('style');
+  s.id = 'wallet-styles';
+  s.textContent = `
+    .coin-chip { display:inline-flex; align-items:center; gap:.35rem; border:1px solid var(--line);
+      background:linear-gradient(180deg,#fff,#fff7e8); color:#7a5212; font:inherit; font-weight:800;
+      padding:.34rem .7rem; border-radius:999px; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,.06); }
+    .coin-chip:hover { filter:brightness(1.02); }
+    .coin-chip .cc-plus { width:1.1em; height:1.1em; line-height:1.05em; text-align:center; border-radius:50%;
+      background:var(--accent); color:#fff; font-weight:900; }
+    .coin-chip.bump { animation:coinbump .6s ease; }
+    @keyframes coinbump { 30%{transform:scale(1.18);} 60%{transform:scale(.96);} }
+    .wallet-modal { position:fixed; inset:0; z-index:9991; display:flex; align-items:center; justify-content:center; }
+    .wallet-scrim { position:absolute; inset:0; background:rgba(12,16,30,.5); backdrop-filter:blur(3px); }
+    .wallet-card { position:relative; width:min(360px,92vw); background:#fff; color:var(--text); border-radius:16px;
+      padding:22px; box-shadow:0 20px 50px rgba(20,30,60,.3); display:flex; flex-direction:column; gap:12px; }
+    .wallet-card.wide { width:min(520px,94vw); }
+    .wallet-card h3 { font-size:1.15rem; }
+    .store-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .pkg { position:relative; display:flex; flex-direction:column; align-items:center; gap:2px; padding:14px 8px;
+      border:1px solid var(--line); border-radius:14px; background:#fff; cursor:pointer; transition:.15s; }
+    .pkg:hover { border-color:var(--accent); transform:translateY(-2px); box-shadow:0 6px 16px rgba(20,30,60,.12); }
+    .pkg.popular { border-color:var(--accent); background:linear-gradient(180deg,#fff,#fff6e6); }
+    .pkg-tag { position:absolute; top:-9px; background:var(--accent); color:#fff; font-size:.62rem; font-weight:800;
+      padding:.1rem .5rem; border-radius:999px; }
+    .pkg-coins { font-size:1.25rem; font-weight:900; color:#7a5212; }
+    .pkg-unit { font-size:.7rem; color:var(--muted); }
+    .pkg-bonus { font-size:.7rem; color:#1f9d55; font-weight:700; min-height:1em; }
+    .pkg-price { margin-top:4px; font-weight:800; }
+    .checkout-sum { display:flex; justify-content:space-between; align-items:center; padding:12px 14px;
+      background:#f6f7fb; border-radius:12px; }
+    .cs-total { font-weight:900; color:#7a5212; } .cs-price { font-weight:800; }
+    .method-list { display:flex; flex-direction:column; gap:8px; }
+    .method { display:flex; align-items:center; gap:10px; padding:.7rem .8rem; border:1px solid var(--line);
+      border-radius:12px; background:#fff; font:inherit; font-weight:700; cursor:pointer; }
+    .method.sel { border-color:var(--accent); box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent); }
+    .m-icon { font-size:1.2rem; }
+    .wallet-primary { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:.8rem;
+      font:inherit; font-weight:800; cursor:pointer; }
+    .wallet-primary:disabled { opacity:.6; cursor:default; }
+    .wallet-hint, .wallet-sandbox { font-size:.78rem; color:var(--muted); text-align:center; margin:0; }
+    .wallet-err { font-size:.8rem; color:#d64545; min-height:1em; margin:0; }
+    .wallet-success { text-align:center; display:flex; flex-direction:column; gap:10px; align-items:center; padding:8px; }
+    .ws-burst { font-size:3rem; } .ws-coins { font-size:1.6rem; font-weight:900; color:#7a5212; }`;
+  document.head.appendChild(s);
+}

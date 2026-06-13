@@ -83,3 +83,134 @@ from public.scores s
 left join public.profiles p on p.id = s.user_id;
 
 grant select on public.leaderboard to anon, authenticated;
+
+-- ============================================================================
+-- Economy: roles, wallet ledger, payments, configurable tournaments & entries.
+-- Same security model as scores: clients READ, only service-role Edge Functions
+-- WRITE the money/state columns. Admin-only writes are gated by is_admin().
+-- ============================================================================
+
+-- Operator role on the profile (player | admin).
+alter table public.profiles add column if not exists role text not null default 'player';
+
+-- True when the caller is an admin. SECURITY DEFINER so it can read the role row
+-- regardless of RLS; used by admin-only policies and the admin-action function.
+create or replace function public.is_admin()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.profiles where id = auth.uid() and role = 'admin');
+$$;
+
+-- Atomic coin movement: adjusts profiles.coins and appends a ledger row, never
+-- letting a balance go negative. The ONLY way coins move — called from Edge
+-- Functions (service role). Returns the new balance.
+create or replace function public.apply_coins(
+  p_user uuid, p_delta bigint, p_reason text, p_ref text default ''
+) returns bigint language plpgsql security definer set search_path = public as $$
+declare new_bal bigint;
+begin
+  update public.profiles
+     set coins = coins + p_delta
+   where id = p_user and coins + p_delta >= 0
+   returning coins into new_bal;
+  if new_bal is null then
+    raise exception 'insufficient_or_missing' using errcode = 'check_violation';
+  end if;
+  insert into public.wallet_ledger (user_id, delta, reason, ref, balance_after)
+    values (p_user, p_delta, p_reason, p_ref, new_bal);
+  return new_bal;
+end;
+$$;
+
+-- ------------------------------------------------------------- app_config ---
+create table if not exists public.app_config (
+  key        text primary key,
+  value      jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+alter table public.app_config enable row level security;
+
+drop policy if exists "config readable" on public.app_config;
+create policy "config readable" on public.app_config for select using (true);
+
+drop policy if exists "config admin write" on public.app_config;
+create policy "config admin write" on public.app_config
+  for all using (public.is_admin()) with check (public.is_admin());
+
+-- ----------------------------------------------------------- wallet_ledger ---
+create table if not exists public.wallet_ledger (
+  id            bigint generated always as identity primary key,
+  user_id       uuid not null references auth.users (id) on delete cascade,
+  delta         bigint not null,
+  reason        text not null,
+  ref           text not null default '',
+  balance_after bigint not null,
+  created_at    timestamptz not null default now()
+);
+create index if not exists wallet_ledger_user_idx on public.wallet_ledger (user_id, created_at desc);
+alter table public.wallet_ledger enable row level security;
+
+-- Players read their own ledger; nobody writes from the client (apply_coins only).
+drop policy if exists "ledger own read" on public.wallet_ledger;
+create policy "ledger own read" on public.wallet_ledger
+  for select using (auth.uid() = user_id or public.is_admin());
+
+-- ---------------------------------------------------------- payment_orders ---
+create table if not exists public.payment_orders (
+  id           text primary key,
+  user_id      uuid not null references auth.users (id) on delete cascade,
+  package_id   text not null,
+  method       text not null check (method in ('telebirr', 'topup')),
+  amount_etb   numeric not null,
+  coins        bigint not null,
+  status       text not null default 'pending' check (status in ('pending', 'paid', 'failed', 'expired')),
+  provider_ref text,
+  created_at   timestamptz not null default now(),
+  paid_at      timestamptz
+);
+create index if not exists orders_user_idx on public.payment_orders (user_id, created_at desc);
+alter table public.payment_orders enable row level security;
+
+drop policy if exists "orders own read" on public.payment_orders;
+create policy "orders own read" on public.payment_orders
+  for select using (auth.uid() = user_id or public.is_admin());
+
+-- ------------------------------------------------------------ tournaments ---
+create table if not exists public.tournaments (
+  id              text primary key,
+  game_id         text not null,
+  title_en        text not null,
+  title_am        text not null,
+  type            text not null default 'free' check (type in ('free', 'paid')),
+  entry_fee_coins bigint not null default 0,
+  prize_model     text not null default 'sponsored' check (prize_model in ('sponsored', 'pool')),
+  sponsored_prize bigint not null default 0,
+  prize_tiers     jsonb not null default '[{"rank":1,"pct":50},{"rank":2,"pct":30},{"rank":3,"pct":20}]'::jsonb,
+  starts_at       timestamptz not null,
+  ends_at         timestamptz not null,
+  state           text not null default 'upcoming' check (state in ('upcoming','live','ended','settling','settled')),
+  created_at      timestamptz not null default now()
+);
+alter table public.tournaments enable row level security;
+
+drop policy if exists "tournaments readable" on public.tournaments;
+create policy "tournaments readable" on public.tournaments for select using (true);
+
+drop policy if exists "tournaments admin write" on public.tournaments;
+create policy "tournaments admin write" on public.tournaments
+  for all using (public.is_admin()) with check (public.is_admin());
+
+-- ------------------------------------------------------ tournament_entries ---
+create table if not exists public.tournament_entries (
+  user_id       uuid not null references auth.users (id) on delete cascade,
+  tournament_id text not null,
+  fee_paid      bigint not null default 0,
+  prize_won     bigint not null default 0,
+  entered_at    timestamptz not null default now(),
+  primary key (user_id, tournament_id)
+);
+alter table public.tournament_entries enable row level security;
+
+-- Players read their own entries; the entry/settlement Edge Functions write.
+drop policy if exists "entries own read" on public.tournament_entries;
+create policy "entries own read" on public.tournament_entries
+  for select using (auth.uid() = user_id or public.is_admin());

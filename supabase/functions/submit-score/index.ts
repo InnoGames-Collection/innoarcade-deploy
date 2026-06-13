@@ -83,6 +83,28 @@ Deno.serve(async (req: Request) => {
   // Service-role client for the privileged read/write.
   const admin = createClient(url, serviceKey);
 
+  // Tournament gate: if this id is a configured tournament, it must be live, and
+  // a PAID tournament only counts scores from players who entered (paid the fee).
+  // Unknown ids (e.g. the derived/local tournaments) skip the gate so the
+  // existing flow keeps working before any rows exist in the tournaments table.
+  const { data: tour } = await admin
+    .from('tournaments')
+    .select('type, starts_at, ends_at, state')
+    .eq('id', tournamentId).maybeSingle();
+  if (tour) {
+    const now = Date.now();
+    const live = tour.state === 'live' ||
+      (now >= new Date(tour.starts_at).getTime() && now < new Date(tour.ends_at).getTime()
+        && tour.state !== 'ended' && tour.state !== 'settled' && tour.state !== 'settling');
+    if (!live) return json({ error: 'tournament not live' }, 409);
+    if (tour.type === 'paid') {
+      const { data: entry } = await admin
+        .from('tournament_entries').select('user_id')
+        .eq('user_id', user.id).eq('tournament_id', tournamentId).maybeSingle();
+      if (!entry) return json({ error: 'not entered' }, 402);
+    }
+  }
+
   const { data: existing } = await admin
     .from('scores')
     .select('best, plays, updated_at')

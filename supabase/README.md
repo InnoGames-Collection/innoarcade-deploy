@@ -15,14 +15,37 @@ fine **without** this (local mock); adding the keys lights it up.
 ## 2. Create the tables
 
 Dashboard → **SQL Editor** → paste [`schema.sql`](schema.sql) → **Run**.
-This creates `profiles`, `scores`, the `leaderboard` view, RLS policies, and a
-trigger that auto-creates a profile on signup.
+This creates the score tables (`profiles`, `scores`, the `leaderboard` view, RLS,
+the signup trigger) **and** the economy: `profiles.role`, the `is_admin()` and
+`apply_coins()` helpers, and `app_config`, `wallet_ledger`, `payment_orders`,
+`tournaments`, `tournament_entries` with their RLS. Re-running is safe
+(`if not exists` / `create or replace` throughout).
+
+**Money integrity:** clients can *read* their own wallet/orders/entries but can
+**never write** coins — every coin movement goes through `apply_coins()` inside a
+service-role Edge Function (the same boundary as `scores`). `apply_coins()`
+refuses to overdraw a balance, so an entry fee can't push a wallet negative.
+
+**Make yourself an admin** (for the `/admin` console), after signing in once:
+
+```sql
+update public.profiles set role = 'admin' where id = 'YOUR-AUTH-USER-UUID';
+```
 
 ## 3. Deploy the Edge Functions
 
 **Easiest — dashboard (no CLI):** Dashboard → **Edge Functions → Create a
-function**. Name it `submit-score`, paste [`functions/submit-score/index.ts`](functions/submit-score/index.ts),
-**Deploy**. Repeat for `send-sms` ([`functions/send-sms/index.ts`](functions/send-sms/index.ts)).
+function**, paste each file, **Deploy**. The functions are:
+
+| Function | Purpose | Deploy note |
+| --- | --- | --- |
+| `submit-score` | score gate (now also checks tournament live + paid entry) | |
+| `send-sms` | OTP delivery hook | |
+| `buy-coins` | open a coin purchase (sandbox or TeleBirr) | |
+| `payment-callback` | TeleBirr webhook / sandbox completer → credits coins | **`--no-verify-jwt`** (provider has no user JWT) |
+| `enter-tournament` | debit entry fee + record entry | |
+| `settle-tournament` | pay out prizes, mark settled | admin JWT *or* `x-cron-secret` |
+| `admin-action` | guarded operator mutations (config, tournaments, coins, roles) | |
 
 **Or CLI** (a `config.toml` is included so this works from `Games/innoarcade`):
 
@@ -32,11 +55,39 @@ supabase login
 supabase link --project-ref aopmkdefqykctrxhflaq
 supabase functions deploy submit-score
 supabase functions deploy send-sms
+supabase functions deploy buy-coins
+supabase functions deploy payment-callback --no-verify-jwt
+supabase functions deploy enter-tournament
+supabase functions deploy settle-tournament
+supabase functions deploy admin-action
 ```
 
 `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are injected
 automatically. (On the modern key system, if legacy keys are disabled, set the
 function secret `SUPABASE_SERVICE_ROLE_KEY` = your `sb_secret_…` key.)
+
+## 3b. Payments — sandbox now, TeleBirr later
+
+With **no** payment secrets set, `buy-coins` runs in **sandbox**: it credits the
+coins immediately and marks the order paid, so the coin store and paid
+tournaments are fully demoable without a merchant account.
+
+To go live with **TeleBirr**, set the function secrets and the adapter activates
+with no client/schema change:
+
+```bash
+supabase secrets set TELEBIRR_APP_KEY=… TELEBIRR_APP_ID=… \
+  TELEBIRR_PUBLIC_KEY=… TELEBIRR_CHECKOUT_URL=… CRON_SECRET=…
+```
+
+Then fill the two marked `TODO` blocks: request signing in `buy-coins` and
+notification verification in `payment-callback`. Point your TeleBirr merchant
+**notify URL** at the deployed `payment-callback`.
+
+**Auto-settle tournaments** with a scheduled job (Dashboard → **Database → Cron**,
+or `pg_cron`) that POSTs ended tournaments to `settle-tournament` with the
+`x-cron-secret: $CRON_SECRET` header — or just click **Settle** in the admin
+console.
 
 ## 4. Phone auth — free, no Twilio
 
@@ -63,6 +114,14 @@ function secret `SUPABASE_SERVICE_ROLE_KEY` = your `sb_secret_…` key.)
 - [`src/platform/backend.ts`](../src/platform/backend.ts) — `submitScoreRemote` (calls
   the Edge Function) and `leaderboardRemote` / `playerStandingRemote` (read the view).
   These mirror the mock in `tournaments.ts`, so the hub and games adopt them incrementally.
+- [`src/platform/config.ts`](../src/platform/config.ts) — coin packages / fees / flags
+  (`app_config`), with baked-in defaults so the store renders offline.
+- [`src/platform/wallet.ts`](../src/platform/wallet.ts) — balance + ledger; reads only,
+  mutations are server-side (`apply_coins`).
+- [`src/platform/payments.ts`](../src/platform/payments.ts) — coin checkout (`buy-coins`
+  → `payment-callback`), sandbox when no merchant keys.
+- [`src/platform/admin.ts`](../src/platform/admin.ts) — operator API behind `admin-action`
+  / `settle-tournament`; powers the [`/admin`](../admin/index.html) console.
 
 ## Going to production / data sovereignty
 

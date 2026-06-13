@@ -9,6 +9,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         hub: p('index.html'),
+        admin: p('admin/index.html'),
         orbitBlast: p('games/orbit-blast/index.html'),
         merge2048: p('games/merge-2048/index.html'),
         templeDash: p('games/temple-dash/index.html'),

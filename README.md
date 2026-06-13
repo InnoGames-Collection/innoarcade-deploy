@@ -23,6 +23,34 @@ Dashboard, Tournaments and Free-games views the moment it's registered:
   `leaderboard`, `playerStanding`) so a real backend (e.g. Supabase) can drop in
   later without touching the games.
 
+## Economy, payments & operations
+
+A full competitive-tournament layer, built the same way — a clean
+`src/platform/*` module with a **local mock that works offline** and a Supabase
++ Edge Function swap-in. Coins never move on the client: every credit/debit goes
+through an Edge Function (the same integrity boundary as scores).
+
+- **Coin wallet** ([wallet.ts](src/platform/wallet.ts)) — balance + immutable
+  ledger; a live coin chip and the player dashboard sit on the hub.
+- **Coin store & payments** ([payments.ts](src/platform/payments.ts),
+  [config.ts](src/platform/config.ts)) — buy coin packages via **TeleBirr** or
+  **airtime top-up**. With no merchant keys it runs in **sandbox** (credits
+  instantly) so the whole purchase journey demos offline; real TeleBirr drops in
+  via the `buy-coins` / `payment-callback` functions.
+- **Hybrid tournaments** ([tournaments.ts](src/platform/tournaments.ts)) —
+  **free** (house-sponsored prizes) *and* **paid** (coin entry fee → prize pool,
+  split by tiers) tournaments, with states (upcoming → live → ended → settled),
+  registration, and prize settlement.
+- **Admin console** ([admin/](admin/index.html), [admin.ts](src/platform/admin.ts))
+  — a separate role-gated app (`profiles.role = 'admin'`): dashboards
+  (revenue, coins sold, GGR, payouts), tournament create/configure/**settle**,
+  player & coin management, payment monitoring, and live config. Open at
+  [/admin/](http://localhost:5173/admin/). Bilingual like the hub.
+
+> **Note:** real-money skill tournaments may require a licensing/compliance
+> review in Ethiopia before launch. The code ships the mechanism; the legal
+> posture is a separate decision.
+
 ## Games
 
 | Game             | Genre                                      | Mode        | Status      |

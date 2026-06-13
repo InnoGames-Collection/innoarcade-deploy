@@ -114,6 +114,25 @@ const en = {
   'hub.monthly': 'Monthly Championship',
   'hub.weekly': 'Weekly Cup',
   'hub.playToRank': 'Play now to claim your spot',
+  // Wallet / store / tournaments-economy
+  'hub.myDashboard': 'My dashboard',
+  'hub.entry': 'Entry',
+  'hub.freeEntry': 'Free entry',
+  'hub.pool': 'Prize pool',
+  'hub.register': 'Register to play',
+  'hub.entered': 'Entered',
+  'hub.playNow': 'Play now',
+  'hub.confirmEntry': 'Join tournament',
+  'hub.confirm': 'Confirm',
+  'hub.cancel': 'Cancel',
+  'hub.needCoins': 'Not enough coins',
+  'hub.buyCoins': 'Buy coins',
+  'hub.feeNotice': 'This entry fee will be deducted from your wallet.',
+  'hub.upcoming': 'Upcoming',
+  'hub.ended': 'Ended',
+  'hub.settled': 'Settled',
+  'hub.prizeSplit': 'Prize split',
+  'hub.joined': "You're in! Good luck.",
 } as const;
 
 export type I18nKey = keyof typeof en;
@@ -230,6 +249,25 @@ const am: Dict = {
   'hub.monthly': 'ወርሃዊ ሻምፒዮና',
   'hub.weekly': 'ሳምንታዊ ዋንጫ',
   'hub.playToRank': 'ቦታዎን ለመያዝ አሁን ይጫወቱ',
+  // Wallet / store / tournaments-economy
+  'hub.myDashboard': 'የእኔ ዳሽቦርድ',
+  'hub.entry': 'መግቢያ',
+  'hub.freeEntry': 'ነፃ መግቢያ',
+  'hub.pool': 'የሽልማት ገንዘብ',
+  'hub.register': 'ለመጫወት ይመዝገቡ',
+  'hub.entered': 'ገብተዋል',
+  'hub.playNow': 'አሁን ይጫወቱ',
+  'hub.confirmEntry': 'ውድድሩን ይቀላቀሉ',
+  'hub.confirm': 'አረጋግጥ',
+  'hub.cancel': 'ይቅር',
+  'hub.needCoins': 'በቂ ሳንቲም የለም',
+  'hub.buyCoins': 'ሳንቲም ይግዙ',
+  'hub.feeNotice': 'ይህ የመግቢያ ክፍያ ከቦርሳዎ ይቀነሳል።',
+  'hub.upcoming': 'በቅርቡ',
+  'hub.ended': 'አብቅቷል',
+  'hub.settled': 'ተወራርዷል',
+  'hub.prizeSplit': 'የሽልማት ክፍፍል',
+  'hub.joined': 'ገብተዋል! መልካም ዕድል።',
 };
 
 const dicts: Record<Lang, Dict> = { en, am };

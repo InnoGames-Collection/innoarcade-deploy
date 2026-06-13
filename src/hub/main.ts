@@ -2,12 +2,17 @@ import '../styles/base.css';
 import './hub.css';
 import { applyTranslations, getLang, setLang, t, type Lang } from '../i18n';
 import { mountSignIn } from './signin';
+import { mountWallet, openStore } from './wallet';
+import { renderDashboard, injectDashboardStyles } from './dashboard';
 import { mergedLeaderboard } from '../platform/backend';
 import { CATALOG, type GameMeta } from '../platform/catalog';
 import {
   activeTournaments, featuredTournament, tournamentGame, leaderboard,
-  playerStanding, countdown, type Tournament,
+  playerStanding, countdown, loadTournaments, loadMyEntries,
+  tournamentState, isPaid, isEntered, enterTournament, prizePool,
+  InsufficientCoinsError, type Tournament,
 } from '../platform/tournaments';
+import { balanceSync } from '../platform/wallet';
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 const lang = (): Lang => getLang();
@@ -21,6 +26,113 @@ function escapeHtml(s: string): string {
 
 function thumbStyle(g: GameMeta): string {
   return `background:linear-gradient(145deg, ${g.thumb[0]}, ${g.thumb[1]});`;
+}
+
+// --- Tournament entry economy (CTA + confirm flow) --------------------------
+
+const STATE_LABEL: Record<string, () => string> = {
+  upcoming: () => t('hub.upcoming'), live: () => t('hub.live'),
+  ended: () => t('hub.ended'), settling: () => t('hub.ended'), settled: () => t('hub.settled'),
+};
+
+// The card's primary action, reflecting state / paid / entered.
+function entryCta(tour: Tournament, game: GameMeta, cls: string): string {
+  const state = tournamentState(tour);
+  const playable = state === 'live' || state === 'upcoming';
+  if (!playable) return `<span class="btn disabled ${cls}">${STATE_LABEL[state]?.() ?? ''}</span>`;
+  if (!isPaid(tour) || isEntered(tour.id)) {
+    return `<a class="btn primary ${cls}" href="${game.route}" data-play="${tour.id}">${t('hub.playNow')}</a>`;
+  }
+  return `<button class="btn primary ${cls}" data-enter="${tour.id}">${t('hub.register')} · ${tour.entryFeeCoins} 🪙</button>`;
+}
+
+// Small free/fee + pool badges for a tournament card.
+function economyBadges(tour: Tournament): string {
+  const fee = isPaid(tour)
+    ? `<span class="econ-badge fee">${t('hub.entry')}: ${tour.entryFeeCoins} 🪙</span>`
+    : `<span class="econ-badge free">${t('hub.freeEntry')}</span>`;
+  return `${fee}<span class="econ-badge pool">${t('hub.pool')}: ${prizePool(tour).toLocaleString()} 🪙</span>`;
+}
+
+// Attach handlers to register buttons / play links inside a freshly-rendered root.
+function wireEntryCtas(): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-enter]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const tour = activeTournaments().find((x) => x.id === b.dataset.enter);
+      const game = tour ? tournamentGame(tour) : undefined;
+      if (tour && game) openEntryModal(tour, game);
+    });
+  });
+  // Free / already-entered play links also record an entry so they show on the
+  // dashboard (idempotent; navigation proceeds normally).
+  document.querySelectorAll<HTMLAnchorElement>('[data-play]').forEach((a) => {
+    a.addEventListener('click', () => { void enterTournament(a.dataset.play!).catch(() => {}); });
+  });
+}
+
+function entryModal(inner: string): HTMLElement {
+  document.querySelector('.entry-modal')?.remove();
+  const m = document.createElement('div');
+  m.className = 'entry-modal';
+  m.innerHTML = `<div class="entry-scrim"></div><div class="entry-card">${inner}</div>`;
+  document.body.appendChild(m);
+  m.querySelector('.entry-scrim')!.addEventListener('click', () => m.remove());
+  return m;
+}
+
+function openEntryModal(tour: Tournament, game: GameMeta): void {
+  const fee = tour.entryFeeCoins;
+  const gameName = lang() === 'am' ? game.nameAm : game.nameEn;
+  const split = (tour.prizeTiers ?? []).map((s) =>
+    `<span class="split-chip">#${s.rank} · ${s.pct}%</span>`).join('');
+  const m = entryModal(`
+    <h3>🏆 ${escapeHtml(tTitle(tour))}</h3>
+    <p class="entry-game">${escapeHtml(gameName)}</p>
+    <div class="entry-rows">
+      <div class="entry-row"><span>${t('hub.entry')}</span><strong>${fee} 🪙</strong></div>
+      <div class="entry-row"><span>${t('hub.pool')}</span><strong>${prizePool(tour).toLocaleString()} 🪙</strong></div>
+    </div>
+    <div class="entry-split"><span class="split-label">${t('hub.prizeSplit')}</span>${split}</div>
+    <p class="entry-notice">${t('hub.feeNotice')}</p>
+    <p class="entry-err" id="err"></p>
+    <div class="entry-actions" id="actions"></div>`);
+  renderEntryActions(m, tour, game);
+}
+
+function renderEntryActions(m: HTMLElement, tour: Tournament, game: GameMeta): void {
+  const actions = m.querySelector('#actions')!;
+  const afford = balanceSync() >= tour.entryFeeCoins;
+  if (!afford) {
+    actions.innerHTML = `
+      <p class="entry-need">${t('hub.needCoins')}</p>
+      <button class="btn primary" id="buy">${t('hub.buyCoins')}</button>
+      <button class="btn ghost" id="cancel">${t('hub.cancel')}</button>`;
+    actions.querySelector('#buy')!.addEventListener('click', () => { m.remove(); openStore(); });
+  } else {
+    actions.innerHTML = `
+      <button class="btn primary" id="confirm">${t('hub.confirm')} · ${tour.entryFeeCoins} 🪙</button>
+      <button class="btn ghost" id="cancel">${t('hub.cancel')}</button>`;
+    actions.querySelector('#confirm')!.addEventListener('click', async () => {
+      const btn = actions.querySelector<HTMLButtonElement>('#confirm')!;
+      btn.disabled = true;
+      try {
+        await enterTournament(tour.id);
+        m.querySelector('.entry-card')!.innerHTML = `
+          <div class="entry-joined">
+            <div class="ej-burst">✅</div>
+            <h3>${t('hub.joined')}</h3>
+            <a class="btn primary" href="${game.route}">${t('hub.playNow')}</a>
+          </div>`;
+        renderAll();
+        void renderDashboard();
+      } catch (e) {
+        if (e instanceof InsufficientCoinsError) { renderEntryActions(m, tour, game); return; }
+        m.querySelector('#err')!.textContent = t('hub.needCoins');
+        btn.disabled = false;
+      }
+    });
+  }
+  actions.querySelector('#cancel')!.addEventListener('click', () => m.remove());
 }
 
 // --- Featured tournament hero ----------------------------------------------
@@ -42,7 +154,8 @@ function renderFeatured(): void {
           <div class="fc-countdown" id="fcCountdown"></div>
           <div class="fc-prize">${t('hub.prize')}: <strong>${tour.prizeCoins.toLocaleString()}</strong> ${t('hub.coins')} 🪙</div>
         </div>
-        <a class="btn primary fc-cta" href="${game.route}">${t('hub.enterNow')}</a>
+        <div class="fc-econ">${economyBadges(tour)}</div>
+        ${entryCta(tour, game, 'fc-cta')}
       </div>
       <div class="fc-board">
         <div class="fc-board-head">${t('hub.leaderboard')}</div>
@@ -101,14 +214,16 @@ function renderTournaments(): void {
       <article class="tour-card">
         <div class="tc-thumb" style="${thumbStyle(game)}"><span>${game.icon}</span></div>
         <div class="tc-body">
-          <span class="live-dot">● ${t('hub.live')}</span>
+          <span class="live-dot">● ${STATE_LABEL[tournamentState(tour)]?.() ?? t('hub.live')}</span>
           <h4>${escapeHtml(tTitle(tour))}</h4>
           <p class="tc-game">${escapeHtml(name(game))}</p>
+          <div class="tc-econ">${economyBadges(tour)}</div>
           <div class="tc-count" data-ends="${tour.endsAt}"></div>
         </div>
-        <a class="btn primary tc-cta" href="${game.route}">${t('hub.enterNow')}</a>
+        ${entryCta(tour, game, 'tc-cta')}
       </article>`;
   }).join('');
+  wireEntryCtas();
 }
 
 // --- Games grid, grouped into category rows ---------------------------------
@@ -202,6 +317,16 @@ function renderAll(): void {
   applyTranslations();
   tickCountdowns();
   void refreshFeatured(); // swap in real scores once they load
+  void renderDashboard();
+}
+
+// Load authoritative tournament config + the player's entries (online), then
+// re-render so cards reflect real state. No-ops to local data offline.
+async function refreshData(): Promise<void> {
+  await Promise.all([loadTournaments(), loadMyEntries()]);
+  renderFeatured();
+  renderTournaments();
+  void renderDashboard();
 }
 
 const langEn = $('#langEn');
@@ -229,6 +354,9 @@ window.addEventListener('scroll', () => {
 
 document.documentElement.lang = getLang();
 syncLangButtons();
+injectDashboardStyles();
 renderAll();
 mountSignIn();
+void mountWallet();
+void refreshData();
 setInterval(tickCountdowns, 1000);
