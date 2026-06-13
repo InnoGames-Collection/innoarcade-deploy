@@ -12,8 +12,12 @@
 
 import { getGame, tournamentGames, type GameMeta } from './catalog';
 import { isConfigured, supabase } from './supabase';
+import { isSignedIn } from './auth';
 import { config, defaultEntryFee } from './config';
 import { mockApply, balanceSync } from './wallet';
+
+// Entry fees / entries are per-account: server path only for signed-in users.
+const online = (): boolean => isConfigured() && isSignedIn();
 
 /** free = open entry, prizes funded by the house; paid = coin entry fee, pooled. */
 export type TournamentType = 'free' | 'paid';
@@ -428,7 +432,7 @@ export async function enterTournament(tournamentId: string): Promise<TournamentE
   const t = getTournament(tournamentId);
   if (!t) throw new Error('unknown tournament');
 
-  if (!isConfigured()) {
+  if (!online()) {
     const entries = readEntries();
     if (entries[tournamentId]) return entries[tournamentId];
     const fee = isPaid(t) ? t.entryFeeCoins : 0;
@@ -459,7 +463,7 @@ export async function enterTournament(tournamentId: string): Promise<TournamentE
 // The player's entries. Offline reads localStorage; online fetches the table and
 // refreshes the sync cache used by isEntered().
 export async function myEntries(): Promise<TournamentEntry[]> {
-  if (!isConfigured()) return Object.values(readEntries());
+  if (!online()) return Object.values(readEntries());
   try {
     const sb = supabase();
     const me = (await sb.auth.getUser()).data.user?.id;

@@ -17,8 +17,12 @@
 // nothing in this file or the UI changes.
 
 import { isConfigured, supabase } from './supabase';
+import { isSignedIn } from './auth';
 import { packageById, type CoinPackage } from './config';
 import { mockApply } from './wallet';
+
+// Server checkout only for authenticated users; guests use the local sandbox.
+const online = (): boolean => isConfigured() && isSignedIn();
 
 export type PayMethod = 'telebirr' | 'topup';
 export type OrderStatus = 'pending' | 'paid' | 'failed' | 'expired';
@@ -61,7 +65,7 @@ export async function startCheckout(packageId: string, method: PayMethod): Promi
   const pkg = packageById(packageId);
   if (!pkg) throw new Error('unknown package');
 
-  if (!isConfigured()) {
+  if (!online()) {
     const order: Order = {
       id: `o_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       packageId, coins: totalCoins(pkg), amountEtb: pkg.priceEtb,
@@ -84,7 +88,7 @@ export async function startCheckout(packageId: string, method: PayMethod): Promi
 // settlement (credit the wallet). Online it polls the order row the webhook
 // updates. Resolves with the final order.
 export async function pollOrder(orderId: string): Promise<Order> {
-  if (!isConfigured()) {
+  if (!online()) {
     await new Promise((r) => setTimeout(r, SANDBOX_SETTLE_MS));
     const list = readMockOrders();
     const order = list.find((o) => o.id === orderId);
@@ -115,7 +119,7 @@ export async function pollOrder(orderId: string): Promise<Order> {
 
 // The signed-in player's recent orders (admin sees all via admin.ts).
 export async function myOrders(limit = 20): Promise<Order[]> {
-  if (!isConfigured()) {
+  if (!online()) {
     return readMockOrders().sort((a, b) => b.createdAt - a.createdAt).slice(0, limit);
   }
   const sb = supabase();

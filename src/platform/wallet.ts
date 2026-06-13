@@ -12,6 +12,11 @@
 // boundary can never be crossed by accident in a real deployment.
 
 import { isConfigured, supabase } from './supabase';
+import { isSignedIn } from './auth';
+
+// Server-backed only for authenticated users; anonymous players (even with a
+// backend configured) use the local guest wallet so the app is always usable.
+const online = (): boolean => isConfigured() && isSignedIn();
 
 export interface LedgerEntry {
   id: string;
@@ -55,7 +60,7 @@ export function balanceSync(): number {
 
 /** Authoritative balance. Reads `profiles.coins` online, localStorage offline. */
 export async function balance(): Promise<number> {
-  if (!isConfigured()) { cached = readLocalBalance(); emit(); return cached; }
+  if (!online()) { cached = readLocalBalance(); emit(); return cached; }
   try {
     const sb = supabase();
     const me = (await sb.auth.getUser()).data.user?.id;
@@ -69,7 +74,7 @@ export async function balance(): Promise<number> {
 
 /** Recent ledger rows, newest first. */
 export async function ledger(limit = 20): Promise<LedgerEntry[]> {
-  if (!isConfigured()) {
+  if (!online()) {
     return readLocalLedger().sort((a, b) => b.createdAt - a.createdAt).slice(0, limit);
   }
   try {
@@ -104,8 +109,8 @@ export function onWalletChange(fn: (balance: number) => void): () => void {
 // payment / tournament-entry / admin paths call this; online those operations
 // are server-authoritative and this throws to enforce the integrity boundary.
 export function mockApply(delta: number, reason: string, ref = ''): LedgerEntry {
-  if (isConfigured()) {
-    throw new Error('wallet.mockApply is offline-only; online coins move via Edge Functions');
+  if (online()) {
+    throw new Error('wallet.mockApply is guest-only; signed-in coins move via Edge Functions');
   }
   const next = Math.max(0, cached + delta);
   cached = next;

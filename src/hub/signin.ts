@@ -68,6 +68,13 @@ function shell(inner: string): HTMLElement {
   return m;
 }
 
+// Open the sign-in flow from elsewhere (e.g. the coin store / paid-entry gate).
+export function openSignIn(): void {
+  if (!authAvailable()) return;
+  injectStyles();
+  openModal();
+}
+
 function openModal(): void {
   const m = shell(`
     <h3>${t('title')}</h3>

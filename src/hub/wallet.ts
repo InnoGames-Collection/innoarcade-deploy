@@ -4,9 +4,18 @@
 // wallet / payments / config modules. Strings are inline EN/AM.
 
 import { getLang } from '../i18n';
+import { isConfigured } from '../platform/supabase';
+import { isSignedIn, onAuthChange } from '../platform/auth';
+import { openSignIn } from './signin';
 import { balance, balanceSync, onWalletChange } from '../platform/wallet';
 import { loadConfig, coinPackages, paymentMethodsEnabled, isMaintenance, type CoinPackage } from '../platform/config';
 import { startCheckout, pollOrder, PAY_METHOD_LABEL, type PayMethod } from '../platform/payments';
+
+// Real coins require an account: with a backend configured, buying is gated
+// behind sign-in. Without a backend (pure local dev) it's an open guest demo.
+export function needsSignInToBuy(): boolean {
+  return isConfigured() && !isSignedIn();
+}
 
 const STR = {
   en: {
@@ -14,12 +23,14 @@ const STR = {
     pay: 'Pay with', payNow: 'Pay', processing: 'Processing payment…', success: 'Coins added!',
     failed: "Payment didn't complete. Try again.", close: 'Close', sandbox: 'Demo mode — no real charge',
     maintenance: 'The store is briefly unavailable.', total: 'You get', price: 'Price',
+    signInTitle: 'Sign in to buy coins', signInBody: 'Coins are tied to your account, so you need to sign in before buying.', signIn: 'Sign in',
   },
   am: {
     buy: 'ሳንቲም ይግዙ', store: 'የሳንቲም መደብር', coins: 'ሳንቲሞች', bonus: 'ጉርሻ', popular: 'ምርጥ ዋጋ',
     pay: 'ይክፈሉ በ', payNow: 'ይክፈሉ', processing: 'ክፍያ በመከናወን ላይ…', success: 'ሳንቲሞች ታክለዋል!',
     failed: 'ክፍያው አልተጠናቀቀም። እንደገና ይሞክሩ።', close: 'ዝጋ', sandbox: 'የማሳያ ሁነታ — ክፍያ የለም',
     maintenance: 'መደብሩ ለጊዜው አይገኝም።', total: 'ያገኛሉ', price: 'ዋጋ',
+    signInTitle: 'ሳንቲም ለመግዛት ይግቡ', signInBody: 'ሳንቲሞች ከመለያዎ ጋር የተሳሰሩ ናቸው፤ ከመግዛትዎ በፊት መግባት አለብዎት።', signIn: 'ግባ',
   },
 };
 const t = (k: keyof typeof STR.en): string => (STR[getLang()] ?? STR.en)[k];
@@ -36,6 +47,8 @@ export async function mountWallet(): Promise<void> {
   chip.addEventListener('click', openStore);
   renderChip();
   onWalletChange(renderChip);
+  // Switch wallets (guest ↔ account) on sign-in/out.
+  onAuthChange(() => { void balance().then(renderChip); });
   await loadConfig();
   await balance();
   renderChip();
@@ -60,6 +73,14 @@ function shell(inner: string, wide = false): HTMLElement {
 
 export function openStore(): void {
   if (isMaintenance()) { shell(`<h3>${t('store')}</h3><p class="wallet-hint">${t('maintenance')}</p>`); return; }
+  if (needsSignInToBuy()) {
+    const m = shell(`
+      <h3>${t('signInTitle')}</h3>
+      <p class="wallet-hint">${t('signInBody')}</p>
+      <button class="wallet-primary" id="signin">${t('signIn')}</button>`);
+    m.querySelector('#signin')!.addEventListener('click', () => { m.remove(); openSignIn(); });
+    return;
+  }
   const pkgs = coinPackages();
   const m = shell(`
     <h3>🪙 ${t('store')}</h3>

@@ -3,7 +3,11 @@
    Inspired by modern telecom game portals: clean white surfaces, soft shadows,
    colourful category rows. */
 
-:root {
+/* html:root (specificity 0,1,1) so the hub's light theme deterministically
+   beats base.css's `:root` (0,1,0) dark-theme vars regardless of bundle order —
+   otherwise --text/--accent can flip to the dark-theme values and render cream
+   text on white. */
+html:root {
   --bg: #eef1f8;
   --bg-2: #ffffff;
   --card: #ffffff;
@@ -14,6 +18,10 @@
   --accent-2: #ff7a59;
   --good: #18b187;
 }
+
+/* Primary buttons on the hub are blue → white text (base.css uses dark text,
+   which is for its gold theme and reads poorly on blue). */
+.btn.primary { color: #fff; }
 
 body {
   background: var(--bg);
@@ -181,10 +189,11 @@ body {
 .entry-scrim { position: absolute; inset: 0; background: rgba(12,16,30,.5); backdrop-filter: blur(3px); }
 .entry-card { position: relative; width: min(360px, 92vw); background: #fff; color: var(--text); border-radius: 16px;
   padding: 22px; box-shadow: 0 20px 50px rgba(20,30,60,.3); display: flex; flex-direction: column; gap: 10px; }
-.entry-card h3 { font-size: 1.15rem; }
+.entry-card h3 { font-size: 1.15rem; color: var(--text); }
 .entry-game { color: var(--muted); font-size: 0.85rem; margin-top: -4px; }
 .entry-rows { display: flex; flex-direction: column; gap: 6px; background: #f6f7fb; border-radius: 12px; padding: 12px 14px; }
-.entry-row { display: flex; justify-content: space-between; font-size: 0.9rem; }
+.entry-row { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--muted); }
+.entry-row strong { color: var(--text); }
 .entry-split { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .split-label { font-size: 0.78rem; color: var(--muted); margin-right: 4px; }
 .split-chip { font-size: 0.72rem; font-weight: 700; background: rgba(91,108,255,0.12); color: var(--accent); padding: 0.1rem 0.5rem; border-radius: 999px; }

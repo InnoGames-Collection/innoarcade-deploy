@@ -1,8 +1,9 @@
 import '../styles/base.css';
 import './hub.css';
 import { applyTranslations, getLang, setLang, t, type Lang } from '../i18n';
-import { mountSignIn } from './signin';
-import { mountWallet, openStore } from './wallet';
+import { mountSignIn, openSignIn } from './signin';
+import { mountWallet, openStore, needsSignInToBuy } from './wallet';
+import { onAuthChange } from '../platform/auth';
 import { renderDashboard, injectDashboardStyles } from './dashboard';
 import { mergedLeaderboard } from '../platform/backend';
 import { CATALOG, type GameMeta } from '../platform/catalog';
@@ -81,6 +82,19 @@ function entryModal(inner: string): HTMLElement {
 }
 
 function openEntryModal(tour: Tournament, game: GameMeta): void {
+  // Paid entry requires an account when a backend is configured.
+  if (isPaid(tour) && needsSignInToBuy()) {
+    const m = entryModal(`
+      <h3>🏆 ${escapeHtml(tTitle(tour))}</h3>
+      <p class="entry-notice">${t('hub.feeNotice')}</p>
+      <div class="entry-actions">
+        <button class="btn primary" id="signin">${t('hub.register')}</button>
+        <button class="btn ghost" id="cancel">${t('hub.cancel')}</button>
+      </div>`);
+    m.querySelector('#signin')!.addEventListener('click', () => { m.remove(); openSignIn(); });
+    m.querySelector('#cancel')!.addEventListener('click', () => m.remove());
+    return;
+  }
   const fee = tour.entryFeeCoins;
   const gameName = lang() === 'am' ? game.nameAm : game.nameEn;
   const split = (tour.prizeTiers ?? []).map((s) =>
@@ -359,4 +373,6 @@ renderAll();
 mountSignIn();
 void mountWallet();
 void refreshData();
+// Re-pull wallet/entries/standing when the player signs in or out.
+onAuthChange(() => { void refreshData(); });
 setInterval(tickCountdowns, 1000);

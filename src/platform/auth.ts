@@ -20,6 +20,15 @@ export function authAvailable(): boolean {
   return isConfigured();
 }
 
+// Synchronous "is a user signed in" cache, kept fresh by currentUser() and
+// onAuthChange(). Lets the wallet / payments / tournament modules choose the
+// server path only for authenticated users (anonymous players stay on the local
+// guest wallet, even when Supabase is configured) without an async hop.
+let cachedUser: AuthUser | null = null;
+export function isSignedIn(): boolean {
+  return cachedUser !== null;
+}
+
 // Normalize to E.164-ish (Ethiopia default +251) so users can type 09… locally.
 export function normalizePhone(input: string): string {
   let s = input.replace(/[^\d+]/g, '');
@@ -48,7 +57,8 @@ export async function currentUser(): Promise<AuthUser | null> {
   if (!isConfigured()) return null;
   const { data } = await supabase().auth.getUser();
   const u = data.user;
-  return u ? { id: u.id, phone: u.phone ?? '', name: (u.user_metadata?.name as string) ?? '' } : null;
+  cachedUser = u ? { id: u.id, phone: u.phone ?? '', name: (u.user_metadata?.name as string) ?? '' } : null;
+  return cachedUser;
 }
 
 export async function setDisplayName(name: string): Promise<void> {
@@ -65,7 +75,8 @@ export function onAuthChange(fn: (user: AuthUser | null) => void): () => void {
   if (!isConfigured()) return () => {};
   const { data } = supabase().auth.onAuthStateChange((_e, session) => {
     const u = session?.user;
-    fn(u ? { id: u.id, phone: u.phone ?? '', name: (u.user_metadata?.name as string) ?? '' } : null);
+    cachedUser = u ? { id: u.id, phone: u.phone ?? '', name: (u.user_metadata?.name as string) ?? '' } : null;
+    fn(cachedUser);
   });
   return () => data.subscription.unsubscribe();
 }
