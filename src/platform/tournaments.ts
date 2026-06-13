@@ -12,8 +12,9 @@
 
 import { getGame, tournamentGames, type GameMeta } from './catalog';
 import { isConfigured, supabase } from './supabase';
-import { config, defaultEntryFee, economyOnline as online } from './config';
+import { config, defaultEntryFee, economyOnline as online, economyNeedsAuth } from './config';
 import { mockApply, balanceSync } from './wallet';
+import { SignInRequiredError } from './payments';
 
 /** free = open entry, prizes funded by the house; paid = coin entry fee, pooled. */
 export type TournamentType = 'free' | 'paid';
@@ -431,6 +432,9 @@ export class InsufficientCoinsError extends Error {
 export async function enterTournament(tournamentId: string): Promise<TournamentEntry> {
   const t = getTournament(tournamentId);
   if (!t) throw new Error('unknown tournament');
+  // Paid entry is account-bound when the economy is on — never debit a local
+  // guest wallet while signed out (the same backstop the coin store has).
+  if (isPaid(t) && economyNeedsAuth()) throw new SignInRequiredError();
 
   if (!online()) {
     const entries = readEntries();

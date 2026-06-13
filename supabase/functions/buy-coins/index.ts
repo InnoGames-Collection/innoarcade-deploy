@@ -89,8 +89,9 @@ Deno.serve(async (req: Request) => {
   // that callback credits it — identical to the live flow, no money involved.
   const appBase = String(body.appBase ?? '').replace(/\/?$/, '/'); // ensure trailing slash
   const ret = encodeURIComponent(String(body.returnUrl ?? ''));
+  // Directory-style URL (not …/index.html) so it survives Vercel "Clean URLs".
   const redirectUrl = appBase
-    ? `${appBase}checkout/index.html?order=${orderId}&ref=${providerRef}` +
+    ? `${appBase}checkout/?order=${orderId}&ref=${providerRef}` +
       `&amount=${pkg.priceEtb}&coins=${coins}&pkg=${pkg.id}&method=${method}&return=${ret}`
     : '';
   return json({ order: { ...order, redirectUrl }, sandbox: true });

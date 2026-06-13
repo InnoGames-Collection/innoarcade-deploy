@@ -77,20 +77,24 @@ Deno.serve(async (req: Request) => {
     }
   } else {
     // --- MOCK (free dev) ----------------------------------------------------
-    // The OTP appears in this function's logs so you can complete sign-in...
+    // The OTP appears in this function's logs so you can complete sign-in.
     console.log(`[send-sms:mock] → ${phone}: ${message}`);
-    // ...and, for a real-feeling demo with no SMS gateway, it's also written to
-    // the public `dev_otps` table so the sign-in screen can show it directly
-    // (see supabase/dev.sql). Best-effort: never let this break the auth hook.
-    try {
-      const url = Deno.env.get('SUPABASE_URL');
-      const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-      if (url && service && phone) {
-        const admin = createClient(url, service);
-        await admin.from('dev_otps').upsert({ phone, code: otp, created_at: new Date().toISOString() });
+    // Optional LOCAL-dev convenience: with the DEV_OTP_ECHO secret set, also write
+    // the code to the public `dev_otps` table so the sign-in screen can show it
+    // (see supabase/dev.sql). OFF by default — the deployed demo uses Supabase
+    // "Test phone numbers" instead and drops that table. Best-effort: never let
+    // this break the auth hook.
+    if (Deno.env.get('DEV_OTP_ECHO') === 'true') {
+      try {
+        const url = Deno.env.get('SUPABASE_URL');
+        const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+        if (url && service && phone) {
+          const admin = createClient(url, service);
+          await admin.from('dev_otps').upsert({ phone, code: otp, created_at: new Date().toISOString() });
+        }
+      } catch (e) {
+        console.error('[send-sms:mock] dev_otps write skipped', e);
       }
-    } catch (e) {
-      console.error('[send-sms:mock] dev_otps write skipped', e);
     }
   }
 

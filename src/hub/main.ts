@@ -14,6 +14,7 @@ import {
   InsufficientCoinsError, type Tournament,
 } from '../platform/tournaments';
 import { balanceSync } from '../platform/wallet';
+import { SignInRequiredError } from '../platform/payments';
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 const lang = (): Lang => getLang();
@@ -140,6 +141,7 @@ function renderEntryActions(m: HTMLElement, tour: Tournament, game: GameMeta): v
         renderAll();
         void renderDashboard();
       } catch (e) {
+        if (e instanceof SignInRequiredError) { m.remove(); openSignIn(); return; }
         if (e instanceof InsufficientCoinsError) { renderEntryActions(m, tour, game); return; }
         m.querySelector('#err')!.textContent = t('hub.entryFailed');
         btn.disabled = false;

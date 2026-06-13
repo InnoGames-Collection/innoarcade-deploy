@@ -31,10 +31,11 @@ A full competitive-tournament layer, built the same way — a clean
 through an Edge Function (the same integrity boundary as scores).
 
 - **Sign-in** ([auth.ts](src/platform/auth.ts), [signin.ts](src/hub/signin.ts))
-  — real Supabase **phone-OTP** accounts (the SIM is the identity). Until a real
-  SMS gateway is wired, the `send-sms` hook runs in mock mode and the demo shows
-  the code **on screen** (`VITE_DEV_OTP_ECHO`), so any phone signs in with a real
-  session — see the [backend demo](#backend-demo-mocked-sms--telebirr).
+  — real Supabase **phone-OTP** accounts (the SIM is the identity). With no SMS
+  gateway, the demo signs in via Supabase **Test phone numbers** (fixed codes);
+  for local dev the `send-sms` mock can instead echo the code **on screen**
+  (`VITE_DEV_OTP_ECHO`). Real SMS is one `SMS_MODE=gateway` flip away — see the
+  [backend demo](#backend-demo-mocked-sms--telebirr).
 - **Coin wallet** ([wallet.ts](src/platform/wallet.ts)) — balance + immutable
   ledger; a live coin chip and the player dashboard sit on the hub.
 - **Coin store & payments** ([payments.ts](src/platform/payments.ts),
