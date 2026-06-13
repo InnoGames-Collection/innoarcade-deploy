@@ -1,0 +1,166 @@
+/* Memory Match — ported from the awetar build; markup/art kept, chrome adapted
+   to the InnoArcade page shell (topbar + language switch). */
+
+#stage {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 12px 28px;
+  gap: 14px;
+}
+
+.topbar {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.topbar .game-name {
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: var(--text);
+}
+.back-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.back-link:hover { color: var(--text); }
+
+.lang-switch { display: flex; gap: 6px; }
+.lang-btn {
+  background: transparent;
+  border: 1px solid var(--muted);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.lang-btn.active { border-color: var(--accent); color: var(--accent); }
+
+/* --- awetar memory-match (scoped) ----------------------------------------- */
+#memory-match-wrapper {
+  --pink: #ff6b9d;
+  --teal: #00d4aa;
+  --bg-solid: #0b1521;
+  --hud-bg: #162436;
+  --border-color: #2a3e56;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(12px, 3vw, 20px);
+  background: var(--bg-solid);
+  border-radius: clamp(16px, 4vw, 24px);
+  font-family: inherit;
+  color: #fff;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  border: 2px solid var(--border-color);
+}
+#memory-match-wrapper * { box-sizing: border-box; }
+.mm-hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: var(--hud-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 14px;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+}
+.mm-hud-item { display: flex; align-items: center; gap: 8px; font-size: 1.2rem; }
+.mm-hud-item.r { flex-direction: row-reverse; }
+.mm-hud-sub { font-size: 0.65rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; }
+.mm-hud-val { font-size: 1rem; font-weight: 900; }
+.mm-hud-val.gold { color: #ffd700; }
+.mm-hud-title { font-size: 0.9rem; font-weight: 800; opacity: 0.9; }
+.mm-stats {
+  display: flex;
+  gap: clamp(10px, 3vw, 1.8rem);
+  margin-bottom: clamp(0.8rem, 2vw, 1.2rem);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.mm-stat {
+  background: var(--hud-bg);
+  padding: 0.5rem 1.1rem;
+  border-radius: 12px;
+  border: 2px solid var(--border-color);
+}
+.mm-stat-label { font-size: 0.82rem; opacity: 0.85; margin-right: 0.35rem; }
+.mm-stat-value { font-size: 1.3rem; font-weight: 900; color: var(--pink); }
+.mm-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(7px, 2vw, 11px);
+  margin-bottom: clamp(0.8rem, 2vw, 1.2rem);
+}
+.mm-card {
+  width: clamp(50px, 13vw, 62px);
+  height: clamp(50px, 13vw, 62px);
+  background: var(--pink);
+  border-radius: clamp(10px, 3vw, 14px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.6rem, 5.5vw, 2.1rem);
+  transition: all 0.2s;
+  border: 2px solid var(--border-color);
+}
+.mm-card.flipped, .mm-card.matched {
+  background: #fff;
+  color: #0a1628;
+  border-color: var(--teal);
+}
+.mm-card.matched { opacity: 0.75; cursor: default; animation: mm-match-pop 0.4s ease; }
+@keyframes mm-match-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+.mm-card:hover:not(.matched) { transform: translateY(-2px); background: #fff; border-color: #fff; color: var(--bg-solid); }
+.mm-message {
+  font-size: clamp(0.85rem, 2.8vw, 1.05rem);
+  font-weight: 700;
+  margin-bottom: clamp(0.8rem, 2vw, 1.2rem);
+  min-height: 28px;
+  color: var(--pink);
+  text-align: center;
+}
+.mm-actions { display: flex; gap: 10px; }
+.mm-restart-btn {
+  background: var(--teal);
+  color: #0a1628;
+  border: 2px solid var(--teal);
+  padding: clamp(10px, 2.5vw, 14px) clamp(32px, 8vw, 46px);
+  font-size: clamp(0.85rem, 2.8vw, 1.1rem);
+  font-weight: 900;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.mm-restart-btn:hover { transform: translateY(-2px); background: #fff; border-color: #fff; }
+.mm-restart-btn:active { transform: scale(0.97); }
+.mm-peek { background: rgba(255, 107, 157, 0.12); border: 1px solid var(--pink); color: var(--pink); box-shadow: none; }
+.mm-peek:hover:not(:disabled) { background: #fff !important; border-color: #fff !important; color: #0b1521 !important; }
+.mm-peek:disabled {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.2) !important;
+  background: transparent !important;
+  cursor: not-allowed;
+  box-shadow: none;
+}

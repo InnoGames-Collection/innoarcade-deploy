@@ -26,6 +26,11 @@ export interface GameMeta {
   scoreAm: string;
   /** Marks the flagship builds we polished for the partner demo. */
   featured?: boolean;
+  /** Operator-tunable play economy for the ported awetar games. Drives the
+   *  shared game host (see platform/gameHost.ts): `winPoints` is the score a win
+   *  awards, `winRate` the base win chance (0–100) for chance games. Skill games
+   *  ignore winRate. Absent for the engine-native games, which score by play. */
+  play?: { winPoints: number; winRate: number };
 }
 
 export const CATALOG: GameMeta[] = [
@@ -123,6 +128,36 @@ export const CATALOG: GameMeta[] = [
     genreEn: 'Shooter', genreAm: 'ተኳሽ',
     mode: 'free', icon: '🫧', accent: '#7b6cf0', thumb: ['#3d2f8c', '#140d30'],
     scoreEn: 'Score', scoreAm: 'ነጥብ',
+  },
+
+  // --- Ported awetar titles -------------------------------------------------
+  // `mode` is the casual↔tournament switch; `play` tunes the win reward/odds.
+  {
+    id: 'memory-match',
+    route: 'games/memory-match/',
+    nameEn: 'Memory Match', nameAm: 'ማች ማስታወሻ',
+    genreEn: 'Puzzle · Casual', genreAm: 'እንቆቅልሽ · ቀላል',
+    mode: 'free', icon: '🧩', accent: '#ff6b9d', thumb: ['#8c2b5c', '#0b1521'],
+    scoreEn: 'Points', scoreAm: 'ነጥብ',
+    play: { winPoints: 180, winRate: 50 },
+  },
+  {
+    id: 'tap-game',
+    route: 'games/tap-game/',
+    nameEn: 'Tap Game', nameAm: 'ታፕ ጨዋታ',
+    genreEn: 'Arcade · Reflex', genreAm: 'አርኬድ · ቅልጥፍና',
+    mode: 'free', icon: '👆', accent: '#ff6b35', thumb: ['#7a2d1a', '#210a0a'],
+    scoreEn: 'Score', scoreAm: 'ነጥብ',
+    play: { winPoints: 150, winRate: 50 },
+  },
+  {
+    id: 'dice-roll',
+    route: 'games/dice-roll/',
+    nameEn: 'Dice Roll', nameAm: 'ዳይስ ጨዋታ',
+    genreEn: 'Chance · Tournament', genreAm: 'ዕድል · ውድድር',
+    mode: 'tournament', icon: '🎲', accent: '#d18a04', thumb: ['#2f0999', '#0b6655'],
+    scoreEn: 'Points', scoreAm: 'ነጥብ',
+    play: { winPoints: 90, winRate: 35 },
   },
 ];
 

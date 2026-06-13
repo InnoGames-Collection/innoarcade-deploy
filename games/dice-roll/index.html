@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎲</text></svg>" />
+    <title>Dice Roll — InnoArcade</title>
+  </head>
+  <body>
+    <div id="stage">
+      <header class="topbar">
+        <a class="back-link" href="../../" data-i18n="arc.back">All games</a>
+        <span class="game-name" data-i18n="dr.title">Dice Roll</span>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button id="langEn" class="lang-btn">EN</button>
+          <button id="langAm" class="lang-btn">አማ</button>
+        </div>
+      </header>
+
+      <div id="dice-roll-wrapper">
+        <div class="dr-hud">
+          <div class="dr-hud-item"><span>🪙</span><div><div class="dr-hud-sub" data-i18n="arc.cost">Cost</div><div class="dr-hud-val" id="dr-hud-cost">…</div></div></div>
+          <div class="dr-hud-title">🎲 <span data-i18n="dr.title">Dice Roll</span></div>
+          <div class="dr-hud-item r"><div style="text-align:right"><div class="dr-hud-sub" data-i18n="arc.win">Win</div><div class="dr-hud-val gold" id="dr-hud-win">…</div></div><span>⭐</span></div>
+        </div>
+
+        <div class="dr-tourney" id="dr-tourney">
+          <span class="dr-t-name" id="dr-t-name">—</span>
+          <span class="dr-t-rank"><span data-i18n="arc.yourRank">Your rank</span> <strong id="dr-rank">#—</strong></span>
+        </div>
+
+        <div class="dr-dice-container">
+          <div class="dr-scene">
+            <div class="dr-cube" id="dr-cube1">
+              <div class="cube-face face-front face-1"><div class="dot"></div></div>
+              <div class="cube-face face-back face-6"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+              <div class="cube-face face-right face-3"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+              <div class="cube-face face-left face-4"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+              <div class="cube-face face-top face-2"><div class="dot"></div><div class="dot"></div></div>
+              <div class="cube-face face-bottom face-5"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+            </div>
+          </div>
+
+          <div class="dr-vs">Roll</div>
+
+          <div class="dr-scene">
+            <div class="dr-cube" id="dr-cube2">
+              <div class="cube-face face-front face-1"><div class="dot"></div></div>
+              <div class="cube-face face-back face-6"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+              <div class="cube-face face-right face-3"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+              <div class="cube-face face-left face-4"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+              <div class="cube-face face-top face-2"><div class="dot"></div><div class="dot"></div></div>
+              <div class="cube-face face-bottom face-5"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dr-message" id="dr-message"></div>
+        <button class="dr-roll-btn" id="dr-roll-btn" data-i18n="dr.rollBtn">ROLL DICE</button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/games/dice-roll/main.ts"></script>
+  </body>
+</html>
