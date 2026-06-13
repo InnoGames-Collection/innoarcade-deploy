@@ -8,7 +8,7 @@ import { onAuthChange, currentUser } from '../platform/auth';
 import { openSignIn } from './signin';
 import { balance, balanceSync, onWalletChange } from '../platform/wallet';
 import { loadConfig, coinPackages, paymentMethodsEnabled, isMaintenance, economyNeedsAuth, type CoinPackage } from '../platform/config';
-import { startCheckout, pollOrder, PAY_METHOD_LABEL, type PayMethod } from '../platform/payments';
+import { startCheckout, pollOrder, PAY_METHOD_LABEL, SignInRequiredError, type PayMethod } from '../platform/payments';
 
 // When the server economy is enabled, buying requires sign-in. In local/demo
 // mode (economy backend off) it's an open guest experience so the demo flows.
@@ -162,7 +162,8 @@ function openCheckout(pkg: CoinPackage): void {
       await pollOrder(order.id);
       await balance();
       showSuccess(m, total);
-    } catch {
+    } catch (e) {
+      if (e instanceof SignInRequiredError) { m.remove(); openSignIn(); return; }
       m.querySelector('#err')!.textContent = t('failed');
       pay.disabled = false;
       pay.textContent = `${t('payNow')} ${pkg.priceEtb} ETB`;

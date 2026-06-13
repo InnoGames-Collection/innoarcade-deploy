@@ -17,8 +17,15 @@
 // nothing in this file or the UI changes.
 
 import { supabase } from './supabase';
-import { packageById, economyOnline as online, type CoinPackage } from './config';
+import { packageById, economyOnline as online, economyNeedsAuth, type CoinPackage } from './config';
 import { mockApply } from './wallet';
+
+/** Thrown when a purchase is attempted signed-out while the server economy is on
+ *  (coins are account-bound there). The UI gates this earlier; this is the
+ *  platform-level backstop so coins can never be bought without an account. */
+export class SignInRequiredError extends Error {
+  constructor() { super('sign-in required'); this.name = 'SignInRequiredError'; }
+}
 
 export type PayMethod = 'telebirr' | 'topup';
 export type OrderStatus = 'pending' | 'paid' | 'failed' | 'expired';
@@ -60,6 +67,8 @@ function writeMockOrders(list: Order[]): void {
 export async function startCheckout(packageId: string, method: PayMethod): Promise<CheckoutResult> {
   const pkg = packageById(packageId);
   if (!pkg) throw new Error('unknown package');
+  // Backend economy on but signed out → never credit a local guest wallet.
+  if (economyNeedsAuth()) throw new SignInRequiredError();
 
   if (!online()) {
     const order: Order = {
