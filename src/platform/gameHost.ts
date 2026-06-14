@@ -91,14 +91,19 @@ export class GameHost {
     if (!this.isTournament) return { ok: true };
     const t = this.tournament!;
     if (isEntered(t.id)) return { ok: true };
+    // Best-effort paid entry: try to join the tournament so the round counts
+    // toward the prize, but NEVER block play if the player isn't signed in or
+    // is short on coins — the game is always playable; only the competitive
+    // entry is gated. (Score submission below is local-first regardless.)
     try {
       await enterTournament(t.id);
-      return { ok: true };
     } catch (e) {
-      if (e instanceof InsufficientCoinsError) return { ok: false, reason: 'coins' };
-      if (e instanceof SignInRequiredError) return { ok: false, reason: 'auth' };
-      throw e;
+      if (!(e instanceof InsufficientCoinsError) && !(e instanceof SignInRequiredError)) {
+        // Unexpected error — swallow it so play still proceeds.
+        console.warn('tournament entry skipped:', e);
+      }
     }
+    return { ok: true };
   }
 
   // Record a finished round. `score` is the points the round earned (0 on a
