@@ -51,16 +51,16 @@ function renderPromo(): void {
 }
 function advancePromo(): void { promoIdx = (promoIdx + 1) % PROMOS.length; renderPromo(); }
 
-// --- Minimal "My dashboard" balances strip (top of the portal) --------------
+// --- Compact balance pill strip (in the topbar) ------------------------------
 function renderMyStats(): void {
-  const host = document.querySelector('#myStatsGrid');
+  const host = document.querySelector('#topBalances');
   if (!host) return;
-  const card = (icon: string, val: string, label: string, cls: string): string =>
-    `<div class="ms-card ${cls}"><div class="ms-ico">${icon}</div><div class="ms-val">${val}</div><div class="ms-label">${label}</div></div>`;
+  const chip = (icon: string, val: string, cls: string): string =>
+    `<span class="bal-chip ${cls}">${icon} <strong>${val}</strong></span>`;
   host.innerHTML =
-    card('🪙', balanceSync().toLocaleString(), t('hub.coinsLabel'), 'ms-coins') +
-    card('⭐', pointsBal().toLocaleString(), t('hub.points'), 'ms-points') +
-    card('👑', goldBal().toLocaleString(), t('hub.gold'), 'ms-gold');
+    chip('🪙', balanceSync().toLocaleString(), 'bal-coins') +
+    chip('⭐', pointsBal().toLocaleString(), 'bal-points') +
+    chip('👑', goldBal().toLocaleString(), 'bal-gold');
 }
 
 // --- Tournament entry economy (CTA + confirm flow) --------------------------
@@ -252,7 +252,7 @@ async function refreshFeatured(): Promise<void> {
   }
 }
 
-// --- Stats strip (enterprise KPIs under the hero) ---------------------------
+// --- Stats strip (platform KPIs — shown above the games list) ---------------
 function renderStats(): void {
   const host = document.querySelector('#statsStrip');
   if (!host) return;
@@ -327,7 +327,7 @@ function gameCard(g: GameMeta): string {
 }
 
 // Browse state for the games section (segmented filter + search).
-let gameFilter: 'all' | 'tournament' | 'free' = 'all';
+let gameFilter: 'all' | 'tournament' | 'free' = 'tournament';
 let gameQuery = '';
 
 function renderGames(): void {
@@ -541,7 +541,7 @@ function mountSettings(): void {
 }
 
 // Nav active-state on scroll (top nav + mobile bottom nav).
-const sections = ['myStats', 'games', 'tournaments', 'draws', 'winners', 'dashboard', 'brain'];
+const sections = ['statsStrip', 'games', 'tournaments', 'draws', 'winners', 'dashboard', 'brain'];
 function syncNavActive(): void {
   let current = sections[0];
   for (const id of sections) {

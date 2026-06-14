@@ -272,17 +272,15 @@ body {
 /* ====================================================================== */
 
 /* --- stats strip (KPIs under the hero) --- */
-.stats-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-@media (max-width: 760px) { .stats-strip { grid-template-columns: repeat(2, 1fr); } }
 .stat {
   position: relative; background: var(--card); border: 1px solid var(--line);
-  border-radius: var(--radius); padding: 1.1rem 1.2rem; box-shadow: var(--shadow-sm);
+  border-radius: var(--radius); padding: 0.85rem 1rem; box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 .stat::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--grad-brand); }
-.stat-icon { font-size: 1.3rem; }
-.stat-value { font-size: 1.7rem; font-weight: 900; letter-spacing: -0.02em; margin-top: 0.25rem; }
-.stat-label { color: var(--muted); font-size: 0.82rem; font-weight: 600; }
+.stat-icon { font-size: 1.15rem; }
+.stat-value { font-size: 1.45rem; font-weight: 900; letter-spacing: -0.02em; margin-top: 0.15rem; }
+.stat-label { color: var(--muted); font-size: 0.78rem; font-weight: 600; }
 
 /* --- live pulse dot --- */
 .live-dot { display: inline-flex; align-items: center; gap: 0.32rem; }
@@ -367,17 +365,18 @@ body {
 .gc-glyph { font-size: 3.4rem; position: relative; z-index: 1; }
 .cat-shelf .game-card { width: auto; }
 
-/* minimal "My dashboard" balances strip (awetar-style stat cards) */
-.mystats-section { margin-bottom: 0.25rem; }
-.mystats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; }
-.ms-card { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 0.9rem 0.6rem;
-  text-align: center; box-shadow: var(--shadow-sm); }
-.ms-ico { font-size: 1.3rem; line-height: 1; }
-.ms-val { font-size: clamp(1.2rem, 5vw, 1.6rem); font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; margin-top: 0.15rem; }
-.ms-label { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.1rem; }
-.ms-coins .ms-val { color: #8a6310; }
-.ms-points .ms-val { color: var(--accent); }
-.ms-gold .ms-val { color: #9a6b12; }
+/* compact balance chips in topbar */
+.top-balances { display: flex; align-items: center; gap: 0.4rem; margin-inline: auto; }
+.bal-chip { display: inline-flex; align-items: center; gap: 0.28rem; font-size: 0.8rem; font-weight: 600;
+  padding: 0.22rem 0.65rem; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,0.85); white-space: nowrap; }
+.bal-chip strong { font-weight: 800; }
+.bal-coins strong { color: #8a6310; }
+.bal-points strong { color: var(--accent); }
+.bal-gold strong { color: #9a6b12; }
+
+/* platform KPI strip (above games list) */
+.stats-strip-section { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.7rem; }
+@media (max-width: 600px) { .stats-strip-section { grid-template-columns: repeat(2, 1fr); } }
 .cat-empty { color: var(--muted); font-size: 0.9rem; padding: 1rem 0.25rem; }
 
 /* settings gear + dropdown */

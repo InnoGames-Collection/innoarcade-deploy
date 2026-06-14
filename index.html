@@ -13,11 +13,12 @@
         <span class="brand-name" data-i18n="app.title">InnoArcade</span>
       </div>
       <nav class="topnav">
-        <a href="#myStats" class="nav-link active" data-i18n="hub.dashboard">Dashboard</a>
+        <a href="#statsStrip" class="nav-link active" data-i18n="hub.dashboard">Dashboard</a>
         <a href="#tournaments" class="nav-link" data-i18n="hub.tournaments">Tournaments</a>
         <a href="#games" class="nav-link" data-i18n="hub.freeGames">Free games</a>
         <a href="#brain" class="nav-link" data-i18n="hub.brain">Brain &amp; Word</a>
       </nav>
+      <div id="topBalances" class="top-balances"></div>
       <button id="settingsBtn" class="settings-btn" aria-label="Settings">⚙</button>
     </header>
 
@@ -27,17 +28,15 @@
         <div class="promo-dots" id="promoDots"></div>
       </section>
 
-      <section id="myStats" class="mystats-section" aria-label="Your balances">
-        <div id="myStatsGrid" class="mystats-grid"></div>
-      </section>
+      <section id="statsStrip" class="stats-strip-section" aria-label="Platform stats"></section>
 
       <section id="games" class="games-section">
         <div class="games-head">
           <h2 class="section-title">🎮 <span data-i18n="hub.available">Available games</span></h2>
           <div class="games-tools">
             <div class="seg" id="gameSeg" role="tablist">
-              <button class="seg-btn active" data-filter="all" data-i18n="hub.allGames">All</button>
-              <button class="seg-btn" data-filter="tournament" data-i18n="hub.tournament">Tournament</button>
+              <button class="seg-btn" data-filter="all" data-i18n="hub.allGames">All</button>
+              <button class="seg-btn active" data-filter="tournament" data-i18n="hub.tournament">Tournament</button>
               <button class="seg-btn" data-filter="free" data-i18n="arc.free">Free</button>
             </div>
             <input id="gameSearch" class="game-search" type="search" aria-label="Search games" />
@@ -66,7 +65,6 @@
         <span class="section-eyebrow" data-i18n="hub.heroEyebrow">Compete &amp; win</span>
         <h2 class="section-title" data-i18n="hub.featured">Featured tournament</h2>
         <div id="featured"></div>
-        <div id="statsStrip" class="stats-strip" style="margin-top:1.25rem"></div>
       </section>
 
       <section id="brain" class="brain-section">
@@ -83,7 +81,7 @@
     </footer>
 
     <nav class="bottomnav" aria-label="Primary">
-      <a href="#myStats" class="bn-item active"><span class="bn-ico">🏠</span><span data-i18n="nav.home">Home</span></a>
+      <a href="#statsStrip" class="bn-item active"><span class="bn-ico">🏠</span><span data-i18n="nav.home">Home</span></a>
       <a href="#games" class="bn-item"><span class="bn-ico">🎮</span><span data-i18n="nav.games">Games</span></a>
       <a href="#draws" class="bn-item"><span class="bn-ico">🎁</span><span data-i18n="nav.draws">Draws</span></a>
       <a href="#winners" class="bn-item"><span class="bn-ico">🏆</span><span data-i18n="nav.winners">Winners</span></a>

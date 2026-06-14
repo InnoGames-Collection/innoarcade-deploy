@@ -61,17 +61,33 @@ export function normalizePhone(input: string): string {
   return s;
 }
 
+// Guard auth network calls against an indefinite stall. Supabase's fetch has no
+// timeout, so on a slow/blocked network (proxy, ad-blocker, captive portal) the
+// promise can hang forever — leaving the sign-in UI stuck on "Sending…". Reject
+// after `ms` so the caller can show an error and re-enable the button.
+export class AuthTimeoutError extends Error {
+  constructor() { super('auth request timed out'); this.name = 'AuthTimeoutError'; }
+}
+function withTimeout<T>(p: Promise<T>, ms = 15_000): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const id = setTimeout(() => reject(new AuthTimeoutError()), ms);
+    p.then((v) => { clearTimeout(id); resolve(v); },
+           (e) => { clearTimeout(id); reject(e); });
+  });
+}
+
 export async function requestOtp(phone: string): Promise<void> {
-  const { error } = await supabase().auth.signInWithOtp({ phone: normalizePhone(phone) });
+  const { error } = await withTimeout(
+    supabase().auth.signInWithOtp({ phone: normalizePhone(phone) }));
   if (error) throw error;
 }
 
 export async function verifyOtp(phone: string, code: string): Promise<AuthUser> {
-  const { data, error } = await supabase().auth.verifyOtp({
+  const { data, error } = await withTimeout(supabase().auth.verifyOtp({
     phone: normalizePhone(phone),
     token: code.trim(),
     type: 'sms',
-  });
+  }));
   if (error) throw error;
   const u = data.user!;
   return { id: u.id, phone: u.phone ?? '', name: (u.user_metadata?.name as string) ?? '' };

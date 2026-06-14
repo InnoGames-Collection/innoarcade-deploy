@@ -5,7 +5,7 @@
 
 import {
   authAvailable, requestOtp, verifyOtp, currentUser, signOut, setDisplayName,
-  onAuthChange, devOtpEcho, fetchDevOtp, type AuthUser,
+  onAuthChange, devOtpEcho, fetchDevOtp, AuthTimeoutError, type AuthUser,
 } from '../platform/auth';
 import { getLang } from '../i18n';
 
@@ -17,6 +17,7 @@ const STR = {
     name: 'Display name', save: 'Save', signOut: 'Sign out',
     sent: 'Code sent. Check your SMS.',
     errSend: "Couldn't send the code. Check the number and try again.",
+    errTimeout: 'Network is slow or unreachable. Check your connection and try again.',
     errVerify: 'Wrong or expired code.', close: 'Close',
     demoCode: 'Demo mode — your code is',
     promo: 'Win weekly & monthly prizes',
@@ -28,6 +29,7 @@ const STR = {
     name: 'የሚታይ ስም', save: 'አስቀምጥ', signOut: 'ውጣ',
     sent: 'ኮድ ተልኳል። SMS ይመልከቱ (ወይም በፈተና ሁነታ የ function logs)።',
     errSend: 'ኮዱን መላክ አልተቻለም። ቁጥሩን አረጋግጠው እንደገና ይሞክሩ።',
+    errTimeout: 'አውታረ መረቡ ቀርፋፋ ወይም አይገኝም። ግንኙነትዎን አረጋግጠው እንደገና ይሞክሩ።',
     errVerify: 'የተሳሳተ ወይም ጊዜው ያለፈበት ኮድ።', close: 'ዝጋ',
     demoCode: 'የማሳያ ሁነታ — ኮድዎ',
     promo: 'ሳምንታዊ እና ወርሃዊ ሽልማቶችን ያሸንፉ',
@@ -105,8 +107,8 @@ function openModal(): void {
     try {
       await requestOtp(phone);
       openCode();
-    } catch {
-      m.querySelector('#err')!.textContent = t('errSend');
+    } catch (e) {
+      m.querySelector('#err')!.textContent = t(e instanceof AuthTimeoutError ? 'errTimeout' : 'errSend');
       go.disabled = false; go.textContent = t('send');
     }
   });
@@ -155,8 +157,8 @@ function openCode(): void {
       if (iv) clearInterval(iv);
       m.remove(); render();
       if (!user.name) openProfile();
-    } catch {
-      m.querySelector('#err')!.textContent = t('errVerify');
+    } catch (e) {
+      m.querySelector('#err')!.textContent = t(e instanceof AuthTimeoutError ? 'errTimeout' : 'errVerify');
       go.disabled = false; go.textContent = t('verify');
     }
   });
