@@ -4,7 +4,7 @@
 export type Lang = 'en' | 'am';
 
 const en = {
-  'app.title': 'InnoArcade',
+  'app.title': 'GoPlay',
   'app.tagline': 'Free HTML5 arcade games — play instantly, no downloads.',
   'hub.phase1': 'Play now',
   'hub.phase2': 'Phase 2 — in the workshop',
@@ -260,7 +260,7 @@ export type I18nKey = keyof typeof en;
 type Dict = Record<I18nKey, string>;
 
 const am: Dict = {
-  'app.title': 'ኢኖአርኬድ',
+  'app.title': 'GoPlay',
   'app.tagline': 'ነፃ የHTML5 አርኬድ ጨዋታዎች — ያለ ማውረድ ወዲያውኑ ይጫወቱ።',
   'hub.phase1': 'አሁን ይጫወቱ',
   'hub.phase2': 'ምዕራፍ 2 — በዝግጅት ላይ',

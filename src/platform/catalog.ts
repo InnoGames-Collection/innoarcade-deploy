@@ -213,7 +213,58 @@ export const CATALOG: GameMeta[] = [
     scoreEn: 'Points', scoreAm: 'ነጥብ',
     play: { winPoints: 50, winRate: 45 },
   },
+  {
+    id: 'ethiopian-quiz',
+    route: 'games/ethiopian-quiz/',
+    nameEn: 'Ethiopian Quiz', nameAm: 'የኢትዮጵያ ጥያቄ',
+    genreEn: 'Trivia · Tournament', genreAm: 'ጥያቄ · ውድድር',
+    mode: 'tournament', icon: '🇪🇹', accent: '#3f9e16', thumb: ['#1f7a14', '#0a3208'],
+    scoreEn: 'Points', scoreAm: 'ነጥብ',
+    play: { winPoints: 150, winRate: 50 },
+  },
+  // LexiQuest brain & word games, surfaced in the GoPlay catalog with the same
+  // card style. They open in the LexiQuest app (their gameplay lives there).
+  { id: 'sudoku', route: '../lexiquest/#/g/sudoku', nameEn: 'Sudoku', nameAm: 'ሱዶኩ',
+    genreEn: 'Brain · Logic', genreAm: 'አእምሮ · ሎጂክ', mode: 'free', icon: '🔢',
+    accent: '#34b38a', thumb: ['#34b38a', '#176049'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
+  { id: 'spell', route: '../lexiquest/#/g/spell', nameEn: 'Spell It', nameAm: 'ፊደል ቃላት',
+    genreEn: 'Word · Spelling', genreAm: 'ቃላት · ፊደል', mode: 'free', icon: '🔤',
+    accent: '#6a4cff', thumb: ['#6a4cff', '#34238f'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
+  { id: 'vocab', route: '../lexiquest/#/g/vocab', nameEn: 'Vocabulary', nameAm: 'መዝገበ ቃላት',
+    genreEn: 'Word · Vocabulary', genreAm: 'ቃላት · መዝገበ', mode: 'free', icon: '📖',
+    accent: '#2aa9d6', thumb: ['#2aa9d6', '#13627e'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
+  { id: 'rhyme', route: '../lexiquest/#/g/rhyme', nameEn: 'Rhyme Time', nameAm: 'ግጥም',
+    genreEn: 'Word · Rhyme', genreAm: 'ቃላት · ግጥም', mode: 'free', icon: '🎵',
+    accent: '#e25aa0', thumb: ['#e25aa0', '#8e2c63'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
+  { id: 'target24', route: '../lexiquest/#/g/target24', nameEn: 'Target 24', nameAm: 'ኢላማ 24',
+    genreEn: 'Brain · Math', genreAm: 'አእምሮ · ሒሳብ', mode: 'free', icon: '🎯',
+    accent: '#f0a832', thumb: ['#f0a832', '#9c6310'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
+  { id: 'crosssum', route: '../lexiquest/#/g/crosssum', nameEn: 'Cross Sum', nameAm: 'ድምር',
+    genreEn: 'Brain · Math', genreAm: 'አእምሮ · ሒሳብ', mode: 'free', icon: '➕',
+    accent: '#5b8cff', thumb: ['#5b8cff', '#27468f'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
+  { id: 'logic', route: '../lexiquest/#/g/logic', nameEn: 'Logic Grid', nameAm: 'ሎጂክ',
+    genreEn: 'Brain · Logic', genreAm: 'አእምሮ · ሎጂክ', mode: 'free', icon: '🧩',
+    accent: '#ff7a59', thumb: ['#ff7a59', '#a83b22'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
+  { id: 'sequence', route: '../lexiquest/#/g/sequence', nameEn: 'Sequence', nameAm: 'ቅደም ተከተል',
+    genreEn: 'Brain · Logic', genreAm: 'አእምሮ · ሎጂክ', mode: 'free', icon: '🔗',
+    accent: '#7a6cff', thumb: ['#7a6cff', '#3d2f9e'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
 ];
+
+// Preferred display order for the flat catalog: these lead (in this order), then
+// every other game follows in catalog order.
+const FEATURED_ORDER = [
+  'popblast', 'luckyslot', 'memory-match', 'merge-2048', 'spin-wheel',
+  'ethiopian-quiz', 'dice-roll', 'lucky-box', 'temple-dash', 'sudoku',
+];
+
+/** The full catalog sorted for display (featured games first, then the rest). */
+export function orderedCatalog(): GameMeta[] {
+  const rank = (g: GameMeta): number => {
+    const i = FEATURED_ORDER.indexOf(g.id);
+    return i < 0 ? FEATURED_ORDER.length + CATALOG.indexOf(g) : i;
+  };
+  return [...CATALOG].sort((a, b) => rank(a) - rank(b));
+}
 
 const byId = new Map(CATALOG.map((g) => [g.id, g]));
 

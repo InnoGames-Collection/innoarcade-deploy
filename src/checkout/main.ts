@@ -70,7 +70,7 @@ function render(): void {
         </header>
         <div class="tb-body">
           <p class="tb-label">${t('merchant')}</p>
-          <p class="tb-merchant">🕹️ InnoArcade</p>
+          <p class="tb-merchant">🎮 GoPlay</p>
           <div class="tb-amount">
             <span class="tb-etb">ETB</span>
             <span class="tb-val">${Number(amount).toLocaleString()}</span>

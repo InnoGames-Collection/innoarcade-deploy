@@ -370,6 +370,15 @@ body {
   background: #fff; border-radius: 26%;
   box-shadow: 0 8px 18px rgba(47, 124, 14, 0.22), inset 0 0 0 1px rgba(47, 124, 14, 0.06); }
 
+/* mode tag (Tournament / Free) on the cover + category + play pill in the body */
+.gc-tag.free { background: rgba(31, 116, 224, 0.9); }
+.gc-tag.tournament { background: rgba(31, 78, 12, 0.85); }
+.gc-cat { color: var(--muted); font-size: 0.74rem; font-weight: 600; }
+.gc-play { display: inline-block; margin-top: 0.5rem; background: var(--accent); color: #fff;
+  font-size: 0.8rem; font-weight: 800; padding: 0.32rem 1.05rem; border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(47, 124, 14, 0.28); transition: filter 0.12s, transform 0.1s; }
+.game-card:hover .gc-play { filter: brightness(1.06); transform: translateY(-1px); }
+
 /* compact balance chips in topbar */
 .top-balances { display: flex; align-items: center; gap: 0.4rem; margin-inline: auto; }
 .bal-chip { display: inline-flex; align-items: center; gap: 0.28rem; font-size: 0.8rem; font-weight: 600;
@@ -408,10 +417,22 @@ body {
 .sm-chev { color: var(--muted); }
 
 @media (max-width: 720px) {
-  .topbar { gap: 0.5rem; padding-inline: 0.8rem; }
-  .coin-chip { font-size: 0.72rem; }
-  .cc-seg { padding: 0.14rem 0.34rem; }
+  /* Fit the header to the phone: drop the scroll-nav (the bottom bar covers it),
+     shrink the brand + balance chips, and keep the gear reachable — no more
+     horizontal overflow that hid the settings off-screen. */
+  .topbar { gap: 0.4rem; padding-inline: 0.7rem; flex-wrap: nowrap; }
+  .topnav { display: none; }
+  .brand { font-size: 1rem; }
+  .brand-icon { width: 1.7rem; height: 1.7rem; font-size: 1rem; }
+  .top-balances { margin-inline: auto 0; gap: 0.25rem; min-width: 0; }
+  .bal-chip { font-size: 0.7rem; padding: 0.18rem 0.45rem; gap: 0.18rem; }
+  /* Gold/points live in the dashboard; on mobile keep only the coins chip in the
+     header so the gear always fits. */
+  .bal-chip.bal-points, .bal-chip.bal-gold { display: none; }
+  .auth-btn { font-size: 0.78rem !important; padding: 0.34rem 0.7rem !important; }
+  .settings-btn { width: 2rem; height: 2rem; }
 }
+html, body { max-width: 100%; overflow-x: hidden; }
 
 /* bottom navigation (mobile app shell) */
 .bottomnav { display: none; }

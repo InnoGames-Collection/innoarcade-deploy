@@ -3,29 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕹️</text></svg>" />
-    <title>InnoArcade — Play & Compete</title>
-    <script type="module" crossorigin src="./assets/hub-Bi2L6dsX.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/index-C8BkLz8x.js">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>" />
+    <title>GoPlay — Play & Compete</title>
+    <script type="module" crossorigin src="./assets/hub-BkKz-SiP.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/index-DRsvV4S3.js">
     <link rel="modulepreload" crossorigin href="./assets/audio-B72F-rOv.js">
-    <link rel="modulepreload" crossorigin href="./assets/tournaments-DyCKfGH2.js">
-    <link rel="modulepreload" crossorigin href="./assets/currency-BW70_o0L.js">
-    <link rel="modulepreload" crossorigin href="./assets/backend-Bq_Er9oI.js">
+    <link rel="modulepreload" crossorigin href="./assets/tournaments-kUkNN1lI.js">
+    <link rel="modulepreload" crossorigin href="./assets/testMode-CRWQDKix.js">
+    <link rel="modulepreload" crossorigin href="./assets/backend-CkZhwmO7.js">
     <link rel="stylesheet" crossorigin href="./assets/audio-HPgZI6Yo.css">
-    <link rel="stylesheet" crossorigin href="./assets/hub-CC82JsGb.css">
+    <link rel="stylesheet" crossorigin href="./assets/hub-DaNAMcSm.css">
   </head>
   <body>
     <header class="topbar">
       <div class="brand">
-        <span class="brand-icon">🕹️</span>
-        <span class="brand-name" data-i18n="app.title">InnoArcade</span>
+        <span class="brand-icon">🎮</span>
+        <span class="brand-name" data-i18n="app.title">GoPlay</span>
       </div>
       <nav class="topnav">
-        <a href="#myStats" class="nav-link active" data-i18n="hub.dashboard">Dashboard</a>
+        <a href="#statsStrip" class="nav-link active" data-i18n="hub.dashboard">Dashboard</a>
+        <a href="#games" class="nav-link" data-i18n="hub.available">Games</a>
         <a href="#tournaments" class="nav-link" data-i18n="hub.tournaments">Tournaments</a>
-        <a href="#games" class="nav-link" data-i18n="hub.freeGames">Free games</a>
-        <a href="#brain" class="nav-link" data-i18n="hub.brain">Brain &amp; Word</a>
+        <a href="#draws" class="nav-link" data-i18n="hub.draws">Draws</a>
       </nav>
+      <div id="topBalances" class="top-balances"></div>
       <button id="settingsBtn" class="settings-btn" aria-label="Settings">⚙</button>
     </header>
 
@@ -35,17 +36,15 @@
         <div class="promo-dots" id="promoDots"></div>
       </section>
 
-      <section id="myStats" class="mystats-section" aria-label="Your balances">
-        <div id="myStatsGrid" class="mystats-grid"></div>
-      </section>
+      <section id="statsStrip" class="stats-strip-section" aria-label="Platform stats"></section>
 
       <section id="games" class="games-section">
         <div class="games-head">
           <h2 class="section-title">🎮 <span data-i18n="hub.available">Available games</span></h2>
           <div class="games-tools">
             <div class="seg" id="gameSeg" role="tablist">
-              <button class="seg-btn active" data-filter="all" data-i18n="hub.allGames">All</button>
-              <button class="seg-btn" data-filter="tournament" data-i18n="hub.tournament">Tournament</button>
+              <button class="seg-btn" data-filter="all" data-i18n="hub.allGames">All</button>
+              <button class="seg-btn active" data-filter="tournament" data-i18n="hub.tournament">Tournament</button>
               <button class="seg-btn" data-filter="free" data-i18n="arc.free">Free</button>
             </div>
             <input id="gameSearch" class="game-search" type="search" aria-label="Search games" />
@@ -74,16 +73,8 @@
         <span class="section-eyebrow" data-i18n="hub.heroEyebrow">Compete &amp; win</span>
         <h2 class="section-title" data-i18n="hub.featured">Featured tournament</h2>
         <div id="featured"></div>
-        <div id="statsStrip" class="stats-strip" style="margin-top:1.25rem"></div>
       </section>
 
-      <section id="brain" class="brain-section">
-        <div class="cat-head">
-          <h2 class="section-title">🧠 <span data-i18n="hub.brain">Brain &amp; Word</span></h2>
-          <a class="view-all" href="../lexiquest/" data-i18n="hub.viewAll">View all</a>
-        </div>
-        <div id="brainGrid" class="cat-grid"></div>
-      </section>
     </main>
 
     <footer class="hub-footer">
@@ -91,7 +82,7 @@
     </footer>
 
     <nav class="bottomnav" aria-label="Primary">
-      <a href="#myStats" class="bn-item active"><span class="bn-ico">🏠</span><span data-i18n="nav.home">Home</span></a>
+      <a href="#statsStrip" class="bn-item active"><span class="bn-ico">🏠</span><span data-i18n="nav.home">Home</span></a>
       <a href="#games" class="bn-item"><span class="bn-ico">🎮</span><span data-i18n="nav.games">Games</span></a>
       <a href="#draws" class="bn-item"><span class="bn-ico">🎁</span><span data-i18n="nav.draws">Draws</span></a>
       <a href="#winners" class="bn-item"><span class="bn-ico">🏆</span><span data-i18n="nav.winners">Winners</span></a>

@@ -30,6 +30,7 @@ export default defineConfig({
         luckyslot: p('games/luckyslot/index.html'),
         popblast: p('games/popblast/index.html'),
         crashGame: p('games/crash-game/index.html'),
+        ethiopianQuiz: p('games/ethiopian-quiz/index.html'),
       },
     },
   },

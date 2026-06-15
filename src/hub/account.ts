@@ -44,14 +44,14 @@ const STR = {
 const INFO: Record<'terms' | 'faq', { en: string[]; am: string[] }> = {
   terms: {
     en: [
-      'By using InnoArcade you agree to play responsibly and to follow the operator’s service terms.',
+      'By using GoPlay you agree to play responsibly and to follow the operator’s service terms.',
       'Coins and Gold are bought with real money. Points are earned by playing and have no cash value.',
       'Prize draws run on a fixed daily, weekly and monthly schedule. Tickets are bought with Points and entries are final.',
       'Subscriptions renew automatically until cancelled. The one-day free trial applies to first-time subscribers only.',
       'You must be 18 or older to enter prize draws.',
     ],
     am: [
-      'InnoArcadeን በመጠቀም በኃላፊነት ለመጫወት ይስማማሉ።',
+      'GoPlayን በመጠቀም በኃላፊነት ለመጫወት ይስማማሉ።',
       'ሳንቲም እና ወርቅ በገንዘብ ይገዛሉ። ነጥብ በመጫወት ይገኛል፣ የገንዘብ ዋጋ የለውም።',
       'ዕጣዎች በየቀኑ፣ በየሳምንቱ እና በየወሩ ይካሄዳሉ። ቲኬቶች በነጥብ ይገዛሉ።',
       'ምዝገባ እስኪሰረዝ ድረስ ይታደሳል። የነጻ ሙከራ ለመጀመሪያ ተመዝጋቢዎች ብቻ ነው።',
@@ -84,7 +84,7 @@ function shell(inner: string): HTMLElement {
   const m = document.createElement('div');
   m.className = 'acct-modal';
   m.innerHTML = `
-    <div class="acct-brand"><span class="acct-brand-icon">🕹️</span><span>InnoArcade</span></div>
+    <div class="acct-brand"><span class="acct-brand-icon">🎮</span><span>GoPlay</span></div>
     <button class="acct-back" aria-label="${t('back')}">✕</button>
     <div class="acct-stack">${inner}</div>`;
   document.body.appendChild(m);

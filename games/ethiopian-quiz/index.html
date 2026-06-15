@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇪🇹</text></svg>" />
+    <title>Ethiopian Quiz — GoPlay</title>
+  </head>
+  <body>
+    <div id="stage">
+      <header class="topbar">
+        <a class="back-link" href="../../" data-i18n="arc.back">All games</a>
+        <span class="game-name">🇪🇹 <span id="eq-title">Ethiopian Quiz</span></span>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button id="langEn" class="lang-btn">EN</button>
+          <button id="langAm" class="lang-btn">አማ</button>
+        </div>
+      </header>
+
+      <div id="eq-wrapper">
+        <div class="eq-hud">
+          <div class="eq-hud-item"><span>🪙</span><div><div class="eq-hud-sub" data-i18n="arc.cost">Cost</div><div class="eq-hud-val" id="eq-cost">…</div></div></div>
+          <div class="eq-hud-title">❓ <span id="eq-title2">Ethiopian Quiz</span></div>
+          <div class="eq-hud-item r"><div style="text-align:right"><div class="eq-hud-sub" data-i18n="arc.win">Win</div><div class="eq-hud-val gold" id="eq-win">…</div></div><span>⭐</span></div>
+        </div>
+
+        <div class="eq-tourney" id="eq-tourney">
+          <span class="eq-t-name" id="eq-t-name">—</span>
+          <span class="eq-t-rank"><span data-i18n="arc.yourRank">Your rank</span> <strong id="eq-rank">#—</strong></span>
+        </div>
+
+        <div class="eq-card" id="eq-card">
+          <div class="eq-progress" id="eq-progress"></div>
+          <h2 class="eq-question" id="eq-question">…</h2>
+          <div class="eq-options" id="eq-options"></div>
+          <div class="eq-message" id="eq-message"></div>
+          <button class="eq-btn" id="eq-start">Start</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/games/ethiopian-quiz/main.ts"></script>
+  </body>
+</html>

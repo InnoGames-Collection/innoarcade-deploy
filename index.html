@@ -3,20 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕹️</text></svg>" />
-    <title>InnoArcade — Play & Compete</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>" />
+    <title>GoPlay — Play & Compete</title>
   </head>
   <body>
     <header class="topbar">
       <div class="brand">
-        <span class="brand-icon">🕹️</span>
-        <span class="brand-name" data-i18n="app.title">InnoArcade</span>
+        <span class="brand-icon">🎮</span>
+        <span class="brand-name" data-i18n="app.title">GoPlay</span>
       </div>
       <nav class="topnav">
         <a href="#statsStrip" class="nav-link active" data-i18n="hub.dashboard">Dashboard</a>
+        <a href="#games" class="nav-link" data-i18n="hub.available">Games</a>
         <a href="#tournaments" class="nav-link" data-i18n="hub.tournaments">Tournaments</a>
-        <a href="#games" class="nav-link" data-i18n="hub.freeGames">Free games</a>
-        <a href="#brain" class="nav-link" data-i18n="hub.brain">Brain &amp; Word</a>
+        <a href="#draws" class="nav-link" data-i18n="hub.draws">Draws</a>
       </nav>
       <div id="topBalances" class="top-balances"></div>
       <button id="settingsBtn" class="settings-btn" aria-label="Settings">⚙</button>
@@ -67,13 +67,6 @@
         <div id="featured"></div>
       </section>
 
-      <section id="brain" class="brain-section">
-        <div class="cat-head">
-          <h2 class="section-title">🧠 <span data-i18n="hub.brain">Brain &amp; Word</span></h2>
-          <a class="view-all" href="../lexiquest/" data-i18n="hub.viewAll">View all</a>
-        </div>
-        <div id="brainGrid" class="cat-grid"></div>
-      </section>
     </main>
 
     <footer class="hub-footer">

@@ -8,7 +8,7 @@ import { onAuthChange, currentUser, signOut } from '../platform/auth';
 import { sfx } from '../engine/audio';
 import { renderDashboard, injectDashboardStyles } from './dashboard';
 import { mergedLeaderboard } from '../platform/backend';
-import { CATALOG, type GameMeta } from '../platform/catalog';
+import { CATALOG, orderedCatalog, type GameMeta } from '../platform/catalog';
 import {
   activeTournaments, featuredTournament, tournamentGame, leaderboard,
   playerStanding, countdown, loadTournaments, loadMyEntries,
@@ -294,97 +294,45 @@ function renderTournaments(): void {
   wireEntryCtas();
 }
 
-// --- Games grid, grouped into category rows ---------------------------------
-// Curated shelf labels (EN/AM) + the order categories appear in. Derived from
-// the catalog genre's first token; unknown keys fall back to the raw key and
-// sort to the end.
-const CAT_LABEL: Record<string, { en: string; am: string }> = {
-  Chance: { en: 'Lucky & casino', am: 'ዕድል እና ካዚኖ' },
-  Arcade: { en: 'Arcade', am: 'አርኬድ' },
-  Puzzle: { en: 'Puzzle', am: 'እንቆቅልሽ' },
-  'Match-3': { en: 'Match 3', am: 'ሦስት አዛምድ' },
-  Runner: { en: 'Runner', am: 'ሩጫ' },
-  Shooter: { en: 'Shooter', am: 'ተኳሽ' },
-};
-const CAT_ORDER = ['Chance', 'Arcade', 'Puzzle', 'Match-3', 'Runner', 'Shooter'];
-function catKey(g: GameMeta): string { return g.genreEn.split('·')[0].trim(); }
-function catLabel(key: string): string {
-  const l = CAT_LABEL[key];
-  return l ? (lang() === 'am' ? l.am : l.en) : key;
-}
+// --- Games library (flat, ordered) ------------------------------------------
+// The category shown on a card = the first token of its genre ("Chance · …").
+const category = (g: GameMeta): string => genre(g).split('·')[0].trim();
 
 function gameCard(g: GameMeta): string {
+  const modeTag = g.mode === 'tournament'
+    ? `<span class="gc-tag tournament">🏆 ${t('hub.tournament')}</span>`
+    : `<span class="gc-tag free">${t('arc.free')}</span>`;
   return `
     <a class="game-card" href="${g.route}">
       <div class="gc-thumb">
         <span class="gc-glyph">${g.icon}</span>
-        ${g.mode === 'tournament' ? `<span class="gc-tag">🏆 ${t('hub.tournament')}</span>` : ''}
+        ${modeTag}
       </div>
       <div class="gc-body">
         <h4>${escapeHtml(name(g))}</h4>
-        <p>${escapeHtml(genre(g))}</p>
+        <p class="gc-cat">${escapeHtml(category(g))}</p>
+        <span class="gc-play">▶ ${t('hub.play')}</span>
       </div>
     </a>`;
 }
 
-// Browse state for the games section (segmented filter + search).
+// Browse state: the top segmented menu filters by tag (all / tournament / free).
 let gameFilter: 'all' | 'tournament' | 'free' = 'tournament';
 let gameQuery = '';
 
+// A single flat library (no category sections), ordered by the catalog's
+// preferred order, filtered by the tag menu + search.
 function renderGames(): void {
   const host = $('#gameGrid');
   const q = gameQuery.trim().toLowerCase();
-  const pool = CATALOG.filter((g) => {
+  const pool = orderedCatalog().filter((g) => {
     if (gameFilter !== 'all' && g.mode !== gameFilter) return false;
     if (q && !`${g.nameEn} ${g.nameAm} ${g.genreEn}`.toLowerCase().includes(q)) return false;
     return true;
   });
-  if (!pool.length) {
-    host.innerHTML = `<p class="cat-empty">${t('hub.noResults')}</p>`;
-    return;
-  }
-  const cats = new Map<string, GameMeta[]>();
-  for (const g of pool) {
-    const k = catKey(g);
-    if (!cats.has(k)) cats.set(k, []);
-    cats.get(k)!.push(g);
-  }
-  const keys = [...cats.keys()].sort((a, b) => {
-    const ia = CAT_ORDER.indexOf(a);
-    const ib = CAT_ORDER.indexOf(b);
-    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
-  });
-  host.innerHTML = keys.map((key) => {
-    const list = cats.get(key)!;
-    return `
-    <div class="cat-block">
-      <div class="cat-head"><h3>${escapeHtml(catLabel(key))}<span class="cat-count">${list.length}</span></h3></div>
-      <div class="cat-shelf">${list.map(gameCard).join('')}</div>
-    </div>`;
-  }).join('');
-}
-
-// --- LexiQuest brain-games category (links into the LexiQuest app) -----------
-interface BrainGame { id: string; nameEn: string; nameAm: string; icon: string; thumb: [string, string]; }
-const LEXIQUEST: BrainGame[] = [
-  { id: 'spell', nameEn: 'Spell It', nameAm: 'ፊደል ቃላት', icon: '🔤', thumb: ['#6a4cff', '#34238f'] },
-  { id: 'vocab', nameEn: 'Vocabulary', nameAm: 'መዝገበ ቃላት', icon: '📖', thumb: ['#2aa9d6', '#13627e'] },
-  { id: 'rhyme', nameEn: 'Rhyme Time', nameAm: 'ግጥም', icon: '🎵', thumb: ['#e25aa0', '#8e2c63'] },
-  { id: 'sudoku', nameEn: 'Sudoku', nameAm: 'ሱዶኩ', icon: '🔢', thumb: ['#34b38a', '#176049'] },
-  { id: 'target24', nameEn: 'Target 24', nameAm: 'ኢላማ 24', icon: '🎯', thumb: ['#f0a832', '#9c6310'] },
-  { id: 'crosssum', nameEn: 'Cross Sum', nameAm: 'ድምር', icon: '➕', thumb: ['#5b8cff', '#27468f'] },
-  { id: 'logic', nameEn: 'Logic Grid', nameAm: 'ሎጂክ', icon: '🧩', thumb: ['#ff7a59', '#a83b22'] },
-  { id: 'sequence', nameEn: 'Sequence', nameAm: 'ቅደም ተከተል', icon: '🔗', thumb: ['#7a6cff', '#3d2f9e'] },
-];
-function renderBrain(): void {
-  const host = $('#brainGrid');
-  host.innerHTML = LEXIQUEST.map((g) => `
-    <a class="game-card" href="../lexiquest/#/g/${g.id}">
-      <div class="gc-thumb">
-        <span class="gc-glyph">${g.icon}</span>
-      </div>
-      <div class="gc-body"><h4>${escapeHtml(lang() === 'am' ? g.nameAm : g.nameEn)}</h4></div>
-    </a>`).join('');
+  host.innerHTML = pool.length
+    ? `<div class="cat-shelf">${pool.map(gameCard).join('')}</div>`
+    : `<p class="cat-empty">${t('hub.noResults')}</p>`;
 }
 
 // --- Draws / lottery --------------------------------------------------------
@@ -464,7 +412,6 @@ function renderAll(): void {
   renderGames();
   renderDraws();
   renderWinners();
-  renderBrain();
   applyTranslations();
   const search = document.querySelector<HTMLInputElement>('#gameSearch');
   if (search) search.placeholder = t('hub.searchGames');
@@ -553,7 +500,7 @@ function mountSettings(): void {
 }
 
 // Nav active-state on scroll (top nav + mobile bottom nav).
-const sections = ['statsStrip', 'games', 'tournaments', 'draws', 'winners', 'dashboard', 'brain'];
+const sections = ['statsStrip', 'games', 'tournaments', 'draws', 'winners', 'dashboard'];
 function syncNavActive(): void {
   let current = sections[0];
   for (const id of sections) {

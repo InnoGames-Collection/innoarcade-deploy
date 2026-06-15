@@ -7,7 +7,7 @@ import { getLang } from '../i18n';
 
 const STR = {
   en: {
-    title: 'InnoArcade Admin', console: 'Operator console',
+    title: 'GoPlay Admin', console: 'Operator console',
     nav_dashboard: 'Dashboard', nav_tournaments: 'Tournaments', nav_players: 'Players',
     nav_payments: 'Payments', nav_config: 'Config',
     signIn: 'Sign in', signOut: 'Sign out', notAuthorised: 'You are not authorised to view this console.',

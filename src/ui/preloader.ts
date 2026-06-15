@@ -6,7 +6,7 @@ export class Preloader {
   private root: HTMLElement;
   private bar: HTMLElement;
 
-  constructor(title = 'InnoArcade') {
+  constructor(title = 'GoPlay') {
     const root = document.createElement('div');
     root.className = 'ia-preloader';
     root.innerHTML = `

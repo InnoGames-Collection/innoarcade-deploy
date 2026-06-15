@@ -72,7 +72,7 @@ function shell(inner: string): HTMLElement {
   const m = document.createElement('div');
   m.className = 'auth-modal';
   m.innerHTML = `
-    <div class="auth-brand"><span class="auth-brand-icon">🕹️</span><span>InnoArcade</span></div>
+    <div class="auth-brand"><span class="auth-brand-icon">🎮</span><span>GoPlay</span></div>
     <button class="auth-back" aria-label="${t('close')}">✕</button>
     <div class="auth-stack">
       <div class="auth-promo">🎁 ${t('promo')}</div>
