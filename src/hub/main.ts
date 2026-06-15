@@ -317,7 +317,7 @@ function gameCard(g: GameMeta): string {
 }
 
 // Browse state: the top segmented menu filters by tag (all / tournament / free).
-let gameFilter: 'all' | 'tournament' | 'free' = 'tournament';
+let gameFilter: 'all' | 'tournament' | 'free' = 'all';
 let gameQuery = '';
 
 // A single flat library (no category sections), ordered by the catalog's
