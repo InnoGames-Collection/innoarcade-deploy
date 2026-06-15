@@ -410,3 +410,50 @@ button:focus-visible, [tabindex]:focus-visible {
 .center { text-align: center; }
 .dim { color: var(--text-dim); }
 .mt { margin-top: 16px; }
+
+/* ============================================================================
+   GoPlay theme override — make the migrated games match the GoPlay/innoarcade
+   look (green accent, white cards, light-green page, GoPlay-style header).
+   Appended last so it wins over the defaults above. Dark mode is remapped to the
+   same light palette so the games always match the rest of GoPlay.
+   ========================================================================== */
+:root, [data-theme="dark"] {
+  --bg: #eef6e6;
+  --surface: #ffffff;
+  --surface-2: #eef6e3;
+  --text: #14271a;
+  --text-dim: #5f7262;
+  --border: #e0ebd4;
+  --accent: #4f9e16;
+  --accent-text: #ffffff;
+  --good: #1f9d55;
+  --shadow: 0 8px 22px rgba(47, 124, 14, 0.12);
+}
+
+/* GoPlay-style game header: white bar, brand in green, a text "All games" back
+   link, and a hidden theme toggle (the native game pages don't theme-switch). */
+.lq-header {
+  padding-top: 12px; padding-bottom: 12px;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.6), 0 6px 20px rgba(31, 41, 80, 0.05);
+}
+.lq-header .brand {
+  background: linear-gradient(135deg, #6cc52f 0%, #4f9e16 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.lq-header .brand span { color: transparent; }
+#themeBtn { display: none; }
+
+/* Turn the icon-only back button into a green "← All games" text link. */
+#backBtn.icon-btn {
+  width: auto; min-width: 0; padding: 0 0.8rem; gap: 0.35rem;
+  background: transparent; border: 1px solid var(--border); border-radius: 999px;
+  color: var(--accent); font-weight: 700; font-size: 0.9rem;
+}
+#backBtn.icon-btn::after { content: "All games"; }
+#backBtn.icon-btn:hover { background: #eef6e3; border-color: var(--accent); }
+
+/* Rounded green primary buttons + card hovers, matching the GoPlay catalog. */
+.btn { border-radius: 12px; }
+.btn.primary { box-shadow: 0 6px 16px rgba(47, 124, 14, 0.28); }
+.game-card { border-radius: 16px; }
+.game-card:hover { box-shadow: var(--shadow); }
