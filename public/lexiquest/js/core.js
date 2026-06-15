@@ -370,7 +370,12 @@
     const g = m && byId[m[1]];
     const back = document.getElementById("backBtn");
     if (g) { back.style.visibility = "visible"; renderGame(app, g); }
-    else { back.style.visibility = "hidden"; renderHub(app); }
+    else {
+      // No game selected: this app is embedded in GoPlay — there is no standalone
+      // LexiQuest landing. Send the player back to the GoPlay games hub.
+      location.href = "../#games";
+      return;
+    }
     window.scrollTo(0, 0);
   }
 
@@ -402,8 +407,9 @@
     document.getElementById("themeBtn").addEventListener("click", toggleTheme);
     const soundBtn = document.getElementById("soundBtn");
     if (soundBtn) soundBtn.addEventListener("click", toggleMute);
-    document.getElementById("backBtn").addEventListener("click", () => { location.hash = "#/"; });
-    document.querySelector(".brand").addEventListener("click", () => { location.hash = "#/"; });
+    // Back and brand return to the GoPlay hub (the games live inside GoPlay now).
+    document.getElementById("backBtn").addEventListener("click", () => { location.href = "../#games"; });
+    document.querySelector(".brand").addEventListener("click", () => { location.href = "../#games"; });
     window.addEventListener("hashchange", route);
     route();
     if ("serviceWorker" in navigator && location.protocol.startsWith("http") &&

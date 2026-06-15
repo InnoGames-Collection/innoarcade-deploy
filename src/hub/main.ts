@@ -422,6 +422,9 @@ const PERIOD_LABEL: Record<DrawPeriod, { en: string; am: string }> = {
 };
 const periodLabel = (p: DrawPeriod): string => (lang() === 'am' ? PERIOD_LABEL[p].am : PERIOD_LABEL[p].en);
 
+// Winners view is tabbed: All | Daily | Weekly | Monthly.
+let winnerFilter: 'all' | DrawPeriod = 'all';
+
 function renderWinners(): void {
   const host = document.querySelector('#winnerList');
   if (!host) return;
@@ -432,14 +435,25 @@ function renderWinners(): void {
       <span class="wr-phone">${escapeHtml(w.phone)}</span>
       <span class="wr-prize">${w.prizeEtb.toLocaleString()} ETB</span>
     </div>`;
-  host.innerHTML = (['daily', 'weekly', 'monthly'] as DrawPeriod[]).map((p) => {
+  const tabs: Array<'all' | DrawPeriod> = ['all', 'daily', 'weekly', 'monthly'];
+  const tabLabel = (k: 'all' | DrawPeriod): string =>
+    k === 'all' ? (lang() === 'am' ? 'ሁሉም' : 'All') : periodLabel(k);
+  const tabBar = `<div class="seg winners-seg" role="tablist">${tabs.map((k) =>
+    `<button class="seg-btn${winnerFilter === k ? ' active' : ''}" data-wf="${k}">${tabLabel(k)}</button>`).join('')}</div>`;
+
+  const group = (p: DrawPeriod): string => {
     const rows = all.filter((w) => w.period === p);
     if (!rows.length) return '';
     return `<div class="winner-group">
       <h4 class="wg-head"><span class="wg-badge wg-${p}">${periodLabel(p)}</span></h4>
       ${rows.map(row).join('')}
     </div>`;
-  }).join('');
+  };
+
+  const body = winnerFilter === 'all'
+    ? (['daily', 'weekly', 'monthly'] as DrawPeriod[]).map(group).join('')
+    : group(winnerFilter);
+  host.innerHTML = tabBar + (body || `<p class="pd-empty">—</p>`);
 }
 
 // --- Live countdowns --------------------------------------------------------
@@ -599,6 +613,13 @@ function setupBrowse(): void {
     });
   });
   document.querySelector('#bnAccount')?.addEventListener('click', () => void openAccount());
+  // Winners tab bar (All / Daily / Weekly / Monthly) — delegated, re-rendered.
+  document.querySelector('#winnerList')?.addEventListener('click', (e) => {
+    const tab = (e.target as HTMLElement).closest<HTMLElement>('[data-wf]');
+    if (!tab) return;
+    winnerFilter = tab.dataset.wf as typeof winnerFilter;
+    renderWinners();
+  });
   // Delegated ℹ️ "how to play" — intercept before the card link navigates.
   document.querySelector('#gameGrid')?.addEventListener('click', (e) => {
     const info = (e.target as HTMLElement).closest<HTMLElement>('.gc-info');

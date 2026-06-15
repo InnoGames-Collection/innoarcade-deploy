@@ -489,3 +489,4 @@ html, body { max-width: 100%; overflow-x: hidden; }
 
 /* ---- settings menu stays on-screen on small viewports ---- */
 .settings-menu { max-width: calc(100vw - 16px); }
+.winners-seg { margin-bottom: 1rem; flex-wrap: wrap; }
