@@ -8,9 +8,10 @@
    otherwise --text/--accent can flip to the dark-theme values and render cream
    text on white. */
 html:root {
-  /* Ethio Telecom brand: vivid green identity + blue primary actions (telefun
-     convention). Bright green page like the telecom portals, white content cards. */
-  --bg: #74bf2e;
+  /* Ethio Telecom brand: green identity + blue primary actions (telefun
+     convention). Light, near-white page (winnershub style) with a faint game-pad
+     watermark; green lives in the header, accents and game art. */
+  --bg: #eef1ea;
   --bg-2: #ffffff;
   --card: #ffffff;
   --text: #14271a;
@@ -31,8 +32,8 @@ html:root {
   --shadow-md: 0 10px 30px rgba(20, 45, 14, 0.16);
   --shadow-lg: 0 22px 50px rgba(16, 50, 10, 0.26);
   --radius: 18px;
-  /* faint star pattern (telecom-portal style) painted over the green page */
-  --stars: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cpath fill='%23ffffff' fill-opacity='0.10' d='M30 12l4 9 9 1-7 6 2 9-8-5-8 5 2-9-7-6 9-1zM86 60l3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1zM52 86l3 6 6 1-4 4 1 6-6-3-5 3 1-6-5-4 6-1z'/%3E%3C/svg%3E");
+  /* faint game-pad watermark (winnershub style) tiled over the light page */
+  --stars: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='170' height='170' viewBox='0 0 170 170'%3E%3Cg fill='%234f9e16' fill-opacity='0.09'%3E%3Cg transform='translate(6 16) scale(1.8)'%3E%3Cpath d='M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM11 13H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5S14.67 12 15.5 12s1.5.67 1.5 1.5S16.33 15 15.5 15zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5S19.33 12 18.5 12z'/%3E%3C/g%3E%3Cg transform='translate(96 96) scale(1.8)'%3E%3Cpath d='M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM11 13H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5S14.67 12 15.5 12s1.5.67 1.5 1.5S16.33 15 15.5 15zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5S19.33 12 18.5 12z'/%3E%3C/g%3E%3Ccircle cx='132' cy='28' r='2.4'/%3E%3Ccircle cx='28' cy='140' r='2.4'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* Primary buttons: brand gradient + white text, with a soft lift on hover. */
@@ -48,18 +49,17 @@ html:root {
 body {
   background:
     var(--stars),
-    radial-gradient(85% 55% at 50% -12%, rgba(255, 255, 255, 0.20) 0%, transparent 60%),
-    radial-gradient(70% 60% at 100% 105%, rgba(18, 78, 8, 0.22) 0%, transparent 60%),
+    radial-gradient(120% 60% at 50% -10%, rgba(124, 201, 58, 0.16) 0%, transparent 55%),
     var(--bg);
   background-attachment: fixed;
   color: var(--text);
 }
 
-/* Section headings sit directly on the green page → white for contrast. */
-.section-title { color: #ffffff; text-shadow: 0 1px 2px rgba(12, 40, 8, 0.25); }
-.section-eyebrow { color: rgba(255, 255, 255, 0.92); }
-.cat-head h3 { color: #ffffff; }
-.games-head .section-title { color: #ffffff; }
+/* Section headings sit on the light page → dark ink for contrast. */
+.section-title { color: var(--text); }
+.section-eyebrow { color: var(--accent); }
+.cat-head h3 { color: var(--text); }
+.games-head .section-title { color: var(--text); }
 
 /* ---- top bar ---- */
 .topbar {
