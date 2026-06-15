@@ -80,3 +80,15 @@ body {
   color: #221a08;
   font-weight: 700;
 }
+
+/* Shared "✕" close control for game windows (replaces the old "All games"
+   links). Returns to the previous page; styled to read on light or dark game
+   chrome via currentColor. */
+.gp-close {
+  display: inline-grid; place-items: center; width: 2.1rem; height: 2.1rem;
+  border-radius: 999px; border: 1px solid rgba(127, 127, 127, 0.4);
+  background: rgba(127, 127, 127, 0.12); color: inherit;
+  font-size: 1rem; line-height: 1; cursor: pointer; padding: 0;
+}
+.gp-close:hover { background: rgba(127, 127, 127, 0.22); }
+.gp-close-block { margin: 0.6rem auto 0; }

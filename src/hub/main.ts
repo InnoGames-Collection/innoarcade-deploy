@@ -1,10 +1,10 @@
 import '../styles/base.css';
 import './hub.css';
 import { applyTranslations, getLang, setLang, t, type Lang } from '../i18n';
-import { mountSignIn, openSignIn } from './signin';
+import { openSignIn } from './signin';
 import { openAccount } from './account';
 import { mountWallet, openStore, needsSignInToBuy } from './wallet';
-import { onAuthChange, currentUser, signOut } from '../platform/auth';
+import { onAuthChange, currentUser, signOut, authAvailable } from '../platform/auth';
 import { sfx } from '../engine/audio';
 import { renderDashboard, injectDashboardStyles } from './dashboard';
 import { mergedLeaderboard } from '../platform/backend';
@@ -18,7 +18,7 @@ import {
 import { balanceSync, onWalletChange } from '../platform/wallet';
 import { SignInRequiredError } from '../platform/payments';
 import { activeDraws, myTickets, enterDraw, recentWinners, NotEnoughPointsError, type DrawPeriod, type Winner } from '../platform/draws';
-import { points as pointsBal, gold as goldBal, onCurrencyChange, earn } from '../platform/currency';
+import { points as pointsBal, onCurrencyChange, earn } from '../platform/currency';
 import { isTestMode, setTestMode } from '../platform/testMode';
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
@@ -58,10 +58,13 @@ function renderMyStats(): void {
   if (!host) return;
   const chip = (icon: string, val: string, cls: string): string =>
     `<span class="bal-chip ${cls}">${icon} <strong>${val}</strong></span>`;
+  // Top bar shows Points + Coins, then a Buy button (gold is bonus/reward only,
+  // so it is no longer surfaced here — it lives in the dashboard).
   host.innerHTML =
-    chip('🪙', balanceSync().toLocaleString(), 'bal-coins') +
     chip('⭐', pointsBal().toLocaleString(), 'bal-points') +
-    chip('👑', goldBal().toLocaleString(), 'bal-gold');
+    chip('🪙', balanceSync().toLocaleString(), 'bal-coins') +
+    `<button class="bal-buy" id="buyCoinsBtn">🪙＋ ${t('hub.buyCoins')}</button>`;
+  host.querySelector('#buyCoinsBtn')?.addEventListener('click', () => openStore());
 }
 
 // --- Tournament entry economy (CTA + confirm flow) --------------------------
@@ -262,7 +265,7 @@ function renderStats(): void {
   const pool = tours.reduce((s, x) => s + prizePool(x), 0);
   const players = 12_480; // community size shown on the storefront
   const stat = (icon: string, value: string, label: string): string =>
-    `<div class="stat"><div class="stat-icon">${icon}</div><div class="stat-value">${value}</div><div class="stat-label">${label}</div></div>`;
+    `<div class="stat"><div class="stat-top"><span class="stat-icon">${icon}</span><span class="stat-value">${value}</span></div><div class="stat-label">${label}</div></div>`;
   host.innerHTML = [
     stat('🎮', String(CATALOG.length), t('hub.statGames')),
     stat('🏆', String(live), t('hub.statLive')),
@@ -319,6 +322,16 @@ const HOWTO: Record<string, { en: string; am: string }> = {
   'crosssum': { en: 'Fill cells so each row and column adds to its target sum.', am: 'እያንዳንዱ ረድፍና አምድ ወደ ዒላማው እንዲደምር ይሙሉ።' },
   'logic': { en: 'Use the clues to deduce the correct grid arrangement.', am: 'ፍንጮችን ተጠቅመው ትክክለኛውን ድልድል ያውጡ።' },
   'sequence': { en: 'Work out the pattern and pick the next item in the sequence.', am: 'ቅጥውን አውቀው ቀጣዩን ይምረጡ።' },
+  'orbit-blast': { en: 'Tap to fire at the orbiting targets. Time your shots to clear waves and rack up a high score.', am: 'በምህዋር ያሉ ኢላማዎችን ለመምታት ይንኩ። ሞገዶችን አጽድተው ከፍተኛ ነጥብ ያስመዝግቡ።' },
+  'metro-rush': { en: 'Swipe to switch lanes, jump and slide past trains. Run as far as you can without crashing.', am: 'መንገድ ለመቀየር ያንሸራትቱ፣ ይዝለሉ። ሳይጋጩ በተቻለ መጠን ይሩጡ።' },
+  'candy-crunch': { en: 'Swap adjacent candies to line up 3+ of a colour. Clear the board’s goals before moves run out.', am: 'ተጎራባች ከረሜላዎችን ቀይረው 3+ ተመሳሳይ ቀለም ያሰልፉ።' },
+  'dot-link': { en: 'Drag to connect dots of the same colour without crossing lines. Fill the board to clear it.', am: 'ተመሳሳይ ቀለም ያላቸውን ነጥቦች ሳያቋርጡ ያገናኙ።' },
+  'brick-blitz': { en: 'Move the paddle to bounce the ball and break every brick. Don’t let the ball fall.', am: 'ኳሷን ለመመለስና ሁሉንም ጡቦች ለመስበር ፓዱን ያንቀሳቅሱ።' },
+  'fruit-slice': { en: 'Swipe across flying fruit to slice it. Avoid the bombs and keep your combo going.', am: 'የሚበሩ ፍራፍሬዎችን ለመቁረጥ ያንሸራትቱ። ቦምቦችን ያስወግዱ።' },
+  'sky-hopper': { en: 'Tap to hop upward from platform to platform. Climb as high as you can without falling.', am: 'ከመድረክ ወደ መድረክ ለመዝለል ይንኩ። ሳይወድቁ ከፍ ብለው ይውጡ።' },
+  'bubble-pop': { en: 'Aim and shoot bubbles to group 3+ of a colour and pop them. Clear the board to win.', am: '3+ ተመሳሳይ ቀለም ለማሰባሰብ አረፋዎችን ይተኩሱ።' },
+  'tap-game': { en: 'Tap as fast and accurately as you can before the timer runs out. Higher taps, higher score.', am: 'ሰዓቱ ከማለቁ በፊት በፍጥነትና በትክክል ይንኩ።' },
+  'scratch-card': { en: 'Scratch the card to reveal symbols. Match the winning symbols to score a prize.', am: 'ምልክቶችን ለማሳየት ካርዱን ይፋቁ። አሸናፊ ምልክቶችን ሲያዛምዱ ይሸልማሉ።' },
 };
 const howToText = (g: GameMeta): { en: string; am: string } =>
   HOWTO[g.id] ?? { en: `Tap Play to start ${g.nameEn}. Score as high as you can!`, am: `${g.nameAm}ን ለመጀመር ይጫወቱ።` };
@@ -582,6 +595,32 @@ function mountSettings(): void {
   window.addEventListener('resize', () => { if (!menu.hidden) position(); });
 }
 
+// Mandatory sign-in gate: the whole portal is subscription/OTP based, so an
+// unauthenticated visitor sees a blocking sign-in surface and cannot reach the
+// games until they sign in with a phone number + OTP. (Only enforced when an
+// auth backend is configured; otherwise the local demo stays open.)
+function mountSignInGate(): void {
+  if (!authAvailable()) return;
+  const show = (): void => {
+    if (document.getElementById('signinGate')) return;
+    const g = document.createElement('div');
+    g.id = 'signinGate';
+    g.className = 'signin-gate';
+    g.innerHTML = `
+      <div class="sg-card">
+        <div class="sg-brand"><span class="sg-icon">🎮</span> GoPlay</div>
+        <h2>${t('gate.title')}</h2>
+        <p>${t('gate.sub')}</p>
+        <button class="btn primary" id="sgBtn">📱 ${t('gate.cta')}</button>
+      </div>`;
+    document.body.appendChild(g);
+    g.querySelector('#sgBtn')!.addEventListener('click', () => openSignIn());
+  };
+  const hide = (): void => document.getElementById('signinGate')?.remove();
+  void currentUser().then((u) => (u ? hide() : show()));
+  onAuthChange((u) => (u ? hide() : show()));
+}
+
 // Nav active-state on scroll (top nav + mobile bottom nav).
 const sections = ['statsStrip', 'games', 'tournaments', 'draws', 'winners', 'dashboard'];
 function syncNavActive(): void {
@@ -648,7 +687,7 @@ onCurrencyChange(renderMyStats);
 setupBrowse();
 syncNavActive();
 mountSettings();
-mountSignIn();
+mountSignInGate();
 void mountWallet();
 void refreshData();
 // Re-pull wallet/entries/standing when the player signs in or out.

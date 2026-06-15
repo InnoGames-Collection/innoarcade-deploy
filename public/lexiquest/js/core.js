@@ -407,8 +407,10 @@
     document.getElementById("themeBtn").addEventListener("click", toggleTheme);
     const soundBtn = document.getElementById("soundBtn");
     if (soundBtn) soundBtn.addEventListener("click", toggleMute);
-    // Back and brand return to the GoPlay hub (the games live inside GoPlay now).
-    document.getElementById("backBtn").addEventListener("click", () => { location.href = "../#games"; });
+    // The ✕ closes back to the previous page; the brand returns to the GoPlay hub.
+    document.getElementById("backBtn").addEventListener("click", () => {
+      if (history.length > 1) history.back(); else location.href = "../#games";
+    });
     document.querySelector(".brand").addEventListener("click", () => { location.href = "../#games"; });
     window.addEventListener("hashchange", route);
     route();

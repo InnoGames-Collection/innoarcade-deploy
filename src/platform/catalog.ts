@@ -69,8 +69,8 @@ export const CATALOG: GameMeta[] = [
     route: 'games/temple-dash/',
     nameEn: 'Temple Dash',
     nameAm: 'ቤተመቅደስ ሩጫ',
-    genreEn: 'Runner', genreAm: 'ሩጫ',
-    mode: 'free', icon: '🏃', accent: '#e2563a', thumb: ['#7a2d1a', '#2a0f08'],
+    genreEn: 'Runner · Tournament', genreAm: 'ሩጫ · ውድድር',
+    mode: 'tournament', icon: '🏃', accent: '#e2563a', thumb: ['#7a2d1a', '#2a0f08'],
     scoreEn: 'Score', scoreAm: 'ነጥብ',
   },
   {

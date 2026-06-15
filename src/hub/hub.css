@@ -274,13 +274,14 @@ body {
 /* --- stats strip (KPIs under the hero) --- */
 .stat {
   position: relative; background: var(--card); border: 1px solid var(--line);
-  border-radius: var(--radius); padding: 0.85rem 1rem; box-shadow: var(--shadow-sm);
+  border-radius: 12px; padding: 0.5rem 0.7rem; box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
-.stat::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--grad-brand); }
-.stat-icon { font-size: 1.15rem; }
-.stat-value { font-size: 1.45rem; font-weight: 900; letter-spacing: -0.02em; margin-top: 0.15rem; }
-.stat-label { color: var(--muted); font-size: 0.78rem; font-weight: 600; }
+.stat::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--grad-brand); }
+.stat-top { display: flex; align-items: baseline; gap: 0.35rem; }
+.stat-icon { font-size: 0.95rem; }
+.stat-value { font-size: 1.15rem; font-weight: 900; letter-spacing: -0.02em; }
+.stat-label { color: var(--muted); font-size: 0.7rem; font-weight: 600; }
 
 /* --- live pulse dot --- */
 .live-dot { display: inline-flex; align-items: center; gap: 0.32rem; }
@@ -490,3 +491,23 @@ html, body { max-width: 100%; overflow-x: hidden; }
 /* ---- settings menu stays on-screen on small viewports ---- */
 .settings-menu { max-width: calc(100vw - 16px); }
 .winners-seg { margin-bottom: 1rem; flex-wrap: wrap; }
+
+/* ---- Buy-coins button in the top bar (replaces the gold chip) ---- */
+.bal-buy { display: inline-flex; align-items: center; gap: 0.2rem; cursor: pointer;
+  font: inherit; font-size: 0.72rem; font-weight: 800; white-space: nowrap;
+  color: #fff; border: none; border-radius: 999px; padding: 0.22rem 0.7rem;
+  background: var(--grad-cta); box-shadow: 0 4px 12px rgba(31, 116, 224, 0.3); }
+.bal-buy:hover { filter: brightness(1.05); }
+
+/* ---- mandatory sign-in gate ---- */
+.signin-gate { position: fixed; inset: 0; z-index: 9985; display: grid; place-items: center;
+  padding: 1.4rem; background: var(--grad-hero, linear-gradient(160deg, #2a6e0a, #11400a)); }
+.sg-card { width: min(380px, 94vw); background: #fff; color: var(--text); border-radius: 20px;
+  padding: 2rem 1.6rem; text-align: center; box-shadow: 0 24px 60px rgba(8, 30, 8, 0.45);
+  display: flex; flex-direction: column; gap: 0.7rem; }
+.sg-brand { font-weight: 900; font-size: 1.3rem; background: var(--grad-brand);
+  -webkit-background-clip: text; background-clip: text; color: transparent; }
+.sg-brand .sg-icon { -webkit-text-fill-color: initial; }
+.sg-card h2 { font-size: 1.4rem; margin: 0.2rem 0 0; }
+.sg-card p { color: var(--muted); font-size: 0.92rem; line-height: 1.5; margin: 0 0 0.4rem; }
+.sg-card .btn.primary { padding: 0.8rem; font-size: 1.02rem; }

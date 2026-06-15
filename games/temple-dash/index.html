@@ -13,6 +13,7 @@
       <canvas id="game"></canvas>
 
       <div id="hud">
+        <button id="closeBtn" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         <div class="hud-top">
           <div class="hud-stats">
             <div class="stat"><span data-i18n="td.score">Score</span><strong id="scoreVal">0</strong></div>
@@ -41,7 +42,7 @@
 
           <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
           <p class="hint" data-i18n="td.start"></p>
-          <a class="back" href="../../" data-i18n="td.back">All games</a>
+          <button type="button" class="gp-close gp-close-block" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         </div>
       </div>
 
@@ -50,7 +51,7 @@
           <h2 data-i18n="td.paused">Paused</h2>
           <button id="resumeBtn" class="btn primary" data-i18n="td.resume">Resume</button>
           <button id="restartBtn" class="btn" data-i18n="td.restart">Play again</button>
-          <a class="back" href="../../" data-i18n="td.back">All games</a>
+          <button type="button" class="gp-close gp-close-block" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         </div>
       </div>
 
@@ -64,7 +65,7 @@
             <div class="stat"><span data-i18n="td.best">Best</span><strong id="finalBest">0</strong></div>
           </div>
           <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
-          <a class="back" href="../../" data-i18n="td.back">All games</a>
+          <button type="button" class="gp-close gp-close-block" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         </div>
       </div>
 
