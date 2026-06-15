@@ -380,9 +380,9 @@ body {
 .game-card:hover .gc-play { filter: brightness(1.06); transform: translateY(-1px); }
 
 /* compact balance chips in topbar */
-.top-balances { display: flex; align-items: center; gap: 0.4rem; margin-inline: auto; }
-.bal-chip { display: inline-flex; align-items: center; gap: 0.28rem; font-size: 0.8rem; font-weight: 600;
-  padding: 0.22rem 0.65rem; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,0.85); white-space: nowrap; }
+.top-balances { display: flex; align-items: center; gap: 0.25rem; margin-inline: auto; }
+.bal-chip { display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.7rem; font-weight: 600;
+  padding: 0.13rem 0.45rem; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,0.85); white-space: nowrap; }
 .bal-chip strong { font-weight: 800; }
 .bal-coins strong { color: #8a6310; }
 .bal-points strong { color: var(--accent); }
@@ -457,3 +457,35 @@ html, body { max-width: 100%; overflow-x: hidden; }
   .seg { flex: 1; }
   .seg-btn { flex: 1; text-align: center; }
 }
+
+/* ---- how-to-play ℹ️ button on cards ---- */
+.gc-info { position: absolute; top: 0.5rem; right: 0.5rem; z-index: 2;
+  width: 1.7rem; height: 1.7rem; border-radius: 999px; border: none; cursor: pointer;
+  background: rgba(255,255,255,0.92); box-shadow: 0 2px 8px rgba(20,45,14,0.18);
+  font-size: 0.9rem; line-height: 1; display: grid; place-items: center; padding: 0; }
+.gc-info:hover { background: #fff; transform: scale(1.08); }
+
+/* ---- how-to-play modal ---- */
+.howto-modal { position: fixed; inset: 0; z-index: 9995; display: grid; place-items: center; padding: 1.2rem; }
+.howto-scrim { position: absolute; inset: 0; background: rgba(12,28,10,0.5); backdrop-filter: blur(2px); }
+.howto-card { position: relative; width: min(380px, 94vw); background: #fff; color: var(--text);
+  border-radius: 18px; padding: 1.4rem 1.3rem 1.2rem; box-shadow: 0 24px 60px rgba(8,30,8,0.4);
+  display: flex; flex-direction: column; gap: 0.6rem; }
+.howto-head { display: flex; align-items: center; gap: 0.6rem; }
+.howto-icon { font-size: 1.8rem; }
+.howto-head h3 { font-size: 1.2rem; }
+.howto-sub { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0; }
+.howto-body { font-size: 0.95rem; line-height: 1.5; color: var(--text); margin: 0 0 0.4rem; }
+.howto-play { text-align: center; text-decoration: none; }
+.howto-close { margin-top: 0.1rem; }
+
+/* ---- winners grouped by period ---- */
+.winner-group { margin-bottom: 1.1rem; }
+.wg-head { margin: 0 0 0.5rem; }
+.wg-badge { display: inline-block; font-size: 0.74rem; font-weight: 800; padding: 0.18rem 0.7rem; border-radius: 999px; }
+.wg-daily { background: #e9f6db; color: #3f7a12; }
+.wg-weekly { background: #e3f0ff; color: #1f5fc4; }
+.wg-monthly { background: #e6f7ee; color: #157a47; }
+
+/* ---- settings menu stays on-screen on small viewports ---- */
+.settings-menu { max-width: calc(100vw - 16px); }

@@ -8,7 +8,7 @@ import { onAuthChange, currentUser, signOut } from '../platform/auth';
 import { sfx } from '../engine/audio';
 import { renderDashboard, injectDashboardStyles } from './dashboard';
 import { mergedLeaderboard } from '../platform/backend';
-import { CATALOG, orderedCatalog, type GameMeta } from '../platform/catalog';
+import { CATALOG, orderedCatalog, getGame, type GameMeta } from '../platform/catalog';
 import {
   activeTournaments, featuredTournament, tournamentGame, leaderboard,
   playerStanding, countdown, loadTournaments, loadMyEntries,
@@ -17,7 +17,7 @@ import {
 } from '../platform/tournaments';
 import { balanceSync, onWalletChange } from '../platform/wallet';
 import { SignInRequiredError } from '../platform/payments';
-import { activeDraws, myTickets, enterDraw, recentWinners, NotEnoughPointsError } from '../platform/draws';
+import { activeDraws, myTickets, enterDraw, recentWinners, NotEnoughPointsError, type DrawPeriod, type Winner } from '../platform/draws';
 import { points as pointsBal, gold as goldBal, onCurrencyChange, earn } from '../platform/currency';
 import { isTestMode, setTestMode } from '../platform/testMode';
 
@@ -39,7 +39,7 @@ function thumbStyle(g: GameMeta): string {
 const PROMOS = [
   { en: 'Win weekly & monthly prizes', am: 'ሳምንታዊ እና ወርሃዊ ሽልማቶችን ያሸንፉ', icon: '🎁', grad: ['#2f8fe6', '#1f5fc4'] },
   { en: 'Enter tournaments — climb the leaderboard', am: 'ውድድሮችን ይቀላቀሉ — ደረጃ ይውጡ', icon: '🏆', grad: ['#62c12e', '#3f9e16'] },
-  { en: 'Play Lucky games for instant rewards', am: 'ለፈጣን ሽልማት ዕድል ጨዋታዎችን ይጫወቱ', icon: '🍀', grad: ['#f0a832', '#d8761b'] },
+  { en: 'Play Lucky games for instant rewards', am: 'ለፈጣን ሽልማት ዕድል ጨዋታዎችን ይጫወቱ', icon: '🍀', grad: ['#2fae5a', '#1f8f3f'] },
 ];
 let promoIdx = 0;
 function renderPromo(): void {
@@ -298,6 +298,32 @@ function renderTournaments(): void {
 // The category shown on a card = the first token of its genre ("Chance · …").
 const category = (g: GameMeta): string => genre(g).split('·')[0].trim();
 
+// Short "how to play" guide per game (EN/AM). Surfaced from an ℹ️ button on each
+// card. Falls back to a generic line for any game without a bespoke entry.
+const HOWTO: Record<string, { en: string; am: string }> = {
+  'popblast': { en: 'Tap groups of 2+ matching gems to pop them. Bigger groups score more. Clear as many as you can before moves run out.', am: 'ተመሳሳይ ቀለም ያላቸውን 2+ ዕንቁዎች ነክተው ያፈንዱ። ትልቅ ቡድን ብዙ ነጥብ ይሰጣል።' },
+  'luckyslot': { en: 'Tap Spin and line up matching symbols across the reels to win. Each spin uses your entry; matches pay out points.', am: 'ስፒን ይንኩ፤ ተመሳሳይ ምልክቶችን ሲያሰልፉ ያሸንፋሉ።' },
+  'memory-match': { en: 'Flip two cards at a time to find matching pairs. Match every pair using as few moves as possible.', am: 'ሁለት ካርዶችን ገልብጠው ተመሳሳይ ጥንዶችን ያግኙ። ሁሉንም በትንሹ እንቅስቃሴ ያዛምዱ።' },
+  'merge-2048': { en: 'Swipe to slide tiles; equal numbers merge and double. Keep merging to reach the 2048 tile.', am: 'ሰቆችን ያንሸራትቱ፤ እኩል ቁጥሮች ሲገናኙ ይዋሃዳሉ። 2048 ለመድረስ ይቀጥሉ።' },
+  'spin-wheel': { en: 'Tap to spin the wheel. Where it stops decides your reward — land on a winning wedge to score.', am: 'መንኮራኩሩን ለማሽከርከር ይንኩ። የሚያርፍበት ቦታ ሽልማትዎን ይወስናል።' },
+  'ethiopian-quiz': { en: 'Answer 5 multiple-choice questions about Ethiopia. Pick the correct option; 3+ correct wins points.', am: 'ስለ ኢትዮጵያ 5 ጥያቄዎችን ይመልሱ። ትክክለኛውን ይምረጡ፤ 3+ ሲያገኙ ነጥብ ያሸንፋሉ።' },
+  'dice-roll': { en: 'Tap Roll. Matching dice (doubles) win and award points. Roll again to push your score.', am: 'ጥሉ ይንኩ። ተመሳሳይ ዳይስ (ድርብ) ሲመጣ ያሸንፋሉ።' },
+  'lucky-box': { en: 'Pick a box to reveal what’s inside. Some boxes hold prizes — choose well to win points.', am: 'ሳጥን ይምረጡ፤ ውስጡን ይክፈቱ። አንዳንዶቹ ሽልማት አላቸው።' },
+  'temple-dash': { en: 'Run, jump and slide to dodge obstacles. Survive as long as you can for a high score.', am: 'እንቅፋቶችን ለማምለጥ ይሩጡ፣ ይዝለሉ። በተቻለ መጠን ይኑሩ።' },
+  'sudoku': { en: 'Fill the grid so every row, column and box has 1–9 with no repeats.', am: 'እያንዳንዱ ረድፍ፣ አምድ እና ሳጥን 1–9 እንዲይዝ ሰንጠረዡን ይሙሉ።' },
+  'crash-game': { en: 'Cash out before the rocket crashes. The longer you wait the bigger the multiplier — but don’t be greedy.', am: 'ሮኬቱ ከመውደቁ በፊት ያውጡ። በቆዩ ቁጥር ብዜቱ ይጨምራል።' },
+  'spell': { en: 'Spell the word from the clue letter by letter.', am: 'ከፍንጭ ቃሉን ፊደል በፊደል ይጻፉ።' },
+  'vocab': { en: 'Choose the correct meaning of the given word.', am: 'የተሰጠውን ቃል ትክክለኛ ትርጉም ይምረጡ።' },
+  'rhyme': { en: 'Pick the word that rhymes with the prompt.', am: 'ከተሰጠው ጋር የሚገጥመውን ቃል ይምረጡ።' },
+  'target24': { en: 'Combine the numbers with + − × ÷ to make exactly 24.', am: 'ቁጥሮቹን በ+ − × ÷ አጣምረው 24 ያድርጉ።' },
+  'crosssum': { en: 'Fill cells so each row and column adds to its target sum.', am: 'እያንዳንዱ ረድፍና አምድ ወደ ዒላማው እንዲደምር ይሙሉ።' },
+  'logic': { en: 'Use the clues to deduce the correct grid arrangement.', am: 'ፍንጮችን ተጠቅመው ትክክለኛውን ድልድል ያውጡ።' },
+  'sequence': { en: 'Work out the pattern and pick the next item in the sequence.', am: 'ቅጥውን አውቀው ቀጣዩን ይምረጡ።' },
+};
+const howToText = (g: GameMeta): { en: string; am: string } =>
+  HOWTO[g.id] ?? { en: `Tap Play to start ${g.nameEn}. Score as high as you can!`, am: `${g.nameAm}ን ለመጀመር ይጫወቱ።` };
+function howTo(g: GameMeta): string { const h = howToText(g); return lang() === 'am' ? h.am : h.en; }
+
 function gameCard(g: GameMeta): string {
   const modeTag = g.mode === 'tournament'
     ? `<span class="gc-tag tournament">🏆 ${t('hub.tournament')}</span>`
@@ -307,6 +333,7 @@ function gameCard(g: GameMeta): string {
       <div class="gc-thumb">
         <span class="gc-glyph">${g.icon}</span>
         ${modeTag}
+        <button class="gc-info" data-howto="${g.id}" aria-label="${t('hub.howToPlay')}">ℹ️</button>
       </div>
       <div class="gc-body">
         <h4>${escapeHtml(name(g))}</h4>
@@ -314,6 +341,26 @@ function gameCard(g: GameMeta): string {
         <span class="gc-play">▶ ${t('hub.play')}</span>
       </div>
     </a>`;
+}
+
+// "How to play" modal, opened by the ℹ️ button on a card. The button lives inside
+// the card's <a>, so we stop the click from navigating.
+function openHowTo(g: GameMeta): void {
+  document.querySelector('.howto-modal')?.remove();
+  const m = document.createElement('div');
+  m.className = 'howto-modal';
+  m.innerHTML = `<div class="howto-scrim"></div>
+    <div class="howto-card">
+      <div class="howto-head"><span class="howto-icon">${g.icon}</span><h3>${escapeHtml(name(g))}</h3></div>
+      <p class="howto-sub">${t('hub.howToPlay')}</p>
+      <p class="howto-body">${escapeHtml(howTo(g))}</p>
+      <a class="btn primary howto-play" href="${g.route}">▶ ${t('hub.play')}</a>
+      <button class="btn ghost howto-close">${t('hub.cancel')}</button>
+    </div>`;
+  document.body.appendChild(m);
+  const close = (): void => m.remove();
+  m.querySelector('.howto-scrim')!.addEventListener('click', close);
+  m.querySelector('.howto-close')!.addEventListener('click', close);
 }
 
 // Browse state: the top segmented menu filters by tag (all / tournament / free).
@@ -368,15 +415,31 @@ function renderDraws(): void {
   });
 }
 
+const PERIOD_LABEL: Record<DrawPeriod, { en: string; am: string }> = {
+  daily: { en: 'Daily', am: 'ዕለታዊ' },
+  weekly: { en: 'Weekly', am: 'ሳምንታዊ' },
+  monthly: { en: 'Monthly', am: 'ወርሃዊ' },
+};
+const periodLabel = (p: DrawPeriod): string => (lang() === 'am' ? PERIOD_LABEL[p].am : PERIOD_LABEL[p].en);
+
 function renderWinners(): void {
   const host = document.querySelector('#winnerList');
   if (!host) return;
-  host.innerHTML = recentWinners().map((w) => `
+  const all = recentWinners(Date.now(), 12);
+  const row = (w: Winner): string => `
     <div class="winner-row">
       <span class="wr-ico">🎉</span>
       <span class="wr-phone">${escapeHtml(w.phone)}</span>
       <span class="wr-prize">${w.prizeEtb.toLocaleString()} ETB</span>
-    </div>`).join('');
+    </div>`;
+  host.innerHTML = (['daily', 'weekly', 'monthly'] as DrawPeriod[]).map((p) => {
+    const rows = all.filter((w) => w.period === p);
+    if (!rows.length) return '';
+    return `<div class="winner-group">
+      <h4 class="wg-head"><span class="wg-badge wg-${p}">${periodLabel(p)}</span></h4>
+      ${rows.map(row).join('')}
+    </div>`;
+  }).join('');
 }
 
 // --- Live countdowns --------------------------------------------------------
@@ -451,7 +514,13 @@ function mountSettings(): void {
   const position = (): void => {
     const r = btn.getBoundingClientRect();
     menu.style.top = `${r.bottom + 8}px`;
-    menu.style.right = `${Math.max(8, window.innerWidth - r.right)}px`;
+    // Right-align the menu under the gear, but clamp so it never spills off the
+    // (narrow, mobile) viewport — the old right-only positioning pushed it
+    // off-screen when the gear sat near the edge.
+    const w = menu.offsetWidth || 232;
+    const left = Math.min(Math.max(8, r.right - w), window.innerWidth - w - 8);
+    menu.style.left = `${Math.max(8, left)}px`;
+    menu.style.right = 'auto';
   };
 
   async function build(): Promise<void> {
@@ -530,6 +599,15 @@ function setupBrowse(): void {
     });
   });
   document.querySelector('#bnAccount')?.addEventListener('click', () => void openAccount());
+  // Delegated ℹ️ "how to play" — intercept before the card link navigates.
+  document.querySelector('#gameGrid')?.addEventListener('click', (e) => {
+    const info = (e.target as HTMLElement).closest<HTMLElement>('.gc-info');
+    if (!info) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const g = getGame(info.dataset.howto!);
+    if (g) openHowTo(g);
+  });
 }
 
 // One-time economy reset — wipe stale cached balances so everyone starts fresh.
