@@ -316,7 +316,7 @@ function catLabel(key: string): string {
 function gameCard(g: GameMeta): string {
   return `
     <a class="game-card" href="${g.route}">
-      <div class="gc-thumb">
+      <div class="gc-thumb" style="${thumbStyle(g)}">
         <span class="gc-glyph">${g.icon}</span>
         ${g.mode === 'tournament' ? `<span class="gc-tag">🏆 ${t('hub.tournament')}</span>` : ''}
       </div>
@@ -380,7 +380,7 @@ function renderBrain(): void {
   const host = $('#brainGrid');
   host.innerHTML = LEXIQUEST.map((g) => `
     <a class="game-card" href="../lexiquest/#/g/${g.id}">
-      <div class="gc-thumb">
+      <div class="gc-thumb" style="background:linear-gradient(145deg, ${g.thumb[0]}, ${g.thumb[1]});">
         <span class="gc-glyph">${g.icon}</span>
       </div>
       <div class="gc-body"><h4>${escapeHtml(lang() === 'am' ? g.nameAm : g.nameEn)}</h4></div>

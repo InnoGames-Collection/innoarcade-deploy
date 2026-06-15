@@ -42,6 +42,16 @@ export async function render(host: HTMLElement): Promise<void> {
       </div>
     </div>
 
+    <div class="a-card">
+      <div class="a-toggles">
+        <label class="a-toggle warn"><input id="wr-on" type="checkbox" ${c.winRateOverride != null ? 'checked' : ''} /> ${t('forceWinRate')}</label>
+      </div>
+      <div class="a-form a-form-grid">
+        <label>${t('winRatePct')}<input id="wr-pct" type="number" min="0" max="100" value="${c.winRateOverride ?? 100}" ${c.winRateOverride == null ? 'disabled' : ''} /></label>
+      </div>
+      <p class="a-note">${t('winRateHint')}</p>
+    </div>
+
     <div class="a-toolbar">
       <button class="a-btn primary" id="save">${t('save')}</button>
       <span class="a-saved" id="saved"></span>
@@ -61,6 +71,11 @@ export async function render(host: HTMLElement): Promise<void> {
       b.onclick = () => b.closest('tr')!.remove());
   }
 
+  // Win-rate override: the % field is only live when the toggle is on.
+  const wrOn = host.querySelector<HTMLInputElement>('#wr-on')!;
+  const wrPct = host.querySelector<HTMLInputElement>('#wr-pct')!;
+  wrOn.addEventListener('change', () => { wrPct.disabled = !wrOn.checked; });
+
   host.querySelector('#save')!.addEventListener('click', async () => {
     const packages: CoinPackage[] = [...tbody.querySelectorAll<HTMLElement>('tr')].map((tr, i) => ({
       id: `pkg_${i}`,
@@ -78,6 +93,9 @@ export async function render(host: HTMLElement): Promise<void> {
         topup: host.querySelector<HTMLInputElement>('#m-top')!.checked,
       },
       maintenance: host.querySelector<HTMLInputElement>('#maint')!.checked,
+      winRateOverride: wrOn.checked
+        ? Math.min(100, Math.max(0, Number(wrPct.value) || 0))
+        : null,
     });
     const saved = host.querySelector('#saved')!;
     saved.textContent = '✓ ' + t('saved');

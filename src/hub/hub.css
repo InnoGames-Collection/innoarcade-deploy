@@ -218,8 +218,8 @@ body {
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 .game-card:hover { transform: translateY(-4px); box-shadow: 0 12px 26px rgba(40, 50, 90, 0.14); }
-.gc-thumb { position: relative; aspect-ratio: 16 / 10; display: grid; place-items: center; color: var(--text); }
-.gc-glyph { font-size: 2.8rem; }
+.gc-thumb { position: relative; aspect-ratio: 16 / 10; display: grid; place-items: center; color: #fff; }
+.gc-glyph { font-size: 2.8rem; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25)); }
 .gc-tag { position: absolute; top: 0.5rem; left: 0.5rem; background: rgba(31, 78, 12, 0.78); color: #fff; font-size: 0.66rem; font-weight: 700; padding: 0.18rem 0.5rem; border-radius: 999px; }
 .gc-body { padding: 0.5rem 0.55rem 0.6rem; text-align: center; }
 .gc-body h4 { font-size: 1rem; letter-spacing: 0.01em; }
@@ -357,19 +357,13 @@ body {
 .game-search { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 0.42rem 0.9rem; font: inherit; font-size: 0.86rem; width: 180px; color: var(--text); }
 .game-search:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
 
-/* Light-green game cards: a soft green cover with a white "app icon" tile, so
-   every game reads as one cohesive bright set. The cover is the dominant part of
-   the card (large image area); the text block below stays tight. */
-.gc-thumb { aspect-ratio: 1 / 1;
-  background: linear-gradient(160deg, #eaf8d8 0%, #cdeda4 55%, #b6e487 100%); }
-.gc-thumb::after { background: radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,0.55), transparent 62%); }
-.gc-glyph { font-size: 3.2rem; line-height: 1; position: relative; z-index: 1;
-  width: 4.7rem; height: 4.7rem; display: grid; place-items: center;
-  background: #fff; border-radius: 26%;
-  box-shadow: 0 8px 18px rgba(47, 124, 14, 0.22), inset 0 0 0 1px rgba(47, 124, 14, 0.06); }
-.cat-shelf .game-card { width: auto; }
-.cat-shelf .game-card { background: #f6fcef; }
-.cat-shelf .game-card:hover { box-shadow: 0 14px 30px rgba(47, 124, 14, 0.2); }
+/* White game cards (winnershub-style): a clean white card with the game's own
+   colourful square cover on top and a tight title below — the cover is the
+   dominant image area. */
+.cat-shelf .game-card { width: auto; background: #fff; }
+.cat-shelf .game-card:hover { box-shadow: 0 14px 30px rgba(40, 50, 90, 0.16); }
+.gc-thumb { aspect-ratio: 1 / 1; }
+.gc-glyph { font-size: 3.6rem; position: relative; z-index: 1; }
 
 /* compact balance chips in topbar */
 .top-balances { display: flex; align-items: center; gap: 0.4rem; margin-inline: auto; }

@@ -29,6 +29,7 @@ import { currentUser } from './auth';
 import { profile } from '../engine/profile';
 import { earn } from './currency';
 import { isTestMode } from './testMode';
+import { winRateOverride } from './config';
 
 export type BeginBlock = 'coins' | 'auth';
 export interface BeginResult {
@@ -70,10 +71,12 @@ export class GameHost {
     }
   }
 
-  /** Effective base win chance 0–100 for chance games. Test mode forces a win so
-   *  the catalog can be played through; otherwise the catalog-configured rate. */
+  /** Effective base win chance 0–100 for chance games. Precedence:
+   *  local Test mode (100) → admin win-rate override → the catalog rate. */
   get winRate(): number {
-    return isTestMode() ? 100 : this.baseWinRate;
+    if (isTestMode()) return 100;
+    const override = winRateOverride();
+    return override ?? this.baseWinRate;
   }
 
   /** True when this game runs a competitive leaderboard. */

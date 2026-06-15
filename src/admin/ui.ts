@@ -33,6 +33,8 @@ const STR = {
     paymentMethods: 'Payment methods', maintenance: 'Maintenance mode', telebirr: 'TeleBirr',
     topup: 'Airtime top-up', price: 'Price (ETB)', bonus: 'Bonus', addPackage: 'Add package', remove: 'Remove',
     saved: 'Saved', offlineNote: 'Demo mode — changes are local to this browser.',
+    forceWinRate: 'Override win rate (chance games)', winRatePct: 'Win rate (%)',
+    winRateHint: 'Forces ALL chance games to this win rate. Set 100 to always win for end-to-end testing.',
   },
   am: {
     title: 'ኢኖአርኬድ አስተዳዳሪ', console: 'የአስተዳዳሪ ኮንሶል',
@@ -56,6 +58,8 @@ const STR = {
     paymentMethods: 'የክፍያ ዘዴዎች', maintenance: 'የጥገና ሁነታ', telebirr: 'ቴሌብር',
     topup: 'የአየር ሰዓት', price: 'ዋጋ (ETB)', bonus: 'ጉርሻ', addPackage: 'ጥቅል ጨምር', remove: 'አስወግድ',
     saved: 'ተቀምጧል', offlineNote: 'የማሳያ ሁነታ — ለውጦች በዚህ አሳሽ ብቻ ናቸው።',
+    forceWinRate: 'የማሸነፍ ምጣኔ ቅያሬ (የዕድል ጨዋታዎች)', winRatePct: 'የማሸነፍ ምጣኔ (%)',
+    winRateHint: 'ሁሉንም የዕድል ጨዋታዎች ወደዚህ ምጣኔ ያስገድዳል። ለሙሉ ሙከራ 100 ያድርጉ።',
   },
 };
 

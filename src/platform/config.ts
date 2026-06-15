@@ -58,6 +58,10 @@ export interface AppConfig {
   houseRakePct: number;
   /** When true, the store + paid entry are disabled and a banner shows. */
   maintenance: boolean;
+  /** QA/operator override for chance-game win odds. `null` → each game uses its
+   *  own catalog rate; a number 0–100 forces ALL chance games to that win rate
+   *  (set 100 for an end-to-end "always win" test). Skill games are unaffected. */
+  winRateOverride: number | null;
 }
 
 // The shipped defaults. Coin pricing is tuned so ~2 ETB ≈ 1 coin at the entry
@@ -74,6 +78,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   defaultEntryFeeCoins: 50,
   houseRakePct: 10,
   maintenance: false,
+  winRateOverride: null,
 };
 
 const LOCAL_KEY = 'innoarcade.config.v1';
@@ -118,6 +123,12 @@ export function defaultEntryFee(): number {
 
 export function isMaintenance(): boolean {
   return cache.maintenance;
+}
+
+/** Operator win-rate override (0–100), or null when each game uses its own rate. */
+export function winRateOverride(): number | null {
+  const v = cache.winRateOverride;
+  return typeof v === 'number' ? Math.min(100, Math.max(0, v)) : null;
 }
 
 // Pull operator overrides from `app_config` (key 'app', a single JSONB row) and
