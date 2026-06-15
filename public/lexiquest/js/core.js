@@ -92,6 +92,10 @@
     if (typeof score === "number" && score > st.best) st.best = score;
     s.stats[gameId] = st;
     const gained = (won ? 20 : 5) + Math.min(Math.max(score || 0, 0), 30);
+    // Award the same points on the GoPlay platform (server-authoritative).
+    if (typeof window.GoPlaySubmit === "function") {
+      window.GoPlaySubmit(gameId, score || 0, gained);
+    }
     const before = levelFor(s.xp || 0);
     s.xp = (s.xp || 0) + gained;
     saveStore(s);

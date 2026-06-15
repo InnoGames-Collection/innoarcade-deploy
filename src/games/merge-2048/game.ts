@@ -12,6 +12,7 @@ import { Tweens, Ease } from '../../engine/tween';
 import { sfx } from '../../engine/audio';
 import { settings } from '../../engine/settings';
 import { profile } from '../../engine/profile';
+import { recordEnginePlay } from '../../platform/gameHost';
 
 export const W = 480;
 export const H = 480;
@@ -246,6 +247,7 @@ export class Merge2048 {
 
   private gameOver(): void {
     const record = profile.recordRun(GAME_ID, this.score);
+    void recordEnginePlay(GAME_ID, this.score);
     this.best = profile.stats(GAME_ID).best;
     this.fx.shake(8, 0.3);
     this.setState('over');

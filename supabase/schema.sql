@@ -20,6 +20,9 @@ create table if not exists public.profiles (
 
 -- (idempotent for projects created before phone was stored on the profile)
 alter table public.profiles add column if not exists phone text;
+-- Points: the play-earned currency (spent on draws/tickets). Server-authoritative
+-- like coins — clients READ it, only the service-role functions move it.
+alter table public.profiles add column if not exists points bigint not null default 0;
 
 alter table public.profiles enable row level security;
 
@@ -134,6 +137,51 @@ begin
   return new_bal;
 end;
 $$;
+
+-- Atomic points movement (play rewards credit; draw tickets debit). Never lets a
+-- balance go negative. Service-role only, mirroring apply_coins. Returns new bal.
+create or replace function public.apply_points(
+  p_user uuid, p_delta bigint
+) returns bigint language plpgsql security definer set search_path = public as $$
+declare new_bal bigint;
+begin
+  update public.profiles
+     set points = points + p_delta
+   where id = p_user and points + p_delta >= 0
+   returning points into new_bal;
+  if new_bal is null then
+    raise exception 'insufficient_or_missing' using errcode = 'check_violation';
+  end if;
+  return new_bal;
+end;
+$$;
+
+-- ------------------------------------------------------------ draw_entries ---
+-- Server-authoritative draw ticket holdings. Tickets are bought by spending
+-- points (apply_points) inside the enter-draw Edge Function; clients READ their
+-- own rows, never write. Keyed per (player, draw window id).
+create table if not exists public.draw_entries (
+  user_id  uuid not null references auth.users (id) on delete cascade,
+  draw_id  text not null,
+  tickets  integer not null default 0,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, draw_id)
+);
+alter table public.draw_entries enable row level security;
+drop policy if exists "read own draw entries" on public.draw_entries;
+create policy "read own draw entries" on public.draw_entries
+  for select using (auth.uid() = user_id);
+
+-- ------------------------------------------------------------ used_nonces ---
+-- Anti-cheat: single-use round tokens. start-round issues a signed token; the
+-- score gate records its jti here so a token cannot be replayed. Old rows are
+-- harmless (the freshness window in submit-score rejects them anyway).
+create table if not exists public.used_nonces (
+  jti     text primary key,
+  user_id uuid,
+  used_at timestamptz not null default now()
+);
+alter table public.used_nonces enable row level security; -- service-role only; no client policies
 
 -- ------------------------------------------------------------- app_config ---
 create table if not exists public.app_config (

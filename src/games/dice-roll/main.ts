@@ -139,8 +139,9 @@ function finishRoll(): void {
       message.textContent = t('dr.lose').replace('{a}', String(v1)).replace('{b}', String(v2));
       message.style.color = '';
     }
-    const res = host.finish(sessionPoints, isWin);
-    if (host.isTournament && res.rank) $('#dr-rank').textContent = `#${res.rank}`;
+    void host.finish(sessionPoints, isWin).then((res) => {
+      if (host.isTournament && res.rank) $('#dr-rank').textContent = `#${res.rank}`;
+    });
   }, 1100);
 }
 

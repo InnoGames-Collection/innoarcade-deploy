@@ -6,6 +6,7 @@
 
 import { sfx } from '../../engine/audio';
 import { profile } from '../../engine/profile';
+import { recordEnginePlay } from '../../platform/gameHost';
 import { achievements } from '../../engine/achievements';
 import { settings } from '../../engine/settings';
 import { Particles } from '../../engine/particles';
@@ -272,6 +273,7 @@ export class TempleDash {
     this.overAt = this.time;
     profile.addCoins(this.coins);
     const record = profile.recordRun(GAME_ID, this.score);
+    void recordEnginePlay(GAME_ID, this.score);
     if (record) this.best = this.score;
     this.setState('over');
     this.onGameOver(this.score, this.coins, record);

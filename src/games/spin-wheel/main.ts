@@ -191,8 +191,9 @@ function spin(speed: number): void {
           message.style.color = '#ffffff';
           sfx.crash();
         }
-        const res = host.finish(sessionPoints, isWin);
-        if (host.isTournament && res.rank) $('#sw-rank').textContent = `#${res.rank}`;
+        void host.finish(sessionPoints, isWin).then((res) => {
+      if (host.isTournament && res.rank) $('#sw-rank').textContent = `#${res.rank}`;
+    });
         isSpinning = false;
         spinBtn.disabled = false;
         spinSpeed = 0;

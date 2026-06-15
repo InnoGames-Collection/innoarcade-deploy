@@ -9,21 +9,78 @@
 // rate limits, best-only). That's the anti-cheat boundary for prize tournaments.
 
 import { isConfigured, supabase } from './supabase';
-import { leaderboard as localBoard, type LeaderEntry, type SubmitResult } from './tournaments';
+import { leaderboard as localBoard, type LeaderEntry } from './tournaments';
 
 export function backendReady(): boolean {
   return isConfigured();
 }
 
-// Persist an authoritative score for the signed-in player. Requires a session
-// (phone-OTP login); throws if called while signed out or unconfigured.
-export async function submitScoreRemote(tournamentId: string, score: number): Promise<SubmitResult> {
+// Result of a finished round: server-awarded points balance, plus leaderboard
+// standing when the game is a tournament (free games return points only).
+export interface PlayResult {
+  points: number;
+  best?: number;
+  isRecord?: boolean;
+  rank?: number;
+  total?: number;
+}
+
+// Submit a finished round to the server (the ONLY economy authority): awards
+// points and, for tournament games, writes the authoritative leaderboard score.
+// Requires a session (the portal is sign-in gated).
+export async function submitPlayRemote(
+  gameId: string, score: number, points: number, leaderboard: boolean, token = '',
+): Promise<PlayResult> {
   const sb = supabase();
   const { data, error } = await sb.functions.invoke('submit-score', {
-    body: { tournamentId, score },
+    body: { gameId, score, points, leaderboard, token },
   });
   if (error) throw error;
-  return data as SubmitResult;
+  return data as PlayResult;
+}
+
+// Anti-cheat: ask the server to open a round and return a single-use signed
+// token to hand back to submit-score. Empty string when unconfigured or when
+// the signing secret isn't set (token-optional mode) — never throws.
+export async function startRoundRemote(gameId: string): Promise<string> {
+  if (!isConfigured()) return '';
+  try {
+    const { data, error } = await supabase().functions.invoke('start-round', { body: { gameId } });
+    if (error) return '';
+    return (data?.token as string) ?? '';
+  } catch { return ''; }
+}
+
+// Read the signed-in player's authoritative points balance from their profile.
+export async function fetchPoints(): Promise<number | null> {
+  if (!isConfigured()) return null;
+  const sb = supabase();
+  const me = (await sb.auth.getUser()).data.user?.id;
+  if (!me) return null;
+  const { data, error } = await sb.from('profiles').select('points').eq('id', me).maybeSingle();
+  if (error || !data) return null;
+  return Number(data.points);
+}
+
+// Buy one draw ticket by spending points (server-authoritative). Returns the new
+// points balance and the player's ticket count for that draw.
+export interface DrawEnterResult { points: number; tickets: number }
+export async function enterDrawRemote(drawId: string): Promise<DrawEnterResult> {
+  const { data, error } = await supabase().functions.invoke('enter-draw', { body: { drawId } });
+  if (error) throw error;
+  return data as DrawEnterResult;
+}
+
+// The signed-in player's ticket holdings, keyed by draw window id.
+export async function fetchDrawTickets(): Promise<Record<string, number>> {
+  if (!isConfigured()) return {};
+  const sb = supabase();
+  const me = (await sb.auth.getUser()).data.user?.id;
+  if (!me) return {};
+  const { data } = await sb.from('draw_entries').select('draw_id, tickets').eq('user_id', me);
+  const out: Record<string, number> = {};
+  (data ?? []).forEach((r: { draw_id: string; tickets: number }) => { out[r.draw_id] = Number(r.tickets); });
+  return out;
 }
 
 // Top-N leaderboard from the server view. Falls back to an empty list when

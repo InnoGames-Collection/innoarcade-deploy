@@ -1,4 +1,5 @@
 import '../../styles/base.css';
+import { recordEnginePlay } from '../../platform/gameHost';
 import './style.css';
 import { applyTranslations, getLang, setLang, type Lang } from '../../i18n';
 import { GameLoop } from '../../engine/loop';
@@ -37,6 +38,7 @@ game.onLevelChange = () => {
 };
 
 game.onGameOver = (score, _level, record) => {
+  void recordEnginePlay('candy-crunch', score);
   $('#finalScore').textContent = `Final Score: ${score}`;
   $('#newBest').classList.toggle('hidden', !record);
 };

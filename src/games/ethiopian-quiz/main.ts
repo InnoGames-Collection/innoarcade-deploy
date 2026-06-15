@@ -141,8 +141,9 @@ function finishRound(): void {
   elMsg.textContent = isWin ? `🎉 +${host.winPoints} ⭐` : '';
   startBtn.textContent = s('again');
   startBtn.style.display = '';
-  const res = host.finish(score, isWin);
-  if (host.isTournament && res.rank) $('#eq-rank').textContent = `#${res.rank}`;
+  void host.finish(score, isWin).then((res) => {
+      if (host.isTournament && res.rank) $('#eq-rank').textContent = `#${res.rank}`;
+    });
 }
 
 function applyLang(): void {

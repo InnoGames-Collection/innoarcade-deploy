@@ -1,4 +1,5 @@
 import '../../styles/base.css';
+import { recordEnginePlay } from '../../platform/gameHost';
 import './style.css';
 import { applyTranslations, getLang, setLang, type Lang } from '../../i18n';
 import { GameLoop } from '../../engine/loop';
@@ -33,6 +34,7 @@ function showOverlay(state: GameState): void {
 game.onStateChange = showOverlay;
 
 game.onGameOver = (score, level, record) => {
+  void recordEnginePlay('dot-link', score);
   if (level > 5) {
     $('#finalScore').textContent = `Final Score: ${score}`;
     $('#newBest').classList.toggle('hidden', !record);

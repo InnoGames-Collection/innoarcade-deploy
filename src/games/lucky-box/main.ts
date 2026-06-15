@@ -59,8 +59,9 @@ function renderTournament(): void {
 
 function submit(points: number, isWin: boolean): void {
   if (isWin) sessionPoints += points;
-  const res = host.finish(sessionPoints, isWin);
-  if (host.isTournament && res.rank) $('#lb-rank').textContent = `#${res.rank}`;
+  void host.finish(sessionPoints, isWin).then((res) => {
+      if (host.isTournament && res.rank) $('#lb-rank').textContent = `#${res.rank}`;
+    });
 }
 
 function initGame(): void {

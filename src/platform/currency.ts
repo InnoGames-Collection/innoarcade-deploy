@@ -11,45 +11,41 @@
 
 export type Currency = 'points' | 'gold';
 
-const KEY: Record<Currency, string> = {
-  points: 'innoarcade.points.v1',
-  gold: 'innoarcade.gold.v1',
-};
-// Small welcome balances so the draw/spin flows are playable with no backend.
-const START: Record<Currency, number> = { points: 500, gold: 5 };
+// In-memory cache only — NO localStorage. The server (profiles.points) is the
+// single source of truth; `setBalance` hydrates this cache from the server on
+// load and after every server economy call. Reads are synchronous so the UI can
+// render instantly from the last hydrated value.
+const cache: Record<Currency, number> = { points: 0, gold: 0 };
 
 const listeners = new Set<() => void>();
+function emit(): void { for (const fn of listeners) fn(); }
 
-function read(c: Currency): number {
-  const raw = localStorage.getItem(KEY[c]);
-  if (raw == null) return START[c];
-  const n = Number(raw);
-  return Number.isFinite(n) ? n : START[c];
+export function points(): number { return cache.points; }
+export function gold(): number { return cache.gold; }
+export function balanceOf(c: Currency): number { return cache[c]; }
+
+/** Hydrate the cache from an authoritative (server) balance. */
+export function setBalance(c: Currency, v: number): void {
+  cache[c] = Math.max(0, Math.floor(v));
+  emit();
 }
-function write(c: Currency, v: number): void {
-  localStorage.setItem(KEY[c], String(Math.max(0, Math.floor(v))));
-  for (const fn of listeners) fn();
-}
 
-export function points(): number { return read('points'); }
-export function gold(): number { return read('gold'); }
-export function balanceOf(c: Currency): number { return read(c); }
-
-/** Credit a currency (play reward, prize payout). */
+/** Optimistic local credit; the server value overwrites it on next hydrate. */
 export function earn(c: Currency, n: number): void {
-  if (n > 0) write(c, read(c) + n);
+  if (n > 0) { cache[c] += n; emit(); }
 }
 
-/** Debit a currency; returns false (and no-ops) when the balance can't cover it. */
+/** Optimistic local debit; returns false when the cached balance can't cover it. */
 export function spend(c: Currency, n: number): boolean {
   if (n <= 0) return true;
-  if (read(c) < n) return false;
-  write(c, read(c) - n);
+  if (cache[c] < n) return false;
+  cache[c] -= n;
+  emit();
   return true;
 }
 
 export function canAfford(c: Currency, n: number): boolean {
-  return read(c) >= n;
+  return cache[c] >= n;
 }
 
 /** Subscribe to any points/gold change; returns an unsubscribe. */

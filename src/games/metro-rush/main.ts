@@ -1,4 +1,5 @@
 import '../../styles/base.css';
+import { recordEnginePlay } from '../../platform/gameHost';
 import './style.css';
 import { applyTranslations, getLang, setLang, type Lang } from '../../i18n';
 import { GameLoop } from '../../engine/loop';
@@ -35,6 +36,7 @@ function showOverlay(state: GameState): void {
 game.onStateChange = showOverlay;
 
 game.onGameOver = (score, tokens, record) => {
+  void recordEnginePlay('metro-rush', score);
   $('#finalScore').textContent = String(score);
   $('#finalTokens').textContent = String(tokens);
   $('#finalBest').textContent = String(game.best);

@@ -32,6 +32,22 @@ const MAX_SCORE: Record<string, number> = {
   'merge-2048': 5_000_000,
   _default: 2_000_000,
 };
+// Server-authoritative ceiling on points a single finished round can award, per
+// game id. The client proposes points (its win reward / skill formula); the
+// server clamps to this so a tampered client can't mint unlimited points.
+const MAX_POINTS: Record<string, number> = {
+  'ethiopian-quiz': 100,
+  'memory-match': 180,
+  'tap-game': 150,
+  'popblast': 150,
+  'spin-wheel': 120,
+  'lucky-box': 100,
+  'luckyslot': 100,
+  'dice-roll': 90,
+  'scratch-card': 80,
+  'crash-game': 50,
+  _default: 300,
+};
 const MIN_SECONDS_BETWEEN = 3; // basic flood protection per (user, tournament)
 
 const cors = {
@@ -45,6 +61,34 @@ function json(body: unknown, status = 200): Response {
     status,
     headers: { ...cors, 'content-type': 'application/json' },
   });
+}
+
+// --- anti-cheat round-token helpers (mirror start-round signing) ---
+function b64url(bytes: Uint8Array): string {
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function b64urlDecode(s: string): string {
+  return atob(s.replace(/-/g, '+').replace(/_/g, '/'));
+}
+async function hmac(payload: string, secret: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const mac = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
+  return b64url(new Uint8Array(mac));
+}
+// Verify a round token is well-signed, fresh, bound to this (user, game), and
+// not already used — then burn it (single-use). Returns false on any failure.
+async function verifyAndBurnToken(admin, token: string, uid: string, gid: string, secret: string): Promise<boolean> {
+  if (!token || !token.includes('.')) return false;
+  const [payload, sig] = token.split('.');
+  if (sig !== (await hmac(payload, secret))) return false;
+  let p: { uid?: string; gid?: string; iat?: number; jti?: string };
+  try { p = JSON.parse(b64urlDecode(payload)); } catch { return false; }
+  if (p.uid !== uid || p.gid !== gid) return false;
+  if (typeof p.iat !== 'number' || Date.now() - p.iat > 15 * 60 * 1000) return false;
+  if (!p.jti) return false;
+  const { error } = await admin.from('used_nonces').insert({ jti: p.jti, user_id: uid });
+  return !error; // unique-violation (replay) → error → reject
 }
 
 Deno.serve(async (req: Request) => {
@@ -63,25 +107,59 @@ Deno.serve(async (req: Request) => {
   const user = userData.user;
   if (!user) return json({ error: 'not signed in' }, 401);
 
-  let body: { tournamentId?: string; score?: number };
+  let body: { gameId?: string; tournamentId?: string; score?: number; points?: number; leaderboard?: boolean; token?: string };
   try {
     body = await req.json();
   } catch {
     return json({ error: 'bad json' }, 400);
   }
-  const tournamentId = String(body.tournamentId ?? '');
+  const token = String(body.token ?? '');
+  // Accept either the new {gameId} contract or the legacy {tournamentId}.
+  const gameId = String(body.gameId ?? String(body.tournamentId ?? '').replace(/-(monthly|weekly)$/, ''));
   const score = Number(body.score);
+  const proposedPoints = Number(body.points ?? 0);
+  // Whether this round should count on a leaderboard. Free games pass false →
+  // points only, no leaderboard row. Defaults to true for the legacy contract.
+  const wantsLeaderboard = body.leaderboard ?? (body.tournamentId != null);
 
   // --- validation ---
-  if (!tournamentId || !Number.isFinite(score) || !Number.isInteger(score) || score < 0) {
+  if (!gameId || !Number.isFinite(score) || !Number.isInteger(score) || score < 0) {
     return json({ error: 'invalid score' }, 400);
   }
-  const gameId = tournamentId.replace(/-(monthly|weekly)$/, '');
   const ceiling = MAX_SCORE[gameId] ?? MAX_SCORE._default;
   if (score > ceiling) return json({ error: 'score out of range' }, 422);
+  const tournamentId = `${gameId}-monthly`;
 
   // Service-role client for the privileged read/write.
   const admin = createClient(url, serviceKey);
+
+  // Points to award (clamped server-side). NOT applied until all validation /
+  // anti-cheat gates have passed — a rejected submission must never credit points.
+  const pointsCeiling = MAX_POINTS[gameId] ?? MAX_POINTS._default;
+  const award = Math.max(0, Math.min(Math.floor(Number.isFinite(proposedPoints) ? proposedPoints : 0), pointsCeiling));
+  let points = 0;
+  const grantPoints = async (): Promise<void> => {
+    try {
+      const { data: pbal } = await admin.rpc('apply_points', { p_user: user.id, p_delta: award });
+      points = Number(pbal ?? 0);
+    } catch { /* best-effort; never blocks the response */ }
+  };
+
+  // Free games: points only, no leaderboard, no token required.
+  if (!wantsLeaderboard) {
+    await grantPoints();
+    return json({ points });
+  }
+
+  // --- anti-cheat: leaderboard scores require a valid single-use round token ---
+  // Enforced only when ROUND_SIGNING_SECRET is set; the token ties the score to a
+  // round that actually started on the server and blocks replays. Checked BEFORE
+  // any points are credited.
+  const signingSecret = Deno.env.get('ROUND_SIGNING_SECRET');
+  if (signingSecret) {
+    const ok = await verifyAndBurnToken(admin, token, user.id, gameId, signingSecret);
+    if (!ok) return json({ error: 'invalid round token' }, 403);
+  }
 
   // Tournament gate: if this id is a configured tournament, it must be live, and
   // a PAID tournament only counts scores from players who entered (paid the fee).
@@ -131,6 +209,9 @@ Deno.serve(async (req: Request) => {
   });
   if (upErr) return json({ error: 'write failed' }, 500);
 
+  // All gates passed — now (and only now) credit the points for this round.
+  await grantPoints();
+
   // Compute the player's rank and the field size from the ranked view.
   const { data: board } = await admin
     .from('leaderboard')
@@ -139,5 +220,5 @@ Deno.serve(async (req: Request) => {
   const total = board?.length ?? 1;
   const rank = board?.find((r: { user_id: string; rank: number }) => r.user_id === user.id)?.rank ?? total;
 
-  return json({ best, isRecord, rank, total });
+  return json({ best, isRecord, rank, total, points });
 });

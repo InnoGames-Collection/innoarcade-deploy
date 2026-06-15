@@ -7,7 +7,7 @@ import { mountWallet, openStore, needsSignInToBuy } from './wallet';
 import { onAuthChange, currentUser, signOut, authAvailable } from '../platform/auth';
 import { sfx } from '../engine/audio';
 import { renderDashboard, injectDashboardStyles } from './dashboard';
-import { mergedLeaderboard } from '../platform/backend';
+import { mergedLeaderboard, fetchPoints } from '../platform/backend';
 import { CATALOG, orderedCatalog, getGame, type GameMeta } from '../platform/catalog';
 import {
   activeTournaments, featuredTournament, tournamentGame, leaderboard,
@@ -17,8 +17,8 @@ import {
 } from '../platform/tournaments';
 import { balanceSync, onWalletChange } from '../platform/wallet';
 import { SignInRequiredError } from '../platform/payments';
-import { activeDraws, myTickets, enterDraw, recentWinners, NotEnoughPointsError, type DrawPeriod, type Winner } from '../platform/draws';
-import { points as pointsBal, onCurrencyChange, earn } from '../platform/currency';
+import { activeDraws, myTickets, enterDraw, recentWinners, NotEnoughPointsError, hydrateTickets, type DrawPeriod, type Winner } from '../platform/draws';
+import { points as pointsBal, onCurrencyChange, earn, setBalance } from '../platform/currency';
 import { isTestMode, setTestMode } from '../platform/testMode';
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
@@ -420,10 +420,12 @@ function renderDraws(): void {
     b.addEventListener('click', () => {
       const d = draws.find((x) => x.id === b.dataset.draw);
       if (!d) return;
-      try { enterDraw(d); renderDraws(); }
-      catch (e) {
-        if (e instanceof NotEnoughPointsError) { b.textContent = t('hub.needPoints'); b.classList.add('disabled'); }
-      }
+      b.disabled = true;
+      void enterDraw(d).then(() => { renderMyStats(); renderDraws(); })
+        .catch((e) => {
+          if (e instanceof NotEnoughPointsError) { b.textContent = t('hub.needPoints'); b.classList.add('disabled'); }
+          else b.disabled = false;
+        });
     });
   });
 }
@@ -690,7 +692,14 @@ mountSettings();
 mountSignInGate();
 void mountWallet();
 void refreshData();
+// Hydrate the points balance from the server (the authority); refresh on load
+// and whenever auth changes, then re-render the top balance strip.
+function hydratePoints(): void {
+  void fetchPoints().then((p) => { if (typeof p === 'number') { setBalance('points', p); renderMyStats(); } });
+  void hydrateTickets().then(() => renderDraws());
+}
+hydratePoints();
 // Re-pull wallet/entries/standing when the player signs in or out.
-onAuthChange(() => { void refreshData(); });
+onAuthChange(() => { void refreshData(); hydratePoints(); });
 setInterval(tickCountdowns, 1000);
 setInterval(advancePromo, 4500);

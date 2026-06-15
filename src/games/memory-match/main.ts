@@ -92,11 +92,10 @@ function initGame(): void {
 function endRound(isWin: boolean): void {
   if (roundOver) return;
   roundOver = true;
-  const result = host.finish(isWin ? host.winPoints : 0, isWin);
+  void host.finish(isWin ? host.winPoints : 0, isWin);
   // Best (lowest moves is "better" here, but the platform best tracks score) and
   // the in-game coin balance both update through the host; reflect the latter.
   $('#mm-hud-win').textContent = `+${host.winPoints} ${t('mm.pts')}`;
-  void result;
 }
 
 function flipCard(card: HTMLElement): void {

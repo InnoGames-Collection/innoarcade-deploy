@@ -356,8 +356,9 @@ function cashOut(): void {
   btn.textContent = t('arc.playAgain');
   btn.classList.remove('cashout');
 
-  const res = host.finish(sessionPoints, true);
-  if (host.isTournament && res.rank) $('#cg-rank').textContent = `#${res.rank}`;
+  void host.finish(sessionPoints, true).then((res) => {
+      if (host.isTournament && res.rank) $('#cg-rank').textContent = `#${res.rank}`;
+    });
 }
 
 function crash(): void {

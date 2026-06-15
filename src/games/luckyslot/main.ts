@@ -147,8 +147,9 @@ function evaluateWin(results: string[]): void {
     sfx.crash();
   }
   if (isWin) sessionPoints += host.winPoints;
-  const res = host.finish(sessionPoints, isWin);
-  if (host.isTournament && res.rank) $('#slot-rank').textContent = `#${res.rank}`;
+  void host.finish(sessionPoints, isWin).then((res) => {
+      if (host.isTournament && res.rank) $('#slot-rank').textContent = `#${res.rank}`;
+    });
 }
 
 spinBtn.addEventListener('click', () => void runSpinLogic());

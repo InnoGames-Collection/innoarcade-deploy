@@ -8,7 +8,7 @@ import {
   featuredTournament, submitScore, leaderboard, tournamentGame,
   countdown, type LeaderEntry,
 } from '../../platform/tournaments';
-import { backendReady, submitScoreRemote, leaderboardRemote } from '../../platform/backend';
+import { backendReady, submitPlayRemote, leaderboardRemote, startRoundRemote } from '../../platform/backend';
 import { currentUser } from '../../platform/auth';
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
@@ -94,9 +94,10 @@ game.onGameOver = (score, record) => {
 async function syncRemoteScore(tournamentId: string, score: number): Promise<void> {
   if (!backendReady() || !(await currentUser())) return;
   try {
-    const res = await submitScoreRemote(tournamentId, score);
-    $('#rankVal').textContent = `#${res.rank}`;
-    $('#rankTotal').textContent = `/ ${res.total}`;
+    const token = await startRoundRemote('orbit-blast');
+    const res = await submitPlayRemote('orbit-blast', score, Math.min(300, Math.floor(score / 50)), true, token);
+    if (res.rank) $('#rankVal').textContent = `#${res.rank}`;
+    if (res.total) $('#rankTotal').textContent = `/ ${res.total}`;
     const board = await leaderboardRemote(tournamentId);
     if (board.length) {
       const meIdx = board.findIndex((e) => e.isPlayer);

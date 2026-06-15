@@ -8,7 +8,8 @@
 // drops in behind these signatures later (the points debit becomes an Edge
 // Function, the draw results a table).
 
-import { spend, points } from './currency';
+import { setBalance } from './currency';
+import { enterDrawRemote, fetchDrawTickets } from './backend';
 
 export type DrawPeriod = 'daily' | 'weekly' | 'monthly';
 
@@ -32,8 +33,6 @@ export interface Winner {
   prizeEtb: number;
   period: DrawPeriod;
 }
-
-const TICKETS_KEY = 'innoarcade.draw.tickets.v1';
 
 // --- window math ------------------------------------------------------------
 function endOfDay(now: number): number {
@@ -79,30 +78,35 @@ export function activeDraws(now = Date.now()): Draw[] {
   ];
 }
 
-// --- tickets ----------------------------------------------------------------
-function readTickets(): Record<string, number> {
-  try { return JSON.parse(localStorage.getItem(TICKETS_KEY) || '{}'); } catch { return {}; }
-}
-function writeTickets(t: Record<string, number>): void {
-  localStorage.setItem(TICKETS_KEY, JSON.stringify(t));
+// --- tickets (server-authoritative; in-memory cache, NO localStorage) --------
+const ticketCache: Record<string, number> = {};
+
+/** Hydrate the ticket cache from the server (call on load / after auth change). */
+export async function hydrateTickets(): Promise<void> {
+  const t = await fetchDrawTickets();
+  for (const k of Object.keys(ticketCache)) delete ticketCache[k];
+  Object.assign(ticketCache, t);
 }
 
 export function myTickets(drawId: string): number {
-  return readTickets()[drawId] ?? 0;
+  return ticketCache[drawId] ?? 0;
 }
 
 export class NotEnoughPointsError extends Error {
   constructor() { super('not enough points'); this.name = 'NotEnoughPointsError'; }
 }
 
-/** Buy one ticket into a draw, debiting its Points cost. */
-export function enterDraw(draw: Draw): number {
-  if (points() < draw.ticketCostPoints) throw new NotEnoughPointsError();
-  if (!spend('points', draw.ticketCostPoints)) throw new NotEnoughPointsError();
-  const t = readTickets();
-  t[draw.id] = (t[draw.id] ?? 0) + 1;
-  writeTickets(t);
-  return t[draw.id];
+/** Buy one ticket into a draw on the server (spends points via enter-draw). */
+export async function enterDraw(draw: Draw): Promise<number> {
+  try {
+    const res = await enterDrawRemote(draw.id);
+    setBalance('points', res.points);
+    ticketCache[draw.id] = res.tickets;
+    return res.tickets;
+  } catch (e) {
+    // 402 from the function (apply_points overdraw guard) → not enough points.
+    throw new NotEnoughPointsError();
+  }
 }
 
 // --- seeded recent winners --------------------------------------------------

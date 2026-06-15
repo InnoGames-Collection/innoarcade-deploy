@@ -19,15 +19,13 @@
 
 import { getGame, type GameMode, type GameMeta } from './catalog';
 import {
-  getTournament, submitScore, leaderboard, enterTournament, isEntered,
+  getTournament, leaderboard, enterTournament, isEntered,
   countdown, playerStanding, InsufficientCoinsError,
   type Tournament, type LeaderEntry,
 } from './tournaments';
 import { SignInRequiredError } from './payments';
-import { backendReady, submitScoreRemote, leaderboardRemote } from './backend';
-import { currentUser } from './auth';
-import { profile } from '../engine/profile';
-import { earn } from './currency';
+import { submitPlayRemote, startRoundRemote } from './backend';
+import { setBalance } from './currency';
 import { isTestMode } from './testMode';
 import { winRateOverride } from './config';
 
@@ -58,6 +56,8 @@ export class GameHost {
   private readonly baseWinRate: number;
   /** The monthly tournament backing this game, when in tournament mode. */
   readonly tournament?: Tournament;
+  /** Anti-cheat: the server-issued single-use token for the current round. */
+  private roundToken = '';
 
   constructor(gameId: string) {
     const meta = getGame(gameId);
@@ -94,10 +94,17 @@ export class GameHost {
     return this.isTournament ? isEntered(this.tournament!.id) : true;
   }
 
+  /** Open a round: fetch the anti-cheat token to hand back on finish(). */
+  async startRound(): Promise<void> {
+    this.roundToken = await startRoundRemote(this.meta.id);
+  }
+
   // Charge for / authorise a round. Free games always pass. Tournament games
   // ensure the player is entered (entry fee debited once per window); a repeat
-  // play in the same window is free because they already paid in.
+  // play in the same window is free because they already paid in. Always opens a
+  // server round (anti-cheat token) first.
   async begin(): Promise<BeginResult> {
+    await this.startRound();
     if (!this.isTournament) return { ok: true };
     // Test mode waives the entry fee so every paid game stays reachable for QA.
     if (isTestMode()) return { ok: true };
@@ -119,20 +126,27 @@ export class GameHost {
     }
   }
 
-  // Record a finished round. `score` is the points the round earned (0 on a
-  // loss for chance games; the run score for skill games).
-  finish(score: number, isWin: boolean): FinishResult {
-    // A win mints portal Points — the currency spent on draw tickets and the
-    // leaderboard — closing the play → earn → draw loop for every game.
-    if (isWin && this.winPoints > 0) earn('points', this.winPoints);
-    if (!this.isTournament) {
-      const isRecord = profile.recordRun(this.meta.id, score);
-      return { best: profile.stats(this.meta.id).best, isRecord };
+  // Points a finished round awards (the play-earned currency). Chance/awarded
+  // games pay `winPoints` on a win; skill/engine games scale their run score.
+  private pointsFor(score: number, isWin: boolean): number {
+    if (this.meta.play) return isWin ? this.winPoints : 0;
+    return Math.min(300, Math.floor(score / 50));
+  }
+
+  // Record a finished round on the SERVER (the only economy authority): awards
+  // points and, for tournament games, writes the authoritative leaderboard
+  // score. `score` is the run/competition score; points are derived here. No
+  // local storage — the returned points balance hydrates the currency cache.
+  async finish(score: number, isWin: boolean): Promise<FinishResult> {
+    const pts = this.pointsFor(score, isWin);
+    try {
+      const res = await submitPlayRemote(this.meta.id, Math.max(0, Math.floor(score)), pts, this.isTournament, this.roundToken);
+      if (typeof res.points === 'number') setBalance('points', res.points);
+      return { best: res.best ?? 0, isRecord: res.isRecord ?? false, rank: res.rank, total: res.total };
+    } catch (e) {
+      console.warn('play submit failed', e);
+      return { best: 0, isRecord: false };
     }
-    const t = this.tournament!;
-    const res = submitScore(t.id, score);
-    void this.syncRemote(t.id, score);
-    return { best: res.best, isRecord: res.isRecord, rank: res.rank, total: res.total };
   }
 
   /** Leaderboard rows for the menu/result strip (tournament mode). */
@@ -152,20 +166,20 @@ export class GameHost {
     return `${c.days}d ${c.hours}h ${c.minutes}m`;
   }
 
-  // Persist the authoritative score server-side when signed in; a no-op offline
-  // or signed out, leaving the instant local standing on screen.
-  private async syncRemote(tournamentId: string, score: number): Promise<void> {
-    if (!backendReady() || !(await currentUser())) return;
-    try {
-      await submitScoreRemote(tournamentId, score);
-      await leaderboardRemote(tournamentId);
-    } catch {
-      /* network/auth hiccup — local standing stays */
-    }
-  }
 }
 
 /** Convenience factory. */
 export function createHost(gameId: string): GameHost {
   return new GameHost(gameId);
+}
+
+/** Record a finished engine-game run on the server (awards points, and writes the
+ *  leaderboard score when the game is a tournament). For the engine games that
+ *  don't use the host's HUD; best-effort and never throws. */
+export async function recordEnginePlay(gameId: string, score: number): Promise<void> {
+  try {
+    const h = new GameHost(gameId);
+    await h.startRound();
+    await h.finish(score, true);
+  } catch { /* best-effort */ }
 }
