@@ -55,8 +55,8 @@ export const CATALOG: GameMeta[] = [
   {
     id: 'merge-2048',
     route: 'games/merge-2048/',
-    nameEn: 'Merge 2048',
-    nameAm: 'መርጅ 2048',
+    nameEn: '2048',
+    nameAm: '2048',
     genreEn: 'Puzzle · Casual',
     genreAm: 'እንቆቅልሽ · ቀላል',
     mode: 'tournament',
@@ -70,8 +70,8 @@ export const CATALOG: GameMeta[] = [
   {
     id: 'temple-dash',
     route: 'games/temple-dash/',
-    nameEn: 'Temple Dash',
-    nameAm: 'ቤተመቅደስ ሩጫ',
+    nameEn: 'Ethiorunner',
+    nameAm: 'ኢትዮሯጭ',
     genreEn: 'Runner · Tournament', genreAm: 'ሩጫ · ውድድር',
     mode: 'tournament', icon: '🏃', accent: '#e2563a', thumb: ['#7a2d1a', '#2a0f08'],
     scoreEn: 'Score', scoreAm: 'ነጥብ',
