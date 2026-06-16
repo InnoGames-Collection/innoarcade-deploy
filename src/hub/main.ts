@@ -51,6 +51,41 @@ function renderPromo(): void {
 }
 function advancePromo(): void { promoIdx = (promoIdx + 1) % PROMOS.length; renderPromo(); }
 
+// Auto-advance timer the player can interrupt by swiping/tapping a dot.
+let promoTimer: ReturnType<typeof setInterval> | undefined;
+function restartPromoTimer(): void {
+  if (promoTimer) clearInterval(promoTimer);
+  promoTimer = setInterval(advancePromo, 4500);
+}
+function goToPromo(i: number): void {
+  promoIdx = (i + PROMOS.length) % PROMOS.length;
+  renderPromo();
+  restartPromoTimer(); // a manual move resets the auto cadence
+}
+
+// Manual control: swipe left/right on the banner, or tap a dot.
+function setupPromo(): void {
+  const track = document.querySelector<HTMLElement>('#promoTrack');
+  const dots = document.querySelector<HTMLElement>('#promoDots');
+  dots?.addEventListener('click', (e) => {
+    const dot = (e.target as HTMLElement).closest<HTMLElement>('.promo-dot');
+    if (!dot || !dot.parentElement) return;
+    goToPromo([...dot.parentElement.children].indexOf(dot));
+  });
+  if (track) {
+    let startX = 0, active = false;
+    track.addEventListener('pointerdown', (e) => { active = true; startX = e.clientX; });
+    track.addEventListener('pointerup', (e) => {
+      if (!active) return;
+      active = false;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 40) goToPromo(promoIdx + (dx < 0 ? 1 : -1));
+    });
+    track.addEventListener('pointercancel', () => { active = false; });
+    track.style.touchAction = 'pan-y'; // allow vertical scroll, capture horizontal swipe
+  }
+}
+
 // --- Compact balance pill strip (in the topbar) ------------------------------
 function renderMyStats(): void {
   const host = document.querySelector('#topBalances');
@@ -708,4 +743,5 @@ hydratePoints();
 // Re-pull wallet/entries/standing when the player signs in or out.
 onAuthChange(() => { void refreshData(); hydratePoints(); });
 setInterval(tickCountdowns, 1000);
-setInterval(advancePromo, 4500);
+setupPromo();
+restartPromoTimer();

@@ -2,8 +2,7 @@
 
 A bilingual HTML5 **games platform** — canvas-based action and puzzle titles
 served in two modes: **Free play** and time-boxed **Tournaments** with live
-leaderboards. Built by **InnoSphere Technologies** as part of the InnoGames
-platform.
+leaderboards. **GoPlay**.
 
 Fully bilingual: **English / አማርኛ (Amharic)** — toggle on the hub or in any game.
 

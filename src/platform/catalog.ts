@@ -224,30 +224,30 @@ export const CATALOG: GameMeta[] = [
     scoreEn: 'Points', scoreAm: 'ነጥብ',
     play: { winPoints: 150, winRate: 50 },
   },
-  // LexiQuest brain & word games, surfaced in the GoPlay catalog with the same
-  // card style. They open in the LexiQuest app (their gameplay lives there).
-  { id: 'sudoku', route: 'lexiquest/index.html#/g/sudoku', nameEn: 'Sudoku', nameAm: 'ሱዶኩ',
+  // Brain & word games — native GoPlay games (formerly the vendored LexiQuest
+  // app), each on its own page, scored through the server like every other game.
+  { id: 'sudoku', route: 'games/sudoku/index.html', nameEn: 'Sudoku', nameAm: 'ሱዶኩ',
     genreEn: 'Brain · Logic', genreAm: 'አእምሮ · ሎጂክ', mode: 'free', icon: '🔢',
     accent: '#34b38a', thumb: ['#34b38a', '#176049'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
-  { id: 'spell', route: 'lexiquest/index.html#/g/spell', nameEn: 'Spell It', nameAm: 'ፊደል ቃላት',
+  { id: 'spell', route: 'games/spell/index.html', nameEn: 'Spell Trivia', nameAm: 'ፊደል ጥያቄ',
     genreEn: 'Word · Spelling', genreAm: 'ቃላት · ፊደል', mode: 'free', icon: '🔤',
     accent: '#6a4cff', thumb: ['#6a4cff', '#34238f'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
-  { id: 'vocab', route: 'lexiquest/index.html#/g/vocab', nameEn: 'Vocabulary', nameAm: 'መዝገበ ቃላት',
+  { id: 'vocab', route: 'games/vocab/index.html', nameEn: 'Vocabulary', nameAm: 'መዝገበ ቃላት',
     genreEn: 'Word · Vocabulary', genreAm: 'ቃላት · መዝገበ', mode: 'free', icon: '📖',
     accent: '#2aa9d6', thumb: ['#2aa9d6', '#13627e'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
-  { id: 'rhyme', route: 'lexiquest/index.html#/g/rhyme', nameEn: 'Rhyme Time', nameAm: 'ግጥም',
+  { id: 'rhyme', route: 'games/rhyme/index.html', nameEn: 'Rhyme Time', nameAm: 'ግጥም',
     genreEn: 'Word · Rhyme', genreAm: 'ቃላት · ግጥም', mode: 'free', icon: '🎵',
     accent: '#e25aa0', thumb: ['#e25aa0', '#8e2c63'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
-  { id: 'target24', route: 'lexiquest/index.html#/g/target24', nameEn: 'Target 24', nameAm: 'ኢላማ 24',
+  { id: 'target24', route: 'games/target24/index.html', nameEn: 'Target 24', nameAm: 'ኢላማ 24',
     genreEn: 'Brain · Math', genreAm: 'አእምሮ · ሒሳብ', mode: 'free', icon: '🎯',
     accent: '#f0a832', thumb: ['#f0a832', '#9c6310'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
-  { id: 'crosssum', route: 'lexiquest/index.html#/g/crosssum', nameEn: 'Cross Sum', nameAm: 'ድምር',
+  { id: 'crosssum', route: 'games/crosssum/index.html', nameEn: 'Cross Sum', nameAm: 'ድምር',
     genreEn: 'Brain · Math', genreAm: 'አእምሮ · ሒሳብ', mode: 'free', icon: '➕',
     accent: '#5b8cff', thumb: ['#5b8cff', '#27468f'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
-  { id: 'logic', route: 'lexiquest/index.html#/g/logic', nameEn: 'Logic Grid', nameAm: 'ሎጂክ',
+  { id: 'logic', route: 'games/logic/index.html', nameEn: 'Logic Grid', nameAm: 'ሎጂክ',
     genreEn: 'Brain · Logic', genreAm: 'አእምሮ · ሎጂክ', mode: 'free', icon: '🧩',
     accent: '#ff7a59', thumb: ['#ff7a59', '#a83b22'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
-  { id: 'sequence', route: 'lexiquest/index.html#/g/sequence', nameEn: 'Sequence', nameAm: 'ቅደም ተከተል',
+  { id: 'sequence', route: 'games/sequence/index.html', nameEn: 'Sequence', nameAm: 'ቅደም ተከተል',
     genreEn: 'Brain · Logic', genreAm: 'አእምሮ · ሎጂክ', mode: 'free', icon: '🔗',
     accent: '#7a6cff', thumb: ['#7a6cff', '#3d2f9e'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
 ];
@@ -275,15 +275,36 @@ for (const g of CATALOG) { if (COVERS[g.id]) g.cover = COVERS[g.id]; }
 //   2. then the rest in catalog order;
 //   3. except BOTTOM games, pinned to the very end.
 const FRONT = [
-  'popblast',     // Candy Blast
-  'temple-dash',  // Ethiorun
-  'orbit-blast',  // Ball Shooter
-  'fruit-slice',  // Fruit Slice
-  'luckyslot',    // Lucky Slot
-  'target24',     // Target 24
-  'merge-2048',   // 2048
+  'temple-dash',    // Ethio Runner
+  'orbit-blast',    // Ball Shooter
+  'merge-2048',     // 2048
+  'memory-match',   // Memory Match
+  'tap-game',       // Tap Game
+  'dice-roll',      // Dice Roll
+  'popblast',       // Candy Blast
+  'ethiopian-quiz', // Ethiopian Quiz
+  'fruit-slice',    // Fruit Slice
+  'spin-wheel',     // Spin Wheel
+  'sudoku',         // Sudoku
+  'brick-blitz',    // Brick Blitz
+  'sequence',       // Sequence
+  'metro-rush',     // Metro Rush
+  'luckyslot',      // Lucky Slot
+  'target24',       // Target 24
+  'lucky-box',      // Lucky Box
+  'spell',          // Spell Trivia
+  'vocab',          // Vocabulary
+  'rhyme',          // Rhyme Time
+  'crosssum',       // Cross Sum
+  'logic',          // Logic Grid
+  'scratch-card',   // Scratch Card
+  'bubble-pop',     // Bubble Pop
+  'crash-game',     // Crash Game
+  'sky-hopper',     // Sky Hopper
+  'dot-link',       // Dot Link
+  'candy-crunch',   // Candy Saga
 ];
-const BOTTOM = ['scratch-card', 'bubble-pop', 'crash-game'];
+const BOTTOM: string[] = [];
 
 /** The full catalog sorted for display (front-runners, middle, then pinned). */
 export function orderedCatalog(): GameMeta[] {

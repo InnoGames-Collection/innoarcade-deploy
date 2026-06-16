@@ -130,10 +130,11 @@ export class GameHost {
 
   // Record a finished round on the SERVER (the only economy authority): awards
   // points and, for tournament games, writes the authoritative leaderboard
-  // score. `score` is the run/competition score; points are derived here. No
-  // local storage — the returned points balance hydrates the currency cache.
-  async finish(score: number, isWin: boolean): Promise<FinishResult> {
-    const pts = this.pointsFor(score, isWin);
+  // score. `score` is the run/competition score; points are derived here unless
+  // `pointsOverride` is given (games with their own points formula). No local
+  // storage — the returned points balance hydrates the currency cache.
+  async finish(score: number, isWin: boolean, pointsOverride?: number): Promise<FinishResult> {
+    const pts = pointsOverride ?? this.pointsFor(score, isWin);
     try {
       const res = await submitPlayRemote(this.meta.id, Math.max(0, Math.floor(score)), pts, this.isTournament, this.roundToken);
       if (typeof res.points === 'number') setBalance('points', res.points);

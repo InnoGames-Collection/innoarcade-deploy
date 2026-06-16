@@ -1,7 +1,7 @@
 {
-  "name": "InnoArcade",
-  "short_name": "InnoArcade",
-  "description": "Free HTML5 arcade games by InnoSphere Technologies",
+  "name": "GoPlay",
+  "short_name": "GoPlay",
+  "description": "GoPlay — free HTML5 arcade games",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

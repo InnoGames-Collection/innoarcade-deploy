@@ -1,13 +1,11 @@
-// Wallet widget for the hub topbar: a live coin-balance chip plus the coin
-// store and checkout flow (TeleBirr / airtime top-up). Self-contained like
-// signin.ts — injects its own markup + styles and speaks only to the platform
-// wallet / payments / config modules. Strings are inline EN/AM.
+// Coin store + checkout flow (TeleBirr / airtime top-up) for the hub. Owns the
+// store/payment UI and keeps the coin balance hydrated; the balance itself is
+// shown by the hub's #topBalances strip. Strings are inline EN/AM.
 
 import { getLang } from '../i18n';
 import { onAuthChange, currentUser } from '../platform/auth';
 import { openSignIn } from './signin';
-import { balance, balanceSync, onWalletChange } from '../platform/wallet';
-import { points, gold, onCurrencyChange } from '../platform/currency';
+import { balance } from '../platform/wallet';
 import { loadConfig, coinPackages, paymentMethodsEnabled, isMaintenance, economyNeedsAuth, type CoinPackage } from '../platform/config';
 import { startCheckout, pollOrder, PAY_METHOD_LABEL, SignInRequiredError, type PayMethod } from '../platform/payments';
 
@@ -34,24 +32,20 @@ const STR = {
 };
 const t = (k: keyof typeof STR.en): string => (STR[getLang()] ?? STR.en)[k];
 
-let chip: HTMLElement | null = null;
-
 export async function mountWallet(): Promise<void> {
   injectStyles();
-  const bar = document.querySelector('.topbar');
-  if (!bar) return;
-  chip = document.createElement('button');
-  chip.className = 'coin-chip';
-  bar.insertBefore(chip, bar.querySelector('#settingsBtn'));
-  chip.addEventListener('click', openStore);
-  renderChip();
-  onWalletChange(renderChip);
-  onCurrencyChange(renderChip);
-  // Switch wallets (guest ↔ account) on sign-in/out.
-  onAuthChange(() => { void balance().then(renderChip); });
+  // The top-right balance display is the #topBalances strip (rendered by the hub:
+  // points + coins + a Buy button). This module owns only the store/checkout and
+  // keeps the coin balance hydrated; it no longer injects its own chip (that was
+  // the duplicate currency widget).
+  // Refresh the balance on sign-in/out.
+  onAuthChange(() => { void balance(); });
+  // Prime the signed-in state first so the store/economy correctly recognises an
+  // already-signed-in user (otherwise needsSignInToBuy() can wrongly prompt
+  // sign-in during the session-restore race).
+  await currentUser();
   await loadConfig();
   await balance();
-  renderChip();
   void resumePendingCheckout();
 }
 
@@ -70,20 +64,9 @@ export async function resumePendingCheckout(): Promise<void> {
   try {
     await currentUser(); // ensure the session is loaded so pollOrder hits the server path
     const order = await pollOrder(orderId);
-    await balance();
-    renderChip();
+    await balance(); // emits onWalletChange → hub re-renders #topBalances
     if (order.status === 'paid') showSuccess(shell(''), order.coins);
   } catch { /* leave the balance as-is; the order book still shows the attempt */ }
-}
-
-// The 3-tier chip: Points & Gold come from the currency module, Coins from the
-// live wallet. All three react to their respective change events.
-function renderChip(): void {
-  if (!chip) return;
-  chip.innerHTML =
-    `<span class="cc-seg cc-points">⭐ ${points().toLocaleString()}</span>` +
-    `<span class="cc-seg cc-coins">🪙 ${balanceSync().toLocaleString()}</span>` +
-    `<span class="cc-seg cc-gold">👑 ${gold().toLocaleString()}</span>`;
 }
 
 // --- store ------------------------------------------------------------------
@@ -186,9 +169,10 @@ function showSuccess(m: HTMLElement, coins: number): void {
       <button class="wallet-primary" id="done">${t('close')}</button>
     </div>`;
   m.querySelector('#done')!.addEventListener('click', () => m.remove());
-  // Pulse the topbar chip.
-  chip?.classList.add('bump');
-  setTimeout(() => chip?.classList.remove('bump'), 600);
+  // Pulse the topbar balance strip.
+  const strip = document.querySelector('#topBalances');
+  strip?.classList.add('bump');
+  setTimeout(() => strip?.classList.remove('bump'), 600);
 }
 
 function injectStyles(): void {
@@ -196,16 +180,8 @@ function injectStyles(): void {
   const s = document.createElement('style');
   s.id = 'wallet-styles';
   s.textContent = `
-    .coin-chip { display:inline-flex; align-items:center; gap:.18rem; border:1px solid var(--line);
-      background:#fff; color:var(--text); font:inherit; font-weight:800; font-size:.8rem;
-      padding:.2rem .26rem; border-radius:999px; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,.06); }
-    .coin-chip:hover { filter:brightness(1.01); }
-    .cc-seg { display:inline-flex; align-items:center; gap:.18rem; padding:.16rem .44rem; border-radius:999px; white-space:nowrap; }
-    .cc-points { color:#1f5fc4; background:#eaf1fc; }
-    .cc-coins { color:#8a6310; background:#fff3d6; }
-    .cc-gold { color:#9a6b12; background:#fbeec4; }
-    .coin-chip.bump { animation:coinbump .6s ease; }
-    @keyframes coinbump { 30%{transform:scale(1.18);} 60%{transform:scale(.96);} }
+    .top-balances.bump { animation:coinbump .6s ease; }
+    @keyframes coinbump { 30%{transform:scale(1.08);} 60%{transform:scale(.98);} }
     .wallet-modal { position:fixed; inset:0; z-index:9991; display:flex; align-items:center; justify-content:center; }
     .wallet-scrim { position:absolute; inset:0; background:rgba(12,16,30,.5); backdrop-filter:blur(3px); }
     .wallet-card { position:relative; width:min(360px,92vw); background:#fff; color:var(--text); border-radius:16px;

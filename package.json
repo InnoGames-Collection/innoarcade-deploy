@@ -1,7 +1,7 @@
 {
   "name": "innoarcade",
   "version": "0.1.0",
-  "description": "InnoArcade — free HTML5 arcade games by InnoSphere Technologies",
+  "description": "GoPlay — free HTML5 arcade games",
   "private": true,
   "type": "module",
   "scripts": {
