@@ -463,7 +463,8 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .gc-info { position: absolute; top: 0.5rem; right: 0.5rem; z-index: 2;
   width: 1.7rem; height: 1.7rem; border-radius: 999px; border: none; cursor: pointer;
   background: rgba(255,255,255,0.92); box-shadow: 0 2px 8px rgba(20,45,14,0.18);
-  font-size: 0.9rem; line-height: 1; display: grid; place-items: center; padding: 0; }
+  font-size: 1rem; font-weight: 900; color: var(--accent);
+  line-height: 1; display: grid; place-items: center; padding: 0; }
 .gc-info:hover { background: #fff; transform: scale(1.08); }
 
 /* ---- how-to-play modal ---- */

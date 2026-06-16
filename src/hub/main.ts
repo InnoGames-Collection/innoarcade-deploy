@@ -348,7 +348,7 @@ function gameCard(g: GameMeta): string {
           ? `<img class="gc-cover" src="${g.cover}" alt="" loading="lazy" />`
           : `<span class="gc-glyph">${g.icon}</span>`}
         ${modeTag}
-        <button class="gc-info" data-howto="${g.id}" aria-label="${t('hub.howToPlay')}">ℹ️</button>
+        <button class="gc-info" data-howto="${g.id}" aria-label="${t('hub.howToPlay')}">?</button>
       </div>
       <div class="gc-body">
         <h4>${escapeHtml(name(g))}</h4>

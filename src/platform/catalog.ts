@@ -204,7 +204,6 @@ export const CATALOG: GameMeta[] = [
     nameEn: 'Candy Blast', nameAm: 'ካንዲ ብላስት',
     genreEn: 'Match-3 · Casual', genreAm: 'ሦስት-አዛምድ · ቀላል',
     mode: 'free', icon: '🍬', accent: '#e85b9c', thumb: ['#8c2b5c', '#2e0c1e'],
-    cover: 'candy_blast.png',
     scoreEn: 'Score', scoreAm: 'ነጥብ',
     play: { winPoints: 150, winRate: 50 },
   },
@@ -254,18 +253,47 @@ export const CATALOG: GameMeta[] = [
     accent: '#7a6cff', thumb: ['#7a6cff', '#3d2f9e'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
 ];
 
-// Preferred display order for the flat catalog: these lead (in this order), then
-// every other game follows in catalog order.
-const FEATURED_ORDER = [
-  'popblast', 'luckyslot', 'memory-match', 'merge-2048', 'spin-wheel',
-  'ethiopian-quiz', 'dice-roll', 'lucky-box', 'temple-dash', 'sudoku',
-];
+// WebP cover art for the catalog cards (files live in /public). Attached to the
+// catalog entries below so a card shows the artwork instead of the emoji glyph.
+const COVERS: Record<string, string> = {
+  'popblast': 'candy_blast.webp',
+  'temple-dash': 'temple_dash.webp',
+  'orbit-blast': 'orbit_blast.webp',
+  'luckyslot': 'lucky_slot.webp',
+  'merge-2048': 'merge_2048.webp',
+  'dice-roll': 'dice_roll.webp',
+  'lucky-box': 'lucky_boxes.webp',
+  'spin-wheel': 'spin_wheel.webp',
+  'memory-match': 'memory_match.webp',
+  'metro-rush': 'metro_rush.webp',
+  'ethiopian-quiz': 'ethiopian_quiz.webp',
+  'sudoku': 'sudoku.webp',
+};
+for (const g of CATALOG) { if (COVERS[g.id]) g.cover = COVERS[g.id]; }
 
-/** The full catalog sorted for display (featured games first, then the rest). */
+// Display order for the flat catalog:
+//   1. FRONT games lead, in this exact order;
+//   2. then the rest in catalog order;
+//   3. except BOTTOM games, pinned to the very end.
+const FRONT = [
+  'popblast',     // Candy Blast
+  'temple-dash',  // Ethiorun
+  'orbit-blast',  // Ball Shooter
+  'fruit-slice',  // Fruit Slice
+  'luckyslot',    // Lucky Slot
+  'target24',     // Target 24
+  'merge-2048',   // 2048
+];
+const BOTTOM = ['scratch-card', 'bubble-pop', 'crash-game'];
+
+/** The full catalog sorted for display (front-runners, middle, then pinned). */
 export function orderedCatalog(): GameMeta[] {
   const rank = (g: GameMeta): number => {
-    const i = FEATURED_ORDER.indexOf(g.id);
-    return i < 0 ? FEATURED_ORDER.length + CATALOG.indexOf(g) : i;
+    const f = FRONT.indexOf(g.id);
+    if (f >= 0) return f;
+    const b = BOTTOM.indexOf(g.id);
+    if (b >= 0) return 10_000 + b;
+    return 1_000 + CATALOG.indexOf(g);
   };
   return [...CATALOG].sort((a, b) => rank(a) - rank(b));
 }
