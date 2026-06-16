@@ -23,6 +23,7 @@ import { SignInRequiredError } from './payments';
 import { submitPlayRemote, startRoundRemote, leaderboardRemote, playerStandingRemote } from './backend';
 import { setBalance } from './currency';
 import { winRateOverride } from './config';
+import { currentUser } from './auth';
 
 export type BeginBlock = 'coins' | 'auth';
 export interface BeginResult {
@@ -101,6 +102,10 @@ export class GameHost {
   // play in the same window is free because they already paid in. Always opens a
   // server round (anti-cheat token) first.
   async begin(): Promise<BeginResult> {
+    // Hydrate the auth cache from the persisted session — game pages don't run
+    // the hub's sign-in flow, so isSignedIn() would otherwise read stale (null)
+    // and wrongly report the player as signed out.
+    await currentUser();
     await this.startRound();
     if (!this.isTournament) return { ok: true };
     const t = this.tournament!;

@@ -84,15 +84,10 @@ Deno.serve(async (req: Request) => {
     return json({ order: { ...order, redirectUrl }, sandbox: false });
   }
 
-  // Sandbox: redirect to the app's own demo TeleBirr page, which calls
-  // payment-callback (the real webhook) on "Pay". The order stays PENDING until
-  // that callback credits it — identical to the live flow, no money involved.
-  const appBase = String(body.appBase ?? '').replace(/\/?$/, '/'); // ensure trailing slash
-  const ret = encodeURIComponent(String(body.returnUrl ?? ''));
-  // Directory-style URL (not …/index.html) so it survives Vercel "Clean URLs".
-  const redirectUrl = appBase
-    ? `${appBase}checkout/?order=${orderId}&ref=${providerRef}` +
-      `&amount=${pkg.priceEtb}&coins=${coins}&pkg=${pkg.id}&method=${method}&return=${ret}`
-    : '';
-  return json({ order: { ...order, redirectUrl }, sandbox: true });
+  // Mock payment (no TeleBirr / airtime integration): credit the coins
+  // immediately, server-side via apply_coins, and mark the order paid. Fully
+  // server-authoritative; the client just sees a completed purchase.
+  await admin.rpc('apply_coins', { p_user: user.id, p_delta: coins, p_reason: 'purchase', p_ref: orderId });
+  await admin.from('payment_orders').update({ status: 'paid' }).eq('id', orderId);
+  return json({ order: { ...order, status: 'paid' }, sandbox: true });
 });

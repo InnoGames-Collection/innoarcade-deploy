@@ -144,10 +144,11 @@ function openCheckout(pkg: CoinPackage): void {
     pay.textContent = t('processing');
     try {
       const { order } = await startCheckout(pkg.id, chosen);
-      // Checkout (real TeleBirr or the sandbox page) hands off via a hosted page;
-      // we leave the app and resume on return (see resumePendingCheckout).
+      // Mock payment: the server credits immediately and returns a paid order.
+      if (order.status === 'paid') { await balance(); showSuccess(m, total); return; }
+      // (Real TeleBirr, if ever enabled, hands off via a hosted page.)
       if (order.redirectUrl) { window.location.href = order.redirectUrl; return; }
-      // No redirect URL (unexpected) — fall back to polling the order row.
+      // Otherwise poll the order row until the webhook credits it.
       await pollOrder(order.id);
       await balance();
       showSuccess(m, total);

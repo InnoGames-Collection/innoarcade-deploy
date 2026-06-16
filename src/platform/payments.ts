@@ -16,6 +16,7 @@
 
 import { supabase } from './supabase';
 import { packageById, economyNeedsAuth } from './config';
+import { currentUser } from './auth';
 
 /** Thrown when a purchase is attempted signed-out. Coins are account-bound, so
  *  this is the platform-level backstop ensuring coins can never be bought without
@@ -50,6 +51,7 @@ export interface CheckoutResult {
 export async function startCheckout(packageId: string, method: PayMethod): Promise<CheckoutResult> {
   const pkg = packageById(packageId);
   if (!pkg) throw new Error('unknown package');
+  await currentUser(); // hydrate the auth cache from the persisted session
   if (economyNeedsAuth()) throw new SignInRequiredError();
 
   // The hosted checkout page (real TeleBirr, or the sandbox page) needs to know
