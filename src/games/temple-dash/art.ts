@@ -25,6 +25,7 @@ export interface Skin {
 // Kenney "Toon Characters 1" human runners: Male Adventurer, Female Adventurer,
 // Zombie — each with a real 3-frame run cycle plus jump and duck poses.
 export const SKINS: Skin[] = [
+  { id: 'boy', nameEn: 'Abebe', nameAm: 'አበበ', cost: 0 },   // GoPlay original Ethiorunner
   { id: 'scout', nameEn: 'Max', nameAm: 'ማክስ', cost: 0 },
   { id: 'jade', nameEn: 'Mia', nameAm: 'ሚያ', cost: 250 },
   { id: 'royal', nameEn: 'Zombie', nameAm: 'ዞምቢ', cost: 600 },

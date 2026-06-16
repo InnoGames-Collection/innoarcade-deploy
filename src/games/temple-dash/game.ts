@@ -109,7 +109,7 @@ export class TempleDash {
   private skinId: string;
 
   constructor(private assets: AssetStore) {
-    this.skinId = profile.selectedSkin(GAME_ID, 'scout');
+    this.skinId = profile.selectedSkin(GAME_ID, 'boy');
     this.fx.reducedMotion = settings.data.reducedMotion;
     settings.onChange((s) => { this.fx.reducedMotion = s.reducedMotion; });
   }
@@ -120,7 +120,7 @@ export class TempleDash {
   }
 
   start(): void {
-    this.skinId = profile.selectedSkin(GAME_ID, 'scout');
+    this.skinId = profile.selectedSkin(GAME_ID, 'boy');
     this.score = 0; this.coins = 0;
     this.elapsed = 0; this.dist = 0; this.speed = BASE_SPEED;
     this.lane = 0; this.laneF = 0;
