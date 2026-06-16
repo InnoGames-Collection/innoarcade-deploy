@@ -29,11 +29,12 @@ export interface GameMeta {
   scoreAm: string;
   /** Marks the flagship builds we polished for the partner demo. */
   featured?: boolean;
-  /** Operator-tunable play economy (built-in GoPlay games). Drives the
-   *  shared game host (see platform/gameHost.ts): `winPoints` is the score a win
-   *  awards, `winRate` the base win chance (0–100) for chance games. Skill games
-   *  ignore winRate. Absent for the engine-native games, which score by play. */
-  play?: { winPoints: number; winRate: number };
+  /** Per-game play tuning for the shared game host (platform/gameHost.ts):
+   *   • winRate — base win chance (0–100) for chance games.
+   *   • winScore — win threshold for skill/engine games (score ≥ this = a win).
+   *  Points are NOT set here: every win awards the flat platform WIN_POINTS.
+   *  (`winPoints` retained as a no-op for back-compat with older entries.) */
+  play?: { winPoints?: number; winRate?: number; winScore?: number };
 }
 
 export const CATALOG: GameMeta[] = [
@@ -285,6 +286,17 @@ const COVERS: Record<string, string> = {
   'sequence': 'sequence.webp',
 };
 for (const g of CATALOG) { if (COVERS[g.id]) g.cover = COVERS[g.id]; }
+
+// Win thresholds for the skill/engine games (score ≥ this = a win → flat points).
+// Chance/quiz/word games decide their own win; these only need a score bar.
+const WIN_SCORE: Record<string, number> = {
+  'orbit-blast': 1000, 'merge-2048': 512, 'temple-dash': 300, 'metro-rush': 300,
+  'candy-crunch': 100, 'dot-link': 50, 'brick-blitz': 100, 'fruit-slice': 30,
+  'sky-hopper': 30, 'bubble-pop': 100,
+};
+for (const g of CATALOG) {
+  if (WIN_SCORE[g.id] != null) g.play = { ...(g.play ?? {}), winScore: WIN_SCORE[g.id] };
+}
 
 // Display order for the flat catalog:
 //   1. FRONT games lead, in this exact order;

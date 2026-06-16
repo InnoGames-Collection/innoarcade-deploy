@@ -32,22 +32,6 @@ const MAX_SCORE: Record<string, number> = {
   'merge-2048': 5_000_000,
   _default: 2_000_000,
 };
-// Server-authoritative ceiling on points a single finished round can award, per
-// game id. The client proposes points (its win reward / skill formula); the
-// server clamps to this so a tampered client can't mint unlimited points.
-const MAX_POINTS: Record<string, number> = {
-  'ethiopian-quiz': 100,
-  'memory-match': 180,
-  'tap-game': 150,
-  'popblast': 150,
-  'spin-wheel': 120,
-  'lucky-box': 100,
-  'luckyslot': 100,
-  'dice-roll': 90,
-  'scratch-card': 80,
-  'crash-game': 50,
-  _default: 300,
-};
 const MIN_SECONDS_BETWEEN = 3; // basic flood protection per (user, tournament)
 
 const cors = {
@@ -107,7 +91,7 @@ Deno.serve(async (req: Request) => {
   const user = userData.user;
   if (!user) return json({ error: 'not signed in' }, 401);
 
-  let body: { gameId?: string; tournamentId?: string; score?: number; points?: number; leaderboard?: boolean; token?: string };
+  let body: { gameId?: string; tournamentId?: string; score?: number; win?: boolean; leaderboard?: boolean; token?: string };
   try {
     body = await req.json();
   } catch {
@@ -117,7 +101,9 @@ Deno.serve(async (req: Request) => {
   // Accept either the new {gameId} contract or the legacy {tournamentId}.
   const gameId = String(body.gameId ?? String(body.tournamentId ?? '').replace(/-(monthly|weekly)$/, ''));
   const score = Number(body.score);
-  const proposedPoints = Number(body.points ?? 0);
+  // New clients send {win}; older deployed clients sent {points>0 on a win}.
+  // Accept either so a function deploy can't strand the live frontend at 0 pts.
+  const win = body.win !== undefined ? Boolean(body.win) : Number((body as { points?: number }).points ?? 0) > 0;
   // Whether this round should count on a leaderboard. Free games pass false →
   // points only, no leaderboard row. Defaults to true for the legacy contract.
   const wantsLeaderboard = body.leaderboard ?? (body.tournamentId != null);
@@ -133,10 +119,12 @@ Deno.serve(async (req: Request) => {
   // Service-role client for the privileged read/write.
   const admin = createClient(url, serviceKey);
 
-  // Points to award (clamped server-side). NOT applied until all validation /
-  // anti-cheat gates have passed — a rejected submission must never credit points.
-  const pointsCeiling = MAX_POINTS[gameId] ?? MAX_POINTS._default;
-  const award = Math.max(0, Math.min(Math.floor(Number.isFinite(proposedPoints) ? proposedPoints : 0), pointsCeiling));
+  // UNIFORM ECONOMY: the SERVER decides the points — a flat WIN_POINTS on a win,
+  // 0 on a loss — identical for every game. The client cannot propose an amount.
+  // Applied only AFTER all validation / anti-cheat gates pass. (Mirror of
+  // WIN_POINTS in src/platform/config.ts — keep in sync.)
+  const WIN_POINTS = 100;
+  const award = win ? WIN_POINTS : 0;
   let points = 0;
   const grantPoints = async (): Promise<void> => {
     try {

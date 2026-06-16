@@ -10,6 +10,12 @@
 import { isConfigured, supabase } from './supabase';
 import { isSignedIn } from './auth';
 
+// Uniform play reward: every game awards exactly this many points on a win, 0 on
+// a loss — the single, flat, server-authoritative rule shared by ALL games so no
+// game is a better "points farm". Mirrored in the submit-score Edge Function;
+// keep the two in sync.
+export const WIN_POINTS = 100;
+
 // The coin economy is server-only. Operations hit the backend whenever Supabase
 // is configured AND the player is signed in — there is no local/offline economy.
 

@@ -22,7 +22,7 @@ import {
 import { SignInRequiredError } from './payments';
 import { submitPlayRemote, startRoundRemote, leaderboardRemote, playerStandingRemote } from './backend';
 import { setBalance } from './currency';
-import { winRateOverride } from './config';
+import { winRateOverride, WIN_POINTS } from './config';
 import { currentUser } from './auth';
 
 export type BeginBlock = 'coins' | 'auth';
@@ -41,13 +41,11 @@ export interface FinishResult {
   total?: number;
 }
 
-const DEFAULT_PLAY = { winPoints: 100, winRate: 50 };
+const DEFAULT_WIN_RATE = 50;
 
 export class GameHost {
   readonly meta: GameMeta;
   readonly mode: GameMode;
-  /** Points a win awards (score units). */
-  readonly winPoints: number;
   /** Configured base win chance 0–100; see `winRate` for the effective value. */
   private readonly baseWinRate: number;
   /** The monthly tournament backing this game, when in tournament mode. */
@@ -63,12 +61,17 @@ export class GameHost {
     if (!meta) throw new Error(`unknown game: ${gameId}`);
     this.meta = meta;
     this.mode = meta.mode;
-    this.winPoints = meta.play?.winPoints ?? DEFAULT_PLAY.winPoints;
-    this.baseWinRate = meta.play?.winRate ?? DEFAULT_PLAY.winRate;
+    this.baseWinRate = meta.play?.winRate ?? DEFAULT_WIN_RATE;
     if (meta.mode === 'tournament') {
       this.tournament = getTournament(`${gameId}-monthly`);
     }
   }
+
+  /** Flat, uniform points a win awards on ANY game (for HUD display). */
+  get winPoints(): number { return WIN_POINTS; }
+
+  /** Win threshold for skill/engine games (score ≥ this counts as a win). */
+  get winScore(): number { return this.meta.play?.winScore ?? 1; }
 
   /** Effective base win chance 0–100 for chance games:
    *  the admin win-rate override (server config) or the catalog rate. */
@@ -126,22 +129,13 @@ export class GameHost {
     }
   }
 
-  // Points a finished round awards (the play-earned currency). Chance/awarded
-  // games pay `winPoints` on a win; skill/engine games scale their run score.
-  private pointsFor(score: number, isWin: boolean): number {
-    if (this.meta.play) return isWin ? this.winPoints : 0;
-    return Math.min(300, Math.floor(score / 50));
-  }
-
-  // Record a finished round on the SERVER (the only economy authority): awards
-  // points and, for tournament games, writes the authoritative leaderboard
-  // score. `score` is the run/competition score; points are derived here unless
-  // `pointsOverride` is given (games with their own points formula). No local
-  // storage — the returned points balance hydrates the currency cache.
-  async finish(score: number, isWin: boolean, pointsOverride?: number): Promise<FinishResult> {
-    const pts = pointsOverride ?? this.pointsFor(score, isWin);
+  // Record a finished round on the SERVER (the only economy authority). The
+  // server awards the uniform flat points (WIN_POINTS on a win, 0 otherwise) —
+  // the client only reports {score, win}. Tournament games also get their
+  // authoritative leaderboard score written. No local storage.
+  async finish(score: number, isWin: boolean): Promise<FinishResult> {
     try {
-      const res = await submitPlayRemote(this.meta.id, Math.max(0, Math.floor(score)), pts, this.isTournament, this.roundToken);
+      const res = await submitPlayRemote(this.meta.id, Math.max(0, Math.floor(score)), isWin, this.isTournament, this.roundToken);
       if (typeof res.points === 'number') setBalance('points', res.points);
       // Cache the server standing so standing() reflects the latest real rank.
       if (this.isTournament && typeof res.rank === 'number') {
@@ -192,13 +186,13 @@ export function createHost(gameId: string): GameHost {
   return new GameHost(gameId);
 }
 
-/** Record a finished engine-game run on the server (awards points, and writes the
- *  leaderboard score when the game is a tournament). For the engine games that
- *  don't use the host's HUD; best-effort and never throws. */
+/** Record a finished engine-game run on the server. A "win" (→ flat points) is
+ *  reaching the game's win threshold (catalog `play.winScore`); the leaderboard
+ *  score is written for tournament games regardless. Best-effort, never throws. */
 export async function recordEnginePlay(gameId: string, score: number): Promise<void> {
   try {
     const h = new GameHost(gameId);
     await h.startRound();
-    await h.finish(score, true);
+    await h.finish(score, score >= h.winScore);
   } catch { /* best-effort */ }
 }

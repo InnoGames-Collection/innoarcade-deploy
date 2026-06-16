@@ -159,13 +159,12 @@ export function typeCatcher(onKey: (k: string) => void, tapTarget: HTMLElement):
 // --- scoring: GoPlay GameHost (server-only points) --------------------------
 let activeHost: GameHost | null = null;
 
-// Submit a finished run. Awards points by the original LexiQuest formula
-// ((won ? 20 : 5) + score capped at 30) through the server submit-score gate —
-// no leaderboard (these are free games), no local store.
+// Submit a finished run through the shared GameHost — identical to every other
+// game. The server awards the uniform flat points on a win (res.won); no
+// game-specific point formula, no leaderboard (these are free games), no store.
 export function recordResult(gameId: string, res: { won: boolean; score: number }): void {
   const host = activeHost && activeHost.meta.id === gameId ? activeHost : createHost(gameId);
-  const points = (res.won ? 20 : 5) + Math.min(Math.max(res.score || 0, 0), 30);
-  void host.startRound().then(() => host.finish(Math.max(0, res.score || 0), res.won, points)).catch(() => {});
+  void host.startRound().then(() => host.finish(Math.max(0, res.score || 0), res.won)).catch(() => {});
 }
 
 // Boot a native LexiQuest game: create its host, wire the EN/AM chrome buttons,

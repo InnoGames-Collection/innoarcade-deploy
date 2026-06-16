@@ -23,15 +23,16 @@ export interface PlayResult {
   total?: number;
 }
 
-// Submit a finished round to the server (the ONLY economy authority): awards
-// points and, for tournament games, writes the authoritative leaderboard score.
-// Requires a session (the portal is sign-in gated).
+// Submit a finished round to the server (the ONLY economy authority). The server
+// decides the points (flat WIN_POINTS on a win, 0 otherwise) — the client only
+// reports {score, win}; it cannot propose an amount. Tournament games also get
+// their authoritative leaderboard score written. Requires a session.
 export async function submitPlayRemote(
-  gameId: string, score: number, points: number, leaderboard: boolean, token = '',
+  gameId: string, score: number, win: boolean, leaderboard: boolean, token = '',
 ): Promise<PlayResult> {
   const sb = supabase();
   const { data, error } = await sb.functions.invoke('submit-score', {
-    body: { gameId, score, points, leaderboard, token },
+    body: { gameId, score, win, leaderboard, token },
   });
   if (error) throw error;
   return data as PlayResult;

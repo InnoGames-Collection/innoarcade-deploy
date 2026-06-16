@@ -87,7 +87,7 @@ async function syncRemoteScore(tournamentId: string, score: number): Promise<voi
   if (!backendReady() || !(await currentUser())) return;
   try {
     const token = await startRoundRemote('orbit-blast');
-    const res = await submitPlayRemote('orbit-blast', score, Math.min(300, Math.floor(score / 50)), true, token);
+    const res = await submitPlayRemote('orbit-blast', score, score >= 1000, true, token);
     if (res.rank) $('#rankVal').textContent = `#${res.rank}`;
     if (res.total) $('#rankTotal').textContent = `/ ${res.total}`;
     const board = await leaderboardRemote(tournamentId);
