@@ -6,4 +6,5 @@ dist
 !.env.example
 .DS_Store
 .vite
-public/
+# NOTE: public/ holds deployable static assets (game cover images + the vendored
+# LexiQuest app). It MUST be committed or Vercel builds without them (404s).
