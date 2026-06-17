@@ -251,8 +251,11 @@ function renderFeatured(): void {
   const top3: LeaderEntry[] = [];
   const me = undefined as LeaderEntry | undefined;
 
+  const fcStyle = game.cover
+    ? `background-image:url('${game.cover}');background-size:cover;background-position:center;`
+    : thumbStyle(game);
   host.innerHTML = `
-    <article class="featured-card" style="${thumbStyle(game)}">
+    <article class="featured-card" style="${fcStyle}">
       <div class="fc-info">
         <span class="fc-badge">🏆 ${escapeHtml(tTitle(tour))}</span>
         <h3 class="fc-title">${escapeHtml(name(game))}</h3>
@@ -337,7 +340,7 @@ function renderTournaments(): void {
     if (!game) return '';
     return `
       <article class="tour-card">
-        <div class="tc-thumb" style="${thumbStyle(game)}"><span>${game.icon}</span></div>
+        <div class="tc-thumb"${game.cover ? '' : ` style="${thumbStyle(game)}"`}>${game.cover ? `<img class="tc-cover" src="${game.cover}" alt="" loading="lazy" />` : `<span>${game.icon}</span>`}</div>
         <div class="tc-body">
           <span class="live-dot">● ${STATE_LABEL[tournamentState(tour)]?.() ?? t('hub.live')}</span>
           <h4>${escapeHtml(tTitle(tour))}</h4>

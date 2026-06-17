@@ -70,7 +70,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     { id: 'whale', coins: 2000, bonus: 600, priceEtb: 500 },
   ],
   paymentMethods: { telebirr: true, topup: true },
-  defaultEntryFeeCoins: 1,
+  defaultEntryFeeCoins: 10,
   houseRakePct: 10,
   maintenance: false,
   winRateOverride: null,
