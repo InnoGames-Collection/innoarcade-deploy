@@ -381,6 +381,29 @@ body {
   box-shadow: 0 4px 12px rgba(47, 124, 14, 0.28); transition: filter 0.12s, transform 0.1s; }
 .game-card:hover .gc-play { filter: brightness(1.06); transform: translateY(-1px); }
 
+/* Level-gated (locked) cards: dimmed thumb + a lock badge + an unlock CTA. */
+.game-card.locked { cursor: pointer; }
+.game-card.locked .gc-thumb { filter: grayscale(0.55) brightness(0.82); }
+.gc-lock { position: absolute; top: 0.5rem; right: 0.5rem; background: rgba(17, 24, 48, 0.82);
+  color: #fff; font-size: 0.66rem; font-weight: 800; padding: 0.18rem 0.5rem; border-radius: 999px; }
+.gc-play.gc-unlock { background: #6b4cff; box-shadow: 0 4px 12px rgba(107, 76, 255, 0.32); }
+
+/* Unlock dialog */
+.unlock-modal { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; }
+.unlock-scrim { position: absolute; inset: 0; background: rgba(12, 18, 38, 0.5); backdrop-filter: blur(2px); }
+.unlock-box { position: relative; background: var(--card, #fff); border-radius: 18px; padding: 1.5rem;
+  width: min(92vw, 340px); text-align: center; box-shadow: 0 24px 60px rgba(20, 30, 60, 0.35); }
+.unlock-glyph { font-size: 2.4rem; line-height: 1; }
+.unlock-glyph img { width: 64px; height: 64px; object-fit: cover; border-radius: 14px; }
+.unlock-box h3 { margin: 0.5rem 0 0.25rem; }
+.unlock-msg { color: var(--muted); font-size: 0.85rem; margin: 0.25rem 0; }
+.unlock-sub { font-size: 0.8rem; font-weight: 700; margin: 0.25rem 0 0.9rem; }
+.unlock-actions { display: flex; gap: 0.6rem; justify-content: center; }
+.unlock-getcoins { margin-top: 0.7rem; background: none; border: none; color: var(--accent);
+  font-weight: 700; font-size: 0.82rem; cursor: pointer; text-decoration: underline; }
+.unlock-box .btn.shake { animation: ushake 0.32s; }
+@keyframes ushake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+
 /* compact balance chips in topbar */
 .top-balances { display: flex; align-items: center; gap: 0.25rem; margin-inline: auto; }
 .bal-chip { display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.7rem; font-weight: 600;

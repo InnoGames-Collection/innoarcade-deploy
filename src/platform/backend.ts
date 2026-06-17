@@ -84,6 +84,24 @@ export async function fetchWallets(): Promise<{ points: number; lifetime: number
   return { points: Number(data.points ?? 0), lifetime: Number(data.points_lifetime ?? 0) };
 }
 
+// The signed-in player's unlocked games (level-gated games bought with coins).
+export async function fetchUnlocks(): Promise<string[]> {
+  if (!isConfigured()) return [];
+  const sb = supabase();
+  const me = (await sb.auth.getUser()).data.user?.id;
+  if (!me) return [];
+  const { data } = await sb.from('profiles').select('unlocks').eq('id', me).maybeSingle();
+  return Array.isArray(data?.unlocks) ? (data!.unlocks as string[]) : [];
+}
+
+// Unlock a level-gated game by spending coins (server-validated). Returns the
+// new coin balance + the updated unlock list.
+export async function unlockGameRemote(gameId: string): Promise<{ coins: number; unlocks: string[] }> {
+  const { data, error } = await supabase().functions.invoke('unlock-game', { body: { gameId } });
+  if (error) throw error;
+  return data as { coins: number; unlocks: string[] };
+}
+
 // Global leaderboard (top players by lifetime points). Powers the landing widget.
 export interface GlobalRow { rank: number; name: string; lifetime: number; isPlayer: boolean }
 export async function fetchGlobalLeaderboard(limit = 5): Promise<GlobalRow[]> {

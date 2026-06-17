@@ -7,7 +7,7 @@ import { mountWallet, openStore, needsSignInToBuy } from './wallet';
 import { onAuthChange, currentUser, signOut, authAvailable } from '../platform/auth';
 import { sfx } from '../engine/audio';
 import { renderDashboard, injectDashboardStyles } from './dashboard';
-import { mergedLeaderboard, fetchWallets, fetchGlobalLeaderboard } from '../platform/backend';
+import { mergedLeaderboard, fetchWallets, fetchGlobalLeaderboard, fetchUnlocks, unlockGameRemote } from '../platform/backend';
 import { CATALOG, orderedCatalog, getGame, type GameMeta } from '../platform/catalog';
 import {
   activeTournaments, featuredTournament, tournamentGame,
@@ -15,11 +15,11 @@ import {
   tournamentState, isPaid, isEntered, enterTournament, prizePool,
   InsufficientCoinsError, type Tournament, type LeaderEntry,
 } from '../platform/tournaments';
-import { balanceSync, onWalletChange } from '../platform/wallet';
+import { balanceSync, balance, onWalletChange } from '../platform/wallet';
 import { SignInRequiredError } from '../platform/payments';
 import { activeDraws, myTickets, enterDraw, recentWinners, NotEnoughPointsError, hydrateTickets, type DrawPeriod, type Winner } from '../platform/draws';
 import { points as pointsBal, onCurrencyChange, setBalance, setLifetime, pointsLifetime } from '../platform/currency';
-import { levelFor } from '../platform/config';
+import { levelFor, economyNeedsAuth } from '../platform/config';
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 const lang = (): Lang => getLang();
@@ -394,19 +394,43 @@ const howToText = (g: GameMeta): { en: string; am: string } =>
   HOWTO[g.id] ?? { en: `Tap Play to start ${g.nameEn}. Score as high as you can!`, am: `${g.nameAm}ን ለመጀመር ይጫወቱ።` };
 function howTo(g: GameMeta): string { const h = howToText(g); return lang() === 'am' ? h.am : h.en; }
 
+// In-memory set of games the player has bought early (server is the authority).
+// Hydrated on load + on auth change; drives locked-card rendering synchronously.
+const unlockedSet = new Set<string>();
+
+// A game is locked when it's gated above the player's level and not yet unlocked.
+function isLocked(g: GameMeta): boolean {
+  return !!g.minLevel && levelFor(pointsLifetime()) < g.minLevel && !unlockedSet.has(g.id);
+}
+
 function gameCard(g: GameMeta): string {
   const modeTag = g.mode === 'tournament'
     ? `<span class="gc-tag tournament">🏆 ${t('hub.tournament')}</span>`
     : `<span class="gc-tag free">${t('arc.free')}</span>`;
-  return `
-    <a class="game-card" href="${g.route}">
+  const thumb = `
       <div class="gc-thumb${g.cover ? ' gc-thumb-cover' : ''}">
         ${g.cover
           ? `<img class="gc-cover" src="${g.cover}" alt="" loading="lazy" />`
           : `<span class="gc-glyph">${g.icon}</span>`}
         ${modeTag}
         <button class="gc-info" data-howto="${g.id}" aria-label="${t('hub.howToPlay')}">?</button>
+        ${isLocked(g) ? `<span class="gc-lock">🔒 ${t('hub.lockLevel')} ${g.minLevel}</span>` : ''}
+      </div>`;
+  // Locked games are a non-navigating tile that opens the unlock dialog.
+  if (isLocked(g)) {
+    return `
+    <div class="game-card locked" data-unlock="${g.id}">
+      ${thumb}
+      <div class="gc-body">
+        <h4>${escapeHtml(name(g))}</h4>
+        <p class="gc-cat">${escapeHtml(category(g))}</p>
+        <span class="gc-play gc-unlock">🔓 ${t('hub.unlock')} · ${g.unlockCost} 🪙</span>
       </div>
+    </div>`;
+  }
+  return `
+    <a class="game-card" href="${g.route}">
+      ${thumb}
       <div class="gc-body">
         <h4>${escapeHtml(name(g))}</h4>
         <p class="gc-cat">${escapeHtml(category(g))}</p>
@@ -713,11 +737,66 @@ function setupBrowse(): void {
   // Delegated ℹ️ "how to play" — intercept before the card link navigates.
   document.querySelector('#gameGrid')?.addEventListener('click', (e) => {
     const info = (e.target as HTMLElement).closest<HTMLElement>('.gc-info');
-    if (!info) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const g = getGame(info.dataset.howto!);
-    if (g) openHowTo(g);
+    if (info) {
+      e.preventDefault();
+      e.stopPropagation();
+      const g = getGame(info.dataset.howto!);
+      if (g) openHowTo(g);
+      return;
+    }
+    // A locked tile doesn't navigate — it opens the unlock dialog instead.
+    const locked = (e.target as HTMLElement).closest<HTMLElement>('.game-card.locked');
+    if (locked) {
+      e.preventDefault();
+      e.stopPropagation();
+      const g = getGame(locked.dataset.unlock!);
+      if (g) openUnlock(g);
+    }
+  });
+}
+
+// Unlock dialog for a level-gated game: reach the required level for free, or buy
+// it now with coins (server-validated charge). On success, mark unlocked + rerender.
+function openUnlock(g: GameMeta): void {
+  if (economyNeedsAuth()) { openSignIn(); return; }
+  const lvl = levelFor(pointsLifetime());
+  const coins = balanceSync();
+  const cost = g.unlockCost ?? 0;
+  const canPay = coins >= cost;
+  const m = document.createElement('div');
+  m.className = 'unlock-modal';
+  m.innerHTML = `
+    <div class="unlock-scrim"></div>
+    <div class="unlock-box" role="dialog" aria-modal="true">
+      <span class="unlock-glyph">${g.cover ? `<img src="${g.cover}" alt="" />` : g.icon}</span>
+      <h3>${escapeHtml(name(g))}</h3>
+      <p class="unlock-msg">${t('hub.unlockReach')} ${g.minLevel} ${t('hub.unlockOrBuy')}</p>
+      <p class="unlock-sub">${t('hub.statLevel')} ${lvl} · ${coins.toLocaleString()} 🪙</p>
+      <div class="unlock-actions">
+        <button id="uCancel" class="btn ghost">${t('hub.cancel')}</button>
+        <button id="uBuy" class="btn primary" ${canPay ? '' : 'disabled'}>🔓 ${cost} 🪙</button>
+      </div>
+      ${canPay ? '' : `<button id="uGet" class="unlock-getcoins">${t('hub.buyCoins')}</button>`}
+    </div>`;
+  document.body.appendChild(m);
+  const close = (): void => m.remove();
+  m.querySelector('.unlock-scrim')!.addEventListener('click', close);
+  m.querySelector('#uCancel')!.addEventListener('click', close);
+  m.querySelector('#uGet')?.addEventListener('click', () => { close(); openStore(); });
+  m.querySelector('#uBuy')!.addEventListener('click', async () => {
+    const btn = m.querySelector('#uBuy') as HTMLButtonElement;
+    btn.disabled = true; btn.textContent = '…';
+    try {
+      const res = await unlockGameRemote(g.id);
+      unlockedSet.clear(); res.unlocks.forEach((id) => unlockedSet.add(id));
+      void balance(); // re-hydrate coin chip from the authoritative new balance
+      close();
+      renderGames();
+      renderMyStats();
+    } catch {
+      btn.disabled = false; btn.textContent = `🔓 ${cost} 🪙`;
+      btn.classList.add('shake');
+    }
   });
 }
 
@@ -760,6 +839,9 @@ function hydratePoints(): void {
     if (w) { setBalance('points', w.points); setLifetime(w.lifetime); renderMyStats(); }
   });
   void hydrateTickets().then(() => renderDraws());
+  void fetchUnlocks().then((ids) => {
+    unlockedSet.clear(); ids.forEach((id) => unlockedSet.add(id)); renderGames();
+  });
 }
 hydratePoints();
 // Re-pull wallet/entries/standing when the player signs in or out.

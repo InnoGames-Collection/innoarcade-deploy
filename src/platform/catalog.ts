@@ -24,6 +24,10 @@ export interface GameMeta {
   /** Optional cover image for the catalog card (path relative to the hub root,
    *  e.g. a file in /public). When set it replaces the emoji glyph on the card. */
   cover?: string;
+  /** Level-gating: locked until the player reaches `minLevel`, or unlocked early
+   *  for `unlockCost` coins. Absent → always playable. */
+  minLevel?: number;
+  unlockCost?: number;
   /** What the score represents, for the HUD/leaderboard ("Score", "Tiles"…). */
   scoreEn: string;
   scoreAm: string;
@@ -296,6 +300,21 @@ const WIN_SCORE: Record<string, number> = {
 };
 for (const g of CATALOG) {
   if (WIN_SCORE[g.id] != null) g.play = { ...(g.play ?? {}), winScore: WIN_SCORE[g.id] };
+}
+
+// Level-gated games: locked until the player reaches `minLevel`, or unlocked
+// early with coins (server-validated cost). Mirror of GATE in unlock-game fn.
+const GATE: Record<string, { minLevel: number; unlockCost: number }> = {
+  'luckyslot': { minLevel: 2, unlockCost: 50 },
+  'spin-wheel': { minLevel: 2, unlockCost: 50 },
+  'target24': { minLevel: 2, unlockCost: 50 },
+  'logic': { minLevel: 2, unlockCost: 50 },
+  'crash-game': { minLevel: 3, unlockCost: 100 },
+  'sequence': { minLevel: 3, unlockCost: 100 },
+};
+for (const g of CATALOG) {
+  const gate = GATE[g.id];
+  if (gate) { g.minLevel = gate.minLevel; g.unlockCost = gate.unlockCost; }
 }
 
 // Display order for the flat catalog:

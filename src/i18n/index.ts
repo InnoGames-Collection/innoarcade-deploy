@@ -142,6 +142,11 @@ const en = {
   'hub.statGames': 'Games',
   'hub.statLive': 'Live tournaments',
   'hub.statPlayers': 'Players',
+  'hub.statLevel': 'Level',
+  'hub.lockLevel': 'Lv',
+  'hub.unlock': 'Unlock',
+  'hub.unlockReach': 'Reach Level',
+  'hub.unlockOrBuy': 'to play free, or unlock it now with coins.',
   // Memory Match (ported)
   'mm.back': 'All games',
   'mm.title': 'Memory Match',
@@ -403,6 +408,11 @@ const am: Dict = {
   'hub.statGames': 'ጨዋታዎች',
   'hub.statLive': 'ቀጥታ ውድድሮች',
   'hub.statPlayers': 'ተጫዋቾች',
+  'hub.statLevel': 'ደረጃ',
+  'hub.lockLevel': 'ደረጃ',
+  'hub.unlock': 'ክፈት',
+  'hub.unlockReach': 'ደረጃ ይድረሱ',
+  'hub.unlockOrBuy': 'በነፃ ለመጫወት፣ ወይም አሁን በሳንቲም ይክፈቱት።',
   // Memory Match (ported)
   'mm.back': 'ሁሉም ጨዋታዎች',
   'mm.title': 'ማች ማስታወሻ',
