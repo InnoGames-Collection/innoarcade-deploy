@@ -9,6 +9,13 @@ import { Preloader } from '../../ui/preloader';
 import { SettingsPanel } from '../../ui/settingsPanel';
 import { registerPwa } from '../../engine/pwa';
 import { fetchSkins, setSkinRemote } from '../../platform/backend';
+import {
+  getRunnerTournament, getMyEntry, enterRunnerTournament, submitRunnerRun, runnerLeaderboard,
+  InsufficientCoinsError, type RunnerTournament, type RunnerEntry, type RunnerLeaderRow, type RunnerSubmitResult,
+} from '../../platform/runner';
+import { balance } from '../../platform/wallet';
+import { SignInRequiredError } from '../../platform/payments';
+import { isConfigured } from '../../platform/supabase';
 import { achievements } from '../../engine/achievements';
 import { sfx } from '../../engine/audio';
 import { TempleDash, W, H, GAME_ID, SKINS, TD_ACHIEVEMENTS, type GameState } from './game';
@@ -60,13 +67,14 @@ function run(assets: AssetStore): void {
 
   game.onStateChange = (s) => {
     showOverlay(s);
-    if (s === 'over' || s === 'menu') buildShop();
+    if (s === 'over' || s === 'menu') { buildShop(); void refreshTourney(); }
   };
-  game.onGameOver = (score, coins, record) => {
+  game.onGameOver = (score, coins, record, durationMs) => {
     $('#finalScore').textContent = String(score);
     $('#finalCoins').textContent = String(coins);
     $('#finalBest').textContent = String(game.best);
     $('#newBest').classList.toggle('hidden', !record);
+    void submitRun(score, durationMs);
   };
 
   // --- input ---
@@ -178,8 +186,94 @@ function run(assets: AssetStore): void {
     if (sig !== chipSig) { powerChips.innerHTML = sig; chipSig = sig; }
   }
 
+  // --- Runner economy (server-only; no caches) ------------------------------
+  // XP/score/leaderboard all live on the server (platform/runner.ts). Free runs
+  // earn XP; entering the tournament (one coin fee → N attempts) makes the best
+  // run rank on the leaderboard.
+  let tourney: RunnerTournament | null = null;
+  let myEntry: RunnerEntry | null = null;
+  let walletCoins = 0;
+
+  const escHtml = (s: string): string =>
+    s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
+  const medal = (rank: number): string => ['🥇', '🥈', '🥉'][rank - 1] ?? `${rank}`;
+
+  function boardHtml(rows: RunnerLeaderRow[]): string {
+    if (!rows.length) return `<p class="rb-empty">${t('td.noBoard')}</p>`;
+    return rows.map((r) => `
+      <div class="rb-row${r.isPlayer ? ' me' : ''}">
+        <span class="rb-rank">${medal(r.rank)}</span>
+        <span class="rb-name">${escHtml(r.isPlayer ? t('td.you') : r.name)}</span>
+        <span class="rb-score">${r.score.toLocaleString()}</span>
+      </div>`).join('');
+  }
+
+  async function refreshTourney(): Promise<void> {
+    if (!isConfigured()) { $('#runnerTourney').innerHTML = ''; return; }
+    tourney = await getRunnerTournament();
+    if (!tourney) { $('#runnerTourney').innerHTML = ''; return; }
+    [myEntry, walletCoins] = await Promise.all([getMyEntry(tourney.id), balance()]);
+    const board = await runnerLeaderboard(tourney.id, 5);
+
+    const left = myEntry?.attemptsLeft ?? 0;
+    const status = left > 0
+      ? `<span class="rt-attempts">🎟️ ${t('td.attemptsLeft')}: <strong>${left}</strong></span>`
+      : `<span class="rt-fee">${tourney.entryFeeCoins} 🪙 → ${tourney.attempts} ${t('td.attempts')}</span>`;
+    const btn = `<button id="enterBtn" class="btn rt-enter">${t('td.enterFor')} · ${tourney.entryFeeCoins} 🪙</button>`;
+
+    $('#runnerTourney').innerHTML = `
+      <div class="rt-head">
+        <span class="rt-title">🏆 ${escHtml(getLang() === 'am' ? tourney.titleAm : tourney.titleEn)}</span>
+        <span class="rt-coins">${walletCoins.toLocaleString()} 🪙</span>
+      </div>
+      <div class="rt-status">${status}${btn}</div>
+      <div class="runner-board">${boardHtml(board)}</div>`;
+
+    $('#enterBtn').addEventListener('click', onEnter);
+  }
+
+  async function onEnter(): Promise<void> {
+    const b = document.querySelector<HTMLButtonElement>('#enterBtn');
+    if (b) b.disabled = true;
+    try {
+      myEntry = await enterRunnerTournament();
+      await refreshTourney();
+      showToast(`🎟️ ${t('td.attemptsLeft')}: ${myEntry.attemptsLeft}`);
+    } catch (e) {
+      if (e instanceof InsufficientCoinsError) showToast(`🪙 ${t('td.needCoins')}`);
+      else if (e instanceof SignInRequiredError) showToast(t('td.signInToRank'));
+      else showToast('✕');
+      if (b) b.disabled = false;
+    }
+  }
+
+  async function submitRun(score: number, durationMs: number): Promise<void> {
+    const reward = $('#runReward');
+    const boardOver = $('#runnerBoardOver');
+    if (!isConfigured()) { reward.innerHTML = ''; boardOver.innerHTML = ''; return; }
+    reward.innerHTML = `<span class="rr-pending">…</span>`;
+    let res: RunnerSubmitResult | null = null;
+    try {
+      res = await submitRunnerRun(score, durationMs);
+    } catch (e) {
+      reward.innerHTML = `<span class="rr-note">${e instanceof SignInRequiredError ? t('td.signInToRank') : '✕'}</span>`;
+      return;
+    }
+    if (!res) { reward.innerHTML = ''; return; }
+    const rankLine = res.ranked
+      ? `<span class="rr-stat"><b>${t('td.rank')}</b> #${res.rank}/${res.total}</span>`
+      : `<span class="rr-note">${t('td.notRanked')}</span>`;
+    reward.innerHTML = `
+      <span class="rr-stat xp">+${res.award} ${t('td.xpGained')}</span>
+      <span class="rr-stat"><b>${t('td.level')}</b> ${res.level}</span>
+      ${rankLine}`;
+    if (tourney) boardOver.innerHTML = boardHtml(await runnerLeaderboard(tourney.id, 5));
+    void refreshTourney();
+  }
+
   applyTranslations();
   buildShop();
+  void refreshTourney();
   showOverlay('menu');
 
   const loop = new GameLoop(

@@ -6,15 +6,13 @@
 // the player's server-side points balance (apply_points, which refuses to
 // overdraw) and records the ticket in draw_entries — atomically and
 // server-authoritatively, so the client can never grant itself tickets or spend
-// points it doesn't have. The cost is derived from the draw period on the
-// server, never trusted from the client.
+// points it doesn't have. The ticket cost AND the per-user ticket cap are read
+// from the authoritative `draws` row (never trusted from the client), and the
+// draw must still be open.
 //
 // Deploy: supabase functions deploy enter-draw
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-// Server-owned ticket prices by draw period (mirror of SPEC in draws.ts).
-const COST: Record<string, number> = { daily: 50, weekly: 120, monthly: 300 };
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -42,11 +40,29 @@ Deno.serve(async (req: Request) => {
   let body: { drawId?: string };
   try { body = await req.json(); } catch { return json({ error: 'bad json' }, 400); }
   const drawId = String(body.drawId ?? '');
-  const period = drawId.split('-')[0];
-  const cost = COST[period];
-  if (!drawId || !cost) return json({ error: 'invalid draw' }, 400);
+  if (!drawId) return json({ error: 'invalid draw' }, 400);
 
   const admin = createClient(url, serviceKey);
+
+  // Make sure the current windows exist, then read the authoritative draw row
+  // (cost, cap, state, window) — never trust the client for any of these.
+  await admin.rpc('ensure_active_draws');
+  const { data: draw } = await admin
+    .from('draws')
+    .select('ticket_cost_points, max_tickets_per_user, state, ends_at')
+    .eq('id', drawId).maybeSingle();
+  if (!draw) return json({ error: 'unknown draw' }, 404);
+
+  const closed = draw.state !== 'open' || new Date(draw.ends_at).getTime() <= Date.now();
+  if (closed) return json({ error: 'draw closed' }, 409);
+
+  const cost = Number(draw.ticket_cost_points);
+
+  // Enforce the per-user ticket cap so no single spender can dominate the pool.
+  const { data: existing } = await admin
+    .from('draw_entries').select('tickets').eq('user_id', user.id).eq('draw_id', drawId).maybeSingle();
+  const held = Number(existing?.tickets ?? 0);
+  if (held >= Number(draw.max_tickets_per_user)) return json({ error: 'ticket cap reached' }, 409);
 
   // Debit points first (raises check_violation if the balance can't cover it).
   let points: number;
@@ -59,9 +75,7 @@ Deno.serve(async (req: Request) => {
   }
 
   // Record the ticket (upsert tickets += 1).
-  const { data: existing } = await admin
-    .from('draw_entries').select('tickets').eq('user_id', user.id).eq('draw_id', drawId).maybeSingle();
-  const tickets = (existing?.tickets ?? 0) + 1;
+  const tickets = held + 1;
   await admin.from('draw_entries').upsert({
     user_id: user.id, draw_id: drawId, tickets, updated_at: new Date().toISOString(),
   });

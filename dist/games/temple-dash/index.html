@@ -7,18 +7,17 @@
     <link rel="manifest" href="../../manifest.webmanifest" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏃</text></svg>" />
     <title>Ethiorunner — GoPlay</title>
-    <script type="module" crossorigin src="../../assets/templeDash-e-LhxRdR.js"></script>
+    <script type="module" crossorigin src="../../assets/templeDash-0hUprcd5.js"></script>
     <link rel="modulepreload" crossorigin href="../../assets/modulepreload-polyfill-B5Qt9EMX.js">
-    <link rel="modulepreload" crossorigin href="../../assets/tournaments-hdGKtAlD.js">
-    <link rel="modulepreload" crossorigin href="../../assets/audio-BirDiauB.js">
-    <link rel="modulepreload" crossorigin href="../../assets/index-Cg8btDqQ.js">
+    <link rel="modulepreload" crossorigin href="../../assets/payments-w6L6ANaZ.js">
+    <link rel="modulepreload" crossorigin href="../../assets/audio-BQRHWHHN.js">
+    <link rel="modulepreload" crossorigin href="../../assets/index-C19WhfG3.js">
     <link rel="modulepreload" crossorigin href="../../assets/loop-BDek7L7e.js">
     <link rel="modulepreload" crossorigin href="../../assets/input-CKS5NiBw.js">
-    <link rel="modulepreload" crossorigin href="../../assets/currency-pVVQ8ldl.js">
-    <link rel="modulepreload" crossorigin href="../../assets/gameHost-BYeIhPeY.js">
+    <link rel="modulepreload" crossorigin href="../../assets/wallet-TRPzFc0p.js">
     <link rel="modulepreload" crossorigin href="../../assets/fx-ccUjo7Ds.js">
     <link rel="stylesheet" crossorigin href="../../assets/audio-DngoG11r.css">
-    <link rel="stylesheet" crossorigin href="../../assets/templeDash-C8XAdHVq.css">
+    <link rel="stylesheet" crossorigin href="../../assets/templeDash-Boe4IBHr.css">
   </head>
   <body>
     <div id="stage">
@@ -50,6 +49,8 @@
             <div class="skin-row" id="skinRow"></div>
           </div>
 
+          <div class="runner-tourney" id="runnerTourney"></div>
+
           <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
           <p class="hint" data-i18n="td.start"></p>
           <button type="button" class="gp-close gp-close-block" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
@@ -73,6 +74,11 @@
             <div class="stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
             <div class="stat"><span data-i18n="td.coins">Coins</span><strong id="finalCoins">0</strong></div>
             <div class="stat"><span data-i18n="td.best">Best</span><strong id="finalBest">0</strong></div>
+          </div>
+          <div class="run-reward" id="runReward"></div>
+          <div class="runner-board-wrap">
+            <h3 data-i18n="td.leaderboard">Leaderboard</h3>
+            <div class="runner-board" id="runnerBoardOver"></div>
           </div>
           <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
           <button type="button" class="gp-close gp-close-block" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>

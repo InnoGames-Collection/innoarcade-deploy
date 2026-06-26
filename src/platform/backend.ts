@@ -197,6 +197,70 @@ export async function fetchDrawTickets(): Promise<Record<string, number>> {
   return out;
 }
 
+// The authoritative draw windows (the server `draws` registry). Empty when
+// unconfigured so the client falls back to its calendar-derived defaults.
+export interface DrawRow {
+  id: string; period: 'daily' | 'weekly' | 'monthly';
+  titleEn: string; titleAm: string;
+  prizeEtb: number; ticketCostPoints: number;
+  maxTicketsPerUser: number; minTickets: number; winnerCount: number;
+  startsAt: number; endsAt: number; state: string;
+}
+export async function fetchDraws(): Promise<DrawRow[]> {
+  if (!isConfigured()) return [];
+  try {
+    const { data, error } = await supabase()
+      .from('draws')
+      .select('id, period, title_en, title_am, prize_etb, ticket_cost_points, max_tickets_per_user, min_tickets, winner_count, starts_at, ends_at, state')
+      .order('ends_at', { ascending: true });
+    if (error || !data) return [];
+    return data.map((r) => ({
+      id: String(r.id), period: r.period as DrawRow['period'],
+      titleEn: String(r.title_en), titleAm: String(r.title_am),
+      prizeEtb: Number(r.prize_etb), ticketCostPoints: Number(r.ticket_cost_points),
+      maxTicketsPerUser: Number(r.max_tickets_per_user), minTickets: Number(r.min_tickets),
+      winnerCount: Number(r.winner_count),
+      startsAt: new Date(r.starts_at as string).getTime(),
+      endsAt: new Date(r.ends_at as string).getTime(),
+      state: String(r.state),
+    }));
+  } catch { return []; }
+}
+
+// Live pool totals per draw (entrants + total tickets) from the public aggregate
+// view, used to show the player's real odds. Keyed by draw id.
+export async function fetchDrawPools(): Promise<Record<string, { entrants: number; totalTickets: number }>> {
+  if (!isConfigured()) return {};
+  try {
+    const { data } = await supabase().from('draw_pools').select('draw_id, entrants, total_tickets');
+    const out: Record<string, { entrants: number; totalTickets: number }> = {};
+    (data ?? []).forEach((r: { draw_id: string; entrants: number; total_tickets: number }) => {
+      out[String(r.draw_id)] = { entrants: Number(r.entrants), totalTickets: Number(r.total_tickets) };
+    });
+    return out;
+  } catch { return {}; }
+}
+
+// The real, masked draw winners (the `draw_winners_public` view). Replaces the
+// former simulated field — empty until a draw actually settles.
+export interface DrawWinnerRow { phone: string; prizeEtb: number; period: 'daily' | 'weekly' | 'monthly' }
+export async function fetchDrawWinners(limit = 24): Promise<DrawWinnerRow[]> {
+  if (!isConfigured()) return [];
+  try {
+    const { data, error } = await supabase()
+      .from('draw_winners_public')
+      .select('phone_masked, prize_etb, period, created_at')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error || !data) return [];
+    return data.map((r) => ({
+      phone: String(r.phone_masked ?? '+2519****'),
+      prizeEtb: Number(r.prize_etb),
+      period: r.period as DrawWinnerRow['period'],
+    }));
+  } catch { return []; }
+}
+
 // Top-N leaderboard from the server view. Falls back to an empty list when
 // unconfigured so callers can merge with the local simulated board if they like.
 export async function leaderboardRemote(tournamentId: string, limit = 50): Promise<LeaderEntry[]> {

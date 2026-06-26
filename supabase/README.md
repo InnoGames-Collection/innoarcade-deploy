@@ -52,7 +52,11 @@ function**, paste each file, **Deploy**. The functions are:
 | `payment-callback` | TeleBirr webhook / sandbox completer → credits coins | **`--no-verify-jwt`** (provider has no user JWT) |
 | `enter-tournament` | debit entry fee + record entry | |
 | `settle-tournament` | pay out prizes, mark settled | admin JWT *or* `x-cron-secret` |
-| `admin-action` | guarded operator mutations (config, tournaments, coins, roles) | |
+| `enter-draw` | buy a draw ticket with points (reads cost/cap from `draws`, enforces the per-user cap) | |
+| `settle-draws` | reveal seed, pick ticket-weighted winner(s), record them (or void+refund) | admin JWT *or* `x-cron-secret` |
+| `runner-enter` | Ethiopian Runner: pay the entry fee (global coins) → bank N attempts | user JWT |
+| `runner-submit` | Ethiopian Runner score gate: award XP every run, record ranked best + consume an attempt when entered | user JWT |
+| `admin-action` | guarded operator mutations (config, tournaments, draws, coins, roles) | |
 
 **Or CLI** (a `config.toml` is included so this works from `Games/innoarcade`):
 
@@ -66,8 +70,33 @@ supabase functions deploy buy-coins
 supabase functions deploy payment-callback --no-verify-jwt
 supabase functions deploy enter-tournament
 supabase functions deploy settle-tournament
+supabase functions deploy enter-draw
+supabase functions deploy settle-draws
+supabase functions deploy runner-enter
+supabase functions deploy runner-submit
 supabase functions deploy admin-action
 ```
+
+> **Draws migrations:** apply [`migrations/20260618120000_draws.sql`](migrations/20260618120000_draws.sql)
+> (the `draws` registry, private `draw_seeds`, immutable `draw_winners`, the
+> `draw_pools`/`draw_winners_public` views, and the `ensure_active_draws` /
+> `settle_due_draws` functions) and [`migrations/20260618130000_draws_cron.sql`](migrations/20260618130000_draws_cron.sql)
+> (a 10-minute `pg_cron` tick). Winners are provably fair via **commit-reveal**:
+> `draws.seed_hash` is published when a window opens and the raw seed (kept in the
+> private `draw_seeds` table) is copied to `draws.revealed_seed` at settlement, so
+> anyone can check `sha256(revealed_seed) = seed_hash` and recompute the winner.
+
+> **Ethiopian Runner economy** (clean, server-only, isolated from the legacy
+> shared economy): apply [`migrations/20260618140000_runner_economy.sql`](migrations/20260618140000_runner_economy.sql)
+> (`runner_xp`, `runner_tournaments`, `runner_entries`, `runner_scores`, the
+> `runner_leaderboard`/`runner_season_leaderboard` views, and the
+> `runner_apply_xp` / `ensure_runner_tournament` / `settle_due_runner_tournaments`
+> functions) and [`migrations/20260618150000_runner_cron.sql`](migrations/20260618150000_runner_cron.sql)
+> (a daily `pg_cron` rollover/settlement tick). The migration seeds the first
+> live monthly window. Model: every run earns **XP** (server matrix → level +
+> season); a single coin **entry fee** buys N attempts whose **best raw score**
+> ranks on one leaderboard. The client (`src/platform/runner.ts`) holds **no
+> caches** — every read hits the server.
 
 `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are injected
 automatically. (On the modern key system, if legacy keys are disabled, set the
@@ -94,7 +123,8 @@ notification verification in `payment-callback`. Point your TeleBirr merchant
 **Auto-settle tournaments** with a scheduled job (Dashboard → **Database → Cron**,
 or `pg_cron`) that POSTs ended tournaments to `settle-tournament` with the
 `x-cron-secret: $CRON_SECRET` header — or just click **Settle** in the admin
-console.
+console. **Draws** auto-settle via the bundled `pg_cron` tick (every 10 min); the
+admin **Draws** view also has a manual **Settle due draws** button.
 
 ## 4. Phone auth — free, no Twilio
 

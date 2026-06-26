@@ -9,7 +9,14 @@ const STR = {
   en: {
     title: 'GoPlay Admin', console: 'Operator console',
     nav_dashboard: 'Dashboard', nav_tournaments: 'Tournaments', nav_players: 'Players',
-    nav_payments: 'Payments', nav_config: 'Config',
+    nav_payments: 'Payments', nav_config: 'Config', nav_draws: 'Draws',
+    // draws
+    drawsHint: 'Windows + seeds are created automatically; tune the prize, ticket cost and caps here. Winners are picked from the committed seed at settlement.',
+    prizeEtb: 'Prize (ETB)', ticketCost: 'Ticket cost (pts)', ticketCap: 'Ticket cap / user',
+    minTickets: 'Min tickets', winnerCount: 'Winners', entrants: 'Entrants', ticketsSold: 'Tickets',
+    settleDraws: 'Settle due draws', settleDrawsConfirm: 'Open current windows and settle any closed draws now?',
+    drawWinners: 'Recent winners', fulfillment: 'Fulfillment', markPaid: 'Mark paid', markFailed: 'Mark failed',
+    rank: 'Rank', voidState: 'Void',
     signIn: 'Sign in', signOut: 'Sign out', notAuthorised: 'You are not authorised to view this console.',
     signInPrompt: 'Sign in with an admin account to continue.',
     // metrics
@@ -39,7 +46,13 @@ const STR = {
   am: {
     title: 'ኢኖአርኬድ አስተዳዳሪ', console: 'የአስተዳዳሪ ኮንሶል',
     nav_dashboard: 'ዳሽቦርድ', nav_tournaments: 'ውድድሮች', nav_players: 'ተጫዋቾች',
-    nav_payments: 'ክፍያዎች', nav_config: 'ቅንብር',
+    nav_payments: 'ክፍያዎች', nav_config: 'ቅንብር', nav_draws: 'ዕጣዎች',
+    drawsHint: 'መስኮቶችና ዘሮች በራስ-ሰር ይፈጠራሉ፤ ሽልማቱን፣ የቲኬት ዋጋንና ገደቦችን እዚህ ያስተካክሉ። አሸናፊዎች ከተወሰነው ዘር ይመረጣሉ።',
+    prizeEtb: 'ሽልማት (ETB)', ticketCost: 'የቲኬት ዋጋ (ነጥብ)', ticketCap: 'የቲኬት ገደብ / ተጠቃሚ',
+    minTickets: 'ዝቅተኛ ቲኬት', winnerCount: 'አሸናፊዎች', entrants: 'ተሳታፊዎች', ticketsSold: 'ቲኬቶች',
+    settleDraws: 'የተዘጉ ዕጣዎችን አወራርድ', settleDrawsConfirm: 'የአሁኑን መስኮቶች ከፍተው የተዘጉ ዕጣዎችን አሁን ያወራርዱ?',
+    drawWinners: 'የቅርብ ጊዜ አሸናፊዎች', fulfillment: 'ክፍያ', markPaid: 'ተከፍሏል አድርግ', markFailed: 'አልተሳካም አድርግ',
+    rank: 'ደረጃ', voidState: 'ተሰርዟል',
     signIn: 'ግባ', signOut: 'ውጣ', notAuthorised: 'ይህን ኮንሶል ለማየት ፈቃድ የለዎትም።',
     signInPrompt: 'ለመቀጠል በአስተዳዳሪ መለያ ይግቡ።',
     players: 'ተጫዋቾች', coinsSold: 'የተሸጡ ሳንቲሞች', revenue: 'ገቢ', ggr: 'የቤት ገቢ',

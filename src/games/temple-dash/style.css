@@ -294,3 +294,63 @@ body {
 @keyframes toast-in { from { transform: translate(-50%, 12px); opacity: 0; } }
 
 .hidden { display: none !important; }
+
+/* --- Runner tournament + leaderboard (server-only economy) --- */
+.runner-tourney {
+  width: 100%;
+  margin: 6px 0 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 206, 84, 0.28);
+  border-radius: 12px;
+  background: rgba(20, 24, 44, 0.55);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rt-head { display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; }
+.rt-title { font-weight: 700; color: var(--text); }
+.rt-coins { color: var(--accent); font-weight: 700; }
+.rt-status { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.82rem; color: var(--text); }
+.rt-attempts strong { color: var(--accent); }
+.rt-fee { color: var(--muted); }
+.rt-enter {
+  font-size: 0.78rem;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.runner-board { display: flex; flex-direction: column; gap: 3px; }
+.rb-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.03);
+}
+.rb-row.me { background: rgba(240, 168, 50, 0.16); font-weight: 700; }
+.rb-rank { text-align: center; }
+.rb-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rb-score { color: var(--accent); font-variant-numeric: tabular-nums; }
+.rb-empty { font-size: 0.8rem; color: var(--muted); text-align: center; margin: 4px 0; }
+
+.runner-board-wrap { width: 100%; margin-top: 6px; }
+.runner-board-wrap h3 { font-size: 0.85rem; margin: 0 0 6px; color: var(--text); }
+
+.run-reward {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  justify-content: center;
+  align-items: center;
+  margin: 8px 0;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+.rr-stat b { color: var(--muted); font-weight: 600; margin-right: 3px; }
+.rr-stat.xp { color: var(--accent); font-weight: 700; }
+.rr-note { color: var(--muted); font-size: 0.82rem; }
+.rr-pending { color: var(--muted); }

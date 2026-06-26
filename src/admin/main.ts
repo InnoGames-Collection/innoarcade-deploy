@@ -15,6 +15,7 @@ import { isAdmin } from '../platform/admin';
 import { t, esc } from './ui';
 import * as dashboard from './views/dashboard';
 import * as tournaments from './views/tournaments';
+import * as draws from './views/draws';
 import * as players from './views/players';
 import * as payments from './views/payments';
 import * as configView from './views/config';
@@ -22,6 +23,7 @@ import * as configView from './views/config';
 const VIEWS = {
   dashboard: { mod: dashboard, icon: '📊', label: 'nav_dashboard' },
   tournaments: { mod: tournaments, icon: '🏆', label: 'nav_tournaments' },
+  draws: { mod: draws, icon: '🎟️', label: 'nav_draws' },
   players: { mod: players, icon: '👥', label: 'nav_players' },
   payments: { mod: payments, icon: '💳', label: 'nav_payments' },
   config: { mod: configView, icon: '⚙️', label: 'nav_config' },

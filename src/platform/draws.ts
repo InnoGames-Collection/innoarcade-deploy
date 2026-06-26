@@ -1,15 +1,16 @@
 // Scheduled prize draws (the telecom-portal lottery layer).
 //
-// Three live windows are derived from the calendar — a Daily, a Weekly and a
-// Monthly draw — each with an ETB prize and a Points entry fee per ticket. More
-// tickets = more chances. Winners are a *deterministic* seeded field (mulberry32
-// over the window id) so the recent-winners board is stable across reloads, the
-// same approach tournaments.ts uses. Everything is local-first; a real backend
-// drops in behind these signatures later (the points debit becomes an Edge
-// Function, the draw results a table).
+// Three live windows — a Daily, a Weekly and a Monthly draw — each with an ETB
+// prize and a Points entry fee per ticket. More tickets = more chances. The
+// windows are now SERVER-AUTHORITATIVE: loadDraws() reads the `draws` registry
+// (which also holds the committed seed hash) and we fall back to calendar-derived
+// defaults only when the backend is unconfigured. Winners are REAL — selected by
+// the settle-draws function from the revealed seed — and read via fetchDrawWinners.
 
 import { setBalance } from './currency';
-import { enterDrawRemote, fetchDrawTickets } from './backend';
+import {
+  enterDrawRemote, fetchDrawTickets, fetchDraws, fetchDrawPools, fetchDrawWinners,
+} from './backend';
 
 export type DrawPeriod = 'daily' | 'weekly' | 'monthly';
 
@@ -22,6 +23,8 @@ export interface Draw {
   prizeEtb: number;
   /** Points charged per ticket. */
   ticketCostPoints: number;
+  /** Per-user ticket cap (server-enforced). */
+  maxTicketsPerUser: number;
   /** Epoch ms. */
   startsAt: number;
   endsAt: number;
@@ -33,6 +36,8 @@ export interface Winner {
   prizeEtb: number;
   period: DrawPeriod;
 }
+
+const DEFAULT_MAX_TICKETS = 50;
 
 // --- window math ------------------------------------------------------------
 function endOfDay(now: number): number {
@@ -67,15 +72,38 @@ const SPEC: Record<DrawPeriod, { titleEn: string; titleAm: string; prizeEtb: num
   monthly: { titleEn: 'Monthly Draw', titleAm: 'ወርሃዊ ዕጣ', prizeEtb: 250_000, ticketCostPoints: 300 },
 };
 
-export function activeDraws(now = Date.now()): Draw[] {
+// Server-sourced windows (filled by loadDraws). When null we use the calendar
+// derivation so the hub renders instantly / offline.
+let remoteCache: Draw[] | null = null;
+
+function derivedDraws(now: number): Draw[] {
   const make = (period: DrawPeriod, startsAt: number, endsAt: number): Draw => ({
-    id: windowId(period, now), period, ...SPEC[period], startsAt, endsAt,
+    id: windowId(period, now), period, ...SPEC[period],
+    maxTicketsPerUser: DEFAULT_MAX_TICKETS, startsAt, endsAt,
   });
   return [
     make('daily', startOfDay(now), endOfDay(now)),
     make('weekly', endOfWeek(now) - 6048e5, endOfWeek(now)),
     make('monthly', new Date(new Date(now).getFullYear(), new Date(now).getMonth(), 1).getTime(), endOfMonth(now)),
   ];
+}
+
+export function activeDraws(now = Date.now()): Draw[] {
+  return remoteCache ?? derivedDraws(now);
+}
+
+// Refresh the authoritative draw windows + their live pools from the backend.
+// Best-effort: a server error keeps the calendar-derived defaults.
+export async function loadDraws(): Promise<Draw[]> {
+  const [rows] = await Promise.all([fetchDraws(), hydratePools()]);
+  remoteCache = rows.length
+    ? rows.filter((r) => r.state === 'open').map((r) => ({
+        id: r.id, period: r.period, titleEn: r.titleEn, titleAm: r.titleAm,
+        prizeEtb: r.prizeEtb, ticketCostPoints: r.ticketCostPoints,
+        maxTicketsPerUser: r.maxTicketsPerUser, startsAt: r.startsAt, endsAt: r.endsAt,
+      }))
+    : null;
+  return activeDraws();
 }
 
 // --- tickets (server-authoritative; in-memory cache, NO localStorage) --------
@@ -92,6 +120,27 @@ export function myTickets(drawId: string): number {
   return ticketCache[drawId] ?? 0;
 }
 
+// --- live pools / odds (server aggregate; in-memory cache) ------------------
+const poolCache: Record<string, { entrants: number; totalTickets: number }> = {};
+
+/** Hydrate the per-draw pool totals (entrants + total tickets) from the server. */
+export async function hydratePools(): Promise<void> {
+  const p = await fetchDrawPools();
+  for (const k of Object.keys(poolCache)) delete poolCache[k];
+  Object.assign(poolCache, p);
+}
+
+/** Total tickets sold into a draw (0 until anyone enters). */
+export function drawTotalTickets(drawId: string): number {
+  return poolCache[drawId]?.totalTickets ?? 0;
+}
+
+/** The player's win probability for a draw as a 0–1 fraction (0 when no pool). */
+export function myOdds(drawId: string): number {
+  const total = drawTotalTickets(drawId);
+  return total > 0 ? myTickets(drawId) / total : 0;
+}
+
 export class NotEnoughPointsError extends Error {
   constructor() { super('not enough points'); this.name = 'NotEnoughPointsError'; }
 }
@@ -102,6 +151,8 @@ export async function enterDraw(draw: Draw): Promise<number> {
     const res = await enterDrawRemote(draw.id);
     setBalance('points', res.points);
     ticketCache[draw.id] = res.tickets;
+    // Keep the live odds fresh after a purchase (best-effort).
+    void hydratePools();
     return res.tickets;
   } catch (e) {
     // 402 from the function (apply_points overdraw guard) → not enough points.
@@ -109,34 +160,19 @@ export async function enterDraw(draw: Draw): Promise<number> {
   }
 }
 
-// --- seeded recent winners --------------------------------------------------
-function mulberry32(seed: number): () => number {
-  return () => {
-    seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-function seedFrom(s: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
-  return h >>> 0;
+// --- real winners -----------------------------------------------------------
+// The recent winners board is now sourced from the server `draw_winners_public`
+// view (masked phone + prize + period), selected by the settle-draws function
+// from the revealed seed. Cached in memory so the UI can render synchronously;
+// loadWinners() refreshes it.
+let winnersCache: Winner[] = [];
+
+/** Hydrate the recent-winners cache from the server. */
+export async function loadWinners(count = 24): Promise<void> {
+  winnersCache = await fetchDrawWinners(count);
 }
 
-// A stable, plausible set of recent winners across the three periods.
-export function recentWinners(now = Date.now(), count = 6): Winner[] {
-  const periods: DrawPeriod[] = ['monthly', 'weekly', 'daily'];
-  const out: Winner[] = [];
-  let pi = 0;
-  for (let i = 0; i < count; i++) {
-    const period = periods[pi % periods.length];
-    const rnd = mulberry32(seedFrom(windowId(period, now) + ':' + i));
-    const head = 90 + Math.floor(rnd() * 10);
-    const tail = String(1000 + Math.floor(rnd() * 9000));
-    const prize = Math.round((SPEC[period].prizeEtb * (0.2 + rnd() * 0.8)) / 1000) * 1000;
-    out.push({ phone: `+2519${head}****${tail.slice(-2)}`, prizeEtb: prize, period });
-    pi++;
-  }
-  return out;
+/** The most recent real draw winners (empty until draws settle). */
+export function recentWinners(count = 24): Winner[] {
+  return winnersCache.slice(0, count);
 }

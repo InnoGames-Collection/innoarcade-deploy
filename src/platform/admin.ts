@@ -111,6 +111,90 @@ export async function settleTournament(id: string): Promise<{ won: number }> {
   return { won: 0 };
 }
 
+// --- Draw management --------------------------------------------------------
+
+export interface AdminDraw {
+  id: string;
+  period: 'daily' | 'weekly' | 'monthly';
+  titleEn: string;
+  titleAm: string;
+  prizeEtb: number;
+  ticketCostPoints: number;
+  maxTicketsPerUser: number;
+  minTickets: number;
+  winnerCount: number;
+  state: string;
+  startsAt: number;
+  endsAt: number;
+  /** Live pool — entrants + total tickets (from draw_pools). */
+  entrants: number;
+  totalTickets: number;
+}
+
+export interface AdminDrawWinner {
+  drawId: string;
+  rank: number;
+  name: string;
+  phone: string;
+  prizeEtb: number;
+  fulfillment: 'pending' | 'paid' | 'failed';
+  createdAt: number;
+}
+
+export async function listDraws(): Promise<AdminDraw[]> {
+  const sb = supabase();
+  const [{ data: rows }, { data: pools }] = await Promise.all([
+    sb.from('draws').select('id, period, title_en, title_am, prize_etb, ticket_cost_points, max_tickets_per_user, min_tickets, winner_count, state, starts_at, ends_at').order('ends_at', { ascending: false }),
+    sb.from('draw_pools').select('draw_id, entrants, total_tickets'),
+  ]);
+  const pool = new Map((pools ?? []).map((p) => [String(p.draw_id), p]));
+  return (rows ?? []).map((r) => {
+    const p = pool.get(String(r.id));
+    return {
+      id: String(r.id), period: r.period as AdminDraw['period'],
+      titleEn: String(r.title_en), titleAm: String(r.title_am),
+      prizeEtb: Number(r.prize_etb), ticketCostPoints: Number(r.ticket_cost_points),
+      maxTicketsPerUser: Number(r.max_tickets_per_user), minTickets: Number(r.min_tickets),
+      winnerCount: Number(r.winner_count), state: String(r.state),
+      startsAt: new Date(r.starts_at as string).getTime(),
+      endsAt: new Date(r.ends_at as string).getTime(),
+      entrants: Number(p?.entrants ?? 0), totalTickets: Number(p?.total_tickets ?? 0),
+    };
+  });
+}
+
+export async function listDrawWinners(limit = 100): Promise<AdminDrawWinner[]> {
+  const sb = supabase();
+  const { data } = await sb
+    .from('draw_winners')
+    .select('draw_id, rank, prize_etb, fulfillment_status, created_at, user_id, profiles(name, phone)')
+    .order('created_at', { ascending: false }).limit(limit);
+  return (data ?? []).map((r) => {
+    const prof = (r as { profiles?: { name?: string; phone?: string } }).profiles;
+    return {
+      drawId: String(r.draw_id), rank: Number(r.rank),
+      name: String(prof?.name ?? 'Player'), phone: String(prof?.phone ?? ''),
+      prizeEtb: Number(r.prize_etb),
+      fulfillment: (r.fulfillment_status as AdminDrawWinner['fulfillment']) ?? 'pending',
+      createdAt: new Date(r.created_at as string).getTime(),
+    };
+  });
+}
+
+export async function saveDraw(draw: Partial<AdminDraw> & { id: string }): Promise<void> {
+  await adminAction('saveDraw', { draw });
+}
+
+export async function settleDraws(): Promise<{ settled: number }> {
+  const { data, error } = await supabase().functions.invoke('settle-draws', { body: {} });
+  if (error) throw error;
+  return data as { settled: number };
+}
+
+export async function fulfillDrawWinner(drawId: string, rank: number, status: 'paid' | 'failed'): Promise<void> {
+  await adminAction('fulfillDrawWinner', { drawId, rank, status });
+}
+
 // --- Player management ------------------------------------------------------
 
 export async function listPlayers(query = ''): Promise<AdminPlayer[]> {

@@ -38,6 +38,8 @@
             <div class="skin-row" id="skinRow"></div>
           </div>
 
+          <div class="runner-tourney" id="runnerTourney"></div>
+
           <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
           <p class="hint" data-i18n="td.start"></p>
           <button type="button" class="gp-close gp-close-block" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
@@ -61,6 +63,11 @@
             <div class="stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
             <div class="stat"><span data-i18n="td.coins">Coins</span><strong id="finalCoins">0</strong></div>
             <div class="stat"><span data-i18n="td.best">Best</span><strong id="finalBest">0</strong></div>
+          </div>
+          <div class="run-reward" id="runReward"></div>
+          <div class="runner-board-wrap">
+            <h3 data-i18n="td.leaderboard">Leaderboard</h3>
+            <div class="runner-board" id="runnerBoardOver"></div>
           </div>
           <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
           <button type="button" class="gp-close gp-close-block" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>

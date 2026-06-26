@@ -27,3 +27,17 @@ verify_jwt = false
 # user JWT must be verified.
 [functions.subscribe]
 verify_jwt = true
+
+# Draw settlement — authorised by an admin JWT OR the x-cron-secret header (for a
+# scheduled job with no user session), so gateway JWT checks are off and the
+# function authorises internally. Mirrors settle-tournament.
+[functions.settle-draws]
+verify_jwt = false
+
+# Ethiopian Runner economy — both called by signed-in players, so the user JWT
+# must be verified.
+[functions.runner-enter]
+verify_jwt = true
+
+[functions.runner-submit]
+verify_jwt = true

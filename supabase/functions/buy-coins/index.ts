@@ -55,10 +55,14 @@ Deno.serve(async (req: Request) => {
 
   const admin = createClient(url, service);
 
-  // Resolve the package (operator catalogue → default).
+  // Resolve the package by id from the operator catalogue OR the built-in
+  // defaults. Accepting both schemes makes checkout robust when the client's
+  // config cache is stale (e.g. it sends 'starter' while the operator catalogue
+  // uses 'pkg_0') — the previous "operator-only" lookup returned 400 there.
   const { data: cfg } = await admin.from('app_config').select('value').eq('key', 'app').maybeSingle();
-  const packages = (cfg?.value?.coinPackages as typeof DEFAULT_PACKAGES) ?? DEFAULT_PACKAGES;
-  const pkg = packages.find((p) => p.id === body.packageId);
+  const operator = (cfg?.value?.coinPackages as typeof DEFAULT_PACKAGES) ?? [];
+  const pkg = operator.find((p) => p.id === body.packageId)
+    ?? DEFAULT_PACKAGES.find((p) => p.id === body.packageId);
   if (!pkg) return json({ error: 'unknown package' }, 400);
 
   const coins = pkg.coins + pkg.bonus;

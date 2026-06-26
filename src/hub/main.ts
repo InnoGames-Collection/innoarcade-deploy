@@ -17,7 +17,7 @@ import {
 } from '../platform/tournaments';
 import { balanceSync, balance, onWalletChange } from '../platform/wallet';
 import { SignInRequiredError } from '../platform/payments';
-import { activeDraws, myTickets, enterDraw, recentWinners, NotEnoughPointsError, hydrateTickets, type DrawPeriod, type Winner } from '../platform/draws';
+import { activeDraws, myTickets, enterDraw, recentWinners, NotEnoughPointsError, hydrateTickets, loadDraws, loadWinners, myOdds, type DrawPeriod, type Winner } from '../platform/draws';
 import { points as pointsBal, onCurrencyChange, setBalance, setLifetime, pointsLifetime } from '../platform/currency';
 import { levelFor, economyNeedsAuth } from '../platform/config';
 
@@ -541,6 +541,11 @@ function renderDraws(): void {
   host.innerHTML = draws.map((d) => {
     const tickets = myTickets(d.id);
     const afford = pointsBal() >= d.ticketCostPoints;
+    const atCap = tickets >= d.maxTicketsPerUser;
+    const odds = myOdds(d.id);
+    const oddsPct = odds > 0 ? (odds * 100).toFixed(odds < 0.01 ? 2 : 1) : null;
+    const canEnter = afford && !atCap;
+    const label = atCap ? t('hub.ticketCap') : `${t('hub.enterDraw')} · ${d.ticketCostPoints} ⭐`;
     return `
       <article class="draw-card draw-${d.period}">
         <div class="dc-top">
@@ -549,8 +554,8 @@ function renderDraws(): void {
         </div>
         <div class="dc-count" data-ends="${d.endsAt}"></div>
         <div class="dc-foot">
-          <span class="dc-tickets">🎟️ ${t('hub.yourTickets')}: <strong>${tickets}</strong></span>
-          <button class="btn primary dc-enter${afford ? '' : ' disabled'}" data-draw="${d.id}">${t('hub.enterDraw')} · ${d.ticketCostPoints} ⭐</button>
+          <span class="dc-tickets">🎟️ ${t('hub.yourTickets')}: <strong>${tickets}</strong>${oddsPct ? ` · ${t('hub.yourOdds')}: <strong>${oddsPct}%</strong>` : ''}</span>
+          <button class="btn primary dc-enter${canEnter ? '' : ' disabled'}"${canEnter ? '' : ' disabled'} data-draw="${d.id}">${label}</button>
         </div>
       </article>`;
   }).join('');
@@ -601,7 +606,7 @@ function renderWinners(): void {
   const host = document.querySelector('#winnerList');
   if (!host) return;
   renderComingAward();
-  const all = recentWinners(Date.now(), 12);
+  const all = recentWinners(24);
   const medal = (i: number): string => ['🥇', '🥈', '🥉'][i] ?? '🎉';
   const row = (w: Winner, i: number): string => `
     <div class="winner-row${i < 3 ? ' top' : ''}">
@@ -918,7 +923,8 @@ function hydratePoints(): void {
   void fetchWallets().then((w) => {
     if (w) { setBalance('points', w.points); setLifetime(w.lifetime); renderMyStats(); }
   });
-  void hydrateTickets().then(() => renderDraws());
+  void loadDraws().then(() => hydrateTickets()).then(() => renderDraws());
+  void loadWinners().then(() => renderWinners());
   void fetchUnlocks().then((ids) => {
     unlockedSet.clear(); ids.forEach((id) => unlockedSet.add(id)); renderGames();
   });

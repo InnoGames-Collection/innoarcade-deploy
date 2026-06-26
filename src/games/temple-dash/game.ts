@@ -5,7 +5,6 @@
 // shared engine: AssetStore, Particles, ScreenFx, profile, settings.
 
 import { sfx } from '../../engine/audio';
-import { recordEnginePlay } from '../../platform/gameHost';
 import { achievements } from '../../engine/achievements';
 import { settings } from '../../engine/settings';
 import { Particles } from '../../engine/particles';
@@ -84,7 +83,12 @@ export class TempleDash {
   biomeName = BIOMES[0].name;
 
   onStateChange: (s: GameState) => void = () => {};
-  onGameOver: (score: number, coins: number, record: boolean) => void = () => {};
+  // record = beat the session best; durationMs = how long the run lasted (for the
+  // server XP/score submission, which happens in main.ts — the economy authority).
+  onGameOver: (score: number, coins: number, record: boolean, durationMs: number) => void = () => {};
+
+  // Wall-clock start of the current run (game-clock seconds), for run duration.
+  private runStart = 0;
 
   private particles = new Particles(500);
   private fx = new ScreenFx();
@@ -127,6 +131,7 @@ export class TempleDash {
     this.spawnCursor = 25;
     this.particles.clear(); this.fx.reset();
     this.walkPhase = 0;
+    this.runStart = this.time;
     this.setState('playing');
     sfx.startMusic([262, 0, 330, 392, 0, 330, 294, 0], 104);
   }
@@ -269,10 +274,10 @@ export class TempleDash {
     this.overAt = this.time;
     const record = this.score > this.best;
     if (record) this.best = this.score;
-    void recordEnginePlay(GAME_ID, this.score);
-    if (record) this.best = this.score;
+    const durationMs = Math.max(0, Math.round((this.time - this.runStart) * 1000));
     this.setState('over');
-    this.onGameOver(this.score, this.coins, record);
+    // Server submission (XP, tournament score, leaderboard) is owned by main.ts.
+    this.onGameOver(this.score, this.coins, record, durationMs);
   }
 
   private setState(s: GameState): void { this.state = s; this.onStateChange(s); }

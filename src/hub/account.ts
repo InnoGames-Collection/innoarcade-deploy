@@ -9,7 +9,7 @@ import { currentUser, signOut, type AuthUser } from '../platform/auth';
 import { openSignIn } from './signin';
 import {
   SUB_PLANS, currentSub, trialAvailable, subscribe, cancelSub, loadSubscription,
-  type SubPeriod, type Subscription,
+  type SubPeriod,
 } from '../platform/subscription';
 import { paymentMethodsEnabled } from '../platform/config';
 import { PAY_METHOD_LABEL, type PayMethod } from '../platform/payments';
@@ -295,11 +295,11 @@ export async function openAccount(): Promise<void> {
   await loadSubscription();
   const sub = currentSub();
   const ref = user ? await fetchReferral() : null;
+  void sub; // subscription card intentionally not shown
   shell(`
     <h2 class="acct-title">${t('account')}</h2>
     ${accountCardHtml(user)}
     ${referralHtml(ref)}
-    ${subscriptionCardHtml(sub)}
     ${entriesHtml()}
     <div class="acct-sec">${t('general')}</div>
     <div class="acct-tiles">
@@ -381,22 +381,6 @@ function wireReferral(): void {
       else btn.disabled = false;
     } catch { msg.textContent = t('failed'); msg.className = 'ref-msg err'; btn.disabled = false; }
   });
-}
-
-function subscriptionCardHtml(sub: Subscription | null): string {
-  if (sub) {
-    const days = Math.max(0, Math.ceil((sub.expiresAt - Date.now()) / 864e5));
-    return `<div class="acct-card sub-on">
-      <div class="acct-row">
-        <div><div class="sub-badge">⭐ ${t('premium')}</div>
-        <div class="acct-muted">${periodLabel(sub.period)} · ${t('expiresIn')} ${days} ${t('daysLeft')}</div></div>
-        <button class="acct-btn ghost" id="aCancel">${t('cancel')}</button>
-      </div></div>`;
-  }
-  return `<button class="acct-card sub-off" id="aSubscribe">
-    <span class="sub-cart">🛒</span>
-    <span><span class="acct-muted">${t('notSub')}</span><strong class="sub-cta">${t('subscribeNow')}</strong></span>
-  </button>`;
 }
 
 function wireAccount(user: AuthUser | null): void {
