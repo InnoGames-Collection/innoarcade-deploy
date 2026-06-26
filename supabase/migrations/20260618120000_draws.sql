@@ -115,8 +115,10 @@ grant select on public.draw_winners_public to anon, authenticated;
 -- --------------------------------------------------------------- draw_rand ---
 -- Deterministic PRNG in [0,1) from (seed, index). SHA-256 keyed so the winner is
 -- reproducible offline from the revealed seed — the heart of provable fairness.
+-- search_path includes `extensions` so pgcrypto's digest() resolves on Supabase
+-- (pgcrypto is installed in the `extensions` schema there, not `public`).
 create or replace function public.draw_rand(p_seed text, p_idx int)
-returns double precision language sql immutable as $$
+returns double precision language sql immutable set search_path = public, extensions as $$
   select ('x' || substr(encode(digest(p_seed || ':' || p_idx::text, 'sha256'), 'hex'), 1, 13))::bit(52)::bigint::double precision
          / (2::double precision ^ 52);
 $$;
@@ -126,7 +128,7 @@ $$;
 -- COMMITTED seed (hash public, raw seed kept private in draw_seeds). Re-running
 -- is safe: an existing window is never disturbed (its commitment must be stable).
 create or replace function public.ensure_active_draws()
-returns void language plpgsql security definer set search_path = public as $$
+returns void language plpgsql security definer set search_path = public, extensions as $$
 declare
   d_start timestamptz := date_trunc('day', now());
   w_start timestamptz := date_trunc('week', now());

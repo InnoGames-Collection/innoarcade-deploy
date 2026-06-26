@@ -16,6 +16,7 @@ import {
 import { balance } from '../../platform/wallet';
 import { SignInRequiredError } from '../../platform/payments';
 import { isConfigured } from '../../platform/supabase';
+import { currentUser } from '../../platform/auth';
 import { achievements } from '../../engine/achievements';
 import { sfx } from '../../engine/audio';
 import { TempleDash, W, H, GAME_ID, SKINS, TD_ACHIEVEMENTS, type GameState } from './game';
@@ -210,6 +211,11 @@ function run(assets: AssetStore): void {
 
   async function refreshTourney(): Promise<void> {
     if (!isConfigured()) { $('#runnerTourney').innerHTML = ''; return; }
+    // Hydrate the persisted session BEFORE the per-user economy reads. The game
+    // page skips the hub sign-in flow, so on a cold first paint getUser() can
+    // still be restoring from storage — without this, coins/attempts read empty
+    // (logged-out-looking) and the panel never recovers until the next game over.
+    await currentUser();
     tourney = await getRunnerTournament();
     if (!tourney) { $('#runnerTourney').innerHTML = ''; return; }
     [myEntry, walletCoins] = await Promise.all([getMyEntry(tourney.id), balance()]);
