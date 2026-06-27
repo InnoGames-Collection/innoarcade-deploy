@@ -60,6 +60,9 @@ export class FruitSlice {
   onGameOver: (score: number, record: boolean) => void = () => {};
 
   private time = 0;
+  // Difficulty ramp: spawn rate + object speed scale up with elapsed time, so the
+  // endless run eventually outpaces the player (no hard end — you fail by misses).
+  private speedMul = 1;
   private fruits: Fruit[] = [];
   private bombs: Bomb[] = [];
   private particles: Particle[] = [];
@@ -73,6 +76,7 @@ export class FruitSlice {
     this.combo = 0;
     this.lives = 3;
     this.time = 0;
+    this.speedMul = 1;
     this.fruits = [];
     this.bombs = [];
     this.particles = [];
@@ -142,30 +146,22 @@ export class FruitSlice {
     if (fruit.sliced) return;
     fruit.sliced = true;
     this.combo += 1;
-    const baseScore = 10;
-    const comboBonus = Math.floor(Math.sqrt(this.combo)) * 5;
-    this.score += baseScore + comboBonus;
+    this.score += 10; // +10 per fruit sliced
     sfx.click();
     this.burstFruit(fruit.x, fruit.y, this.getFruitColor(fruit.type));
     this.screenShake = 0.1;
   }
 
+  // Slicing a bomb costs 10 points (floored at 0). It does NOT end the run — the
+  // game is endless; you fail only by letting fruit fall (lives).
   private hitBomb(bomb: Bomb): void {
     if (bomb.hit) return;
     bomb.hit = true;
-    this.lives -= 1;
     this.combo = 0;
+    this.score = Math.max(0, this.score - 10);
     sfx.jump();
     this.burstFruit(bomb.x, bomb.y, '#ff4444');
     this.screenShake = 0.2;
-    if (this.lives <= 0) {
-      this.setState('gameOver');
-      this.onGameOver(this.score, this.score > this.best);
-      if (this.score > this.best) {
-        setHighScore('fruit-slice', this.score);
-        this.best = this.score;
-      }
-    }
   }
 
   private burstFruit(x: number, y: number, color: string): void {
@@ -203,17 +199,22 @@ export class FruitSlice {
 
     this.screenShake = Math.max(0, this.screenShake - dt * 8);
 
+    // Ramp difficulty with time: spawn faster + everything moves faster, so it
+    // becomes progressively harder to keep up (≈2× speed at 45s, 3× at 90s).
+    this.speedMul = 1 + this.time / 45;
+    const grav = 380 * this.speedMul;
+
     this.spawnCursor -= dt;
     if (this.spawnCursor <= 0) {
       this.spawnFruit();
-      this.spawnCursor = SPAWN_RATE - (this.time * 0.01);
+      this.spawnCursor = Math.max(0.3, SPAWN_RATE / this.speedMul);
     }
 
     for (const fruit of this.fruits) {
       if (!fruit.sliced) {
         fruit.x += fruit.vx * dt;
         fruit.y += fruit.vy * dt;
-        fruit.vy += 380 * dt;
+        fruit.vy += grav * dt;
       } else {
         fruit.sliceTime += dt;
       }
@@ -223,7 +224,7 @@ export class FruitSlice {
       if (!bomb.hit) {
         bomb.x += bomb.vx * dt;
         bomb.y += bomb.vy * dt;
-        bomb.vy += 380 * dt;
+        bomb.vy += grav * dt;
       }
     }
 
@@ -258,8 +259,8 @@ export class FruitSlice {
     if (this.state !== 'playing') return;
     const isBomb = Math.random() < 0.15;
     const x = 40 + Math.random() * (W - 80);
-    const vx = (Math.random() - 0.5) * 200;
-    const vy = -(200 + Math.random() * 150);
+    const vx = (Math.random() - 0.5) * 200 * this.speedMul;
+    const vy = -(200 + Math.random() * 150) * this.speedMul;
 
     if (isBomb) {
       this.bombs.push({ x, y: -20, vx, vy, hit: false });

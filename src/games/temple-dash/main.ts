@@ -8,13 +8,14 @@ import { AssetStore } from '../../engine/assets';
 import { Preloader } from '../../ui/preloader';
 import { SettingsPanel } from '../../ui/settingsPanel';
 import { registerPwa } from '../../engine/pwa';
-import { fetchSkins, setSkinRemote } from '../../platform/backend';
+import { fetchSkins, setSkinRemote, fetchWallets, leaderboardRemote, playerStandingRemote } from '../../platform/backend';
+import { GameHost } from '../../platform/gameHost';
 import {
-  getRunnerTournament, getMyEntry, getMyBest, getMyXp, getRunnerPool, enterRunnerTournament, submitRunnerRun, runnerLeaderboard,
-  InsufficientCoinsError, LevelTooLowError, REQUIRED_LEVEL,
-  type RunnerTournament, type RunnerEntry, type RunnerLeaderRow, type RunnerSubmitResult,
-  type RunnerPeriod,
-} from '../../platform/runner';
+  getTournamentForGame, loadTournaments, loadMyEntries, myEntry, prizePool, tournamentEntrants,
+  enterTournament, InsufficientCoinsError, LevelTooLowError,
+  type Tournament, type LeaderEntry,
+} from '../../platform/tournaments';
+import { levelFor } from '../../platform/config';
 import { balance } from '../../platform/wallet';
 import { SignInRequiredError } from '../../platform/payments';
 import { isConfigured } from '../../platform/supabase';
@@ -103,7 +104,9 @@ function run(assets: AssetStore): void {
 
   function startRun(): void {
     dismissHint();
-    activePeriod = selectedPeriod;
+    // Capture at START whether this run is a ranked attempt (banked attempts left)
+    // so a mid-run change can't misfile the score.
+    rankedThisRun = tourney ? (myEntry(tourney.id)?.left ?? 0) > 0 : false;
     game.start();
   }
   function beginPlay(): void {
@@ -202,26 +205,15 @@ function run(assets: AssetStore): void {
     if (sig !== chipSig) { powerChips.innerHTML = sig; chipSig = sig; }
   }
 
-  // --- Runner economy (server-only; no caches) ------------------------------
-  // XP/score/leaderboard all live on the server (platform/runner.ts). Free runs
-  // earn XP; entering the tournament (one coin fee → N attempts) makes the best
-  // run rank on the leaderboard.
-  let tourney: RunnerTournament | null = null;
-  let myEntry: RunnerEntry | null = null;
+  // --- Tournament economy (unified server system; no caches) ----------------
+  // Ethiorunner is the platform's DAILY tournament. XP/score/leaderboard all live
+  // on the server (platform/gameHost + tournaments). A free run earns XP; buying a
+  // block of attempts (pay-once → N) makes the best run rank on the leaderboard.
+  const host = new GameHost(GAME_ID);
+  let tourney: Tournament | undefined;
   let walletCoins = 0;
-  // Daily / Weekly / Monthly tournaments (doc §4.1) — each scored independently.
-  // Default to Daily: the entry-tier window (unlocks at L3) every player can reach,
-  // per the §3.2 funnel (Monthly is L10-gated, a poor default).
-  let selectedPeriod: RunnerPeriod = 'daily';
-  // The tournament a started run counts toward — captured at run START so switching
-  // tabs mid-run can't misfile the score.
-  let activePeriod: RunnerPeriod = 'daily';
-  // Ethiorunner runs a single DAILY tournament (no weekly/monthly for now). The
-  // RunnerPeriod type still carries weekly/monthly so they can be re-enabled by
-  // restoring those entries here.
-  const PERIODS: { id: RunnerPeriod; label: string }[] = [
-    { id: 'daily', label: t('td.daily') },
-  ];
+  // Whether the in-flight run is a ranked attempt — captured at run START.
+  let rankedThisRun = false;
 
   const escHtml = (s: string): string =>
     s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
@@ -235,18 +227,17 @@ function run(assets: AssetStore): void {
   }
 
   // The big menu Play button reflects whether the next run is a ranked tournament
-  // attempt (entered, attempts left) or a free XP-only run — so the player always
-  // knows what pressing Play does, and why coins were/weren't spent.
+  // attempt (banked attempts left) or a free XP-only run.
   function updatePlayButton(): void {
     const btn = document.querySelector('#startBtn');
     if (!btn) return;
-    const left = myEntry?.attemptsLeft ?? 0;
+    const left = tourney ? (myEntry(tourney.id)?.left ?? 0) : 0;
     btn.textContent = left > 0
       ? `▶ ${t('td.playTournament')} · 🎟️ ${left}`
       : `▶ ${t('td.playFree')}`;
   }
 
-  function boardHtml(rows: RunnerLeaderRow[]): string {
+  function boardHtml(rows: LeaderEntry[]): string {
     if (!rows.length) return `<p class="rb-empty">${t('td.noBoard')}</p>`;
     return rows.map((r) => `
       <div class="rb-row${r.isPlayer ? ' me' : ''}">
@@ -258,30 +249,28 @@ function run(assets: AssetStore): void {
 
   async function refreshTourney(): Promise<void> {
     if (!isConfigured()) { $('#runnerTourney').innerHTML = ''; return; }
-    // Hydrate the persisted session BEFORE the per-user economy reads. The game
-    // page skips the hub sign-in flow, so on a cold first paint getUser() can
-    // still be restoring from storage — without this, coins/attempts read empty
-    // (logged-out-looking) and the panel never recovers until the next game over.
+    // Hydrate the persisted session BEFORE the per-user economy reads, then pull
+    // the live tournament + the player's attempt bank from the unified system.
     await currentUser();
-    tourney = await getRunnerTournament(selectedPeriod);
+    await Promise.all([loadTournaments(), loadMyEntries()]);
+    tourney = getTournamentForGame(GAME_ID);
     if (!tourney) { $('#runnerTourney').innerHTML = ''; return; }
-    let serverBest: number, myLevel: number, pool: { pool: number; entrants: number };
-    [myEntry, walletCoins, serverBest, myLevel, pool] = await Promise.all([
-      getMyEntry(tourney.id), balance(), getMyBest(tourney.id), getMyXp().then((x) => x.level), getRunnerPool(tourney.id),
+    const [w, wallets, serverStanding, board] = await Promise.all([
+      balance(), fetchWallets(), playerStandingRemote(tourney.id), leaderboardRemote(tourney.id, 5),
     ]);
-    // Best is server-authoritative (matches the leaderboard) — seed the game's
-    // best from it so the game-over screen + record indicator reflect the server,
-    // not just this session.
+    walletCoins = w;
+    const myLevel = levelFor(wallets?.lifetime ?? 0);
+    // Best is server-authoritative — seed the game's best so the game-over screen
+    // reflects the server, not just this session.
+    const serverBest = serverStanding?.score ?? 0;
     if (serverBest > game.best) game.best = serverBest;
-    const board = await runnerLeaderboard(tourney.id, 5);
 
-    // Level-tier funnel (doc §3.2): the period is locked until the player reaches
-    // the required level.
-    const needLevel = REQUIRED_LEVEL[selectedPeriod];
+    // Level-tier funnel (doc §3.2): locked until the player reaches the level.
+    const needLevel = tourney.requiredLevel;
     const locked = myLevel < needLevel;
-    const left = myEntry?.attemptsLeft ?? 0;
-    const used = myEntry?.attemptsUsed ?? 0;
-    const purchased = myEntry?.attemptsPurchased ?? 0;
+    const entry = myEntry(tourney.id);
+    const left = entry?.left ?? 0, used = entry?.used ?? 0, purchased = entry?.purchased ?? 0;
+    const pool = prizePool(tourney), entrants = tournamentEntrants(tourney);
     const status = locked
       ? `<span class="rt-fee">🔒 ${t('td.reachLevel')} ${needLevel}</span>`
       : left > 0
@@ -290,31 +279,19 @@ function run(assets: AssetStore): void {
     const btn = locked
       ? `<button class="btn rt-enter" disabled>🔒 L${needLevel}</button>`
       : `<button id="enterBtn" class="btn rt-enter">${left > 0 ? t('td.enterAgain') : t('td.enterFor')} · ${tourney.entryFeeCoins} 🪙 → ${tourney.attempts} ${t('td.attempts')}</button>`;
-    // Only show the period switcher when there's more than one period to pick.
-    const tabs = PERIODS.length > 1
-      ? `<div class="rt-tabs">${PERIODS.map((p) =>
-          `<button class="rt-tab${p.id === selectedPeriod ? ' is-active' : ''}" data-period="${p.id}">${p.label}</button>`).join('')}</div>`
-      : '';
 
     $('#runnerTourney').innerHTML = `
-      ${tabs}
       <div class="rt-head">
         <span class="rt-title">🏆 ${escHtml(getLang() === 'am' ? tourney.titleAm : tourney.titleEn)}</span>
         <span class="rt-coins">${walletCoins.toLocaleString()} 🪙</span>
       </div>
-      <div class="rt-prize">🏆 ${t('td.prizePool')}: <strong>${pool.pool.toLocaleString()} 🪙</strong> · 🥇 ${Math.round(pool.pool * 0.5).toLocaleString()} 🪙 +5 🎟️ <small>· ${pool.entrants} ${t('td.entrants')}</small></div>
+      <div class="rt-prize">🏆 ${t('td.prizePool')}: <strong>${pool.toLocaleString()} 🪙</strong> · 🥇 ${Math.round(pool * 0.5).toLocaleString()} 🪙 +5 🎟️ <small>· ${entrants} ${t('td.entrants')}</small></div>
       <div class="rt-meta">⏳ ${t('td.endsIn')} ${endsIn(tourney.endsAt)} · 🏅 ${t('td.bestRanks')}</div>
       <div class="rt-status">${status}${btn}</div>
       <div class="runner-board">${boardHtml(board)}</div>`;
 
     updatePlayButton();
     document.querySelector('#enterBtn')?.addEventListener('click', onEnter);
-    document.querySelectorAll<HTMLButtonElement>('#runnerTourney .rt-tab').forEach((tab) => {
-      tab.addEventListener('click', () => {
-        const p = tab.dataset.period as RunnerPeriod;
-        if (p && p !== selectedPeriod) { selectedPeriod = p; sfx.click(); void refreshTourney(); }
-      });
-    });
   }
 
   async function onEnter(): Promise<void> {
@@ -322,9 +299,9 @@ function run(assets: AssetStore): void {
     if (b) b.disabled = true;
     const fee = tourney?.entryFeeCoins ?? 0;
     try {
-      myEntry = await enterRunnerTournament(selectedPeriod);
+      const e = await enterTournament(GAME_ID);
       await refreshTourney();
-      showToast(`−${fee} 🪙 · 🎟️ ${myEntry.attemptsLeft} ${t('td.attempts')}`);
+      showToast(`−${fee} 🪙 · 🎟️ ${e.left} ${t('td.attempts')}`);
     } catch (e) {
       if (e instanceof InsufficientCoinsError) showToast(`🪙 ${t('td.needCoins')}`);
       else if (e instanceof LevelTooLowError) showToast(`🔒 ${t('td.reachLevel')} ${e.requiredLevel}`);
@@ -339,28 +316,24 @@ function run(assets: AssetStore): void {
     const boardOver = $('#runnerBoardOver');
     if (!isConfigured()) { reward.innerHTML = ''; boardOver.innerHTML = ''; return; }
     reward.innerHTML = `<span class="rr-pending">…</span>`;
-    let res: RunnerSubmitResult | null = null;
-    try {
-      res = await submitRunnerRun(score, durationMs, activePeriod);
-    } catch (e) {
-      reward.innerHTML = `<span class="rr-note">${e instanceof SignInRequiredError ? t('td.signInToRank') : '✕'}</span>`;
-      return;
-    }
-    if (!res) { reward.innerHTML = ''; return; }
+    // Open an anti-cheat round token, then submit. A ranked run consumes a banked
+    // attempt server-side; otherwise it's a free XP-only run.
+    await host.startRound();
+    const res = await host.finish(score, score >= host.winScore, durationMs, { ranked: rankedThisRun });
+    const ranked = res.ranked ?? false;
     // Reflect the server's authoritative best (ranked runs) on the game-over card.
-    if (res.ranked && res.best > game.best) {
+    if (ranked && (res.best ?? 0) > game.best) {
       game.best = res.best;
       $('#finalBest').textContent = String(res.best);
     }
-    const rankLine = res.ranked
-      ? `<span class="rr-stat"><b>${t('td.rank')}</b> #${res.rank}/${res.total}</span>
-         <span class="rr-stat"><b>RP</b> ${res.rp}</span>`
+    const rankLine = ranked
+      ? `<span class="rr-stat"><b>${t('td.rank')}</b> #${res.rank}/${res.total}</span>`
       : `<span class="rr-note">${t('td.notRanked')}</span>`;
     reward.innerHTML = `
-      <span class="rr-stat xp">+${res.award} ${t('td.xpGained')}</span>
-      <span class="rr-stat"><b>${t('td.level')}</b> ${res.level}</span>
+      <span class="rr-stat xp">+${res.award ?? 0} ${t('td.xpGained')}</span>
+      <span class="rr-stat"><b>${t('td.level')}</b> ${levelFor(res.lifetime ?? 0)}</span>
       ${rankLine}`;
-    if (tourney) boardOver.innerHTML = boardHtml(await runnerLeaderboard(tourney.id, 5));
+    if (tourney) boardOver.innerHTML = boardHtml(await leaderboardRemote(tourney.id, 5));
     void refreshTourney();
   }
 

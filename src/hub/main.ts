@@ -6,12 +6,10 @@ import { openAccount } from './account';
 import { mountWallet, openStore, needsSignInToBuy } from './wallet';
 import { onAuthChange, currentUser, signOut, authAvailable } from '../platform/auth';
 import { sfx } from '../engine/audio';
-import { renderDashboard, injectDashboardStyles } from './dashboard';
 import { mergedLeaderboard, fetchWallets, fetchUnlocks, unlockGameRemote, fetchActiveSeason, fetchSeasonLeaderboard, claimDailyLogin } from '../platform/backend';
-import { CATALOG, orderedCatalog, getGame, type GameMeta } from '../platform/catalog';
-import { getRunnerTournament, getRunnerPool, runnerLeaderboard, RUNNER_GAME_ID, type RunnerTournament } from '../platform/runner';
+import { orderedCatalog, getGame, type GameMeta } from '../platform/catalog';
 import {
-  activeTournaments, featuredTournament, tournamentGame,
+  activeTournaments, featuredTournament, tournamentGame, getTournamentForGame,
   countdown, loadTournaments, loadMyEntries,
   tournamentState, isPaid, isEntered, enterTournament, prizePool,
   InsufficientCoinsError, type Tournament, type LeaderEntry,
@@ -35,12 +33,6 @@ function escapeHtml(s: string): string {
 function thumbStyle(g: GameMeta): string {
   return `background:linear-gradient(145deg, ${g.thumb[0]}, ${g.thumb[1]});`;
 }
-
-// When no generic tournament is live (e.g. the Ethiorunner-only storefront), the
-// hub hero + stats fall back to Ethiorunner's daily runner tournament. Cached here
-// by refreshRunnerFeatured() so the synchronous renders (hero, stats, countdown)
-// can read it.
-let runnerFeatured: { tour: RunnerTournament; pool: number } | null = null;
 
 // --- Promo banner carousel --------------------------------------------------
 const PROMOS = [
@@ -242,7 +234,6 @@ function renderEntryActions(m: HTMLElement, tour: Tournament, game: GameMeta): v
             <a class="btn primary" href="${game.route}">${t('hub.playNow')}</a>
           </div>`;
         renderAll();
-        void renderDashboard();
       } catch (e) {
         if (e instanceof SignInRequiredError) { m.remove(); openSignIn(); return; }
         if (e instanceof InsufficientCoinsError) { renderEntryActions(m, tour, game); return; }
@@ -259,8 +250,7 @@ function renderFeatured(): void {
   const host = $('#featured');
   const tour = featuredTournament();
   const game = tour ? tournamentGame(tour) : undefined;
-  // No generic tournament → feature Ethiorunner's daily runner tournament instead.
-  if (!tour || !game) { renderRunnerFeatured(); return; }
+  if (!tour || !game) { host.innerHTML = ''; return; }
   // The board + your-rank start empty and are filled by refreshFeatured() from
   // the server (no local simulation).
   const top3: LeaderEntry[] = [];
@@ -328,134 +318,6 @@ async function refreshFeatured(): Promise<void> {
   }
 }
 
-// Featured hero backed by Ethiorunner's daily runner tournament (used when the
-// generic tournament system has no live event — i.e. the Ethiorunner-only
-// storefront). The CTA simply opens the game: entry happens inside the runner,
-// not via the generic enter-tournament flow.
-function renderRunnerFeatured(): void {
-  const host = $('#featured');
-  const game = getGame(RUNNER_GAME_ID);
-  if (!game) { host.innerHTML = ''; return; }
-  const fcStyle = game.cover
-    ? `background-image:url('${game.cover}');background-size:cover;background-position:center;`
-    : thumbStyle(game);
-  const pool = runnerFeatured?.pool ?? 0;
-  const fee = runnerFeatured?.tour.entryFeeCoins ?? 10;
-  const title = runnerFeatured
-    ? (lang() === 'am' ? runnerFeatured.tour.titleAm : runnerFeatured.tour.titleEn)
-    : t('td.daily');
-  host.innerHTML = `
-    <article class="featured-card" style="${fcStyle}">
-      <div class="fc-info">
-        <span class="fc-badge">🏆 ${escapeHtml(title)}</span>
-        <h3 class="fc-title">${escapeHtml(name(game))}</h3>
-        <p class="fc-genre">${escapeHtml(genre(game))}</p>
-        <div class="fc-meta">
-          <div class="fc-countdown" id="fcCountdown"></div>
-          <div class="fc-prize">${t('hub.prize')}: <strong>${pool.toLocaleString()}</strong> ${t('hub.coins')} 🪙</div>
-        </div>
-        <div class="fc-econ">
-          <span class="econ-badge fee">${t('hub.entry')}: ${fee} 🪙</span>
-          <span class="econ-badge pool">${t('hub.pool')}: ${pool.toLocaleString()} 🪙</span>
-        </div>
-        <a class="btn primary fc-cta" href="${game.route}">${t('hub.playNow')}</a>
-      </div>
-      <div class="fc-board">
-        <div class="fc-board-head">${t('hub.leaderboard')}</div>
-        <ol class="leader-list"></ol>
-        <div class="fc-yourrank"><span class="muted-small">${t('hub.unranked')}</span></div>
-      </div>
-      <div class="fc-glyph">${game.icon}</div>
-    </article>`;
-}
-
-// Hydrate the runner-backed hero from the server: the live daily tournament, its
-// prize pool and top-3 board. No-op when a generic tournament is featured.
-async function refreshRunnerFeatured(): Promise<void> {
-  if (featuredTournament()) return;
-  const tour = await getRunnerTournament('daily');
-  if (!tour) return;
-  const [pool, board] = await Promise.all([getRunnerPool(tour.id), runnerLeaderboard(tour.id, 3)]);
-  runnerFeatured = { tour, pool: pool.pool };
-  renderRunnerFeatured(); // re-render with real title + pool
-  renderStats();          // KPIs now reflect the live daily tournament
-  tickCountdowns();       // start the hero countdown immediately
-  const list = document.querySelector('#featured .leader-list');
-  if (list && board.length) {
-    list.innerHTML = board.map((r) => `
-      <li class="leader-row${r.isPlayer ? ' me' : ''}">
-        <span class="lr-rank">${r.rank}</span>
-        <span class="lr-name">${escapeHtml(r.name)}</span>
-        <span class="lr-score">${r.score.toLocaleString()}</span>
-      </li>`).join('');
-  }
-}
-
-// --- Stats strip (platform KPIs — shown above the games list) ---------------
-function renderStats(): void {
-  const host = document.querySelector('#statsStrip');
-  if (!host) return;
-  // Count only tournaments whose game is actually listed (parked games may still
-  // have DB rows but render nothing), then fold in the runner daily tournament.
-  const tours = activeTournaments().filter((x) => tournamentGame(x));
-  let live = tours.filter((x) => tournamentState(x) === 'live').length;
-  let pool = tours.reduce((s, x) => s + prizePool(x), 0);
-  if (runnerFeatured) { live += 1; pool += runnerFeatured.pool; }
-  const players = 12_480; // community size shown on the storefront
-  const stat = (icon: string, value: string, label: string): string =>
-    `<div class="stat"><div class="stat-top"><span class="stat-icon">${icon}</span><span class="stat-value">${value}</span></div><div class="stat-label">${label}</div></div>`;
-  host.innerHTML = [
-    stat('🎮', String(CATALOG.length), t('hub.statGames')),
-    stat('🏆', String(live), t('hub.statLive')),
-    stat('🪙', pool.toLocaleString(), t('hub.pool')),
-    stat('👥', players.toLocaleString(), t('hub.statPlayers')),
-  ].join('');
-}
-
-// --- Tournament cards -------------------------------------------------------
-function renderTournaments(): void {
-  const host = $('#tournamentList');
-  const tours = activeTournaments();
-  host.innerHTML = tours.map((tour) => {
-    const game = tournamentGame(tour);
-    if (!game) return '';
-    return `
-      <article class="tour-card">
-        <div class="tc-thumb"${game.cover ? '' : ` style="${thumbStyle(game)}"`}>${game.cover ? `<img class="tc-cover" src="${game.cover}" alt="" loading="lazy" />` : `<span>${game.icon}</span>`}</div>
-        <div class="tc-body">
-          <span class="live-dot">● ${STATE_LABEL[tournamentState(tour)]?.() ?? t('hub.live')}</span>
-          <h4>${escapeHtml(tTitle(tour))}</h4>
-          <p class="tc-game">${escapeHtml(name(game))}</p>
-          <div class="tc-econ">${economyBadges(tour)}</div>
-          <div class="tc-top" data-tour="${tour.id}"></div>
-          <div class="tc-count" data-ends="${tour.endsAt}"></div>
-        </div>
-        ${entryCta(tour, game, 'tc-cta')}
-      </article>`;
-  }).join('');
-  // Hide the whole Tournaments section when there are no generic cards to show
-  // (the daily Ethiorunner tournament lives in the hero + in-game instead).
-  document.querySelector('#tournaments')?.classList.toggle('hidden', !host.innerHTML.trim());
-  wireEntryCtas();
-  void refreshTourTops();
-}
-
-// Pull the current #1 score for each visible tournament card and show it live.
-// The server leaderboard is the authority; this is a read-only display refresh
-// (no economy effect). Called on render and on a slow interval.
-async function refreshTourTops(): Promise<void> {
-  const els = document.querySelectorAll<HTMLElement>('.tc-top[data-tour]');
-  await Promise.all(Array.from(els).map(async (el) => {
-    try {
-      const board = await mergedLeaderboard(el.dataset.tour!);
-      const top = board[0];
-      el.innerHTML = top
-        ? `<span class="tc-top-lbl">🏆 ${t('hub.topScore')}</span> <strong>${top.score.toLocaleString()}</strong> · ${escapeHtml(top.name)}`
-        : `<span class="tc-top-lbl">🏆 ${t('hub.topScore')}</span> <span class="tc-top-none">${t('hub.beFirst')}</span>`;
-    } catch { /* leave last value */ }
-  }));
-}
-
 // --- Games library (flat, ordered) ------------------------------------------
 // The category shown on a card = the first token of its genre ("Chance · …").
 const category = (g: GameMeta): string => genre(g).split('·')[0].trim();
@@ -509,12 +371,17 @@ function gameCard(g: GameMeta): string {
   const modeTag = g.mode === 'tournament'
     ? `<span class="gc-tag tournament">🏆 ${t('hub.tournament')}</span>`
     : `<span class="gc-tag free">${t('arc.free')}</span>`;
+  // A tournament game with a live window gets the pulsing "Live" badge on its art.
+  const tour = g.mode === 'tournament' ? getTournamentForGame(g.id) : undefined;
+  const liveBadge = tour && tournamentState(tour) === 'live'
+    ? `<span class="gc-live live-dot">● ${t('hub.live')}</span>` : '';
   const thumb = `
       <div class="gc-thumb${g.cover ? ' gc-thumb-cover' : ''}">
         ${g.cover
           ? `<img class="gc-cover" src="${g.cover}" alt="" loading="lazy" />`
           : `<span class="gc-glyph">${g.icon}</span>`}
         ${modeTag}
+        ${liveBadge}
         <button class="gc-info" data-howto="${g.id}" aria-label="${t('hub.howToPlay')}">?</button>
         ${isLocked(g) ? `<span class="gc-lock">🔒 ${t('hub.lockLevel')} ${g.minLevel}</span>` : ''}
       </div>`;
@@ -728,9 +595,7 @@ function fmt(end: number): string {
 function tickCountdowns(): void {
   const tour = featuredTournament();
   const fc = document.querySelector('#fcCountdown');
-  // Hero countdown: generic featured tournament, else the runner daily fallback.
-  const fcEnds = tour ? tour.endsAt : runnerFeatured?.tour.endsAt;
-  if (fc && fcEnds != null) fc.innerHTML = `<span class="cd-label">${t('hub.endsIn')}</span> <span class="cd-val">${fmt(fcEnds)}</span>`;
+  if (fc && tour) fc.innerHTML = `<span class="cd-label">${t('hub.endsIn')}</span> <span class="cd-val">${fmt(tour.endsAt)}</span>`;
   document.querySelectorAll<HTMLElement>('.tc-count, .dc-count').forEach((el) => {
     const end = Number(el.dataset.ends);
     el.innerHTML = `<span class="cd-label">${t('hub.endsIn')}</span> <strong>${fmt(end)}</strong>`;
@@ -746,8 +611,7 @@ function renderAll(): void {
   renderPromo();
   renderMyStats();
   renderFeatured();
-  renderStats();
-  renderTournaments();
+  wireEntryCtas();
   renderGames();
   renderDraws();
   renderWinners();
@@ -757,8 +621,6 @@ function renderAll(): void {
   if (search) search.placeholder = t('hub.searchGames');
   tickCountdowns();
   void refreshFeatured(); // swap in real scores once they load
-  void refreshRunnerFeatured(); // hydrate the Ethiorunner-only hero from the server
-  void renderDashboard();
 }
 
 // Load authoritative tournament config + the player's entries (online), then
@@ -766,9 +628,8 @@ function renderAll(): void {
 async function refreshData(): Promise<void> {
   await Promise.all([loadTournaments(), loadMyEntries()]);
   renderFeatured();
-  renderTournaments();
-  void refreshRunnerFeatured();
-  void renderDashboard();
+  wireEntryCtas();
+  renderGames(); // live badge reflects the loaded tournament
 }
 
 function syncLangButtons(): void {
@@ -863,7 +724,7 @@ function mountSignInGate(): void {
 }
 
 // Nav active-state on scroll (top nav + mobile bottom nav).
-const sections = ['statsStrip', 'games', 'tournaments', 'draws', 'winners', 'dashboard'];
+const sections = ['games', 'draws', 'winners', 'dashboard'];
 function syncNavActive(): void {
   let current = sections[0];
   for (const id of sections) {
@@ -987,7 +848,6 @@ if (localStorage.getItem('innoarcade.reset.v4') !== '1') {
 
 document.documentElement.lang = getLang();
 syncLangButtons();
-injectDashboardStyles();
 renderAll();
 // Keep the top balances strip live as coins/points/gold change.
 onWalletChange(renderMyStats);
@@ -1022,7 +882,5 @@ hydratePoints();
 // Re-pull wallet/entries/standing when the player signs in or out.
 onAuthChange(() => { void refreshData(); hydratePoints(); });
 setInterval(tickCountdowns, 1000);
-// Refresh the live top-score on tournament cards every 20s (display-only).
-setInterval(() => { void refreshTourTops(); }, 20_000);
 setupPromo();
 restartPromoTimer();

@@ -14,10 +14,30 @@
 // `leaderboard` view); this module owns the tournament objects, entries and
 // prize economy. Player names come from the auth profile (shown on the board).
 
-import { getGame, tournamentGames, type GameMeta } from './catalog';
+import { getGame, tournamentGames, type GameMeta, type TournamentCadence } from './catalog';
 import { isConfigured, supabase } from './supabase';
-import { config, defaultEntryFee, economyNeedsAuth } from './config';
+import { config, economyNeedsAuth } from './config';
 import { SignInRequiredError } from './payments';
+
+// Per-cadence economy (doc §4.1): entry fee, attempts banked per entry, and the
+// level-tier funnel (§3.2). The single source of truth for the unified system.
+export const REQUIRED_LEVEL: Record<TournamentCadence, number> = { daily: 3, weekly: 5, monthly: 10 };
+const CADENCE_FEE: Record<TournamentCadence, number> = { daily: 10, weekly: 30, monthly: 75 };
+const CADENCE_ATTEMPTS: Record<TournamentCadence, number> = { daily: 3, weekly: 5, monthly: 10 };
+const CADENCE_TITLE: Record<TournamentCadence, { en: string; am: string }> = {
+  daily: { en: 'Daily Runner', am: 'ዕለታዊ ሩጫ' },
+  weekly: { en: 'Weekly Cup', am: 'ሳምንታዊ ዋንጫ' },
+  monthly: { en: 'Monthly Championship', am: 'ወርሃዊ ሻምፒዮና' },
+};
+
+export class LevelTooLowError extends Error {
+  constructor(public requiredLevel: number) { super('level too low'); this.name = 'LevelTooLowError'; }
+}
+
+/** Parse the cadence out of a tournament id (`game-daily-2026-…` / `game-weekly`). */
+export function cadenceOf(id: string): TournamentCadence {
+  return /-daily(-|$)/.test(id) ? 'daily' : /-weekly(-|$)/.test(id) ? 'weekly' : 'monthly';
+}
 
 /** free = open entry, prizes funded by the house; paid = coin entry fee, pooled. */
 export type TournamentType = 'free' | 'paid';
@@ -42,6 +62,10 @@ export interface Tournament {
   prizeTiers: PrizeTier[];
   /** Headline prize coins (computed pool) — kept for back-compat with the hub. */
   prizeCoins: number;
+  /** Cadence + attempts banked per paid entry + required player level (funnel). */
+  cadence: TournamentCadence;
+  attempts: number;
+  requiredLevel: number;
   /** Epoch ms. */
   startsAt: number;
   endsAt: number;
@@ -84,29 +108,30 @@ function endOfWeek(now = Date.now()): number {
   const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - day);
   return monday.getTime() + 7 * 864e5;
 }
-
-// A derived event's shipped defaults: the monthly is a paid, pooled championship;
-// the weekly is a free, house-sponsored cup. The server `tournaments` row (when
-// present) overrides these entirely.
-function deriveDefaults(id: string): Pick<Tournament,
-  'type' | 'entryFeeCoins' | 'prizeModel' | 'sponsoredPrize' | 'prizeTiers' | 'titleEn' | 'titleAm'> {
-  if (id.endsWith('monthly')) {
-    return {
-      titleEn: 'Monthly Championship', titleAm: 'ወርሃዊ ሻምፒዮና',
-      type: 'paid', entryFeeCoins: defaultEntryFee(), prizeModel: 'pool',
-      sponsoredPrize: 0, prizeTiers: DEFAULT_TIERS,
-    };
-  }
-  return {
-    titleEn: 'Weekly Cup', titleAm: 'ሳምንታዊ ዋንጫ',
-    type: 'free', entryFeeCoins: 0, prizeModel: 'sponsored',
-    sponsoredPrize: 1000, prizeTiers: DEFAULT_TIERS,
-  };
+function startOfDay(now = Date.now()): number {
+  const d = new Date(now);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+}
+// [start, end] epoch window for a cadence.
+function windowFor(cad: TournamentCadence, now = Date.now()): [number, number] {
+  if (cad === 'daily') return [startOfDay(now), startOfDay(now) + 864e5];
+  if (cad === 'weekly') return [endOfWeek(now) - 7 * 864e5, endOfWeek(now)];
+  return [startOfMonth(now), endOfMonth(now)];
 }
 
-function buildTournament(id: string, gameId: string, startsAt: number, endsAt: number): Tournament {
-  const d = deriveDefaults(id);
-  const t: Tournament = { id, gameId, ...d, prizeCoins: 0, startsAt, endsAt };
+// Shipped defaults for a derived (offline) tournament at a given cadence. A real
+// server `tournaments` row overrides these entirely (loadTournaments).
+function buildTournament(gameId: string, cadence: TournamentCadence, now = Date.now()): Tournament {
+  const [startsAt, endsAt] = windowFor(cadence, now);
+  const title = CADENCE_TITLE[cadence];
+  const t: Tournament = {
+    id: `${gameId}-${cadence}`, gameId,
+    titleEn: title.en, titleAm: title.am,
+    type: 'paid', entryFeeCoins: CADENCE_FEE[cadence], prizeModel: 'pool',
+    sponsoredPrize: 0, prizeTiers: DEFAULT_TIERS, prizeCoins: 0,
+    cadence, attempts: CADENCE_ATTEMPTS[cadence], requiredLevel: REQUIRED_LEVEL[cadence],
+    startsAt, endsAt,
+  };
   t.prizeCoins = prizePool(t);
   return t;
 }
@@ -118,18 +143,11 @@ let remoteCache: Tournament[] | null = null;
 const stateCache: Record<string, TournamentState> = {};
 // Real prize-pool inputs per tournament id, from the public `tournament_pools`
 // aggregate view (entrant count + total fees collected). Used by prizePool().
-const poolCache: Record<string, { entrants: number; fees: number }> = {};
+const poolCache: Record<string, { entrants: number; fees: number; pool: number }> = {};
 
 function derivedTournaments(now: number): Tournament[] {
-  const list: Tournament[] = [];
-  // Ethiorunner (temple-dash) runs on the dedicated runner tournament system
-  // (platform/runner.ts) — a single daily event — so it must NOT also derive a
-  // generic monthly/weekly card here, or the hub would show duplicates.
-  for (const game of tournamentGames().filter((g) => g.id !== 'temple-dash')) {
-    list.push(buildTournament(`${game.id}-monthly`, game.id, startOfMonth(now), endOfMonth(now)));
-    list.push(buildTournament(`${game.id}-weekly`, game.id, endOfWeek(now) - 7 * 864e5, endOfWeek(now)));
-  }
-  return list;
+  // Unified model: ONE tournament per game, at the game's assigned cadence.
+  return tournamentGames().map((g) => buildTournament(g.id, g.tournament ?? 'monthly', now));
 }
 
 export function activeTournaments(now = Date.now()): Tournament[] {
@@ -144,15 +162,18 @@ export async function loadTournaments(): Promise<Tournament[]> {
     const sb = supabase();
     const { data, error } = await sb
       .from('tournaments')
-      .select('id, game_id, title_en, title_am, type, entry_fee_coins, prize_model, sponsored_prize, prize_tiers, starts_at, ends_at, state')
+      .select('id, game_id, title_en, title_am, type, entry_fee_coins, attempts, prize_model, sponsored_prize, prize_tiers, starts_at, ends_at, state')
       .order('starts_at', { ascending: false });
     if (error) throw error;
-    const rows = data ?? [];
+    // Only surface tournaments whose game is in the live catalog, and only the
+    // latest live window per game (settled history stays in the table).
+    const rows = (data ?? []).filter((r) => getGame(String(r.game_id)) && r.state === 'live');
     // An empty/absent tournaments table means the operator hasn't created any —
     // keep using the calendar-derived defaults (null) rather than blanking the
     // list, otherwise getTournament() can't resolve the visible cards.
     remoteCache = rows.length ? rows.map((r) => {
       stateCache[String(r.id)] = r.state as TournamentState;
+      const cadence = cadenceOf(String(r.id));
       const t: Tournament = {
         id: String(r.id), gameId: String(r.game_id),
         titleEn: String(r.title_en), titleAm: String(r.title_am),
@@ -162,6 +183,9 @@ export async function loadTournaments(): Promise<Tournament[]> {
         sponsoredPrize: Number(r.sponsored_prize ?? 0),
         prizeTiers: (r.prize_tiers as PrizeTier[]) ?? DEFAULT_TIERS,
         prizeCoins: 0,
+        cadence,
+        attempts: Number(r.attempts ?? CADENCE_ATTEMPTS[cadence]),
+        requiredLevel: REQUIRED_LEVEL[cadence],
         startsAt: new Date(r.starts_at as string).getTime(),
         endsAt: new Date(r.ends_at as string).getTime(),
       };
@@ -182,11 +206,11 @@ async function loadPools(): Promise<void> {
   try {
     const { data } = await supabase()
       .from('tournament_pools')
-      .select('tournament_id, entrants, fees_total');
+      .select('tournament_id, entrants, fees_total, pool');
     for (const k of Object.keys(poolCache)) delete poolCache[k];
     (data ?? []).forEach((r) => {
       poolCache[String(r.tournament_id)] = {
-        entrants: Number(r.entrants ?? 0), fees: Number(r.fees_total ?? 0),
+        entrants: Number(r.entrants ?? 0), fees: Number(r.fees_total ?? 0), pool: Number(r.pool ?? 0),
       };
     });
   } catch { /* view may be absent before the migration — pools read as 0 */ }
@@ -224,9 +248,23 @@ export function countdown(endsAt: number, now = Date.now()): Countdown {
 
 export function prizePool(t: Tournament): number {
   if (t.prizeModel === 'sponsored') return t.sponsoredPrize;
-  const gross = poolCache[t.id]?.fees ?? 0;
+  // Pooled prize = the server view's 65%+top-up figure (matches settlement). Fall
+  // back to fees·(1−rake) only if the view hasn't loaded yet.
+  const cached = poolCache[t.id];
+  if (cached?.pool) return cached.pool;
+  const gross = cached?.fees ?? 0;
   const rake = config().houseRakePct / 100;
   return Math.round((gross * (1 - rake)) / 10) * 10;
+}
+
+/** Entrant count for a tournament (from the public pool view). */
+export function tournamentEntrants(t: Tournament): number {
+  return poolCache[t.id]?.entrants ?? 0;
+}
+
+/** The single live tournament for a game (unified: one per game). */
+export function getTournamentForGame(gameId: string, now = Date.now()): Tournament | undefined {
+  return activeTournaments(now).find((t) => t.gameId === gameId);
 }
 
 export interface PrizeSlot { rank: number; pct: number; coins: number; }
@@ -257,9 +295,17 @@ export function isPaid(t: Tournament): boolean {
 // A synchronous "am I in?" set for instant card rendering; refreshed from the
 // server by loadMyEntries(). Empty until the player's entries load.
 const enteredCache = new Set<string>();
+// The player's attempt bank per tournament id (purchased/used/left).
+export interface MyEntry { purchased: number; used: number; left: number; }
+const entryCache: Record<string, MyEntry> = {};
 
 export function isEntered(tournamentId: string): boolean {
   return enteredCache.has(tournamentId);
+}
+
+/** The player's attempt bank for a tournament (sync; from loadMyEntries). */
+export function myEntry(tournamentId: string): MyEntry | undefined {
+  return entryCache[tournamentId];
 }
 
 export class InsufficientCoinsError extends Error {
@@ -267,29 +313,40 @@ export class InsufficientCoinsError extends Error {
 }
 
 // Register the player for a tournament via the enter-tournament Edge Function.
-// The server is authoritative over the fee debit and the entry row.
-export async function enterTournament(tournamentId: string): Promise<TournamentEntry> {
-  const t = getTournament(tournamentId);
-  if (!t) throw new Error('unknown tournament');
+// Pass a tournament id OR a bare game id — the server resolves the live window by
+// game and is authoritative over the fee debit, the level gate and the attempt
+// bank. Returns the granted attempts.
+export async function enterTournament(tournamentIdOrGameId: string): Promise<TournamentEntry & MyEntry> {
+  // Derive the game id (strip any cadence/date suffix) so the server resolves the
+  // current live window — robust against client/server id drift.
+  const gameId = tournamentIdOrGameId.replace(/-(daily|weekly|monthly)(-[0-9-]+)?$/, '');
+  const t = getTournamentForGame(gameId);
   // Paid entry is account-bound — never proceed signed out.
-  if (isPaid(t) && economyNeedsAuth()) throw new SignInRequiredError();
+  if (t && isPaid(t) && economyNeedsAuth()) throw new SignInRequiredError();
 
   const { data, error } = await supabase().functions.invoke('enter-tournament', {
-    body: { tournamentId },
+    body: { gameId },
   });
   if (error) {
-    // Surface the affordability case so the UI can prompt a top-up.
+    // Surface the affordability / level cases so the UI can prompt accordingly.
     const status = (error as { context?: { status?: number } }).context?.status;
     if (status === 402) throw new InsufficientCoinsError();
     if (status === 401) throw new SignInRequiredError();
+    if (status === 403) throw new LevelTooLowError(t?.requiredLevel ?? REQUIRED_LEVEL[cadenceOf(gameId + '-monthly')]);
     throw error;
   }
-  enteredCache.add(tournamentId);
-  return data as TournamentEntry;
+  const d = data as { tournamentId: string; feePaid: number; prizeWon: number; enteredAt: number;
+    attemptsPurchased: number; attemptsUsed: number; attemptsLeft: number };
+  enteredCache.add(d.tournamentId);
+  entryCache[d.tournamentId] = { purchased: d.attemptsPurchased, used: d.attemptsUsed, left: d.attemptsLeft };
+  return {
+    tournamentId: d.tournamentId, feePaid: d.feePaid, prizeWon: d.prizeWon, enteredAt: d.enteredAt,
+    purchased: d.attemptsPurchased, used: d.attemptsUsed, left: d.attemptsLeft,
+  };
 }
 
-// The player's entries (server `tournament_entries`); refreshes the sync cache
-// used by isEntered().
+// The player's entries (server `tournament_entries`); refreshes the sync caches
+// used by isEntered() + myEntry().
 export async function myEntries(): Promise<TournamentEntry[]> {
   if (!isConfigured()) return [];
   try {
@@ -298,19 +355,30 @@ export async function myEntries(): Promise<TournamentEntry[]> {
     if (!me) { enteredCache.clear(); return []; }
     const { data } = await sb
       .from('tournament_entries')
-      .select('tournament_id, fee_paid, prize_won, entered_at')
+      .select('tournament_id, fee_paid, prize_won, entered_at, attempts_purchased, attempts_used')
       .eq('user_id', me);
     enteredCache.clear();
+    for (const k of Object.keys(entryCache)) delete entryCache[k];
     return (data ?? []).map((r) => {
-      enteredCache.add(String(r.tournament_id));
+      const id = String(r.tournament_id);
+      enteredCache.add(id);
+      const purchased = Number(r.attempts_purchased ?? 0), used = Number(r.attempts_used ?? 0);
+      entryCache[id] = { purchased, used, left: Math.max(0, purchased - used) };
       return {
-        tournamentId: String(r.tournament_id),
+        tournamentId: id,
         feePaid: Number(r.fee_paid),
         prizeWon: Number(r.prize_won),
         enteredAt: new Date(r.entered_at as string).getTime(),
       };
     });
   } catch { return []; }
+}
+
+/** Update the local attempt cache after a ranked run consumes one (from finish). */
+export function noteAttemptsLeft(tournamentId: string, left: number): void {
+  const cur = entryCache[tournamentId];
+  if (cur) { cur.left = left; cur.used = cur.purchased - left; }
+  else entryCache[tournamentId] = { purchased: left, used: 0, left };
 }
 
 /** Convenience: pre-warm the entered-set so cards render correctly. */

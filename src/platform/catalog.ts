@@ -5,6 +5,8 @@
 // game is still freely playable, it just also has a competitive leaderboard.
 
 export type GameMode = 'free' | 'tournament';
+/** Tournament cadence — each tournament game runs exactly one of these. */
+export type TournamentCadence = 'daily' | 'weekly' | 'monthly';
 
 export interface GameMeta {
   id: string;
@@ -15,6 +17,8 @@ export interface GameMeta {
   genreEn: string;
   genreAm: string;
   mode: GameMode;
+  /** For tournament games: which cadence this game competes on (one each). */
+  tournament?: TournamentCadence;
   /** Emoji used as a lightweight thumbnail/glyph until art is dropped in. */
   icon: string;
   /** Primary accent colour (hex) — themes the card and the in-game UI. */
@@ -78,7 +82,7 @@ const ALL_GAMES: GameMeta[] = [
     nameEn: 'Ethiorunner',
     nameAm: 'ኢትዮሯጭ',
     genreEn: 'Runner · Tournament', genreAm: 'ሩጫ · ውድድር',
-    mode: 'tournament', icon: '🏃', accent: '#e2563a', thumb: ['#7a2d1a', '#2a0f08'],
+    mode: 'tournament', tournament: 'daily', icon: '🏃', accent: '#e2563a', thumb: ['#7a2d1a', '#2a0f08'],
     scoreEn: 'Score', scoreAm: 'ነጥብ',
   },
   {
@@ -117,8 +121,8 @@ const ALL_GAMES: GameMeta[] = [
     id: 'fruit-slice',
     route: 'games/fruit-slice/',
     nameEn: 'Fruit Slice', nameAm: 'ፍሩት ስላይስ',
-    genreEn: 'Arcade', genreAm: 'አርኬድ',
-    mode: 'free', icon: '🍉', accent: '#46c05a', thumb: ['#236f2c', '#0a2410'],
+    genreEn: 'Arcade · Tournament', genreAm: 'አርኬድ · ውድድር',
+    mode: 'tournament', tournament: 'monthly', icon: '🍉', accent: '#46c05a', thumb: ['#236f2c', '#0a2410'],
     scoreEn: 'Score', scoreAm: 'ነጥብ',
   },
   {
@@ -143,9 +147,9 @@ const ALL_GAMES: GameMeta[] = [
     id: 'memory-match',
     route: 'games/memory-match/',
     nameEn: 'Memory Match', nameAm: 'ማች ማስታወሻ',
-    genreEn: 'Puzzle · Casual', genreAm: 'እንቆቅልሽ · ቀላል',
-    mode: 'tournament', icon: '🧩', accent: '#ff6b9d', thumb: ['#8c2b5c', '#0b1521'],
-    scoreEn: 'Points', scoreAm: 'ነጥብ',
+    genreEn: 'Puzzle · Tournament', genreAm: 'እንቆቅልሽ · ውድድር',
+    mode: 'tournament', tournament: 'weekly', icon: '🧩', accent: '#ff6b9d', thumb: ['#8c2b5c', '#0b1521'],
+    scoreEn: 'Score', scoreAm: 'ነጥብ',
     play: { winPoints: 180, winRate: 50 },
   },
   {
@@ -261,7 +265,7 @@ const ALL_GAMES: GameMeta[] = [
 // above is fully built and stays in the file — re-enable one by adding its id here
 // (a one-line change). Right now we ship Ethiorunner (temple-dash) alone; the rest
 // are parked until we relist them.
-const ENABLED = new Set<string>(['temple-dash']);
+const ENABLED = new Set<string>(['temple-dash', 'memory-match', 'fruit-slice']);
 export const CATALOG: GameMeta[] = ALL_GAMES.filter((g) => ENABLED.has(g.id));
 
 // WebP cover art for the catalog cards (files live in /public). Attached to the

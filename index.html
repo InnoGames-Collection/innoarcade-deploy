@@ -13,10 +13,9 @@
         <span class="brand-name" data-i18n="app.title">GoPlay</span>
       </div>
       <nav class="topnav">
-        <a href="#statsStrip" class="nav-link active" data-i18n="hub.dashboard">Dashboard</a>
-        <a href="#games" class="nav-link" data-i18n="hub.available">Games</a>
-        <a href="#tournaments" class="nav-link" data-i18n="hub.tournaments">Tournaments</a>
+        <a href="#games" class="nav-link active" data-i18n="hub.available">Games</a>
         <a href="#draws" class="nav-link" data-i18n="hub.draws">Draws</a>
+        <a href="#winners" class="nav-link" data-i18n="hub.topPlayers">Top players</a>
       </nav>
       <div id="topBalances" class="top-balances"></div>
       <button id="settingsBtn" class="settings-btn" aria-label="Settings">
@@ -29,8 +28,6 @@
         <div class="promo-track" id="promoTrack"></div>
         <div class="promo-dots" id="promoDots"></div>
       </section>
-
-      <section id="statsStrip" class="stats-strip-section" aria-label="Platform stats"></section>
 
       <section id="games" class="games-section">
         <div class="games-head">
@@ -45,11 +42,6 @@
           </div>
         </div>
         <div id="gameGrid"></div>
-      </section>
-
-      <section id="tournaments" class="tournaments-section">
-        <h2 class="section-title" data-i18n="hub.tournaments">Tournaments</h2>
-        <div id="tournamentList" class="tournament-cards"></div>
       </section>
 
       <section id="draws" class="draws-section">
@@ -83,7 +75,7 @@
     </footer>
 
     <nav class="bottomnav" aria-label="Primary">
-      <a href="#statsStrip" class="bn-item active"><span class="bn-ico">🏠</span><span data-i18n="nav.home">Home</span></a>
+      <a href="#games" class="bn-item active"><span class="bn-ico">🏠</span><span data-i18n="nav.home">Home</span></a>
       <a href="#games" class="bn-item"><span class="bn-ico">🎮</span><span data-i18n="nav.games">Games</span></a>
       <a href="#draws" class="bn-item"><span class="bn-ico">🎁</span><span data-i18n="nav.draws">Draws</span></a>
       <a href="#winners" class="bn-item"><span class="bn-ico">🏆</span><span data-i18n="nav.winners">Winners</span></a>

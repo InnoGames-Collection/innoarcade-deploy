@@ -9,6 +9,9 @@ body {
   align-items: center;
   justify-content: center;
   height: 100dvh;
+  /* Breathing room so the board never touches the screen edges (incl. notches). */
+  padding: calc(10px + env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
@@ -17,8 +20,11 @@ body {
 
 #stage {
   position: relative;
-  height: min(100dvh, 150vw);
+  height: min(100dvh - 20px, 150vw);
+  max-height: 100%;
+  max-width: 100%;
   aspect-ratio: 2 / 3;
+  margin: 0 auto;
   background: radial-gradient(ellipse at center, #1a2a35 0%, #0a0f1a 100%);
   border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 150, 50, 0.15);

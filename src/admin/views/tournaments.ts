@@ -5,7 +5,7 @@
 import { getLang } from '../../i18n';
 import { CATALOG } from '../../platform/catalog';
 import {
-  newCustomTournamentId, type Tournament, type PrizeTier,
+  newCustomTournamentId, cadenceOf, type Tournament, type PrizeTier,
 } from '../../platform/tournaments';
 import { listTournaments, saveTournament, settleTournament, type AdminTournament } from '../../platform/admin';
 import { t, esc, num } from '../ui';
@@ -132,6 +132,9 @@ function openEditor(existing?: AdminTournament): void {
       sponsoredPrize: Number(q<HTMLInputElement>('#sp').value) || 0,
       prizeTiers: existing?.prizeTiers ?? DEFAULT_TIERS,
       prizeCoins: 0,
+      cadence: existing?.cadence ?? cadenceOf(existing?.id ?? gameId),
+      attempts: existing?.attempts ?? 1,
+      requiredLevel: existing?.requiredLevel ?? 1,
       startsAt: isNew ? new Date(q<HTMLInputElement>('#start').value).getTime() : existing!.startsAt,
       endsAt: isNew ? new Date(q<HTMLInputElement>('#end').value).getTime() : existing!.endsAt,
     };

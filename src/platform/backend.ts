@@ -22,6 +22,12 @@ export interface PlayResult {
   isRecord?: boolean;
   rank?: number;
   total?: number;
+  /** Tournament attempts remaining after this ranked run consumed one. */
+  attemptsLeft?: number;
+  /** Whether the run counted on the leaderboard (false = free/practice). */
+  ranked?: boolean;
+  /** XP awarded this round (0 for ranked tournament play). */
+  award?: number;
 }
 
 // Submit a finished round to the server (the ONLY economy authority). The server

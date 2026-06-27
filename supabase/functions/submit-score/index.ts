@@ -133,8 +133,9 @@ Deno.serve(async (req: Request) => {
     return json({ error: 'bad json' }, 400);
   }
   const token = String(body.token ?? '');
-  // Accept either the new {gameId} contract or the legacy {tournamentId}.
-  const gameId = String(body.gameId ?? String(body.tournamentId ?? '').replace(/-(monthly|weekly)$/, ''));
+  // Accept either the new {gameId} contract or the legacy {tournamentId}. Strip
+  // the cadence suffix (bare or dated, e.g. -monthly, -daily-2026-06-27) to recover the game id.
+  const gameId = String(body.gameId ?? String(body.tournamentId ?? '').replace(/-(daily|weekly|monthly)(-[0-9-]+)?$/, ''));
   const score = Number(body.score);
   // New clients send {win}; older deployed clients sent {points>0 on a win}.
   // Accept either so a function deploy can't strand the live frontend at 0 pts.
@@ -149,7 +150,6 @@ Deno.serve(async (req: Request) => {
   }
   const ceiling = MAX_SCORE[gameId] ?? MAX_SCORE._default;
   if (score > ceiling) return json({ error: 'score out of range' }, 422);
-  const tournamentId = `${gameId}-monthly`;
 
   // Service-role client for the privileged read/write.
   const admin = createClient(url, serviceKey);
@@ -193,10 +193,24 @@ Deno.serve(async (req: Request) => {
     if (!ok) return json({ error: 'invalid round token' }, 403);
   }
 
-  // Tournament gate: if this id is a configured tournament, it must be live, and
-  // a PAID tournament only counts scores from players who entered (paid the fee).
-  // Unknown ids (e.g. the derived/local tournaments) skip the gate so the
-  // existing flow keeps working before any rows exist in the tournaments table.
+  // Resolve the game's single LIVE tournament window server-side (no client-built
+  // id). If none is live, treat this as a practice run: award capped XP, unranked.
+  const { data: tid } = await admin.rpc('active_game_tournament', { p_game: gameId });
+  const tournamentId = String(tid ?? '');
+  if (!tournamentId) {
+    let award = 0;
+    try {
+      const { data: rewardable } = await admin.rpc('claim_xp_session', { p_user: user.id, p_game: gameId, p_cap: 3 });
+      if (rewardable) award = Math.round(XP_BASE * difficulty);
+    } catch { /* default no award */ }
+    await applyXpAndRead(award);
+    return json({ points, lifetime, xp: points, award, ranked: false, attemptsLeft: 0 });
+  }
+
+  // Tournament gate: the window must be live, and a PAID tournament consumes one
+  // banked attempt per ranked run (pay-once → N attempts). The consume is atomic
+  // (optimistic guard on attempts_used) so concurrent runs can't overspend.
+  let attemptsLeft = 0;
   const { data: tour } = await admin
     .from('tournaments')
     .select('type, starts_at, ends_at, state')
@@ -209,9 +223,18 @@ Deno.serve(async (req: Request) => {
     if (!live) return json({ error: 'tournament not live' }, 409);
     if (tour.type === 'paid') {
       const { data: entry } = await admin
-        .from('tournament_entries').select('user_id')
+        .from('tournament_entries').select('attempts_purchased, attempts_used')
         .eq('user_id', user.id).eq('tournament_id', tournamentId).maybeSingle();
       if (!entry) return json({ error: 'not entered' }, 402);
+      const purchased = Number(entry.attempts_purchased), used = Number(entry.attempts_used);
+      if (used >= purchased) return json({ error: 'no attempts left', attemptsLeft: 0 }, 402);
+      const { data: upd } = await admin
+        .from('tournament_entries')
+        .update({ attempts_used: used + 1 })
+        .eq('user_id', user.id).eq('tournament_id', tournamentId).eq('attempts_used', used)
+        .select('attempts_used');
+      if (!upd || upd.length === 0) return json({ error: 'no attempts left', attemptsLeft: 0 }, 402);
+      attemptsLeft = purchased - (used + 1);
     }
   }
 
@@ -256,5 +279,5 @@ Deno.serve(async (req: Request) => {
   const total = board?.length ?? 1;
   const rank = board?.find((r: { user_id: string; rank: number }) => r.user_id === user.id)?.rank ?? total;
 
-  return json({ best, isRecord, rank, total, points, lifetime, xp: points });
+  return json({ best, isRecord, rank, total, points, lifetime, xp: points, attemptsLeft, ranked: true, award: 0 });
 });

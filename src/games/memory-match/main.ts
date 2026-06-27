@@ -11,6 +11,7 @@ import './style.css';
 import { applyTranslations, getLang, setLang, t, type Lang } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { createHost } from '../../platform/gameHost';
+import { loadTournaments, loadMyEntries } from '../../platform/tournaments';
 
 const host = createHost('memory-match');
 
@@ -26,29 +27,49 @@ function play(type: 'flip' | 'match' | 'nomatch' | 'win' | 'lose' | 'click'): vo
   }
 }
 
-const winRate = host.winRate;
-const maxMoves = winRate >= 70 ? 18 : winRate <= 30 ? 10 : 14;
+const ROUND_SECONDS = 120; // 2-minute bounded round
 const emojis = ['🍎', '🍊', '🍋', '🍇', '🍓', '🍑'];
 
 let cards: string[] = [];
 let flipped: HTMLElement[] = [];
 let moves = 0;
 let pairs = 0;
-let canFlip = true;
-let peekUsed = false;
-let isPeeking = false;
-let roundOver = false;
+let canFlip = false;
+let roundOver = true;     // idle until the player presses Play
+let playing = false;
+let rankedThisRun = false;
+let secondsLeft = ROUND_SECONDS;
+let timerId = 0;
 
 const grid = $('#mm-grid');
+const timeEl = $('#mm-time');
 const movesEl = $('#mm-moves');
 const pairsEl = $('#mm-pairs');
+const scoreEl = $('#mm-score');
 const message = $('#mm-message');
 const restartBtn = $('#mm-restart-btn');
-const peekBtn = $('#mm-peek-btn') as HTMLButtonElement;
+const playBtn = $('#mm-play-btn') as HTMLButtonElement;
 
 function setHUD(): void {
   $('#mm-hud-cost').textContent = host.costCoins > 0 ? `${host.costCoins} 🪙` : t('mm.free');
-  $('#mm-hud-win').textContent = `+${host.winPoints} ${t('mm.pts')}`;
+  $('#mm-hud-win').textContent = String(host.attemptsLeft);
+}
+
+// Score (doc-style normalization input): rewards pairs found, speed (time left)
+// and efficiency (fewer moves). No win/lose — the score itself is the reward.
+function liveScore(): number {
+  const used = ROUND_SECONDS - secondsLeft;
+  return Math.max(0, pairs * 100 + Math.max(0, ROUND_SECONDS - used) * 2 - moves * 5);
+}
+function fmtTime(s: number): string {
+  const m = Math.floor(s / 60), ss = s % 60;
+  return `${m}:${ss.toString().padStart(2, '0')}`;
+}
+function refreshStats(): void {
+  timeEl.textContent = fmtTime(Math.max(0, secondsLeft));
+  movesEl.textContent = String(moves);
+  pairsEl.textContent = `${pairs}/6`;
+  scoreEl.textContent = String(liveScore());
 }
 
 function shuffle<T>(a: T[]): T[] {
@@ -59,24 +80,12 @@ function shuffle<T>(a: T[]): T[] {
   return a;
 }
 
-function initGame(): void {
+function buildBoard(): void {
   cards = shuffle([...emojis, ...emojis]);
   flipped = [];
   moves = 0;
   pairs = 0;
-  canFlip = true;
-  roundOver = false;
-  movesEl.textContent = '0/' + maxMoves;
-  pairsEl.textContent = '0/6';
-  message.textContent = t('mm.findPairs').replace('{n}', String(maxMoves));
-  message.style.color = '';
   grid.innerHTML = '';
-
-  peekUsed = false;
-  isPeeking = false;
-  peekBtn.disabled = false;
-  peekBtn.textContent = 'PEEK (1)';
-
   cards.forEach((emoji, i) => {
     const card = document.createElement('div');
     card.className = 'mm-card';
@@ -86,29 +95,68 @@ function initGame(): void {
     card.addEventListener('click', () => flipCard(card));
     grid.appendChild(card);
   });
+  refreshStats();
 }
 
-function endRound(isWin: boolean): void {
+// Start a paid round: consume a banked attempt or buy the next block (pay-once →
+// N attempts); if refused, play a free practice round. Each Play/Replay = a round.
+async function startPlay(): Promise<void> {
+  if (playing) return;
+  const res = await host.begin();
+  rankedThisRun = res.ok;
+  if (!res.ok) {
+    if (res.reason === 'coins') message.textContent = t('mm.needCoins');
+    else if (res.reason === 'level') message.textContent = t('mm.reachLevel').replace('{n}', String(host.requiredLevel));
+    else if (res.reason === 'auth') message.textContent = t('td.signInToRank');
+  } else {
+    message.textContent = '';
+  }
+  message.style.color = '';
+  buildBoard();
+  playing = true;
+  roundOver = false;
+  canFlip = true;
+  secondsLeft = ROUND_SECONDS;
+  refreshStats();
+  setHUD();
+  clearInterval(timerId);
+  timerId = window.setInterval(tick, 1000);
+}
+
+function tick(): void {
+  secondsLeft -= 1;
+  refreshStats();
+  if (secondsLeft <= 0) endRound('time');
+}
+
+function endRound(why: 'time' | 'cleared'): void {
   if (roundOver) return;
   roundOver = true;
-  void host.finish(isWin ? host.winPoints : 0, isWin);
-  // Best (lowest moves is "better" here, but the platform best tracks score) and
-  // the in-game coin balance both update through the host; reflect the latter.
-  $('#mm-hud-win').textContent = `+${host.winPoints} ${t('mm.pts')}`;
+  playing = false;
+  canFlip = false;
+  clearInterval(timerId);
+  const finalScore = liveScore();
+  const durationMs = (ROUND_SECONDS - Math.max(0, secondsLeft)) * 1000;
+  message.textContent = (why === 'cleared' ? t('mm.cleared') : t('mm.timeUp')).replace('{n}', String(finalScore));
+  message.style.color = '#ffd700';
+  void host.finish(finalScore, false, durationMs, { ranked: rankedThisRun }).then((r) => {
+    setHUD();
+    if (rankedThisRun && r.rank) message.textContent += ` · #${r.rank}/${r.total}`;
+  });
 }
 
 function flipCard(card: HTMLElement): void {
-  if (!canFlip || isPeeking || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+  if (!playing || !canFlip || card.classList.contains('flipped') || card.classList.contains('matched')) return;
   play('flip');
   card.classList.add('flipped');
   card.textContent = card.dataset.e!;
   flipped.push(card);
   if (flipped.length === 2) {
     moves++;
-    movesEl.textContent = moves + '/' + maxMoves;
     canFlip = false;
     checkMatch();
   }
+  refreshStats();
 }
 
 function checkMatch(): void {
@@ -117,23 +165,11 @@ function checkMatch(): void {
     c1.classList.add('matched');
     c2.classList.add('matched');
     pairs++;
-    pairsEl.textContent = `${pairs}/6`;
     flipped = [];
     canFlip = true;
     play('match');
-    if (pairs === 6) {
-      const stars = moves <= 9 ? 3 : moves <= 13 ? 2 : 1;
-      message.textContent = `🎉 ${t('mm.perfect')} ${'⭐'.repeat(stars)} (${moves})`;
-      message.style.color = '#ffd700';
-      play('win');
-      endRound(true);
-    } else if (moves >= maxMoves) {
-      message.textContent = t('mm.outOfMoves').replace('{n}', String(maxMoves));
-      message.style.color = '#ff4444';
-      canFlip = false;
-      play('lose');
-      endRound(false);
-    }
+    refreshStats();
+    if (pairs === 6) { play('win'); endRound('cleared'); }
   } else {
     play('nomatch');
     setTimeout(() => {
@@ -142,50 +178,13 @@ function checkMatch(): void {
       c1.textContent = '❓';
       c2.textContent = '❓';
       flipped = [];
-      if (moves >= maxMoves && pairs < 6) {
-        message.textContent = t('mm.outOfMoves').replace('{n}', String(maxMoves));
-        message.style.color = '#ff4444';
-        canFlip = false;
-        play('lose');
-        endRound(false);
-      } else {
-        canFlip = true;
-      }
+      if (!roundOver) canFlip = true;
     }, 900);
   }
 }
 
-function triggerPeek(): void {
-  if (peekUsed || isPeeking) return;
-  peekUsed = true;
-  isPeeking = true;
-  peekBtn.disabled = true;
-  peekBtn.textContent = 'PEEK (0)';
-  play('click');
-  play('flip');
-  const allCards = Array.from(document.querySelectorAll<HTMLElement>('.mm-card'));
-  allCards.forEach((card) => {
-    if (!card.classList.contains('matched') && !card.classList.contains('flipped')) {
-      card.textContent = card.dataset.e!;
-      card.classList.add('flipped');
-    }
-  });
-  setTimeout(() => {
-    allCards.forEach((card) => {
-      if (!card.classList.contains('matched') && !flipped.includes(card)) {
-        card.textContent = '❓';
-        card.classList.remove('flipped');
-      }
-    });
-    isPeeking = false;
-  }, 1200);
-}
-
-peekBtn.addEventListener('click', triggerPeek);
-restartBtn.addEventListener('click', () => {
-  play('click');
-  initGame();
-});
+playBtn.addEventListener('click', () => void startPlay());
+restartBtn.addEventListener('click', () => { play('click'); void startPlay(); });
 
 // --- Language switch --------------------------------------------------------
 const langEn = $('#langEn');
@@ -200,9 +199,7 @@ function pick(lang: Lang): void {
   setLang(lang);
   applyTranslations();
   syncLangButtons();
-  if (!roundOver && pairs === 0 && moves === 0) {
-    message.textContent = t('mm.findPairs').replace('{n}', String(maxMoves));
-  }
+  if (!playing && roundOver) message.textContent = t('mm.tapPlay');
 }
 langEn.addEventListener('click', () => pick('en'));
 langAm.addEventListener('click', () => pick('am'));
@@ -211,5 +208,9 @@ document.documentElement.lang = getLang();
 applyTranslations();
 syncLangButtons();
 setHUD();
-initGame();
+buildBoard();
+message.textContent = t('mm.tapPlay');
+
+// Hydrate the live tournament + attempt bank so cost/attempts show before Play.
+void Promise.all([loadTournaments(), loadMyEntries()]).then(() => setHUD());
 
