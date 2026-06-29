@@ -10,13 +10,12 @@ import { SettingsPanel } from '../../ui/settingsPanel';
 import { registerPwa } from '../../engine/pwa';
 import { fetchSkins, setSkinRemote, leaderboardRemote, playerStandingRemote } from '../../platform/backend';
 import { GameHost } from '../../platform/gameHost';
+import { openTournamentEntryForGame } from '../../hub/tournamentEntry';
 import {
   getTournamentForGame, loadTournaments, loadMyEntries, myEntry,
-  enterTournament, InsufficientCoinsError,
   type Tournament, type LeaderEntry,
 } from '../../platform/tournaments';
 import { balance } from '../../platform/wallet';
-import { SignInRequiredError } from '../../platform/payments';
 import { isConfigured } from '../../platform/supabase';
 import { currentUser } from '../../platform/auth';
 import { sfx } from '../../engine/audio';
@@ -252,7 +251,7 @@ function run(assets: AssetStore): void {
     const left = entry?.left ?? 0;
     const title = getLang() === 'am' ? tourney.titleAm : tourney.titleEn;
     const enterBtn = left <= 0
-      ? `<button id="enterBtn" class="btn rt-enter">${t('td.enterFor')} · ${tourney.entryFeeCoins} 🪙</button>`
+      ? `<button id="enterBtn" class="btn rt-enter">${t('hub.enterTournament')} · ${tourney.entryFeeCoins} 🪙</button>`
       : '';
 
     $('#runnerTourney').innerHTML = `
@@ -274,18 +273,8 @@ function run(assets: AssetStore): void {
   }
 
   async function onEnter(): Promise<void> {
-    const b = document.querySelector<HTMLButtonElement>('#enterBtn');
-    if (b) b.disabled = true;
-    try {
-      const e = await enterTournament(GAME_ID);
-      showToast(`🎟️ ${t('td.attemptsLeft')}: ${e.left}`);
-      await refreshTourney();
-    } catch (e) {
-      if (e instanceof InsufficientCoinsError) showToast(`🪙 ${t('td.needCoins')}`);
-      else if (e instanceof SignInRequiredError) showToast(t('td.signInToRank'));
-      else showToast('✕');
-      if (b) b.disabled = false;
-    }
+    if (!tourney) return;
+    openTournamentEntryForGame(GAME_ID, () => { void refreshTourney(); });
   }
 
   async function submitRun(score: number, durationMs: number): Promise<void> {

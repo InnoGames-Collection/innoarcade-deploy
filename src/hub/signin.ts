@@ -5,8 +5,9 @@
 
 import {
   authAvailable, requestOtp, verifyOtp, currentUser, signOut, setDisplayName,
-  onAuthChange, devOtpEcho, fetchDevOtp, AuthTimeoutError, type AuthUser,
+  onAuthChange, devOtpEcho, fetchDevOtp, AuthTimeoutError, normalizePhone, type AuthUser,
 } from '../platform/auth';
+import { maskPhone } from '../platform/phone';
 import { getLang } from '../i18n';
 
 const STR = {
@@ -57,7 +58,7 @@ export function mountSignIn(): void {
 
 function render(): void {
   if (!slot) return;
-  const label = user ? `👤 ${esc(user.name || user.phone)}` : t('signIn');
+  const label = user ? `👤 ${esc(user.name || maskPhone(user.phone || phone))}` : t('signIn');
   slot.innerHTML = `<button class="auth-btn">${label}</button>`;
   slot.querySelector('button')!.addEventListener('click', user ? openProfile : openModal);
 }
@@ -154,9 +155,13 @@ function openCode(): void {
     go.disabled = true; go.textContent = t('verifying');
     try {
       user = await verifyOtp(phone, code);
+      const displayName = maskPhone(normalizePhone(phone));
+      if (!user.name || user.name === 'Player') {
+        await setDisplayName(displayName);
+        user = { ...user, name: displayName };
+      }
       if (iv) clearInterval(iv);
       m.remove(); render();
-      if (!user.name) openProfile();
     } catch (e) {
       m.querySelector('#err')!.textContent = t(e instanceof AuthTimeoutError ? 'errTimeout' : 'errVerify');
       go.disabled = false; go.textContent = t('verify');

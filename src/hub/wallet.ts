@@ -21,6 +21,8 @@ const STR = {
     failed: "Payment didn't complete. Try again.", close: 'Close', sandbox: 'Demo mode — no real charge',
     maintenance: 'The store is briefly unavailable.', total: 'You get', price: 'Price',
     signInTitle: 'Sign in to buy coins', signInBody: 'Coins are tied to your account, so you need to sign in before buying.', signIn: 'Sign in',
+    confirmPurchase: 'Confirm purchase', purchaseNotice: 'You will receive {n} coins for {etb} ETB.',
+    back: 'Back',
   },
   am: {
     buy: 'ሳንቲም ይግዙ', store: 'የሳንቲም መደብር', coins: 'ሳንቲሞች', bonus: 'ጉርሻ', popular: 'ምርጥ ዋጋ',
@@ -28,6 +30,8 @@ const STR = {
     failed: 'ክፍያው አልተጠናቀቀም። እንደገና ይሞክሩ።', close: 'ዝጋ', sandbox: 'የማሳያ ሁነታ — ክፍያ የለም',
     maintenance: 'መደብሩ ለጊዜው አይገኝም።', total: 'ያገኛሉ', price: 'ዋጋ',
     signInTitle: 'ሳንቲም ለመግዛት ይግቡ', signInBody: 'ሳንቲሞች ከመለያዎ ጋር የተሳሰሩ ናቸው፤ ከመግዛትዎ በፊት መግባት አለብዎት።', signIn: 'ግባ',
+    confirmPurchase: 'ግዢን አረጋግጥ', purchaseNotice: '{etb} ETB በመክፈል {n} ሳንቲም ያገኛሉ።',
+    back: 'ተመለስ',
   },
 };
 const t = (k: keyof typeof STR.en): string => (STR[getLang()] ?? STR.en)[k];
@@ -91,8 +95,20 @@ export function openStore(): void {
     m.querySelector('#signin')!.addEventListener('click', () => { m.remove(); openSignIn(); });
     return;
   }
+  renderStoreGrid(shell('', true));
+}
+
+/** Packages sorted for tournament entry — smallest pack that covers `minCoins` first. */
+export function coinPackagesForEntry(minCoins: number): CoinPackage[] {
+  const pkgs = [...coinPackages()].sort((a, b) => (a.coins + a.bonus) - (b.coins + b.bonus));
+  const cover = pkgs.find((p) => p.coins + p.bonus >= minCoins);
+  if (!cover) return pkgs;
+  return [cover, ...pkgs.filter((p) => p.id !== cover.id)];
+}
+
+function renderStoreGrid(m: HTMLElement): void {
   const pkgs = coinPackages();
-  const m = shell(`
+  m.querySelector('.wallet-card')!.innerHTML = `
     <h3>🪙 ${t('store')}</h3>
     <div class="store-grid">
       ${pkgs.map((p) => `
@@ -103,9 +119,70 @@ export function openStore(): void {
           ${p.bonus ? `<span class="pkg-bonus">+${p.bonus} ${t('bonus')}</span>` : '<span class="pkg-bonus"> </span>'}
           <span class="pkg-price">${p.priceEtb} ETB</span>
         </button>`).join('')}
-    </div>`, true);
+    </div>`;
   m.querySelectorAll<HTMLButtonElement>('.pkg').forEach((b) => {
     b.addEventListener('click', () => openCheckout(pkgs.find((p) => p.id === b.dataset.id)!));
+  });
+}
+
+/** Checkout embedded inside another modal (e.g. tournament entry). Keeps parent open on success. */
+export function openInlineCoinCheckout(
+  pkg: CoinPackage,
+  parentModal: HTMLElement,
+  onSuccess: () => void,
+): void {
+  injectStyles();
+  if (needsSignInToBuy()) { parentModal.remove(); openSignIn(); return; }
+  const card = parentModal.querySelector('.entry-card') ?? parentModal.querySelector('.wallet-card');
+  if (!card) return;
+  const total = pkg.coins + pkg.bonus;
+  const methods = paymentMethodsEnabled();
+  const avail = (['telebirr', 'topup'] as PayMethod[]).filter((mth) => methods[mth]);
+  let chosen: PayMethod = avail[0] ?? 'telebirr';
+  card.innerHTML = `
+    <h3>${t('confirmPurchase')}</h3>
+    <div class="checkout-sum">
+      <span class="cs-total">🪙 ${total.toLocaleString()} ${t('coins')}</span>
+      <span class="cs-price">${pkg.priceEtb} ETB</span>
+    </div>
+    <p class="wallet-hint">${t('purchaseNotice').replace('{n}', String(total)).replace('{etb}', String(pkg.priceEtb))}</p>
+    <div class="method-list">
+      ${avail.map((mth, i) => {
+        const lab = PAY_METHOD_LABEL[mth];
+        return `<button type="button" class="method${i === 0 ? ' sel' : ''}" data-m="${mth}">
+          <span class="m-icon">${lab.icon}</span><span>${getLang() === 'am' ? lab.am : lab.en}</span>
+        </button>`;
+      }).join('')}
+    </div>
+    <p class="wallet-err" id="err"></p>
+    <button class="wallet-primary" id="pay">${t('payNow')} ${pkg.priceEtb} ETB</button>
+    <button class="wallet-link" id="back">${t('back')}</button>
+    <p class="wallet-sandbox">${t('sandbox')}</p>`;
+  card.querySelectorAll<HTMLButtonElement>('.method').forEach((b) => {
+    b.addEventListener('click', () => {
+      card.querySelectorAll('.method').forEach((x) => x.classList.remove('sel'));
+      b.classList.add('sel');
+      chosen = b.dataset.m as PayMethod;
+    });
+  });
+  card.querySelector('#back')!.addEventListener('click', () => onSuccess());
+  const pay = card.querySelector<HTMLButtonElement>('#pay')!;
+  pay.addEventListener('click', async () => {
+    pay.disabled = true;
+    pay.textContent = t('processing');
+    try {
+      const { order } = await startCheckout(pkg.id, chosen);
+      if (order.status === 'paid') { await balance(); onSuccess(); return; }
+      if (order.redirectUrl) { window.location.href = order.redirectUrl; return; }
+      await pollOrder(order.id);
+      await balance();
+      onSuccess();
+    } catch (e) {
+      if (e instanceof SignInRequiredError) { parentModal.remove(); openSignIn(); return; }
+      card.querySelector('#err')!.textContent = t('failed');
+      pay.disabled = false;
+      pay.textContent = `${t('payNow')} ${pkg.priceEtb} ETB`;
+    }
   });
 }
 
@@ -115,11 +192,12 @@ function openCheckout(pkg: CoinPackage): void {
   let chosen: PayMethod = avail[0] ?? 'telebirr';
   const total = pkg.coins + pkg.bonus;
   const m = shell(`
-    <h3>${t('pay')}</h3>
+    <h3>${t('confirmPurchase')}</h3>
     <div class="checkout-sum">
       <span class="cs-total">🪙 ${total.toLocaleString()} ${t('coins')}</span>
       <span class="cs-price">${pkg.priceEtb} ETB</span>
     </div>
+    <p class="wallet-hint">${t('purchaseNotice').replace('{n}', String(total)).replace('{etb}', String(pkg.priceEtb))}</p>
     <div class="method-list">
       ${avail.map((mth, i) => {
         const lab = PAY_METHOD_LABEL[mth];
@@ -211,6 +289,7 @@ function injectStyles(): void {
     .wallet-primary { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:.8rem;
       font:inherit; font-weight:800; cursor:pointer; }
     .wallet-primary:disabled { opacity:.6; cursor:default; }
+    .wallet-link { background:none; border:none; color:var(--muted); font:inherit; font-weight:700; cursor:pointer; padding:.4rem; }
     .wallet-hint, .wallet-sandbox { font-size:.78rem; color:var(--muted); text-align:center; margin:0; }
     .wallet-err { font-size:.8rem; color:#d64545; min-height:1em; margin:0; }
     .wallet-success { text-align:center; display:flex; flex-direction:column; gap:10px; align-items:center; padding:8px; }

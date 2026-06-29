@@ -9,6 +9,7 @@
 // as an anonymous local player (see profile/tournaments fallbacks).
 
 import { isConfigured, supabase } from './supabase';
+import { maskPhone } from './phone';
 
 export interface AuthUser {
   id: string;
@@ -90,14 +91,24 @@ export async function verifyOtp(phone: string, code: string): Promise<AuthUser> 
   }));
   if (error) throw error;
   const u = data.user!;
-  return { id: u.id, phone: u.phone ?? '', name: (u.user_metadata?.name as string) ?? '' };
+  const ph = u.phone ?? normalizePhone(phone);
+  const displayName = maskPhone(ph);
+  return {
+    id: u.id,
+    phone: ph,
+    name: (u.user_metadata?.name as string) || displayName,
+  };
 }
 
 export async function currentUser(): Promise<AuthUser | null> {
   if (!isConfigured()) return null;
   const { data } = await supabase().auth.getUser();
   const u = data.user;
-  cachedUser = u ? { id: u.id, phone: u.phone ?? '', name: (u.user_metadata?.name as string) ?? '' } : null;
+  cachedUser = u ? {
+    id: u.id,
+    phone: u.phone ?? '',
+    name: (u.user_metadata?.name as string) || maskPhone(u.phone ?? ''),
+  } : null;
   return cachedUser;
 }
 
@@ -115,7 +126,11 @@ export function onAuthChange(fn: (user: AuthUser | null) => void): () => void {
   if (!isConfigured()) return () => {};
   const { data } = supabase().auth.onAuthStateChange((_e, session) => {
     const u = session?.user;
-    cachedUser = u ? { id: u.id, phone: u.phone ?? '', name: (u.user_metadata?.name as string) ?? '' } : null;
+    cachedUser = u ? {
+    id: u.id,
+    phone: u.phone ?? '',
+    name: (u.user_metadata?.name as string) || maskPhone(u.phone ?? ''),
+  } : null;
     fn(cachedUser);
   });
   return () => data.subscription.unsubscribe();

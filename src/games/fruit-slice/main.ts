@@ -1,5 +1,6 @@
 import '../../styles/base.css';
 import { GameHost } from '../../platform/gameHost';
+import { openTournamentEntryForGame } from '../../hub/tournamentEntry';
 import { loadTournaments, loadMyEntries } from '../../platform/tournaments';
 import './style.css';
 import { applyTranslations, getLang, setLang, type Lang } from '../../i18n';
@@ -19,8 +20,6 @@ ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
 const game = new FruitSlice();
 
-// Unified tournament economy (monthly cadence). A run is ranked when the player
-// has a banked attempt (pay-once → N attempts); otherwise it's a free XP run.
 const host = new GameHost('fruit-slice');
 let rankedThisRun = false;
 
@@ -72,7 +71,10 @@ game.onGameOver = (score, record) => {
 async function play(): Promise<void> {
   const res = await host.begin();
   if (!res.ok) {
-    if (res.reason === 'coins') toast(`🪙 Not enough coins for entry (${host.costCoins})`);
+    if (res.reason === 'coins') {
+      openTournamentEntryForGame('fruit-slice', () => { void play(); });
+      return;
+    }
     else if (res.reason === 'auth') toast('Sign in to compete');
     return;
   }

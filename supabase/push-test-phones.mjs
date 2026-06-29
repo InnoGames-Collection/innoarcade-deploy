@@ -67,6 +67,7 @@ async function main() {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
+      external_phone_enabled: true,
       sms_test_otp: smsTestOtp,
       sms_test_otp_valid_until: validUntil,
     }),

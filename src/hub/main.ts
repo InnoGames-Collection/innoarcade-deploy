@@ -3,7 +3,7 @@ import './hub.css';
 import { applyTranslations, getLang, setLang, t, type Lang } from '../i18n';
 import { openSignIn } from './signin';
 import { openAccount } from './account';
-import { mountWallet, openStore, needsSignInToBuy } from './wallet';
+import { mountWallet, openStore } from './wallet';
 import { onAuthChange, currentUser, signOut, authAvailable } from '../platform/auth';
 import { sfx } from '../engine/audio';
 import { mergedLeaderboard, fetchWallets, fetchUnlocks, unlockGameRemote, fetchActiveSeason, fetchSeasonLeaderboard, fetchTournamentPeriodWinners, claimDailyLogin } from '../platform/backend';
@@ -12,10 +12,10 @@ import {
   activeTournaments, featuredTournament, tournamentGame, getTournamentForGame,
   countdown, loadTournaments, loadMyEntries,
   tournamentState, isPaid, isEntered, enterTournament, prizePool,
-  InsufficientCoinsError, type Tournament, type LeaderEntry,
+  type Tournament, type LeaderEntry,
 } from '../platform/tournaments';
 import { balanceSync, balance, onWalletChange } from '../platform/wallet';
-import { SignInRequiredError } from '../platform/payments';
+import { openTournamentEntry } from './tournamentEntry';
 import { activeDraws, myTickets, enterDraw, NotEnoughPointsError, hydrateTickets, loadDraws, myOdds } from '../platform/draws';
 import { xp as xpBal, onCurrencyChange, setBalance, setLifetime, xpLifetime } from '../platform/currency';
 import { levelFor, economyNeedsAuth, WINNER_ETB_PRIZES, type WinnerCadence } from '../platform/config';
@@ -160,7 +160,7 @@ function entryCta(tour: Tournament, game: GameMeta, cls: string): string {
   if (!isPaid(tour) || isEntered(tour.id)) {
     return `<a class="btn primary ${cls}" href="${game.route}" data-play="${tour.id}">${t('hub.playNow')}</a>`;
   }
-  return `<button class="btn primary ${cls}" data-enter="${tour.id}">${t('hub.register')} · ${tour.entryFeeCoins} 🪙</button>`;
+  return `<button class="btn primary ${cls}" data-enter="${tour.id}">${t('hub.enterTournament')} · ${tour.entryFeeCoins} 🪙</button>`;
 }
 
 // Small free/fee + pool badges for a tournament card.
@@ -177,7 +177,7 @@ function wireEntryCtas(): void {
     b.addEventListener('click', () => {
       const tour = activeTournaments().find((x) => x.id === b.dataset.enter);
       const game = tour ? tournamentGame(tour) : undefined;
-      if (tour && game) openEntryModal(tour, game);
+      if (tour && game) openTournamentEntry({ tour, game, onEntered: () => renderAll(), playHref: game.route });
     });
   });
   // Free / already-entered play links also record an entry so they show on the
@@ -185,84 +185,6 @@ function wireEntryCtas(): void {
   document.querySelectorAll<HTMLAnchorElement>('[data-play]').forEach((a) => {
     a.addEventListener('click', () => { void enterTournament(a.dataset.play!).catch(() => {}); });
   });
-}
-
-function entryModal(inner: string): HTMLElement {
-  document.querySelector('.entry-modal')?.remove();
-  const m = document.createElement('div');
-  m.className = 'entry-modal';
-  m.innerHTML = `<div class="entry-scrim"></div><div class="entry-card">${inner}</div>`;
-  document.body.appendChild(m);
-  m.querySelector('.entry-scrim')!.addEventListener('click', () => m.remove());
-  return m;
-}
-
-function openEntryModal(tour: Tournament, game: GameMeta): void {
-  // Paid entry requires an account when a backend is configured.
-  if (isPaid(tour) && needsSignInToBuy()) {
-    const m = entryModal(`
-      <h3>🏆 ${escapeHtml(tTitle(tour))}</h3>
-      <p class="entry-notice">${t('hub.feeNotice')}</p>
-      <div class="entry-actions">
-        <button class="btn primary" id="signin">${t('hub.register')}</button>
-        <button class="btn ghost" id="cancel">${t('hub.cancel')}</button>
-      </div>`);
-    m.querySelector('#signin')!.addEventListener('click', () => { m.remove(); openSignIn(); });
-    m.querySelector('#cancel')!.addEventListener('click', () => m.remove());
-    return;
-  }
-  const fee = tour.entryFeeCoins;
-  const gameName = lang() === 'am' ? game.nameAm : game.nameEn;
-  const split = (tour.prizeTiers ?? []).map((s) =>
-    `<span class="split-chip">#${s.rank} · ${s.pct}%</span>`).join('');
-  const m = entryModal(`
-    <h3>🏆 ${escapeHtml(tTitle(tour))}</h3>
-    <p class="entry-game">${escapeHtml(gameName)}</p>
-    <div class="entry-rows">
-      <div class="entry-row"><span>${t('hub.entry')}</span><strong>${fee} 🪙</strong></div>
-      <div class="entry-row"><span>${t('hub.pool')}</span><strong>${prizePool(tour).toLocaleString()} 🪙</strong></div>
-    </div>
-    <div class="entry-split"><span class="split-label">${t('hub.prizeSplit')}</span>${split}</div>
-    <p class="entry-notice">${t('hub.feeNotice')}</p>
-    <p class="entry-err" id="err"></p>
-    <div class="entry-actions" id="actions"></div>`);
-  renderEntryActions(m, tour, game);
-}
-
-function renderEntryActions(m: HTMLElement, tour: Tournament, game: GameMeta): void {
-  const actions = m.querySelector('#actions')!;
-  const afford = balanceSync() >= tour.entryFeeCoins;
-  if (!afford) {
-    actions.innerHTML = `
-      <p class="entry-need">${t('hub.needCoins')}</p>
-      <button class="btn primary" id="buy">${t('hub.buyCoins')}</button>
-      <button class="btn ghost" id="cancel">${t('hub.cancel')}</button>`;
-    actions.querySelector('#buy')!.addEventListener('click', () => { m.remove(); openStore(); });
-  } else {
-    actions.innerHTML = `
-      <button class="btn primary" id="confirm">${t('hub.confirm')} · ${tour.entryFeeCoins} 🪙</button>
-      <button class="btn ghost" id="cancel">${t('hub.cancel')}</button>`;
-    actions.querySelector('#confirm')!.addEventListener('click', async () => {
-      const btn = actions.querySelector<HTMLButtonElement>('#confirm')!;
-      btn.disabled = true;
-      try {
-        await enterTournament(tour.id);
-        m.querySelector('.entry-card')!.innerHTML = `
-          <div class="entry-joined">
-            <div class="ej-burst">✅</div>
-            <h3>${t('hub.joined')}</h3>
-            <a class="btn primary" href="${game.route}">${t('hub.playNow')}</a>
-          </div>`;
-        renderAll();
-      } catch (e) {
-        if (e instanceof SignInRequiredError) { m.remove(); openSignIn(); return; }
-        if (e instanceof InsufficientCoinsError) { renderEntryActions(m, tour, game); return; }
-        m.querySelector('#err')!.textContent = t('hub.entryFailed');
-        btn.disabled = false;
-      }
-    });
-  }
-  actions.querySelector('#cancel')!.addEventListener('click', () => m.remove());
 }
 
 // --- Featured tournament hero ----------------------------------------------

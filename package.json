@@ -9,7 +9,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "seed": "node supabase/seed.mjs",
-    "setup:test-phones": "node supabase/push-test-phones.mjs"
+    "setup:test-phones": "node supabase/push-test-phones.mjs",
+    "verify:auth": "node supabase/verify-auth-setup.mjs"
   },
   "devDependencies": {
     "typescript": "~5.6.2",

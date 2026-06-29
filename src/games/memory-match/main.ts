@@ -10,6 +10,7 @@ import '../../styles/base.css';
 import './style.css';
 import { applyTranslations, getLang, setLang, t, type Lang } from '../../i18n';
 import { sfx } from '../../engine/audio';
+import { openTournamentEntryForGame } from '../../hub/tournamentEntry';
 import { createHost } from '../../platform/gameHost';
 import { loadTournaments, loadMyEntries } from '../../platform/tournaments';
 
@@ -118,8 +119,11 @@ async function startPlay(): Promise<void> {
   try {
     const res = await host.begin();
     if (!res.ok) {
-      if (res.reason === 'coins') message.textContent = t('mm.needCoins');
-      else if (res.reason === 'auth') message.textContent = t('td.signInToRank');
+      if (res.reason === 'coins') {
+        openTournamentEntryForGame('memory-match', () => { void startPlay(); });
+        return;
+      }
+      if (res.reason === 'auth') message.textContent = t('td.signInToRank');
       else message.textContent = t('td.enterFirst');
       return;
     }
