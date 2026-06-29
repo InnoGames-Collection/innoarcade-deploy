@@ -207,9 +207,7 @@ Deno.serve(async (req: Request) => {
     return json({ points, lifetime, xp: points, award, ranked: false, attemptsLeft: 0 });
   }
 
-  // Tournament gate: the window must be live, and a PAID tournament consumes one
-  // banked attempt per ranked run (pay-once → N attempts). The consume is atomic
-  // (optimistic guard on attempts_used) so concurrent runs can't overspend.
+  // Tournament gate: window must be live; attempt was consumed at start-round.
   let attemptsLeft = 0;
   const { data: tour } = await admin
     .from('tournaments')
@@ -227,14 +225,7 @@ Deno.serve(async (req: Request) => {
         .eq('user_id', user.id).eq('tournament_id', tournamentId).maybeSingle();
       if (!entry) return json({ error: 'not entered' }, 402);
       const purchased = Number(entry.attempts_purchased), used = Number(entry.attempts_used);
-      if (used >= purchased) return json({ error: 'no attempts left', attemptsLeft: 0 }, 402);
-      const { data: upd } = await admin
-        .from('tournament_entries')
-        .update({ attempts_used: used + 1 })
-        .eq('user_id', user.id).eq('tournament_id', tournamentId).eq('attempts_used', used)
-        .select('attempts_used');
-      if (!upd || upd.length === 0) return json({ error: 'no attempts left', attemptsLeft: 0 }, 402);
-      attemptsLeft = purchased - (used + 1);
+      attemptsLeft = Math.max(0, purchased - used);
     }
   }
 

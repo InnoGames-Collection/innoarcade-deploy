@@ -152,12 +152,12 @@ function renderEntryBody(
       });
     });
     actions.innerHTML = `
-      <button type="button" class="btn primary" id="confirm" disabled>${t('hub.enterTournament')} · ${fee} 🪙</button>
+      <button type="button" class="btn primary" id="confirm" disabled>${t('hub.ok')}</button>
       <button type="button" class="btn ghost" id="cancel">${t('hub.cancel')}</button>`;
   } else {
     buySection.hidden = true;
     actions.innerHTML = `
-      <button type="button" class="btn primary" id="confirm">${t('hub.enterTournament')} · ${fee} 🪙</button>
+      <button type="button" class="btn primary" id="confirm">${t('hub.ok')}</button>
       <button type="button" class="btn ghost" id="cancel">${t('hub.cancel')}</button>`;
     actions.querySelector<HTMLButtonElement>('#confirm')!.addEventListener('click', async () => {
       const btn = actions.querySelector<HTMLButtonElement>('#confirm')!;
@@ -175,7 +175,7 @@ function renderEntryBody(
         }
         m.querySelector('#err')!.textContent = t('hub.entryFailed');
         btn.disabled = false;
-        btn.textContent = `${t('hub.enterTournament')} · ${fee} 🪙`;
+        btn.textContent = t('hub.ok');
       }
     });
   }

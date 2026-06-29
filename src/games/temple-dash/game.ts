@@ -113,7 +113,7 @@ export class TempleDash {
   private skinId: string;
 
   constructor(private assets: AssetStore) {
-    this.skinId = 'boy'; // overridden from the server profile by main.ts
+    this.skinId = 'champion'; // overridden from the server profile by main.ts
     this.fx.reducedMotion = settings.data.reducedMotion;
     settings.onChange((s) => { this.fx.reducedMotion = s.reducedMotion; });
   }

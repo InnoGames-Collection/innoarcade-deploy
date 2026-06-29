@@ -48,13 +48,20 @@ export async function submitPlayRemote(
 // Anti-cheat: ask the server to open a round and return a single-use signed
 // token to hand back to submit-score. Empty string when unconfigured or when
 // the signing secret isn't set (token-optional mode) — never throws.
-export async function startRoundRemote(gameId: string): Promise<string> {
-  if (!isConfigured()) return '';
+export interface StartRoundResult { token: string; attemptsLeft?: number }
+
+export async function startRoundRemote(gameId: string, ranked = true): Promise<StartRoundResult> {
+  if (!isConfigured()) return { token: '' };
   try {
-    const { data, error } = await supabase().functions.invoke('start-round', { body: { gameId } });
-    if (error) return '';
-    return (data?.token as string) ?? '';
-  } catch { return ''; }
+    const { data, error } = await supabase().functions.invoke('start-round', {
+      body: { gameId, ranked },
+    });
+    if (error) return { token: '' };
+    return {
+      token: (data?.token as string) ?? '',
+      attemptsLeft: data?.attemptsLeft != null ? Number(data.attemptsLeft) : undefined,
+    };
+  } catch { return { token: '' }; }
 }
 
 // Per-game cosmetic skin selection, persisted on the player's profile (the only

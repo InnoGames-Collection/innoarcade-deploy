@@ -268,7 +268,8 @@ body {
 .skin-chip:active { transform: scale(0.95); }
 .skin-chip.is-selected { border-color: var(--accent); background: rgba(240, 168, 50, 0.12); }
 .skin-chip.is-locked { opacity: 0.85; }
-.skin-chip canvas { width: 56px; height: 56px; }
+.skin-chip canvas,
+.skin-chip .skin-thumb-img { width: 56px; height: 56px; object-fit: contain; }
 
 .skin-name {
   font-size: 0.8rem;

@@ -20,7 +20,7 @@ import { isConfigured } from '../../platform/supabase';
 import { currentUser } from '../../platform/auth';
 import { sfx } from '../../engine/audio';
 import { TempleDash, W, H, GAME_ID, SKINS, type GameState } from './game';
-import { sheetDefs } from './art';
+import { sheetDefs, skinThumbUrl } from './art';
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
@@ -89,13 +89,14 @@ function run(assets: AssetStore): void {
   async function startRun(): Promise<void> {
     const left = tourney ? (myEntry(tourney.id)?.left ?? 0) : 0;
     if (!left) {
-      showToast(t('td.enterFirst'));
+      await onEnter();
       return;
     }
     try {
       await host.startRound();
       game.best = serverBest;
       game.start();
+      updateActionButtons();
     } catch {
       showToast(t('td.signInToRank'));
     }
@@ -116,14 +117,14 @@ function run(assets: AssetStore): void {
   muteBtn.addEventListener('click', () => { muteBtn.textContent = sfx.toggleMute() ? '🔇' : '🔊'; });
   document.addEventListener('visibilitychange', () => { if (document.hidden) game.pause(); });
 
-  let selectedSkin = 'boy';
-  function thumbFor(id: string): HTMLCanvasElement {
-    const c = document.createElement('canvas');
-    c.width = c.height = 72;
-    const tctx = c.getContext('2d')!;
-    const w = 72 * 0.72;
-    assets.draw(tctx, `${id}_stand`, 0, (72 - w) / 2, 2, w, 68);
-    return c;
+  let selectedSkin = 'champion';
+  function thumbFor(id: string): HTMLElement {
+    const img = document.createElement('img');
+    img.className = 'skin-thumb-img';
+    img.src = skinThumbUrl(id);
+    img.alt = '';
+    img.draggable = false;
+    return img;
   }
 
   function buildShop(): void {
@@ -155,7 +156,7 @@ function run(assets: AssetStore): void {
   }
 
   void fetchSkins().then((sk) => {
-    selectedSkin = sk[GAME_ID] ?? 'boy';
+    selectedSkin = sk[GAME_ID] ?? 'champion';
     game.setSkin(selectedSkin);
     buildShop();
   });
@@ -199,22 +200,21 @@ function run(assets: AssetStore): void {
     const startBtn = document.querySelector<HTMLButtonElement>('#startBtn');
     const againBtn = document.querySelector<HTMLButtonElement>('#againBtn');
     const restartBtn = document.querySelector<HTMLButtonElement>('#restartBtn');
+    const playLabel = left > 0
+      ? `▶ ${t('td.playTournament')} · 🎟️ ${left}`
+      : t('td.playTournament');
 
     if (startBtn) {
-      startBtn.disabled = left <= 0;
-      startBtn.textContent = left > 0
-        ? `▶ ${t('td.playTournament')} · 🎟️ ${left}`
-        : t('td.enterFirst');
+      startBtn.disabled = false;
+      startBtn.textContent = playLabel;
     }
     if (againBtn) {
       againBtn.disabled = false;
-      againBtn.textContent = left > 0
-        ? `▶ ${t('td.playTournament')} · 🎟️ ${left}`
-        : t('td.enterFor');
+      againBtn.textContent = playLabel;
     }
     if (restartBtn) {
-      restartBtn.disabled = left <= 0;
-      restartBtn.textContent = left > 0 ? t('td.restart') : t('td.enterFor');
+      restartBtn.disabled = false;
+      restartBtn.textContent = left > 0 ? t('td.restart') : t('td.playTournament');
     }
   }
 
@@ -250,9 +250,6 @@ function run(assets: AssetStore): void {
     const entry = myEntry(tourney.id);
     const left = entry?.left ?? 0;
     const title = getLang() === 'am' ? tourney.titleAm : tourney.titleEn;
-    const enterBtn = left <= 0
-      ? `<button id="enterBtn" class="btn rt-enter">${t('hub.enterTournament')} · ${tourney.entryFeeCoins} 🪙</button>`
-      : '';
 
     $('#runnerTourney').innerHTML = `
       <div class="rt-head">
@@ -260,16 +257,10 @@ function run(assets: AssetStore): void {
         <span class="rt-coins">${walletCoins.toLocaleString()} 🪙</span>
       </div>
       <div class="rt-best">${t('td.yourBest')}: <strong>${serverBest.toLocaleString()}</strong></div>
-      <div class="rt-status">
-        ${left > 0
-          ? `<span class="rt-attempts">🎟️ ${t('td.attemptsLeft')}: <strong>${left}</strong></span>`
-          : `<span class="rt-fee">${tourney.entryFeeCoins} 🪙 → ${tourney.attempts} ${t('td.attempts')}</span>`}
-        ${enterBtn}
-      </div>
+      ${left > 0 ? `<div class="rt-status"><span class="rt-attempts">🎟️ ${t('td.attemptsLeft')}: <strong>${left}</strong></span></div>` : ''}
       <div class="runner-board">${boardHtml(board)}</div>`;
 
     updateActionButtons();
-    document.querySelector('#enterBtn')?.addEventListener('click', onEnter);
   }
 
   async function onEnter(): Promise<void> {

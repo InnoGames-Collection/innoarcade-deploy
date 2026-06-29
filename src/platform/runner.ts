@@ -212,7 +212,7 @@ export async function enterRunnerTournament(period: RunnerPeriod = 'daily'): Pro
 export async function submitRunnerRun(score: number, timeMs = 0, period: RunnerPeriod = 'daily'): Promise<RunnerSubmitResult | null> {
   if (!isConfigured()) return null;
   await currentUser();
-  const token = await startRoundRemote(RUNNER_GAME_ID);
+  const { token } = await startRoundRemote(RUNNER_GAME_ID);
   const { data, error } = await supabase().functions.invoke('runner-submit', {
     body: { score: Math.max(0, Math.floor(score)), timeMs: Math.max(0, Math.floor(timeMs)), token, period },
   });

@@ -86,7 +86,7 @@ game.onGameOver = (score, record) => {
 async function syncRemoteScore(tournamentId: string, score: number): Promise<void> {
   if (!backendReady() || !(await currentUser())) return;
   try {
-    const token = await startRoundRemote('orbit-blast');
+    const { token } = await startRoundRemote('orbit-blast');
     const res = await submitPlayRemote('orbit-blast', score, score >= 1000, true, token);
     if (res.rank) $('#rankVal').textContent = `#${res.rank}`;
     if (res.total) $('#rankTotal').textContent = `/ ${res.total}`;

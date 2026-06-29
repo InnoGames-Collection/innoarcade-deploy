@@ -125,37 +125,38 @@ export class GameHost {
   }
 
   /** Open a round: fetch the anti-cheat token to hand back on finish(). */
-  async startRound(): Promise<void> {
-    this.roundToken = await startRoundRemote(this.meta.id);
+  async startRound(ranked = true): Promise<number | undefined> {
+    const res = await startRoundRemote(this.meta.id, ranked);
+    this.roundToken = res.token;
+    if (this.isTournament && typeof res.attemptsLeft === 'number') {
+      noteAttemptsLeft(this.tournament!.id, res.attemptsLeft);
+      return res.attemptsLeft;
+    }
+    return undefined;
   }
 
   // Authorise a round. Free games always pass. Tournament games use the PAY-ONCE
-  // → N-ATTEMPTS model: if the player has a banked attempt left, the round is
-  // authorised for free (the attempt is consumed server-side on submit); when the
-  // bank is empty, buy another block (one fee → N attempts). A `reason` is
-  // returned for recoverable refusals (coins / auth / level) so the game can
-  // prompt accordingly. Always opens a server round (anti-cheat token) first.
+  // → N-ATTEMPTS model: buy a block when the bank is empty, then consume one
+  // attempt when the run starts (start-round). Pause/resume does not consume.
   async begin(): Promise<BeginResult> {
-    // Hydrate the auth cache from the persisted session — game pages don't run
-    // the hub's sign-in flow, so isSignedIn() would otherwise read stale (null)
-    // and wrongly report the player as signed out.
     await currentUser();
-    await this.startRound();
-    if (!this.isTournament) return { ok: true };
-    const t = this.tournament!;
-    // Banked attempt available → no charge (consumed on submit).
-    if (this.attemptsLeft > 0) return { ok: true };
-    // Bank empty → buy the next block (server gates level + debits the fee).
-    try {
-      await enterTournament(t.id);
-      return { ok: true };
-    } catch (e) {
-      if (e instanceof InsufficientCoinsError) return { ok: false, reason: 'coins' };
-      if (e instanceof SignInRequiredError) return { ok: false, reason: 'auth' };
-      // Unexpected error — don't block play over an infrastructure hiccup.
-      console.warn('tournament entry skipped:', e);
+    if (!this.isTournament) {
+      await this.startRound();
       return { ok: true };
     }
+    const t = this.tournament!;
+    if (this.attemptsLeft <= 0) {
+      try {
+        await enterTournament(t.id);
+      } catch (e) {
+        if (e instanceof InsufficientCoinsError) return { ok: false, reason: 'coins' };
+        if (e instanceof SignInRequiredError) return { ok: false, reason: 'auth' };
+        console.warn('tournament entry skipped:', e);
+      }
+    }
+    if (this.attemptsLeft <= 0) return { ok: false, reason: 'coins' };
+    await this.startRound();
+    return { ok: true };
   }
 
   // Record a finished round on the SERVER (the only economy authority). The
