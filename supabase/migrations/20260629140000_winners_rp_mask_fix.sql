@@ -108,6 +108,8 @@ left join public.profiles p on p.id = a.user_id;
 grant select on public.previous_season_rp_leaderboard to anon, authenticated;
 
 -- --- Leaderboards show masked phone as public name --------------------------
+-- Drop dependents before leaderboard (tournament_period_board joins leaderboard).
+drop view if exists public.tournament_period_board;
 drop view if exists public.leaderboard;
 create view public.leaderboard
 with (security_invoker = on) as
@@ -122,7 +124,6 @@ left join public.profiles p on p.id = s.user_id;
 grant select on public.leaderboard to anon, authenticated;
 
 -- --- Winners tab: latest tournament window per cadence (prefer ended/settled)
-drop view if exists public.tournament_period_board;
 create view public.tournament_period_board
 with (security_invoker = on) as
 with tagged as (
