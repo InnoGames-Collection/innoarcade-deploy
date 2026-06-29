@@ -274,7 +274,10 @@ function run(assets: AssetStore): void {
 
   async function onEnter(): Promise<void> {
     if (!tourney) return;
-    openTournamentEntryForGame(GAME_ID, () => { void refreshTourney(); });
+    openTournamentEntryForGame(GAME_ID, {
+      onEntered: () => { void refreshTourney(); },
+      onPlay: () => { void onPlayOrEnter(); },
+    });
   }
 
   async function submitRun(score: number, durationMs: number): Promise<void> {

@@ -120,7 +120,10 @@ async function startPlay(): Promise<void> {
     const res = await host.begin();
     if (!res.ok) {
       if (res.reason === 'coins') {
-        openTournamentEntryForGame('memory-match', () => { void startPlay(); });
+        openTournamentEntryForGame('memory-match', {
+          onEntered: () => { void startPlay(); },
+          onPlay: () => { void startPlay(); },
+        });
         return;
       }
       if (res.reason === 'auth') message.textContent = t('td.signInToRank');

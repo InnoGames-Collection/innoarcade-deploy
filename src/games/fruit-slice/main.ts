@@ -72,7 +72,10 @@ async function play(): Promise<void> {
   const res = await host.begin();
   if (!res.ok) {
     if (res.reason === 'coins') {
-      openTournamentEntryForGame('fruit-slice', () => { void play(); });
+      openTournamentEntryForGame('fruit-slice', {
+        onEntered: () => { void play(); },
+        onPlay: () => { void play(); },
+      });
       return;
     }
     else if (res.reason === 'auth') toast('Sign in to compete');
