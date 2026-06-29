@@ -63,6 +63,7 @@ function run(assets: AssetStore): void {
 
   function showOverlay(state: GameState): void {
     for (const [k, el] of Object.entries(overlays)) el.classList.toggle('hidden', k !== state);
+    document.querySelector('#closeBtn')?.classList.toggle('hidden', state !== 'playing');
   }
 
   game.onStateChange = (s) => {

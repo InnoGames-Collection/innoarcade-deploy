@@ -88,6 +88,24 @@ export const DEFAULT_CONFIG: AppConfig = {
   winRateOverride: null,
 };
 
+/** Top-3 season coin prizes — mirror the default store catalogue totals. */
+export const SEASON_TOP_PRIZES: { rank: number; packId: string; label: string; coins: number }[] = [
+  { rank: 1, packId: 'pro', label: 'Pro', coins: 1300 },
+  { rank: 2, packId: 'value', label: 'Value', coins: 600 },
+  { rank: 3, packId: 'popular', label: 'Popular', coins: 220 },
+];
+
+export const SEASON_POT_COINS =
+  SEASON_TOP_PRIZES.reduce((s, p) => s + p.coins, 0) + 100 + 100 + 50 * 5; // ranks 4–10
+
+/** ETB cash prizes for Winners tab (ranks 1–3 per cadence). */
+export type WinnerCadence = 'daily' | 'weekly' | 'monthly';
+export const WINNER_ETB_PRIZES: Record<WinnerCadence, [number, number, number]> = {
+  daily: [2000, 1500, 1000],
+  weekly: [5000, 2000, 1000],
+  monthly: [25000, 10000, 5000],
+};
+
 // In-memory cache (NO localStorage) so synchronous UI (store grid, fee labels)
 // can read instantly from the last server value; loadConfig() refreshes it from
 // the `app_config` table. Starts from the baked-in defaults until first load.

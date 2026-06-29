@@ -347,7 +347,36 @@ body {
 .dc-tickets strong { color: var(--text); }
 .dc-enter { padding: 0.45rem 0.9rem; font-size: 0.85rem; }
 
-/* winners */
+/* winners / leaderboard (unified) */
+.leaderboard-section { margin-bottom: 2rem; }
+.leaderboard-list { display: flex; flex-direction: column; gap: 0.45rem; }
+.season-banner { display: flex; align-items: center; gap: 0.9rem; margin-bottom: 0.9rem;
+  padding: 0.8rem 1rem; border-radius: 14px; color: #fff;
+  background: linear-gradient(110deg, #2a1f6e, #4a3bb8); box-shadow: 0 10px 24px rgba(42, 31, 110, 0.28); }
+.season-banner-prize { background: linear-gradient(110deg, #1f4e0c, #2f7c0e); box-shadow: 0 10px 24px rgba(31, 78, 12, 0.3); }
+.season-banner:empty { display: none; }
+.sb-glow { font-size: 1.8rem; filter: drop-shadow(0 2px 6px rgba(255, 214, 110, 0.6)); }
+.sb-body { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.sb-title { font-weight: 800; font-size: 0.95rem; }
+.sb-sub { font-size: 0.8rem; opacity: 0.92; }
+.sb-meta { font-weight: 900; font-size: 0.95rem; white-space: nowrap; }
+.prize-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem; }
+.prize-chip { font-size: 0.72rem; font-weight: 800; background: rgba(255,255,255,0.16); border-radius: 999px; padding: 0.15rem 0.55rem; }
+.lb-row { display: grid; grid-template-columns: 2rem 1fr auto auto; align-items: center; gap: 0.55rem;
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.6rem 0.85rem; box-shadow: var(--shadow-sm); }
+.lb-row.me { border-color: var(--accent); background: #f3fbe9; }
+.lb-row.top { border-color: rgba(214, 158, 0, 0.5); background: linear-gradient(90deg, rgba(255, 214, 110, 0.16), var(--card) 60%); }
+.lb-rank { font-size: 1.05rem; font-weight: 800; text-align: center; }
+.lb-name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lb-badge { font-size: 0.72rem; font-weight: 800; border-radius: 999px; padding: 0.12rem 0.55rem; white-space: nowrap; }
+.lb-badge.lvl { color: #7a4bd0; background: #efe7fb; }
+.lb-badge.wg-daily { color: #1a5fa8; background: #e3f0ff; }
+.lb-badge.wg-weekly { color: #8a5a00; background: #fff3d0; }
+.lb-badge.wg-monthly { color: #6b3fa0; background: #f0e8ff; }
+.lb-score { font-weight: 900; color: var(--accent); font-size: 0.85rem; white-space: nowrap; }
+.phase2-hidden { display: none !important; }
+
+/* legacy winner/draw styles kept for admin + phase 2 */
 .winner-list { display: flex; flex-direction: column; gap: 0.5rem; }
 .winner-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.7rem;
   background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.65rem 0.9rem; box-shadow: var(--shadow-sm); }
@@ -357,7 +386,7 @@ body {
 .winner-row.top { border-color: rgba(214, 158, 0, 0.5); background:
   linear-gradient(90deg, rgba(255, 214, 110, 0.16), var(--card) 60%); }
 
-/* Coming-award banner: season prize pool + live countdown to settlement. */
+/* Coming-award banner (legacy alias) */
 .coming-award { display: flex; align-items: center; gap: 0.9rem; margin-bottom: 0.9rem;
   padding: 0.8rem 1rem; border-radius: 14px; color: #fff;
   background: linear-gradient(110deg, #1f4e0c, #2f7c0e); box-shadow: 0 10px 24px rgba(31, 78, 12, 0.3); }
@@ -557,6 +586,49 @@ html, body { max-width: 100%; overflow-x: hidden; }
 /* ---- settings menu stays on-screen on small viewports ---- */
 .settings-menu { max-width: calc(100vw - 16px); }
 .winners-seg { margin-bottom: 1rem; flex-wrap: wrap; }
+
+/* ---- Winners panel (telecom reference layout) ---- */
+.winners-panel {
+  background: #fff;
+  border-radius: 20px;
+  padding: 1.25rem 1rem 1rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--line);
+}
+.winners-title {
+  margin: 0 0 0.85rem;
+  text-align: center;
+  font-size: 1.65rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.winners-table-wrap { overflow-x: auto; }
+.winners-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.winners-table thead th {
+  text-align: left;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 0.35rem 0.5rem 0.65rem;
+  border-bottom: 1px solid var(--line);
+}
+.winners-table thead th:first-child { width: 2.5rem; text-align: center; }
+.winners-table thead th:last-child { text-align: right; }
+.winners-row td { padding: 0.55rem 0.5rem; border-bottom: 1px solid #f0f4eb; vertical-align: middle; }
+.winners-row:last-child td { border-bottom: none; }
+.winners-row.top .w-reward { color: var(--accent); font-weight: 900; }
+.winners-row.me { background: #f3fbe9; }
+.w-no { text-align: center; font-weight: 800; color: var(--muted); }
+.w-phone { font-weight: 700; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 0.45rem; }
+.w-avatar {
+  flex-shrink: 0;
+  width: 1.6rem; height: 1.6rem; border-radius: 50%;
+  display: grid; place-items: center; font-size: 0.75rem;
+  background: var(--grad-brand); color: #fff;
+}
+.w-reward { text-align: right; font-weight: 800; color: var(--text); white-space: nowrap; }
+.winners-empty { text-align: center; color: var(--muted); padding: 1.2rem 0.5rem !important; }
 
 /* ---- Buy-coins button in the top bar (replaces the gold chip) ---- */
 .bal-buy { display: inline-flex; align-items: center; gap: 0.2rem; cursor: pointer;

@@ -1,0 +1,17 @@
+{
+  "otp": "123456",
+  "note": "Add each phone in Supabase Dashboard → Authentication → Phone → Test phone numbers. Digits only in dashboard (no +). Local dev: also listed in supabase/config.toml [auth.sms.test_otp].",
+  "phones": [
+    { "local": "0911000000", "e164": "+251911000000", "dashboard": "251911000000" },
+    { "local": "0911000001", "e164": "+251911000001", "dashboard": "251911000001" },
+    { "local": "0911000002", "e164": "+251911000002", "dashboard": "251911000002" },
+    { "local": "0911000003", "e164": "+251911000003", "dashboard": "251911000003" },
+    { "local": "0911000004", "e164": "+251911000004", "dashboard": "251911000004" },
+    { "local": "0911000005", "e164": "+251911000005", "dashboard": "251911000005" },
+    { "local": "0911000006", "e164": "+251911000006", "dashboard": "251911000006" },
+    { "local": "0911000007", "e164": "+251911000007", "dashboard": "251911000007" },
+    { "local": "0911000008", "e164": "+251911000008", "dashboard": "251911000008" },
+    { "local": "0911000009", "e164": "+251911000009", "dashboard": "251911000009" },
+    { "local": "0911000010", "e164": "+251911000010", "dashboard": "251911000010" }
+  ]
+}

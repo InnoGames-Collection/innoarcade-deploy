@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "seed": "node supabase/seed.mjs"
+    "seed": "node supabase/seed.mjs",
+    "setup:test-phones": "bash supabase/setup-test-phones.sh"
   },
   "devDependencies": {
     "typescript": "~5.6.2",

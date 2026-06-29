@@ -73,15 +73,26 @@ supabase secrets set SUPABASE_SERVICE_ROLE_KEY=sb_secret_xxx
 ## 3. Enable phone auth + add Test phone numbers (no SMS, no Twilio)
 
 1. Dashboard → **Authentication → Sign In / Providers → Phone → Enable**.
-2. Same page → **Test phone numbers** → add one row per account you'll actually
-  sign in as, each with a fixed code. You only need numbers for the **humans**
-   who log in (the operator + a demo player) — the ~40 seeded players are just
-   data and never sign in. For example:
+2. Same page → **Test phone numbers** → add each row below (OTP **`123456`** for all).
+   Full list is in [`supabase/test-phones.json`](supabase/test-phones.json). These are **real
+   sign-in accounts** — not seeded demo data. Each person must log in and play
+   tournaments to appear on leaderboards.
 
-  | Phone           | Code     | Used for         |
-  | --------------- | -------- | ---------------- |
-  | `+251911000000` | `123456` | admin / operator |
-  | `+251911000001` | `123456` | demo player      |
+  | Phone (dashboard) | OTP    |
+  | ----------------- | ------ |
+  | `251911000000`    | 123456 |
+  | `251911000001`    | 123456 |
+  | … through …       | 123456 |
+  | `251911000010`    | 123456 |
+
+   Local Supabase CLI: the same OTP map is in `supabase/config.toml` under
+   `[auth.sms.test_otp]`. Push it to the hosted project after linking:
+
+```bash
+supabase login
+supabase link --project-ref aopmkdefqykctrxhflaq
+npm run setup:test-phones   # runs: supabase config push
+```
 
    Test numbers bypass SMS entirely: Supabase accepts the fixed code, so **no SMS
    gateway, no Send SMS hook, and no `dev_otps` table** are needed for sign-in.
@@ -102,9 +113,9 @@ ADMIN_PHONE=+251911000000 \
 npm run seed
 ```
 
-This creates ~40 demo players, coin purchases (orders + ledger), the live
-monthly/weekly tournaments, scores and paid entries, and promotes `ADMIN_PHONE`
-to admin. Re-running only resets the demo accounts, never real players.
+This creates live tournament windows and app config. It does **not** create fake
+players or scores — rankings come from real sign-ins and tournament play.
+Re-running is safe. Promotes `ADMIN_PHONE` to admin if that user has signed in once.
 
 ## 5. Run the app
 

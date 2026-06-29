@@ -5,17 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍬</text></svg>" />
     <title>Candy Saga — GoPlay</title>
-    <script type="module" crossorigin src="../../assets/candyCrunch-Dmloa6x-.js"></script>
+    <script type="module" crossorigin src="../../assets/candyCrunch-Vz8uRIcC.js"></script>
     <link rel="modulepreload" crossorigin href="../../assets/modulepreload-polyfill-B5Qt9EMX.js">
-    <link rel="modulepreload" crossorigin href="../../assets/tournaments-eqtz9MMb.js">
-    <link rel="modulepreload" crossorigin href="../../assets/audio-DFxUOKH2.js">
+    <link rel="modulepreload" crossorigin href="../../assets/tournaments-CZiJdtVT.js">
+    <link rel="modulepreload" crossorigin href="../../assets/audio-V0AWKlHG.js">
     <link rel="modulepreload" crossorigin href="../../assets/currency-6Vn0SSos.js">
-    <link rel="modulepreload" crossorigin href="../../assets/gameHost-BojkZI5e.js">
-    <link rel="modulepreload" crossorigin href="../../assets/index-zrFQ42vq.js">
+    <link rel="modulepreload" crossorigin href="../../assets/gameHost-VihrJXwn.js">
+    <link rel="modulepreload" crossorigin href="../../assets/index-CSqbYloN.js">
     <link rel="modulepreload" crossorigin href="../../assets/loop-BDek7L7e.js">
     <link rel="modulepreload" crossorigin href="../../assets/input-DF-0NnhL.js">
     <link rel="modulepreload" crossorigin href="../../assets/storage-CInvdOsc.js">
-    <link rel="stylesheet" crossorigin href="../../assets/audio-DngoG11r.css">
+    <link rel="stylesheet" crossorigin href="../../assets/audio-CrCdc_l1.css">
     <link rel="stylesheet" crossorigin href="../../assets/candyCrunch-Dw1eu6fA.css">
   </head>
   <body>
@@ -23,7 +23,7 @@
       <canvas id="game" width="480" height="720"></canvas>
 
       <div id="hud">
-        <button id="closeBtn" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+        <button id="closeBtn" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         <button id="muteBtn" aria-label="Sound">🔊</button>
         <button id="pauseBtn" aria-label="Pause">⏸</button>
       </div>
@@ -38,7 +38,7 @@
             <button id="langEn" class="lang-btn">EN</button>
             <button id="langAm" class="lang-btn">አማ</button>
           </div>
-          <button type="button" class="gp-close gp-close-block" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         </div>
       </div>
 
@@ -47,7 +47,7 @@
           <h2 data-i18n="td.paused">Paused</h2>
           <button id="resumeBtn" class="btn primary" data-i18n="td.resume">Resume</button>
           <button id="restartBtn" class="btn" data-i18n="td.restart">Play again</button>
-          <button type="button" class="gp-close gp-close-block" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         </div>
       </div>
 
@@ -56,7 +56,7 @@
           <h2 data-i18n="cc.levelClear">Level clear!</h2>
           <p id="levelScore" class="score"></p>
           <button id="nextBtn" class="btn primary" data-i18n="cc.next">Next level</button>
-          <button type="button" class="gp-close gp-close-block" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         </div>
       </div>
 
@@ -66,7 +66,7 @@
           <p id="finalScore" class="score"></p>
           <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
           <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
-          <button type="button" class="gp-close gp-close-block" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         </div>
       </div>
     </div>

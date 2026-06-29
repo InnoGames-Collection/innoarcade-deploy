@@ -20,11 +20,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // Fallback package catalogue — mirrors src/platform/config.ts DEFAULT_CONFIG.
 // app_config.value.coinPackages overrides this when the operator has edited it.
 const DEFAULT_PACKAGES = [
-  { id: 'starter', coins: 50, bonus: 0, priceEtb: 25 },
-  { id: 'plus', coins: 120, bonus: 10, priceEtb: 50 },
-  { id: 'pro', coins: 300, bonus: 50, priceEtb: 100 },
-  { id: 'mega', coins: 700, bonus: 150, priceEtb: 200 },
-  { id: 'whale', coins: 2000, bonus: 600, priceEtb: 500 },
+  { id: 'starter', coins: 50, bonus: 0, priceEtb: 5 },
+  { id: 'popular', coins: 200, bonus: 20, priceEtb: 20, popular: true },
+  { id: 'value', coins: 500, bonus: 100, priceEtb: 50 },
+  { id: 'pro', coins: 1000, bonus: 300, priceEtb: 100 },
 ];
 
 const cors = {

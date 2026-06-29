@@ -169,22 +169,21 @@ export async function fetchActiveSeason(): Promise<Season | null> {
   return { id: Number(data.id), name: String(data.name), endsAt: new Date(data.ends_at as string).getTime() };
 }
 
-// Seasonal competition leaderboard — doc §5: ranked by AVERAGE best RP across
-// the season's tournaments (min 3 entries). `season` carries the avg RP; level is
-// still derived from lifetime XP.
-export async function fetchSeasonLeaderboard(limit = 5): Promise<GlobalRow[]> {
+// Seasonal competition leaderboard — ranked by the player's BEST tournament RP
+// in the active season (each tournament RP comes from their best raw score).
+export async function fetchSeasonLeaderboard(limit = 10): Promise<GlobalRow[]> {
   if (!isConfigured()) return [];
   const sb = supabase();
   const me = (await sb.auth.getUser()).data.user?.id;
   const { data, error } = await sb
     .from('season_rp_leaderboard')
-    .select('rank, name, avg_rp, entries, xp_lifetime, user_id')
+    .select('rank, name, best_rp, entries, xp_lifetime, user_id')
     .order('rank', { ascending: true })
     .limit(limit);
   if (error || !data) return [];
   return data.map((r) => ({
     rank: Number(r.rank), name: (r.name as string) ?? 'Player',
-    lifetime: Number(r.xp_lifetime), season: Number(r.avg_rp),
+    lifetime: Number(r.xp_lifetime), season: Number(r.best_rp),
     isPlayer: r.user_id === me,
   }));
 }
@@ -273,12 +272,74 @@ export async function fetchDrawWinners(limit = 24): Promise<DrawWinnerRow[]> {
       .limit(limit);
     if (error || !data) return [];
     return data.map((r) => ({
-      phone: String(r.phone_masked ?? '+2519****'),
+      phone: String(r.phone_masked ?? '+2519****00000'),
       prizeEtb: Number(r.prize_etb),
       period: r.period as DrawWinnerRow['period'],
     }));
   } catch { return []; }
 }
+
+export interface SeasonWinnerRow {
+  rank: number; phone: string; name: string; lifetime: number; bestRp: number; seasonName: string; isPlayer: boolean;
+}
+
+/** Previous closed season — same RP ranking rules as fetchSeasonLeaderboard. */
+export async function fetchPreviousSeasonLeaderboard(limit = 10): Promise<SeasonWinnerRow[]> {
+  if (!isConfigured()) return [];
+  try {
+    const sb = supabase();
+    const me = (await sb.auth.getUser()).data.user?.id;
+    const { data, error } = await sb
+      .from('previous_season_rp_leaderboard')
+      .select('rank, phone_masked, name, best_rp, xp_lifetime, season_name, user_id')
+      .order('rank', { ascending: true })
+      .limit(limit);
+    if (error || !data) return [];
+    return data.map((r) => ({
+      rank: Number(r.rank),
+      phone: String(r.phone_masked ?? '+2519****00000'),
+      name: String(r.name ?? 'Player'),
+      lifetime: Number(r.xp_lifetime ?? 0),
+      bestRp: Number(r.best_rp ?? 0),
+      seasonName: String(r.season_name ?? ''),
+      isPlayer: r.user_id === me,
+    }));
+  } catch { return []; }
+}
+
+export type PeriodCadence = 'daily' | 'weekly' | 'monthly';
+export interface PeriodWinnerRow {
+  rank: number; phone: string; name: string; rp: number; isPlayer: boolean;
+}
+
+/** Latest tournament window per cadence — top 10 by RP (Winners tab). */
+export async function fetchTournamentPeriodWinners(
+  cadence: PeriodCadence,
+  limit = 10,
+): Promise<PeriodWinnerRow[]> {
+  if (!isConfigured()) return [];
+  try {
+    const sb = supabase();
+    const me = (await sb.auth.getUser()).data.user?.id;
+    const { data, error } = await sb
+      .from('tournament_period_board')
+      .select('rank, phone_masked, name, rp, user_id')
+      .eq('cadence', cadence)
+      .order('rank', { ascending: true })
+      .limit(limit);
+    if (error || !data) return [];
+    return data.map((r) => ({
+      rank: Number(r.rank),
+      phone: String(r.phone_masked ?? r.name ?? '+2519****00000'),
+      name: String(r.name ?? 'Player'),
+      rp: Number(r.rp ?? 0),
+      isPlayer: r.user_id === me,
+    }));
+  } catch { return []; }
+}
+
+/** @deprecated use fetchPreviousSeasonLeaderboard */
+export const fetchPreviousSeasonWinners = fetchPreviousSeasonLeaderboard;
 
 // Top-N leaderboard from the server view. Falls back to an empty list when
 // unconfigured so callers can merge with the local simulated board if they like.

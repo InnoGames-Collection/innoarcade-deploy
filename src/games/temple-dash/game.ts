@@ -192,8 +192,8 @@ export class TempleDash {
     // Biome readout (safe modulo guards any non-positive distance).
     const bi = ((Math.floor(this.dist / BIOME_LEN) % BIOMES.length) + BIOMES.length) % BIOMES.length;
     this.biomeName = BIOMES[bi].name;
-    // Difficulty ramps with time + distance — drives obstacle density (endless runner curve).
-    this.difficulty = Math.min(1, Math.max(this.elapsed / 90, this.dist / 1500));
+    // Difficulty ramps quickly — hard earlier (≈30s or ~400m to max).
+    this.difficulty = Math.min(1, Math.max(this.elapsed / 30, this.dist / 400));
 
     const delta = this.lane - this.laneF;
     const step = LANE_LERP * dt;
@@ -287,8 +287,8 @@ export class TempleDash {
 
   /** Human-readable tier for HUD (i18n keys resolved in main.ts). */
   difficultyTier(): 'normal' | 'hard' | 'extreme' {
-    if (this.difficulty < 0.33) return 'normal';
-    if (this.difficulty < 0.66) return 'hard';
+    if (this.difficulty < 0.25) return 'normal';
+    if (this.difficulty < 0.55) return 'hard';
     return 'extreme';
   }
 
@@ -324,7 +324,7 @@ export class TempleDash {
       this.spawnCursor += 8;
     }
 
-    const gapScale = 0.55 - d * 0.24;
+    const gapScale = 0.48 - d * 0.28;
     const minGap = this.speed * gapScale;
     this.spawnCursor += minGap + Math.random() * minGap;
   }

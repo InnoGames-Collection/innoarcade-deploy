@@ -6,7 +6,7 @@ import { openAccount } from './account';
 import { mountWallet, openStore, needsSignInToBuy } from './wallet';
 import { onAuthChange, currentUser, signOut, authAvailable } from '../platform/auth';
 import { sfx } from '../engine/audio';
-import { mergedLeaderboard, fetchWallets, fetchUnlocks, unlockGameRemote, fetchActiveSeason, fetchSeasonLeaderboard, claimDailyLogin } from '../platform/backend';
+import { mergedLeaderboard, fetchWallets, fetchUnlocks, unlockGameRemote, fetchActiveSeason, fetchSeasonLeaderboard, fetchTournamentPeriodWinners, claimDailyLogin } from '../platform/backend';
 import { orderedCatalog, getGame, type GameMeta } from '../platform/catalog';
 import {
   activeTournaments, featuredTournament, tournamentGame, getTournamentForGame,
@@ -16,9 +16,9 @@ import {
 } from '../platform/tournaments';
 import { balanceSync, balance, onWalletChange } from '../platform/wallet';
 import { SignInRequiredError } from '../platform/payments';
-import { activeDraws, myTickets, enterDraw, recentWinners, NotEnoughPointsError, hydrateTickets, loadDraws, loadWinners, myOdds, type DrawPeriod, type Winner } from '../platform/draws';
+import { activeDraws, myTickets, enterDraw, NotEnoughPointsError, hydrateTickets, loadDraws, myOdds } from '../platform/draws';
 import { xp as xpBal, onCurrencyChange, setBalance, setLifetime, xpLifetime } from '../platform/currency';
-import { levelFor, economyNeedsAuth } from '../platform/config';
+import { levelFor, economyNeedsAuth, WINNER_ETB_PRIZES, type WinnerCadence } from '../platform/config';
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 const lang = (): Lang => getLang();
@@ -86,27 +86,41 @@ function setupPromo(): void {
   }
 }
 
-// --- Seasonal competition leaderboard (top players by season points) --------
+// Shared row renderer — current season (name) or previous season (masked phone).
+function seasonLbRow(
+  r: { rank: number; lifetime: number; season?: number; avgRp?: number; isPlayer: boolean },
+  label: string,
+): string {
+  const medal = ['🥇', '🥈', '🥉'];
+  const rp = r.season ?? r.avgRp ?? 0;
+  return `
+    <div class="lb-row${r.rank <= 3 ? ' top' : ''}${r.isPlayer ? ' me' : ''}">
+      <span class="lb-rank">${medal[r.rank - 1] ?? '#' + r.rank}</span>
+      <span class="lb-name">${escapeHtml(label)}</span>
+      <span class="lb-badge lvl">Level ${levelFor(r.lifetime)}</span>
+      <span class="lb-score">${rp.toLocaleString()} RP</span>
+    </div>`;
+}
+
+// --- Seasonal competition leaderboard (top players by season RP) ------------
 function renderGlobalBoard(): void {
   const host = document.querySelector('#globalBoard');
   if (!host) return;
-  // Season header: name + time remaining (the competition window).
   void fetchActiveSeason().then((s) => {
-    const info = document.querySelector('#seasonInfo');
-    if (info) info.innerHTML = s
-      ? `🗓️ ${t('hub.seasonName')} <strong>${escapeHtml(s.name)}</strong> · ${t('hub.endsIn')} <strong data-ends="${s.endsAt}">${fmt(s.endsAt)}</strong>`
-      : '';
+    const banner = document.querySelector('#seasonBanner');
+    if (!banner) return;
+    if (!s) { banner.innerHTML = ''; return; }
+    banner.innerHTML = `
+      <span class="sb-glow">🥇</span>
+      <div class="sb-body">
+        <span class="sb-title">${t('hub.seasonRank')}</span>
+        <span class="sb-sub">${t('hub.seasonName')} ${escapeHtml(s.name)} · ${t('hub.endsIn')} <strong data-ends="${s.endsAt}">${fmt(s.endsAt)}</strong></span>
+      </div>
+      <span class="sb-meta">${t('hub.rankedByRp')}</span>`;
   });
-  void fetchSeasonLeaderboard(5).then((rows) => {
+  void fetchSeasonLeaderboard(10).then((rows) => {
     if (!rows.length) { host.innerHTML = `<p class="pd-empty">${t('hub.unranked')}</p>`; return; }
-    const medal = ['🥇', '🥈', '🥉'];
-    host.innerHTML = rows.map((r) => `
-      <div class="gb-row${r.isPlayer ? ' me' : ''}">
-        <span class="gb-rank">${medal[r.rank - 1] ?? '#' + r.rank}</span>
-        <span class="gb-name">${escapeHtml(r.name)}</span>
-        <span class="gb-lvl">Level: ${levelFor(r.lifetime)}</span>
-        <span class="gb-pts">${(r.season ?? 0).toLocaleString()} RP</span>
-      </div>`).join('');
+    host.innerHTML = rows.map((r) => seasonLbRow(r, r.name)).join('');
   });
 }
 
@@ -121,7 +135,7 @@ function renderMyStats(): void {
   if (bar) {
     bar.innerHTML =
       chip('🎖️', t('hub.statLevel'), String(levelFor(xpLifetime())), 'bal-level') +
-      chip('⭐', t('hub.points'), xpLifetime().toLocaleString(), 'bal-points') +
+      chip('⭐', t('hub.progress'), xpLifetime().toLocaleString(), 'bal-points') +
       chip('🪙', t('hub.coinsLabel'), balanceSync().toLocaleString(), 'bal-coins');
   }
   const host = document.querySelector('#topBalances');
@@ -523,66 +537,55 @@ function renderDraws(): void {
   });
 }
 
-const PERIOD_LABEL: Record<DrawPeriod, { en: string; am: string }> = {
-  daily: { en: 'Daily', am: 'ዕለታዊ' },
-  weekly: { en: 'Weekly', am: 'ሳምንታዊ' },
-  monthly: { en: 'Monthly', am: 'ወርሃዊ' },
-};
-const periodLabel = (p: DrawPeriod): string => (lang() === 'am' ? PERIOD_LABEL[p].am : PERIOD_LABEL[p].en);
+// Winners tab: Daily / Weekly / Monthly ETB prizes for the latest tournament window.
+let winnerCadence: WinnerCadence = 'daily';
 
-// Winners view is tabbed: All | Daily | Weekly | Monthly.
-let winnerFilter: 'all' | DrawPeriod = 'all';
+function formatEtbPrize(amount: number): string {
+  if (lang() === 'am' && amount >= 1000) {
+    const k = amount / 1000;
+    const label = Number.isInteger(k) ? String(k) : k.toFixed(1);
+    return `${label}ሺ ብር/ETB`;
+  }
+  return `${amount.toLocaleString()} ETB`;
+}
 
-// Total coin pot paid out each season (mirror of season_prize tiers in SQL).
-const SEASON_POT = 500 + 300 + 200 + 100 + 100 + 50 * 5; // top-10 prize table
-
-// "Coming award" banner: the live season's total coin pot + time to settlement.
-function renderComingAward(): void {
-  const el = document.querySelector('#comingAward');
-  if (!el) return;
-  void fetchActiveSeason().then((s) => {
-    if (!s) { el.innerHTML = ''; return; }
-    el.innerHTML = `
-      <span class="ca-glow">🏅</span>
-      <div class="ca-body">
-        <span class="ca-title">${t('hub.comingAward')}</span>
-        <span class="ca-sub">${t('hub.seasonName')} ${escapeHtml(s.name)} · ${t('hub.endsIn')} <strong data-ends="${s.endsAt}">${fmt(s.endsAt)}</strong></span>
-      </div>
-      <span class="ca-pot">${SEASON_POT.toLocaleString()} 🪙</span>`;
-  });
+function winnerPrizeForRank(cadence: WinnerCadence, rank: number): string {
+  const prizes = WINNER_ETB_PRIZES[cadence];
+  const etb = rank >= 1 && rank <= 3 ? prizes[rank - 1] : 0;
+  return etb > 0 ? formatEtbPrize(etb) : '—';
 }
 
 function renderWinners(): void {
-  const host = document.querySelector('#winnerList');
-  if (!host) return;
-  renderComingAward();
-  const all = recentWinners(24);
-  const medal = (i: number): string => ['🥇', '🥈', '🥉'][i] ?? '🎉';
-  const row = (w: Winner, i: number): string => `
-    <div class="winner-row${i < 3 ? ' top' : ''}">
-      <span class="wr-ico">${medal(i)}</span>
-      <span class="wr-phone">${escapeHtml(w.phone)}</span>
-      <span class="wr-prize">${w.prizeEtb.toLocaleString()} ETB</span>
-    </div>`;
-  const tabs: Array<'all' | DrawPeriod> = ['all', 'daily', 'weekly', 'monthly'];
-  const tabLabel = (k: 'all' | DrawPeriod): string =>
-    k === 'all' ? (lang() === 'am' ? 'ሁሉም' : 'All') : periodLabel(k);
-  const tabBar = `<div class="seg winners-seg" role="tablist">${tabs.map((k) =>
-    `<button class="seg-btn${winnerFilter === k ? ' active' : ''}" data-wf="${k}">${tabLabel(k)}</button>`).join('')}</div>`;
+  const tbody = document.querySelector('#winnerList');
+  if (!tbody) return;
 
-  const group = (p: DrawPeriod): string => {
-    const rows = all.filter((w) => w.period === p);
-    if (!rows.length) return '';
-    return `<div class="winner-group">
-      <h4 class="wg-head"><span class="wg-badge wg-${p}">${periodLabel(p)}</span></h4>
-      ${rows.map(row).join('')}
-    </div>`;
-  };
+  void fetchTournamentPeriodWinners(winnerCadence, 10).then((rows) => {
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="3" class="winners-empty">${t('hub.noWinnersYet')}</td></tr>`;
+      return;
+    }
 
-  const body = winnerFilter === 'all'
-    ? (['daily', 'weekly', 'monthly'] as DrawPeriod[]).map(group).join('')
-    : group(winnerFilter);
-  host.innerHTML = tabBar + (body || `<p class="pd-empty">—</p>`);
+    tbody.innerHTML = rows.map((r) => `
+      <tr class="winners-row${r.rank <= 3 ? ' top' : ''}${r.isPlayer ? ' me' : ''}">
+        <td class="w-no">${r.rank}</td>
+        <td class="w-phone">
+          <span class="w-avatar" aria-hidden="true">👤</span>
+          ${escapeHtml(r.phone)}
+        </td>
+        <td class="w-reward">${winnerPrizeForRank(winnerCadence, r.rank)}</td>
+      </tr>`).join('');
+  });
+}
+
+function setupWinnersTabs(): void {
+  document.querySelectorAll<HTMLButtonElement>('#winnersSeg .seg-btn').forEach((b) => {
+    b.addEventListener('click', () => {
+      winnerCadence = (b.dataset.cadence as WinnerCadence) ?? 'daily';
+      document.querySelectorAll('#winnersSeg .seg-btn').forEach((x) => x.classList.remove('active'));
+      b.classList.add('active');
+      renderWinners();
+    });
+  });
 }
 
 // --- Live countdowns --------------------------------------------------------
@@ -730,7 +733,7 @@ function mountSignInGate(): void {
 }
 
 // Nav active-state on scroll (top nav + mobile bottom nav).
-const sections = ['games', 'draws', 'winners', 'dashboard'];
+const sections = ['games', 'topPlayers', 'winners', 'dashboard'];
 function syncNavActive(): void {
   let current = sections[0];
   for (const id of sections) {
@@ -760,13 +763,6 @@ function setupBrowse(): void {
     });
   });
   document.querySelector('#bnAccount')?.addEventListener('click', () => void openAccount());
-  // Winners tab bar (All / Daily / Weekly / Monthly) — delegated, re-rendered.
-  document.querySelector('#winnerList')?.addEventListener('click', (e) => {
-    const tab = (e.target as HTMLElement).closest<HTMLElement>('[data-wf]');
-    if (!tab) return;
-    winnerFilter = tab.dataset.wf as typeof winnerFilter;
-    renderWinners();
-  });
   // Delegated ℹ️ "how to play" — intercept before the card link navigates.
   document.querySelector('#gameGrid')?.addEventListener('click', (e) => {
     const info = (e.target as HTMLElement).closest<HTMLElement>('.gc-info');
@@ -859,6 +855,7 @@ renderAll();
 onWalletChange(renderMyStats);
 onCurrencyChange(renderMyStats);
 setupBrowse();
+setupWinnersTabs();
 syncNavActive();
 mountSettings();
 mountSignInGate();
@@ -879,7 +876,7 @@ function hydratePoints(): void {
     }
   });
   void loadDraws().then(() => hydrateTickets()).then(() => renderDraws());
-  void loadWinners().then(() => renderWinners());
+  renderWinners();
   void fetchUnlocks().then((ids) => {
     unlockedSet.clear(); ids.forEach((id) => unlockedSet.add(id)); renderGames();
   });

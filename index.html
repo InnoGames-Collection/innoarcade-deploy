@@ -14,8 +14,8 @@
       </div>
       <nav class="topnav">
         <a href="#games" class="nav-link active" data-i18n="hub.available">Games</a>
-        <a href="#draws" class="nav-link" data-i18n="hub.draws">Draws</a>
-        <a href="#winners" class="nav-link" data-i18n="hub.topPlayers">Top players</a>
+        <a href="#topPlayers" class="nav-link" data-i18n="hub.topPlayers">Top players</a>
+        <a href="#winners" class="nav-link" data-i18n="hub.winners">Winners</a>
       </nav>
       <div id="topBalances" class="top-balances"></div>
       <button id="settingsBtn" class="settings-btn" aria-label="Settings">
@@ -46,22 +46,40 @@
         <div id="gameGrid"></div>
       </section>
 
-      <section id="draws" class="draws-section">
+      <section id="draws" class="draws-section phase2-hidden" hidden>
         <h2 class="section-title">🎁 <span data-i18n="hub.draws">Draws</span></h2>
         <p class="section-sub" data-i18n="hub.drawIntro">Spend points on tickets — more tickets, more chances.</p>
         <div id="drawList" class="draw-cards"></div>
       </section>
 
-      <section id="topPlayers" class="winners-section">
+      <section id="topPlayers" class="leaderboard-section">
         <h2 class="section-title">🥇 <span data-i18n="hub.topPlayers">Top players</span></h2>
-        <p id="seasonInfo" class="section-sub"></p>
-        <div id="globalBoard" class="global-board"></div>
+        <p class="section-sub" data-i18n="hub.topPlayersSub">Top 10 this season — ranked by best tournament RP.</p>
+        <div id="seasonBanner" class="season-banner"></div>
+        <div id="globalBoard" class="leaderboard-list"></div>
       </section>
 
-      <section id="winners" class="winners-section">
-        <h2 class="section-title">🏆 <span data-i18n="hub.winners">Winners</span></h2>
-        <div id="comingAward" class="coming-award"></div>
-        <div id="winnerList" class="winner-list"></div>
+      <section id="winners" class="leaderboard-section">
+        <div class="winners-panel">
+          <h2 class="winners-title" data-i18n="hub.winners">WINNERS</h2>
+          <div id="winnersSeg" class="seg winners-seg" role="tablist">
+            <button type="button" class="seg-btn active" data-cadence="daily" role="tab" data-i18n="hub.winTabDaily">Daily</button>
+            <button type="button" class="seg-btn" data-cadence="weekly" role="tab" data-i18n="hub.winTabWeekly">Weekly</button>
+            <button type="button" class="seg-btn" data-cadence="monthly" role="tab" data-i18n="hub.winTabMonthly">Monthly</button>
+          </div>
+          <div class="winners-table-wrap">
+            <table class="winners-table" aria-label="Winners">
+              <thead>
+                <tr>
+                  <th data-i18n="hub.colNo">No.</th>
+                  <th data-i18n="hub.colPhone">Phone Number</th>
+                  <th data-i18n="hub.colRewards">Rewards</th>
+                </tr>
+              </thead>
+              <tbody id="winnerList"></tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
       <section id="dashboard" class="featured-section">
@@ -79,7 +97,7 @@
     <nav class="bottomnav" aria-label="Primary">
       <a href="#games" class="bn-item active"><span class="bn-ico">🏠</span><span data-i18n="nav.home">Home</span></a>
       <a href="#games" class="bn-item"><span class="bn-ico">🎮</span><span data-i18n="nav.games">Games</span></a>
-      <a href="#draws" class="bn-item"><span class="bn-ico">🎁</span><span data-i18n="nav.draws">Draws</span></a>
+      <a href="#topPlayers" class="bn-item"><span class="bn-ico">🥇</span><span data-i18n="nav.topPlayers">Top</span></a>
       <a href="#winners" class="bn-item"><span class="bn-ico">🏆</span><span data-i18n="nav.winners">Winners</span></a>
       <button class="bn-item" id="bnAccount"><span class="bn-ico">👤</span><span data-i18n="nav.account">Account</span></button>
     </nav>

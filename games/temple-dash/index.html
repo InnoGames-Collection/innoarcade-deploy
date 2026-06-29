@@ -12,8 +12,9 @@
     <div id="stage">
       <canvas id="game"></canvas>
 
+      <button id="closeBtn" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+
       <div id="hud">
-        <button id="closeBtn" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         <div class="hud-top">
           <div class="hud-stats">
             <div class="stat"><span data-i18n="td.score">Score</span><strong id="scoreVal">0</strong></div>
@@ -31,6 +32,7 @@
 
       <div id="menuOverlay" class="overlay">
         <div class="panel panel-clean">
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
           <div class="shop">
             <h3 data-i18n="td.skins">Runners</h3>
             <div class="skin-row" id="skinRow"></div>
@@ -39,12 +41,12 @@
           <div class="runner-tourney" id="runnerTourney"></div>
 
           <button id="startBtn" class="btn primary" data-i18n="td.playTournament">Play</button>
-          <button type="button" class="gp-close gp-close-block" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         </div>
       </div>
 
       <div id="pauseOverlay" class="overlay hidden">
         <div class="panel">
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
           <h2 data-i18n="td.paused">Paused</h2>
           <button id="resumeBtn" class="btn primary" data-i18n="td.resume">Resume</button>
           <button id="restartBtn" class="btn" data-i18n="td.restart">Play again</button>
@@ -53,6 +55,7 @@
 
       <div id="overOverlay" class="overlay hidden">
         <div class="panel">
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
           <h2 data-i18n="td.gameOver">Game over</h2>
           <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
           <div class="final">
