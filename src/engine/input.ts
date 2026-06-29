@@ -39,7 +39,7 @@ export class Input {
     });
 
     target.addEventListener('pointerdown', (e) => {
-      if ((e.target as HTMLElement).closest('button, a')) return;
+      if ((e.target as HTMLElement).closest('button, a, .skin-chip, .overlay .panel')) return;
       this.tracking = true;
       this.startX = e.clientX;
       this.startY = e.clientY;

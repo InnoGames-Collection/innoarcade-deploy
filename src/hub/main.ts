@@ -104,7 +104,7 @@ function renderGlobalBoard(): void {
       <div class="gb-row${r.isPlayer ? ' me' : ''}">
         <span class="gb-rank">${medal[r.rank - 1] ?? '#' + r.rank}</span>
         <span class="gb-name">${escapeHtml(r.name)}</span>
-        <span class="gb-lvl">L${levelFor(r.lifetime)}</span>
+        <span class="gb-lvl">Level: ${levelFor(r.lifetime)}</span>
         <span class="gb-pts">${(r.season ?? 0).toLocaleString()} RP</span>
       </div>`).join('');
   });
@@ -114,14 +114,15 @@ function renderGlobalBoard(): void {
 // The Level / Points / Coins chips render in their own bar right under the promo
 // banner (where the KPI strip used to be). The Buy Coin button stays in the topbar.
 function renderMyStats(): void {
-  const chip = (icon: string, val: string, cls: string): string =>
-    `<span class="bal-chip ${cls}">${icon} <strong>${val}</strong></span>`;
+  function chip(icon: string, label: string, val: string, cls: string): string {
+    return `<span class="bal-chip ${cls}">${icon} <span class="bal-lbl">${label}:</span> <strong>${val}</strong></span>`;
+  }
   const bar = document.querySelector('#playerBar');
   if (bar) {
     bar.innerHTML =
-      chip('🎖️', `L${levelFor(xpLifetime())}`, 'bal-level') +
-      chip('⭐', xpBal().toLocaleString(), 'bal-points') +
-      chip('🪙', balanceSync().toLocaleString(), 'bal-coins');
+      chip('🎖️', 'Level', String(levelFor(xpLifetime())), 'bal-level') +
+      chip('⭐', 'Point', xpLifetime().toLocaleString(), 'bal-points') +
+      chip('🪙', 'Coin', balanceSync().toLocaleString(), 'bal-coins');
   }
   const host = document.querySelector('#topBalances');
   if (host) {

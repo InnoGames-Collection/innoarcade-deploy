@@ -431,6 +431,7 @@ body {
 .player-bar-section .bal-chip { font-size: 0.82rem; padding: 0.3rem 0.7rem; }
 .bal-chip { display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.7rem; font-weight: 600;
   padding: 0.13rem 0.45rem; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,0.85); white-space: nowrap; }
+.bal-chip .bal-lbl { font-weight: 500; opacity: 0.85; margin-right: 0.15rem; }
 .bal-chip strong { font-weight: 800; }
 .bal-coins strong { color: #8a6310; }
 .bal-points strong { color: var(--accent); }

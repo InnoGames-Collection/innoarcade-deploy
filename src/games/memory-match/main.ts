@@ -117,13 +117,14 @@ async function startPlay(): Promise<void> {
   starting = true;
   try {
     const res = await host.begin();
-    rankedThisRun = res.ok;
     if (!res.ok) {
       if (res.reason === 'coins') message.textContent = t('mm.needCoins');
       else if (res.reason === 'auth') message.textContent = t('td.signInToRank');
-    } else {
-      message.textContent = '';
+      else message.textContent = t('td.enterFirst');
+      return;
     }
+    rankedThisRun = true;
+    message.textContent = '';
     message.style.color = '';
     const seq = ++roundSeq;     // supersede any in-flight round (mid-round Replay)
     clearInterval(timerId);

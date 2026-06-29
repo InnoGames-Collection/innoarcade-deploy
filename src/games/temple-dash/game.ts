@@ -141,7 +141,7 @@ export class TempleDash {
 
   handleAction(a: Action): void {
     switch (this.state) {
-      case 'menu': if (a === 'tap') this.start(); break;
+      case 'menu': break; // Play button only — no tap-to-start on the menu overlay
       case 'over': if (a === 'tap' && this.time - this.overAt > 0.8) this.start(); break;
       case 'playing':
         if (a === 'left') this.lane = Math.max(-1, this.lane - 1);

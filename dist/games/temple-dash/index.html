@@ -7,19 +7,19 @@
     <link rel="manifest" href="../../manifest.webmanifest" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏃</text></svg>" />
     <title>Ethiorunner — GoPlay</title>
-    <script type="module" crossorigin src="../../assets/templeDash-CbO5R80S.js"></script>
+    <script type="module" crossorigin src="../../assets/templeDash-B-3BCV3F.js"></script>
     <link rel="modulepreload" crossorigin href="../../assets/modulepreload-polyfill-B5Qt9EMX.js">
-    <link rel="modulepreload" crossorigin href="../../assets/tournaments-D2jWckik.js">
-    <link rel="modulepreload" crossorigin href="../../assets/audio-pMX5Y8PT.js">
-    <link rel="modulepreload" crossorigin href="../../assets/index-De7xFyFE.js">
+    <link rel="modulepreload" crossorigin href="../../assets/tournaments-eqtz9MMb.js">
+    <link rel="modulepreload" crossorigin href="../../assets/audio-DFxUOKH2.js">
+    <link rel="modulepreload" crossorigin href="../../assets/index-C9_2CSiM.js">
     <link rel="modulepreload" crossorigin href="../../assets/loop-BDek7L7e.js">
-    <link rel="modulepreload" crossorigin href="../../assets/input-CKS5NiBw.js">
+    <link rel="modulepreload" crossorigin href="../../assets/input-BbP3XBK1.js">
     <link rel="modulepreload" crossorigin href="../../assets/currency-6Vn0SSos.js">
-    <link rel="modulepreload" crossorigin href="../../assets/gameHost-CLDqnUAr.js">
-    <link rel="modulepreload" crossorigin href="../../assets/wallet-Bz8n9Vw6.js">
+    <link rel="modulepreload" crossorigin href="../../assets/gameHost-BojkZI5e.js">
+    <link rel="modulepreload" crossorigin href="../../assets/wallet-TSB98yq5.js">
     <link rel="modulepreload" crossorigin href="../../assets/fx-ccUjo7Ds.js">
     <link rel="stylesheet" crossorigin href="../../assets/audio-DngoG11r.css">
-    <link rel="stylesheet" crossorigin href="../../assets/templeDash-DYiY_JM4.css">
+    <link rel="stylesheet" crossorigin href="../../assets/templeDash-Dtk5j7RP.css">
   </head>
   <body>
     <div id="stage">
@@ -43,20 +43,15 @@
       </div>
 
       <div id="menuOverlay" class="overlay">
-        <div class="panel">
-          <h1>Ethiorunner</h1>          <p class="controls" data-i18n="td.controls"></p>
-
+        <div class="panel panel-clean">
           <div class="shop">
             <h3 data-i18n="td.skins">Runners</h3>
             <div class="skin-row" id="skinRow"></div>
           </div>
 
-          <p id="runnerHint" class="runner-hint">💡 <span data-i18n="td.economyHint">Free runs earn XP · Enter a tournament to compete for coins</span> <button id="hintClose" class="hint-x" aria-label="Dismiss">✕</button></p>
-
           <div class="runner-tourney" id="runnerTourney"></div>
 
-          <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
-          <p class="hint" data-i18n="td.start"></p>
+          <button id="startBtn" class="btn primary" data-i18n="td.playTournament">Play</button>
           <button type="button" class="gp-close gp-close-block" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         </div>
       </div>
@@ -66,7 +61,6 @@
           <h2 data-i18n="td.paused">Paused</h2>
           <button id="resumeBtn" class="btn primary" data-i18n="td.resume">Resume</button>
           <button id="restartBtn" class="btn" data-i18n="td.restart">Play again</button>
-          <button type="button" class="gp-close gp-close-block" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         </div>
       </div>
 
@@ -76,7 +70,6 @@
           <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
           <div class="final">
             <div class="stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
-            <div class="stat"><span>💎 <span data-i18n="td.gems">Gems</span></span><strong id="finalCoins">0</strong></div>
             <div class="stat"><span data-i18n="td.best">Best</span><strong id="finalBest">0</strong></div>
           </div>
           <div class="run-reward" id="runReward"></div>
@@ -85,20 +78,6 @@
             <div class="runner-board" id="runnerBoardOver"></div>
           </div>
           <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
-          <button type="button" class="gp-close gp-close-block" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-        </div>
-      </div>
-
-      <div id="ftue" class="overlay hidden">
-        <div class="panel ftue">
-          <h2 data-i18n="td.howto">How to play</h2>
-          <ul class="ftue-list">
-            <li>⬅➡ <span data-i18n="td.ftueLane">Swipe or arrows to change lane</span></li>
-            <li>⬆ <span data-i18n="td.ftueJump">Swipe up / ▲ to jump hurdles</span></li>
-            <li>⬇ <span data-i18n="td.ftueSlide">Swipe down / ▼ to slide under beams</span></li>
-            <li>🪙 <span data-i18n="td.ftueCoin">Collect coins to unlock runners</span></li>
-          </ul>
-          <button id="ftueBtn" class="btn primary" data-i18n="td.gotit">Got it</button>
         </div>
       </div>
 

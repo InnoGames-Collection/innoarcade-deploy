@@ -62,7 +62,7 @@ game.onGameOver = (score, record) => {
     if (note) {
       note.textContent = (res.ranked ?? false)
         ? `🏆 Ranked · #${res.rank ?? '—'}/${res.total ?? '—'} · 🎟️ ${res.attemptsLeft ?? 0} left`
-        : `Free run · +${res.award ?? 0} XP`;
+        : '';
     }
   });
 };
@@ -71,11 +71,13 @@ game.onGameOver = (score, record) => {
 // (pay-once → N attempts). If refused (coins/level/auth), fall back to a free run.
 async function play(): Promise<void> {
   const res = await host.begin();
-  if (res.ok) { rankedThisRun = true; game.start(); return; }
-  if (res.reason === 'coins') toast(`🪙 Not enough coins for entry (${host.costCoins})`);
-  else if (res.reason === 'auth') toast('Sign in to compete — playing free');
-  rankedThisRun = false;
-  game.start(); // free practice run still earns XP
+  if (!res.ok) {
+    if (res.reason === 'coins') toast(`🪙 Not enough coins for entry (${host.costCoins})`);
+    else if (res.reason === 'auth') toast('Sign in to compete');
+    return;
+  }
+  rankedThisRun = true;
+  game.start();
 }
 
 const input = new Input(document.body);
