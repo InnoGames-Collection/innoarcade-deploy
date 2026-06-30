@@ -560,15 +560,17 @@ export class TempleDash {
       : sliding
         ? `${this.skinId}_slide`
         : `${this.skinId}_walk${(Math.floor(this.walkPhase) % WALK_FRAMES) + 1}`;
-    // Run juice: lean + light bob; stride frames carry most of the motion.
     const bob = running ? Math.abs(Math.sin(this.walkPhase * Math.PI)) * 5 * pr : 0;
-    const lean = running ? -0.07 : jumping ? -0.12 : sliding ? -0.04 : 0;
+    const lean = running ? -0.07 : jumping ? -0.12 : 0;
+    const slideScale = 0.62;
+    const drawH = sliding ? charH * slideScale : charH;
+    const drawW = sliding ? charW * slideScale : charW;
 
     // Foot anchor: bottom-center of the normalized sprite canvas on the ground line.
     ctx.save();
     ctx.translate(x, groundY - lift - bob);
     if (lean) ctx.rotate(lean);
-    this.assets.draw(ctx, pose, 0, -charW / 2, -charH, charW, charH);
+    this.assets.draw(ctx, pose, 0, -drawW / 2, -drawH, drawW, drawH);
     ctx.restore();
   }
 }

@@ -18,13 +18,12 @@ const ROOT = join(__dirname, '..');
 const SKIN_DIR = join(ROOT, 'src/games/temple-dash/skins/ethio_f');
 const INPUT_DIR = join(SKIN_DIR, 'img');
 
-/** WhatsApp timestamp fragment → output pose name (Set A only). */
+/** WhatsApp timestamp fragment → output pose name (rear-view Set A only). */
 const POSE_MAP = {
   '12.36.51': 'stand',
-  '12.38.46': 'slide',
+  '12.40.45': 'slide', // rear crouch — not 12.38.46 horizontal dive
   '12.39.17': 'walk1',
   '12.39.52': 'walk2',
-  '12.40.04': 'walk3',
   '12.40.29': 'jump',
   '12.42.33': 'hit',
 };
@@ -101,6 +100,21 @@ function bbox(rgba, width, height, alphaThreshold = 16) {
   return { left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
 }
 
+function footCenterX(rgba, width, height, alphaThreshold = 16) {
+  const band = Math.max(3, Math.floor(height * 0.08));
+  let sumX = 0;
+  let count = 0;
+  for (let y = height - band; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (rgba[(y * width + x) * 4 + 3] > alphaThreshold) {
+        sumX += x;
+        count++;
+      }
+    }
+  }
+  return count ? sumX / count : width / 2;
+}
+
 function poseFromFilename(name) {
   for (const [stamp, pose] of Object.entries(POSE_MAP)) {
     if (name.includes(stamp)) return pose;
@@ -126,7 +140,9 @@ async function loadProcessed(filePath) {
     .toBuffer();
 
   const meta = await sharp(cropped).metadata();
-  return { buffer: cropped, width: meta.width, height: meta.height };
+  const { data: cropPx } = await sharp(cropped).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const footX = footCenterX(cropPx, meta.width, meta.height);
+  return { buffer: cropped, width: meta.width, height: meta.height, footX };
 }
 
 async function main() {
@@ -171,8 +187,8 @@ async function main() {
 
   const manifest = { canvas: { width: canvasW, height: canvasH }, poses: {} };
 
-  for (const [pose, { buffer, width, height }] of processed) {
-    const left = Math.round((canvasW - width) / 2);
+  for (const [pose, { buffer, width, height, footX }] of processed) {
+    const left = Math.round(canvasW / 2 - footX);
     const top = PAD_TOP + (maxH - height); // feet aligned to common baseline
     const outPath = join(SKIN_DIR, `${pose}.png`);
 
@@ -188,7 +204,7 @@ async function main() {
       .png({ compressionLevel: 9 })
       .toFile(outPath);
 
-    manifest.poses[pose] = { file: `${pose}.png`, crop: { width, height }, placedAt: { left, top } };
+    manifest.poses[pose] = { file: `${pose}.png`, crop: { width, height }, footX, placedAt: { left, top } };
     console.log(`wrote ${outPath}`);
   }
 
@@ -202,12 +218,12 @@ async function main() {
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   console.log(`wrote ${manifestPath}`);
 
-  const missing = ['stand', 'walk1', 'walk2', 'walk3', 'jump', 'slide'].filter((p) => !processed.has(p));
+  const missing = ['stand', 'walk1', 'walk2', 'jump', 'slide'].filter((p) => !processed.has(p));
   if (missing.length) {
     console.warn(`\nWarning: missing gameplay poses: ${missing.join(', ')}`);
     process.exitCode = 1;
   } else {
-    console.log('\nDone — all 6 gameplay poses ready.');
+    console.log('\nDone — run cycle uses walk1 + walk2 (2 rear-view strides).');
   }
 }
 

@@ -10,7 +10,7 @@ const urls = import.meta.glob(['./kenney/*.png', './skins/*.png', './skins/**/*.
   import: 'default',
 }) as Record<string, string>;
 
-export const WALK_FRAMES = 3;
+export const WALK_FRAMES = 2;
 
 /** Normalized sprite canvas (keep in sync with skins/ethio_f/manifest.json). */
 export const SKIN_SPRITE_W = 515;
@@ -31,7 +31,7 @@ export const SKINS: Skin[] = [
   { id: DEFAULT_SKIN_ID, nameEn: 'Ethio Star', nameAm: 'ኢትዮ ኮከብ', cost: 0, thumb: './skins/ethio_f.png' },
 ];
 
-const POSES = ['stand', 'walk1', 'walk2', 'walk3', 'jump', 'slide'] as const;
+const POSES = ['stand', 'walk1', 'walk2', 'jump', 'slide'] as const;
 
 function assetUrl(relativePath: string): string {
   const suffix = relativePath.replace('./', '');
