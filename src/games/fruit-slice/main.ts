@@ -1,20 +1,21 @@
 import '../../styles/base.css';
 import { GameHost } from '../../platform/gameHost';
 import { openTournamentEntryForGame } from '../../hub/tournamentEntry';
-import { refreshGameTournamentPanel, tournamentBoardHtml } from '../../platform/gameTournamentPanel';
+import { tournamentBoardHtml } from '../../platform/gameTournamentPanel';
+import { balance } from '../../platform/wallet';
 import { leaderboardRemote, playerStandingRemote } from '../../platform/backend';
 import { isConfigured } from '../../platform/supabase';
 import { currentUser } from '../../platform/auth';
-import { loadTournaments, loadMyEntries, myEntry, getTournamentForGame } from '../../platform/tournaments';
+import { loadTournaments, loadMyEntries, myEntry, getTournamentForGame, type LeaderEntry } from '../../platform/tournaments';
 import './style.css';
-import { applyTranslations, getLang, setLang, t, type Lang } from '../../i18n';
+import { applyTranslations, getLang, t } from '../../i18n';
 import { GameLoop } from '../../engine/loop';
 import { Input } from '../../engine/input';
 import { sfx } from '../../engine/audio';
 import { FruitSlice, W, H, type GameState } from './game';
 
 const GAME_ID = 'fruit-slice';
-const tourneyMount = (): HTMLElement => $('#fsTourney');
+const host = new GameHost(GAME_ID);
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
@@ -27,10 +28,31 @@ ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
 const game = new FruitSlice();
 
-const host = new GameHost(GAME_ID);
 let rankedThisRun = false;
 let serverBest = 0;
 let starting = false;
+
+function escHtml(s: string): string {
+  return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
+}
+
+function medal(rank: number): string {
+  return ['🥇', '🥈', '🥉'][rank - 1] ?? `${rank}`;
+}
+
+function gameTitle(): string {
+  return getLang() === 'am' ? host.meta.nameAm : host.meta.nameEn;
+}
+
+function boardHtml(rows: LeaderEntry[]): string {
+  if (!rows.length) return `<p class="fb-empty">${t('td.noBoard')}</p>`;
+  return rows.map((r) => `
+    <div class="fb-row${r.isPlayer ? ' me' : ''}">
+      <span class="fb-rank">${medal(r.rank)}</span>
+      <span class="fb-name">${escHtml(r.isPlayer ? t('td.you') : r.name)}</span>
+      <span class="fb-score">${r.score.toLocaleString()}</span>
+    </div>`).join('');
+}
 
 // Minimal transient toast (this game has no toast element of its own).
 let toastT = 0;
@@ -76,14 +98,44 @@ function showOverlay(state: GameState): void {
   for (const [key, el] of Object.entries(overlays)) {
     el.classList.toggle('hidden', key !== state);
   }
-  $('#hud').classList.toggle('hidden', state !== 'playing');
+  const playing = state === 'playing';
+  $('#hud').classList.toggle('hidden', !playing);
+  $('#closeBtn').classList.toggle('hidden', !playing);
 }
 
 game.onStateChange = showOverlay;
 
 async function refreshTournamentPanel(): Promise<void> {
-  const snap = await refreshGameTournamentPanel(GAME_ID, tourneyMount());
-  if (snap) serverBest = snap.serverBest;
+  const mount = $('#fsTourney');
+  if (!isConfigured()) {
+    mount.innerHTML = '';
+    return;
+  }
+  await currentUser();
+  await Promise.all([loadTournaments(), loadMyEntries()]);
+  const tourney = getTournamentForGame(GAME_ID);
+  if (!tourney) {
+    mount.innerHTML = '';
+    return;
+  }
+
+  const [walletCoins, standing, board] = await Promise.all([
+    balance(),
+    playerStandingRemote(tourney.id),
+    leaderboardRemote(tourney.id, 5),
+  ]);
+  serverBest = standing?.score ?? 0;
+  const left = myEntry(tourney.id)?.left ?? 0;
+
+  mount.innerHTML = `
+    <div class="ft-head">
+      <span class="ft-title">🍉 ${escHtml(gameTitle())}</span>
+      <span class="ft-coins">${walletCoins.toLocaleString()} 🪙</span>
+    </div>
+    <div class="ft-best">${t('td.yourBest')}: <strong>${serverBest.toLocaleString()}</strong></div>
+    ${left > 0 ? `<div class="ft-status"><span class="ft-attempts">🎟️ ${t('td.attemptsLeft')}: <strong>${left}</strong></span></div>` : ''}
+    <div class="fs-board">${boardHtml(board)}</div>`;
+
   updateActionButtons();
 }
 
@@ -220,23 +272,6 @@ muteBtn.addEventListener('click', () => {
   muteBtn.textContent = sfx.toggleMute() ? '🔇' : '🔊';
 });
 
-const langEn = $('#langEn');
-const langAm = $('#langAm');
-function syncLangButtons(): void {
-  const lang = getLang();
-  langEn.classList.toggle('active', lang === 'en');
-  langAm.classList.toggle('active', lang === 'am');
-}
-function pick(lang: Lang): void {
-  setLang(lang);
-  applyTranslations();
-  syncLangButtons();
-  void refreshTournamentPanel();
-  updateActionButtons();
-}
-langEn.addEventListener('click', () => pick('en'));
-langAm.addEventListener('click', () => pick('am'));
-
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) game.pause();
 });
@@ -250,7 +285,6 @@ const loop = new GameLoop(
 
 document.documentElement.lang = getLang();
 applyTranslations();
-syncLangButtons();
 updateActionButtons();
 showOverlay('menu');
 loop.start();

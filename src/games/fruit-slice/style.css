@@ -29,6 +29,14 @@ body {
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
 }
 
+#closeBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 6;
+  pointer-events: auto;
+}
+
 #game {
   display: block;
   width: 100%;
@@ -37,36 +45,25 @@ body {
   cursor: crosshair;
 }
 
-/* Lang + close on the game canvas (runner-style stage chrome). */
-.fs-stage-chrome {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  pointer-events: none;
-}
-
-.fs-stage-chrome .lang-switch,
-.fs-stage-chrome .gp-close {
-  pointer-events: auto;
-}
-
-.fs-stage-chrome .gp-close {
-  position: static;
-  flex: none;
-}
-
 #hud {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  z-index: 5;
+}
+
+.hud-top {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: 12px 52px 0 12px;
+}
+
+.hud-buttons {
   display: flex;
   gap: 8px;
-  pointer-events: none;
-  z-index: 5;
 }
 
 #hud button {
@@ -110,6 +107,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 18px;
   padding: 26px 30px;
+  padding-top: 38px;
   width: min(330px, 92%);
   max-height: 90%;
   overflow-y: auto;
@@ -122,8 +120,7 @@ body {
 }
 
 .panel-clean {
-  padding: 22px 20px;
-  gap: 14px;
+  padding-top: 38px;
 }
 
 .new-best {
@@ -161,53 +158,28 @@ body {
   font-weight: 700;
 }
 
-.lang-switch {
-  display: inline-flex;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 999px;
-  overflow: hidden;
-  background: rgba(10, 12, 26, 0.55);
-  backdrop-filter: blur(4px);
-}
-
-.lang-btn {
-  padding: 0.35rem 0.9rem;
-  background: transparent;
-  border: none;
-  color: var(--muted);
-  font-family: inherit;
-  font-size: 0.82rem;
-  cursor: pointer;
-}
-
-.lang-btn.active {
-  background: var(--accent);
-  color: #221a08;
-  font-weight: 700;
-}
-
-/* --- Tournament panel (shared layout — see gameTournamentPanel.ts) ---------- */
-.game-tourney {
+/* --- Tournament panel (runner parity) ------------------------------------- */
+.fs-tourney {
   width: 100%;
-  margin: 0;
+  margin: 6px 0 10px;
   padding: 10px 12px;
-  border: 1px solid rgba(240, 168, 50, 0.35);
-  border-radius: 14px;
-  background: rgba(10, 12, 26, 0.45);
+  border: 1px solid rgba(255, 206, 84, 0.28);
+  border-radius: 12px;
+  background: rgba(20, 24, 44, 0.55);
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-.game-tourney:empty { display: none; }
-.gt-head { display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; }
-.gt-title { font-weight: 800; color: #fff; }
-.gt-coins { color: #ffce54; font-weight: 800; }
-.gt-best { font-size: 0.82rem; color: rgba(255, 255, 255, 0.85); }
-.gt-best strong { color: #ffce54; font-size: 1rem; }
-.gt-status { font-size: 0.82rem; color: #fff; }
-.gt-attempts strong { color: #ffce54; }
-.gt-board { display: flex; flex-direction: column; gap: 3px; }
-.gt-row {
+.fs-tourney:empty { display: none; }
+.ft-head { display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; }
+.ft-title { font-weight: 700; color: var(--text); }
+.ft-coins { color: var(--accent); font-weight: 700; }
+.ft-best { font-size: 0.82rem; color: rgba(255, 255, 255, 0.85); }
+.ft-best strong { color: #ffb347; font-size: 1rem; }
+.ft-status { font-size: 0.82rem; color: var(--text); }
+.ft-attempts strong { color: var(--accent); }
+.fs-board { display: flex; flex-direction: column; gap: 3px; }
+.fb-row {
   display: grid;
   grid-template-columns: 28px 1fr auto;
   align-items: center;
@@ -215,23 +187,17 @@ body {
   padding: 4px 8px;
   border-radius: 8px;
   font-size: 0.82rem;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.03);
 }
-.gt-row.me { background: rgba(240, 168, 50, 0.18); font-weight: 700; }
-.gt-rank { text-align: center; }
-.gt-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.gt-score { color: var(--accent); font-variant-numeric: tabular-nums; font-weight: 700; }
-.gt-empty { font-size: 0.8rem; color: rgba(255, 255, 255, 0.55); text-align: center; margin: 4px 0; }
-.gt-board-sep {
-  height: 1px;
-  margin: 4px 0;
-  background: rgba(255, 255, 255, 0.12);
-}
+.fb-row.me { background: rgba(240, 168, 50, 0.16); font-weight: 700; }
+.fb-rank { text-align: center; }
+.fb-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fb-score { color: var(--accent); font-variant-numeric: tabular-nums; }
+.fb-empty { font-size: 0.8rem; color: var(--muted); text-align: center; margin: 4px 0; }
 
-/* --- Game-over overlay (runner / memory-match parity) --------------------- */
+/* --- Game-over overlay ---------------------------------------------------- */
 .fs-over-panel {
-  padding: 22px 20px;
   gap: 11px;
   align-items: stretch;
 }
@@ -274,3 +240,21 @@ body {
   text-align: left;
 }
 .fs-over-board { display: flex; flex-direction: column; gap: 3px; }
+
+/* Reuse shared leaderboard row styles on game-over board. */
+.fs-over-board .gt-row,
+.fs-over-board .fb-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.03);
+}
+.fs-over-board .gt-row.me,
+.fs-over-board .fb-row.me { background: rgba(240, 168, 50, 0.16); font-weight: 700; }
+.fs-over-board .gt-score,
+.fs-over-board .fb-score { color: var(--accent); font-variant-numeric: tabular-nums; font-weight: 700; }

@@ -319,20 +319,22 @@ export class FruitSlice {
     ctx.closePath();
     ctx.fill();
 
-    ctx.fillStyle = 'rgba(20, 10, 35, 0.55)';
-    ctx.fillRect(0, 0, W, 60);
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 16px sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(`Score: ${this.score}`, 16, 38);
-    ctx.textAlign = 'right';
-    ctx.fillStyle = '#ff8a8a';
-    ctx.fillText(`♥ ${this.lives}`, W - 16, 38);
-    if (this.combo > 1) {
-      ctx.textAlign = 'center';
-      ctx.fillStyle = `hsl(${this.combo * 20}, 100%, 50%)`;
-      ctx.font = 'bold 20px sans-serif';
-      ctx.fillText(`${this.combo}x`, W / 2, 38);
+    if (this.state === 'playing' || this.state === 'paused') {
+      ctx.fillStyle = 'rgba(20, 10, 35, 0.55)';
+      ctx.fillRect(0, 0, W, 52);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(`Score: ${this.score}`, 16, 34);
+      ctx.fillStyle = '#ff8a8a';
+      ctx.fillText(`♥ ${this.lives}`, 16, H - 18);
+      if (this.combo > 1) {
+        ctx.textAlign = 'center';
+        ctx.fillStyle = `hsl(${this.combo * 20}, 100%, 50%)`;
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText(`${this.combo}x`, W / 2, 34);
+      }
     }
 
     for (const bomb of this.bombs) {

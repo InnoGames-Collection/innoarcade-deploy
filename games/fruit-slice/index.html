@@ -10,28 +10,28 @@
     <div id="stage">
       <canvas id="game" width="480" height="720"></canvas>
 
-      <div id="fsStageChrome" class="fs-stage-chrome">
-        <div class="lang-switch" role="group" aria-label="Language">
-          <button id="langEn" class="lang-btn" type="button">EN</button>
-          <button id="langAm" class="lang-btn" type="button">አማ</button>
-        </div>
-        <button type="button" class="gp-close" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-      </div>
+      <button id="closeBtn" class="gp-close gp-close-corner hidden" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
 
       <div id="hud">
-        <button id="muteBtn" aria-label="Sound">🔊</button>
-        <button id="pauseBtn" aria-label="Pause">⏸</button>
+        <div class="hud-top">
+          <div class="hud-buttons">
+            <button id="muteBtn" aria-label="Sound">🔊</button>
+            <button id="pauseBtn" aria-label="Pause">⏸</button>
+          </div>
+        </div>
       </div>
 
       <div id="menuOverlay" class="overlay">
         <div class="panel panel-clean">
-          <div class="game-tourney" id="fsTourney" aria-live="polite"></div>
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <div class="fs-tourney" id="fsTourney" aria-live="polite"></div>
           <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
         </div>
       </div>
 
       <div id="pauseOverlay" class="overlay hidden">
         <div class="panel">
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
           <h2 data-i18n="td.paused">Paused</h2>
           <button id="resumeBtn" class="btn primary" data-i18n="td.resume">Resume</button>
           <button id="restartBtn" class="btn" data-i18n="td.restart">Play again</button>
@@ -40,6 +40,7 @@
 
       <div id="overOverlay" class="overlay hidden">
         <div class="panel fs-over-panel">
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
           <h2 data-i18n="td.gameOver">Game over</h2>
           <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
           <div class="fs-over-final">
