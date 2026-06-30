@@ -19,8 +19,8 @@ import { balance } from '../../platform/wallet';
 import { isConfigured } from '../../platform/supabase';
 import { currentUser } from '../../platform/auth';
 import { sfx } from '../../engine/audio';
-import { TempleDash, W, H, GAME_ID, SKINS, type GameState } from './game';
-import { sheetDefs, skinThumbUrl } from './art';
+import { TempleDash, W, H, GAME_ID, type GameState } from './game';
+import { sheetDefs, DEFAULT_SKIN_ID } from './art';
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
@@ -67,7 +67,7 @@ function run(assets: AssetStore): void {
 
   game.onStateChange = (s) => {
     showOverlay(s);
-    if (s === 'over' || s === 'menu') { buildShop(); void refreshTourney(); }
+    if (s === 'over' || s === 'menu') { void refreshTourney(); }
     else updateActionButtons();
   };
 
@@ -117,48 +117,9 @@ function run(assets: AssetStore): void {
   muteBtn.addEventListener('click', () => { muteBtn.textContent = sfx.toggleMute() ? '🔇' : '🔊'; });
   document.addEventListener('visibilitychange', () => { if (document.hidden) game.pause(); });
 
-  let selectedSkin = 'champion';
-  function thumbFor(id: string): HTMLElement {
-    const img = document.createElement('img');
-    img.className = 'skin-thumb-img';
-    img.src = skinThumbUrl(id);
-    img.alt = '';
-    img.draggable = false;
-    return img;
-  }
-
-  function buildShop(): void {
-    const row = $('#skinRow');
-    row.innerHTML = '';
-    for (const skin of SKINS) {
-      const isSel = selectedSkin === skin.id;
-      const chip = document.createElement('div');
-      chip.className = `skin-chip${isSel ? ' is-selected' : ''}`;
-      chip.appendChild(thumbFor(skin.id));
-      const name = document.createElement('div');
-      name.className = 'skin-name';
-      name.textContent = getLang() === 'am' ? skin.nameAm : skin.nameEn;
-      chip.appendChild(name);
-      const action = document.createElement('div');
-      action.className = 'skin-action';
-      action.textContent = isSel ? t('td.selected') : t('td.select');
-      chip.appendChild(action);
-      chip.addEventListener('click', () => {
-        if (isSel) return;
-        selectedSkin = skin.id;
-        game.setSkin(skin.id);
-        void setSkinRemote(GAME_ID, skin.id);
-        sfx.click();
-        buildShop();
-      });
-      row.appendChild(chip);
-    }
-  }
-
+  game.setSkin(DEFAULT_SKIN_ID);
   void fetchSkins().then((sk) => {
-    selectedSkin = sk[GAME_ID] ?? 'champion';
-    game.setSkin(selectedSkin);
-    buildShop();
+    if (sk[GAME_ID] !== DEFAULT_SKIN_ID) void setSkinRemote(GAME_ID, DEFAULT_SKIN_ID);
   });
 
   let toastT = 0;
@@ -294,7 +255,6 @@ function run(assets: AssetStore): void {
   }
 
   applyTranslations();
-  buildShop();
   void refreshTourney();
   showOverlay('menu');
 

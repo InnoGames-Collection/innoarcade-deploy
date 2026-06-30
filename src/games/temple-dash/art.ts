@@ -12,6 +12,12 @@ const urls = import.meta.glob(['./kenney/*.png', './skins/*.png', './skins/**/*.
 
 export const WALK_FRAMES = 3;
 
+/** Normalized sprite canvas (keep in sync with skins/ethio_f/manifest.json). */
+export const SKIN_SPRITE_W = 515;
+export const SKIN_SPRITE_H = 732;
+export const SKIN_ASPECT = SKIN_SPRITE_W / SKIN_SPRITE_H;
+export const DEFAULT_SKIN_ID = 'ethio_f';
+
 export interface Skin {
   id: string;
   nameEn: string;
@@ -22,9 +28,7 @@ export interface Skin {
 }
 
 export const SKINS: Skin[] = [
-  { id: 'champion', nameEn: 'Champion', nameAm: 'ቻምፒዮን', cost: 0, thumb: './skins/champion.png' },
-  { id: 'ethio_m', nameEn: 'Ethio Runner', nameAm: 'ኢትዮ ሯጭ', cost: 0, thumb: './skins/ethio_m.png' },
-  { id: 'ethio_f', nameEn: 'Ethio Star', nameAm: 'ኢትዮ ኮከብ', cost: 0, thumb: './skins/ethio_f.png' },
+  { id: DEFAULT_SKIN_ID, nameEn: 'Ethio Star', nameAm: 'ኢትዮ ኮከብ', cost: 0, thumb: './skins/ethio_f.png' },
 ];
 
 const POSES = ['stand', 'walk1', 'walk2', 'walk3', 'jump', 'slide'] as const;

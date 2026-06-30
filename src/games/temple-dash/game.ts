@@ -11,7 +11,7 @@ import { Particles } from '../../engine/particles';
 import { ScreenFx } from '../../engine/fx';
 import type { AssetStore } from '../../engine/assets';
 import type { Action } from '../../engine/input';
-import { SKINS, WALK_FRAMES } from './art';
+import { DEFAULT_SKIN_ID, SKIN_ASPECT, WALK_FRAMES } from './art';
 
 export const W = 480;
 export const H = 720;
@@ -113,7 +113,7 @@ export class TempleDash {
   private skinId: string;
 
   constructor(private assets: AssetStore) {
-    this.skinId = 'champion'; // overridden from the server profile by main.ts
+    this.skinId = DEFAULT_SKIN_ID;
     this.fx.reducedMotion = settings.data.reducedMotion;
     settings.onChange((s) => { this.fx.reducedMotion = s.reducedMotion; });
   }
@@ -525,7 +525,7 @@ export class TempleDash {
     const jp = jumping ? this.jumpT / JUMP_DURATION : 0;
     const lift = jumping ? Math.sin(Math.PI * jp) * JUMP_HEIGHT * pr : 0;
     const charH = 172 * pr;
-    const charW = charH * 0.75; // Kenney toon character ~96x128
+    const charW = charH * SKIN_ASPECT;
 
     // Shadow.
     ctx.fillStyle = `rgba(0,0,0,${0.3 - 0.15 * Math.sin(Math.PI * jp)})`;
@@ -560,15 +560,15 @@ export class TempleDash {
       : sliding
         ? `${this.skinId}_slide`
         : `${this.skinId}_walk${(Math.floor(this.walkPhase) % WALK_FRAMES) + 1}`;
-    const h = sliding ? charH * 0.66 : charH;
-    // Run juice: a forward lean and a vertical bob synced to the stride.
-    const bob = running ? Math.abs(Math.sin(this.walkPhase * Math.PI)) * 7 * pr : 0;
-    const lean = running ? -0.07 : jumping ? -0.12 : 0;
+    // Run juice: lean + light bob; stride frames carry most of the motion.
+    const bob = running ? Math.abs(Math.sin(this.walkPhase * Math.PI)) * 5 * pr : 0;
+    const lean = running ? -0.07 : jumping ? -0.12 : sliding ? -0.04 : 0;
 
+    // Foot anchor: bottom-center of the normalized sprite canvas on the ground line.
     ctx.save();
     ctx.translate(x, groundY - lift - bob);
     if (lean) ctx.rotate(lean);
-    this.assets.draw(ctx, pose, 0, -charW / 2, -h, charW, h);
+    this.assets.draw(ctx, pose, 0, -charW / 2, -charH, charW, charH);
     ctx.restore();
   }
 }
@@ -580,4 +580,3 @@ export const TD_ACHIEVEMENTS = [
   { id: 'td-powerups', game: GAME_ID, titleEn: 'Power Hungry', titleAm: 'ኃይል ወዳድ', descEn: 'Collect 25 power-ups', descAm: '25 ኃይል-መሙያዎች ይሰብስቡ', goal: 25, reward: 200, icon: '⚡' },
 ];
 
-export { SKINS };
