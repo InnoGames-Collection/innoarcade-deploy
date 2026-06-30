@@ -5,70 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚇</text></svg>" />
     <title>Metro Rush — GoPlay</title>
-    <script type="module" crossorigin src="../../assets/metroRush-C2nOJ5fg.js"></script>
-    <link rel="modulepreload" crossorigin href="../../assets/modulepreload-polyfill-B5Qt9EMX.js">
-    <link rel="modulepreload" crossorigin href="../../assets/tournaments-CBOAx5G5.js">
-    <link rel="modulepreload" crossorigin href="../../assets/audio-BNfArDba.js">
+    <script type="module" crossorigin src="../../assets/metroRush-zhvHOIim.js"></script>
+    <link rel="modulepreload" crossorigin href="../../assets/index-CZ7_cxPX.js">
+    <link rel="modulepreload" crossorigin href="../../assets/tournaments-BgXswDUn.js">
+    <link rel="modulepreload" crossorigin href="../../assets/audio-ZxGDtYDe.js">
     <link rel="modulepreload" crossorigin href="../../assets/currency-6Vn0SSos.js">
-    <link rel="modulepreload" crossorigin href="../../assets/gameHost-Cm5oV4-L.js">
-    <link rel="modulepreload" crossorigin href="../../assets/index-B-YGA0Vr.js">
+    <link rel="modulepreload" crossorigin href="../../assets/gameHost-Bm5AyRB_.js">
+    <link rel="modulepreload" crossorigin href="../../assets/freeGameShell-Ch87vUZF.js">
     <link rel="modulepreload" crossorigin href="../../assets/loop-BDek7L7e.js">
     <link rel="modulepreload" crossorigin href="../../assets/input-DF-0NnhL.js">
     <link rel="modulepreload" crossorigin href="../../assets/storage-CInvdOsc.js">
     <link rel="stylesheet" crossorigin href="../../assets/audio-CrCdc_l1.css">
-    <link rel="stylesheet" crossorigin href="../../assets/metroRush-Dpm5ajHc.css">
+    <link rel="stylesheet" crossorigin href="../../assets/metroRush-DbiOsY7-.css">
+    <link rel="stylesheet" crossorigin href="../../assets/game-shell-DSaCnWRc.css">
   </head>
-  <body>
-    <div id="stage">
+  <body class="game-shell" data-game="metro-rush">
+    <div id="stage" class="game-shell-stage">
       <canvas id="game" width="480" height="720"></canvas>
 
-      <div id="hud">
-        <button id="closeBtn" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-        <div class="hud-stats">
-          <div class="stat"><span data-i18n="td.score">Score</span><strong id="scoreVal">0</strong></div>
-          <div class="stat"><span data-i18n="mr.tokens">Tokens</span><strong id="tokensVal">0</strong></div>
-          <div class="stat"><span data-i18n="td.best">Best</span><strong id="bestVal">0</strong></div>
-        </div>
-        <div class="hud-buttons">
-          <button id="muteBtn" aria-label="Sound">🔊</button>
-          <button id="pauseBtn" aria-label="Pause">⏸</button>
-        </div>
-      </div>
+      <button id="closeBtn" class="gp-close gp-close-corner hidden" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
 
-      <div id="menuOverlay" class="overlay">
-        <div class="panel">
-          <h1>Metro Rush</h1>
-          <p class="controls" data-i18n="mr.controls"></p>
-          <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
-          <p class="hint" data-i18n="mr.start"></p>
-          <div class="lang-switch" role="group" aria-label="Language">
-            <button id="langEn" class="lang-btn">EN</button>
-            <button id="langAm" class="lang-btn">አማ</button>
+      <div id="hud" class="hidden">
+        <div class="hud-top">
+          <div class="hud-stats">
+            <div class="stat"><span data-i18n="td.score">Score</span><strong id="scoreVal">0</strong></div>
+            <div class="stat"><span data-i18n="mr.tokens">Tokens</span><strong id="tokensVal">0</strong></div>
+            <div class="stat"><span data-i18n="td.best">Best</span><strong id="bestVal">0</strong></div>
           </div>
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <div class="hud-buttons">
+            <button id="muteBtn" aria-label="Sound">🔊</button>
+            <button id="pauseBtn" aria-label="Pause">⏸</button>
+          </div>
         </div>
       </div>
 
-      <div id="pauseOverlay" class="overlay hidden">
-        <div class="panel">
+      <div id="menuOverlay" class="game-overlay">
+        <div class="game-panel panel-clean">
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <div class="shell-free-menu" id="freeMenu"></div>
+          <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
+        </div>
+      </div>
+
+      <div id="pauseOverlay" class="game-overlay hidden">
+        <div class="game-panel">
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
           <h2 data-i18n="td.paused">Paused</h2>
           <button id="resumeBtn" class="btn primary" data-i18n="td.resume">Resume</button>
           <button id="restartBtn" class="btn" data-i18n="td.restart">Play again</button>
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         </div>
       </div>
 
-      <div id="overOverlay" class="overlay hidden">
-        <div class="panel">
+      <div id="overOverlay" class="game-overlay hidden">
+        <div class="game-panel">
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
           <h2 data-i18n="td.gameOver">Game over</h2>
           <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
-          <div class="final">
-            <div class="stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
-            <div class="stat"><span data-i18n="mr.tokens">Tokens</span><strong id="finalTokens">0</strong></div>
-            <div class="stat"><span data-i18n="td.best">Best</span><strong id="finalBest">0</strong></div>
+          <div class="shell-over-final">
+            <div class="shell-over-stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
+            <div class="shell-over-stat"><span data-i18n="mr.tokens">Tokens</span><strong id="finalTokens">0</strong></div>
+            <div class="shell-over-stat"><span data-i18n="td.best">Best</span><strong id="finalBest">0</strong></div>
           </div>
+          <div class="shell-run-reward" id="runReward"></div>
           <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         </div>
       </div>
     </div>

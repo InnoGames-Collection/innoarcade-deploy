@@ -1,7 +1,7 @@
 // Rhyme Twins — every answer is a pair of rhyming words. Native GoPlay game.
 import '../../styles/base.css';
 import '../_lq/lq.css';
-import { el, toast, modal, typeCatcher, recordResult, dayNumber, shuffled, mulberry32, sound, mountLQ } from '../_lq/lq';
+import { el, toast, modal, typeCatcher, recordResultAsync, showRunReward, dayNumber, shuffled, mulberry32, sound, mountLQ } from '../_lq/lq';
 import { RHYME, type RhymeItem } from '../_lq/data';
 
 const MAX_TRIES = 4;
@@ -40,7 +40,7 @@ function render(mount: HTMLElement): void {
     }
 
     function nextRiddle(): void {
-      if (qIdx >= TOTAL) return finish();
+      if (qIdx >= TOTAL) { void finish(); return; }
       const item: RhymeItem = order[qIdx % order.length];
       let tries = 0, hinted = false, active = 0;
 
@@ -126,9 +126,11 @@ function render(mount: HTMLElement): void {
       typeCatcher(handleKey, slots);
     }
 
-    function finish(): void {
-      recordResult('rhyme', { won: solved >= Math.ceil(TOTAL * 0.6), score: solved });
-      sound(solved >= Math.ceil(TOTAL * 0.6) ? 'win' : 'bad');
+    async function finish(): Promise<void> {
+      const won = solved >= Math.ceil(TOTAL * 0.6);
+      sound(won ? 'win' : 'bad');
+      const res = await recordResultAsync('rhyme', { won, score: solved });
+      showRunReward(res);
       wrap.innerHTML = '';
       wrap.appendChild(el('div', { class: 'quiz-q' },
         el('p', { class: 'prompt', text: solved === TOTAL ? '🎶 Perfect rhymer!' : `You solved ${solved} of ${TOTAL}` }),

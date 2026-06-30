@@ -1,7 +1,7 @@
 // Make 24 — combine four numbers with + − × ÷ to reach exactly 24. Native GoPlay game.
 import '../../styles/base.css';
 import '../_lq/lq.css';
-import { el, toast, modal, recordResult, mulberry32, dayNumber, randInt, statsRow, sound, mountLQ } from '../_lq/lq';
+import { el, toast, modal, recordResultAsync, showRunReward, mulberry32, dayNumber, randInt, statsRow, sound, mountLQ } from '../_lq/lq';
 
 const TARGET = 24, ROUNDS = 5, EPS = 1e-9;
 
@@ -79,7 +79,7 @@ function render(mount: HTMLElement): void {
     }
 
     function nextRound(): void {
-      if (round >= ROUNDS) return finish();
+      if (round >= ROUNDS) { void finish(); return; }
       const vals = generate(rnd);
       nums = vals.map((v) => ({ val: v, label: String(v), used: false }));
       history = []; selIdx = -1; selOp = null;
@@ -149,10 +149,11 @@ function render(mount: HTMLElement): void {
       });
     }
 
-    function finish(): void {
+    async function finish(): Promise<void> {
       const won = solvedCount >= Math.ceil(ROUNDS * 0.6);
       sound(won ? 'win' : 'bad');
-      recordResult('target24', { won, score: solvedCount });
+      const res = await recordResultAsync('target24', { won, score: solvedCount });
+      showRunReward(res);
       const q = mount.querySelector('.quiz-q')!;
       q.innerHTML = '';
       q.append(

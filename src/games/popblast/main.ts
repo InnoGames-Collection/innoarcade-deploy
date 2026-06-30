@@ -4,14 +4,20 @@
 // through the host (win threshold mirrors the original: score > 20).
 
 import '../../styles/base.css';
+import '../../styles/game-shell.css';
 import './style.css';
-import { applyTranslations, getLang, setLang, t, type Lang } from '../../i18n';
+import { applyTranslations, getLang } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { createHost } from '../../platform/gameHost';
+import { ensureToast, paintInlineReward, renderFreeHudHtml, startFreeRound } from '../../platform/freeGameShell';
 
 const host = createHost('popblast');
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
+
+const freeHud = $('#freeHud');
+const runReward = $('#runReward');
+const toast = ensureToast('popblast-toast');
 
 const board = $('#board');
 const scoreDisplay = $('#score');
@@ -29,9 +35,8 @@ let startY = 0;
 let draggedId = 0;
 let gameEnded = false;
 
-function setHUD(): void {
-  $('#popblast-hud-cost').textContent = host.costCoins > 0 ? `${host.costCoins} 🪙` : t('arc.free');
-  $('#popblast-hud-win').textContent = `+${host.winPoints} ${t('arc.pts')}`;
+function mountFreeHud(): void {
+  freeHud.innerHTML = renderFreeHudHtml(host);
 }
 
 function play(type: 'flip' | 'match' | 'pop' | 'nomatch' | 'click'): void {
@@ -43,7 +48,9 @@ function play(type: 'flip' | 'match' | 'pop' | 'nomatch' | 'click'): void {
   }
 }
 
-function createBoard(): void {
+async function createBoard(): Promise<void> {
+  if (!(await startFreeRound(host, toast))) return;
+  runReward.innerHTML = '';
   board.innerHTML = '';
   squares = [];
   score = 0;
@@ -136,7 +143,7 @@ function swapTiles(from: number, to: number): void {
       moves++;
       movesDisplay.textContent = String(moves);
     }
-    if (moves <= 0 && !gameEnded) endGame();
+    if (moves <= 0 && !gameEnded) void endGame();
   }, 150);
 }
 
@@ -221,34 +228,16 @@ function moveDown(): void {
   }, 120);
 }
 
-function endGame(): void {
+async function endGame(): Promise<void> {
   if (gameEnded) return;
   gameEnded = true;
   const isWin = score > 20;
-  setTimeout(() => host.finish(score, isWin), 300);
+  setTimeout(() => void paintInlineReward(host, runReward, score, isWin), 300);
 }
 
-$('#popblast-restart').addEventListener('click', () => createBoard());
-
-// --- Language switch --------------------------------------------------------
-const langEn = $('#langEn');
-const langAm = $('#langAm');
-function syncLangButtons(): void {
-  const lang = getLang();
-  langEn.classList.toggle('active', lang === 'en');
-  langAm.classList.toggle('active', lang === 'am');
-  setHUD();
-}
-function pick(lang: Lang): void {
-  setLang(lang);
-  applyTranslations();
-  syncLangButtons();
-}
-langEn.addEventListener('click', () => pick('en'));
-langAm.addEventListener('click', () => pick('am'));
+$('#popblast-restart').addEventListener('click', () => void createBoard());
 
 document.documentElement.lang = getLang();
 applyTranslations();
-syncLangButtons();
-setHUD();
-createBoard();
+mountFreeHud();
+void createBoard();

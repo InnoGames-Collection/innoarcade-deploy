@@ -18,6 +18,151 @@
 
 .game-shell[data-game="memory-match"] { --game-accent: #ff6b9d; }
 .game-shell[data-game="fruit-slice"] { --game-accent: #46c05a; }
+.game-shell[data-game="metro-rush"] { --game-accent: #36b3a8; }
+.game-shell[data-game="dot-link"] { --game-accent: #5b8cff; }
+.game-shell[data-game="brick-blitz"] { --game-accent: #f0a832; }
+.game-shell[data-game="sky-hopper"] { --game-accent: #56b8e8; }
+.game-shell[data-game="bubble-pop"] { --game-accent: #7b6cf0; }
+.game-shell[data-game="tap-game"] { --game-accent: #ff6b35; }
+.game-shell[data-game="scratch-card"] { --game-accent: #f4d03f; }
+.game-shell[data-game="popblast"] { --game-accent: #e85b9c; }
+.game-shell[data-game="sudoku"] { --game-accent: #34b38a; }
+.game-shell[data-game="spell"] { --game-accent: #6a4cff; }
+.game-shell[data-game="vocab"] { --game-accent: #2aa9d6; }
+.game-shell[data-game="rhyme"] { --game-accent: #e25aa0; }
+.game-shell[data-game="target24"] { --game-accent: #f0a832; }
+.game-shell[data-game="crosssum"] { --game-accent: #5b8cff; }
+.game-shell[data-game="logic"] { --game-accent: #ff7a59; }
+.game-shell[data-game="sequence"] { --game-accent: #7a6cff; }
+
+/* --- Free-game menu block (no tournament) -------------------------------- */
+.game-shell .shell-free-menu {
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--shell-line);
+  border-radius: 14px;
+  background: var(--shell-card);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.game-shell .shell-free-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--shell-text);
+}
+
+.game-shell .shell-free-icon { font-size: 1.35rem; }
+
+.game-shell .shell-free-best {
+  font-size: 0.82rem;
+  color: var(--shell-muted);
+}
+
+.game-shell .shell-free-best strong {
+  color: var(--game-accent);
+  font-size: 0.95rem;
+}
+
+.game-shell .shell-free-tag {
+  font-size: 0.78rem;
+  color: var(--shell-accent);
+  font-weight: 600;
+}
+
+/* XP / result strip on game-over panels */
+.game-shell .shell-run-reward {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 14px;
+  width: 100%;
+  min-height: 1.4rem;
+  margin: 4px 0;
+}
+
+.game-shell .shell-rr-stat b { color: var(--shell-muted); font-weight: 600; margin-right: 3px; }
+.game-shell .shell-rr-stat.xp { color: var(--shell-accent); font-weight: 700; font-size: 1rem; }
+.game-shell .shell-rr-note { color: var(--shell-muted); font-size: 0.82rem; }
+.game-shell .shell-rr-pending { color: var(--shell-muted); }
+
+.game-shell .shell-over-final {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  width: 100%;
+}
+
+.game-shell .shell-over-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.82rem;
+  color: var(--shell-muted);
+}
+
+.game-shell .shell-over-stat strong {
+  font-size: 1.35rem;
+  color: var(--game-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Inline / casual free HUD */
+.game-shell .shell-free-hud {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--shell-line);
+  background: var(--shell-bg);
+  font-size: 0.82rem;
+}
+
+.game-shell .shell-free-hud-tag { color: #1f74e0; font-weight: 700; }
+.game-shell .shell-free-hud-title { font-weight: 700; text-align: center; color: var(--shell-text); }
+.game-shell .shell-free-hud-xp { text-align: right; color: var(--shell-accent); font-weight: 700; }
+
+.shell-toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(18%, 72px);
+  transform: translateX(-50%);
+  background: rgba(17, 24, 48, 0.92);
+  color: #fff;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 700;
+  z-index: 50;
+  pointer-events: none;
+  max-width: 90vw;
+  text-align: center;
+}
+
+.shell-toast.hidden { display: none; }
+
+/* LQ brain games inside game-shell */
+.game-shell #stage.lq-stage {
+  width: min(430px, 100%);
+  max-height: 100dvh;
+  overflow-y: auto;
+  background: var(--shell-bg);
+  border-radius: var(--shell-radius);
+  box-shadow: var(--shell-shadow-md);
+}
+
+.game-shell #stage.lq-stage .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--shell-bg);
+}
 
 /* Runner-style page shell: centered game stage on dark backdrop. */
 body.game-shell {

@@ -6,23 +6,15 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎫</text></svg>" />
     <title>Scratch Card — GoPlay</title>
   </head>
-  <body>
+  <body class="game-shell" data-game="scratch-card">
     <div id="stage">
       <header class="topbar">
         <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         <span class="game-name" data-i18n="sc.title">Scratch Card</span>
-        <div class="lang-switch" role="group" aria-label="Language">
-          <button id="langEn" class="lang-btn">EN</button>
-          <button id="langAm" class="lang-btn">አማ</button>
-        </div>
       </header>
 
       <div id="scratch-card-wrapper">
-        <div class="sc-hud">
-          <div class="sc-hud-item"><span>🪙</span><div><div class="sc-hud-sub" data-i18n="arc.cost">Cost</div><div class="sc-hud-val" id="sc-hud-cost">…</div></div></div>
-          <div class="sc-hud-title">🎫 <span data-i18n="sc.title">Scratch Blast</span></div>
-          <div class="sc-hud-item r"><div style="text-align:right"><div class="sc-hud-sub" data-i18n="arc.win">Win</div><div class="sc-hud-val gold" id="sc-hud-win">…</div></div><span>⭐</span></div>
-        </div>
+        <div id="freeHud"></div>
 
         <div class="sc-timer-container">
           <div class="sc-timer-bar" id="sc-timer-bar"></div>
@@ -38,6 +30,7 @@
           </div>
         </div>
         <div class="sc-message" id="sc-message"></div>
+        <div class="shell-run-reward" id="runReward"></div>
         <button class="sc-reset-btn" id="sc-reset-btn" data-i18n="sc.start">START SCRATCH BLAST</button>
       </div>
     </div>

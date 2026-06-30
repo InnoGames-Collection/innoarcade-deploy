@@ -3,14 +3,20 @@
 // build trusted a forgeable server flag). The host records the result.
 
 import '../../styles/base.css';
+import '../../styles/game-shell.css';
 import './style.css';
-import { applyTranslations, getLang, setLang, t, type Lang } from '../../i18n';
+import { applyTranslations, getLang, t } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { createHost } from '../../platform/gameHost';
+import { ensureToast, paintInlineReward, renderFreeHudHtml, startFreeRound } from '../../platform/freeGameShell';
 
 const host = createHost('scratch-card');
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
+
+const freeHud = $('#freeHud');
+const runReward = $('#runReward');
+const toast = ensureToast('scratch-card-toast');
 
 function chance(ratePct: number): boolean {
   const buf = new Uint32Array(1);
@@ -40,9 +46,8 @@ let slots: string[] = [];
 
 const SYMBOLS = ['💎', '⭐', '💰', '🍒', '🍀', '🍎'];
 
-function setHUD(): void {
-  $('#sc-hud-cost').textContent = host.costCoins > 0 ? `${host.costCoins} 🪙` : t('arc.free');
-  $('#sc-hud-win').textContent = `+${host.winPoints} ${t('arc.pts')}`;
+function mountFreeHud(): void {
+  freeHud.innerHTML = renderFreeHudHtml(host);
 }
 
 function initGame(): void {
@@ -51,6 +56,7 @@ function initGame(): void {
   hasReported = false;
   gameActive = false;
   timeLeft = 6.0;
+  runReward.innerHTML = '';
 
   timerBar.style.width = '100%';
   timerBar.style.background = 'linear-gradient(90deg, #ff4444, #ff8800)';
@@ -113,12 +119,7 @@ function initGame(): void {
 
 async function startBlastTimer(): Promise<void> {
   if (gameActive) return;
-  // Free game passes instantly; a tournament flip would charge here.
-  const begin = await host.begin();
-  if (!begin.ok) {
-    message.textContent = begin.reason === 'auth' ? t('arc.signIn') : t('arc.needCoins');
-    return;
-  }
+  if (!(await startFreeRound(host, toast))) return;
   gameActive = true;
   resetBtn.disabled = true;
   resetBtn.textContent = t('sc.scratchNow');
@@ -153,7 +154,7 @@ function triggerBlastLoss(): void {
   message.style.color = '#ff4444';
   resetBtn.disabled = false;
   resetBtn.textContent = t('arc.playAgain');
-  report(false);
+  void report(false);
 }
 
 let lastScratchSoundTime = 0;
@@ -210,14 +211,14 @@ function checkRevealed(): void {
     }
     resetBtn.disabled = false;
     resetBtn.textContent = t('arc.playAgain');
-    report(isWin);
+    void report(isWin);
   }
 }
 
-function report(win: boolean): void {
+async function report(win: boolean): Promise<void> {
   if (hasReported) return;
   hasReported = true;
-  host.finish(win ? host.winPoints : 0, win);
+  await paintInlineReward(host, runReward, win ? host.winPoints : 0, win);
 }
 
 canvas.addEventListener('mousedown', () => { if (!gameActive && !isScratched) void startBlastTimer(); });
@@ -229,25 +230,7 @@ resetBtn.addEventListener('click', () => {
   else initGame();
 });
 
-// --- Language switch --------------------------------------------------------
-const langEn = $('#langEn');
-const langAm = $('#langAm');
-function syncLangButtons(): void {
-  const lang = getLang();
-  langEn.classList.toggle('active', lang === 'en');
-  langAm.classList.toggle('active', lang === 'am');
-  setHUD();
-}
-function pick(lang: Lang): void {
-  setLang(lang);
-  applyTranslations();
-  syncLangButtons();
-}
-langEn.addEventListener('click', () => pick('en'));
-langAm.addEventListener('click', () => pick('am'));
-
 document.documentElement.lang = getLang();
 applyTranslations();
-syncLangButtons();
-setHUD();
+mountFreeHud();
 initGame();

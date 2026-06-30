@@ -1,11 +1,18 @@
 import '../../styles/base.css';
-import { recordEnginePlay } from '../../platform/gameHost';
+import '../../styles/game-shell.css';
+import { GameHost } from '../../platform/gameHost';
+import {
+  standardStateOverlay, wireFreeEngineMain, wireMutePause, wirePlayButtons,
+} from '../../platform/freeGameShell';
 import './style.css';
-import { applyTranslations, getLang, setLang, type Lang } from '../../i18n';
+import { applyTranslations, getLang } from '../../i18n';
 import { GameLoop } from '../../engine/loop';
 import { Input } from '../../engine/input';
 import { sfx } from '../../engine/audio';
-import { DotLink, W, H, type GameState } from './game';
+import { DotLink, W, H } from './game';
+
+const GAME_ID = 'dot-link';
+const host = new GameHost(GAME_ID);
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
@@ -18,30 +25,40 @@ ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
 const game = new DotLink();
 
-const overlays: Record<string, HTMLElement> = {
-  menu: $('#menuOverlay'),
-  paused: $('#pauseOverlay'),
-  levelClear: $('#levelClearOverlay'),
-  gameOver: $('#overOverlay'),
-};
+const shell = wireFreeEngineMain({
+  host,
+  overlays: {
+    menu: $('#menuOverlay'),
+    paused: $('#pauseOverlay'),
+    levelClear: $('#levelClearOverlay'),
+    over: $('#overOverlay'),
+  },
+  stateOverlay: standardStateOverlay,
+  hud: $('#hud'),
+  closeBtn: $('#closeBtn'),
+  freeMenu: $('#freeMenu'),
+  startBtn: $('#startBtn'),
+  againBtn: $('#againBtn'),
+  restartBtn: $('#restartBtn'),
+  resumeBtn: $('#resumeBtn'),
+  finalScore: $('#finalScore'),
+  finalBest: $('#finalBest'),
+  newBest: $('#newBest'),
+  runReward: $('#runReward'),
+  game,
+});
 
-function showOverlay(state: GameState): void {
-  for (const [key, el] of Object.entries(overlays)) {
-    el.classList.toggle('hidden', key !== state);
-  }
-}
-
-game.onStateChange = showOverlay;
+game.onStateChange = shell.showForState;
 
 game.onGameOver = (score, level, record) => {
-  void recordEnginePlay('dot-link', score);
   if (level > 5) {
-    $('#finalScore').textContent = `Final Score: ${score}`;
-    $('#newBest').classList.toggle('hidden', !record);
+    void shell.handleGameOver(score, record);
   } else {
     $('#levelScore').textContent = `Level Score: ${score}`;
   }
 };
+
+wirePlayButtons(['nextBtn'], () => game.start());
 
 const input = new Input(document.body);
 input.onAction((a) => {
@@ -53,7 +70,6 @@ input.onAction((a) => {
   game.handleAction(a);
 });
 
-// Touch/mouse drawing
 let isDrawing = false;
 canvas.addEventListener('pointerdown', (e) => {
   isDrawing = true;
@@ -70,35 +86,7 @@ canvas.addEventListener('pointercancel', () => {
   isDrawing = false;
 });
 
-$('#startBtn').addEventListener('click', () => game.start());
-$('#againBtn').addEventListener('click', () => game.start());
-$('#restartBtn').addEventListener('click', () => game.start());
-$('#resumeBtn').addEventListener('click', () => game.resume());
-$('#nextBtn').addEventListener('click', () => game.start());
-$('#pauseBtn').addEventListener('click', () => {
-  if (game.state === 'playing') game.pause();
-  else if (game.state === 'paused') game.resume();
-});
-
-const muteBtn = $('#muteBtn');
-muteBtn.textContent = sfx.muted ? '🔇' : '🔊';
-muteBtn.addEventListener('click', () => {
-  muteBtn.textContent = sfx.toggleMute() ? '🔇' : '🔊';
-});
-
-const langEn = $('#langEn');
-const langAm = $('#langAm');
-function syncLangButtons(): void {
-  const lang = getLang();
-  langEn.classList.toggle('active', lang === 'en');
-  langAm.classList.toggle('active', lang === 'am');
-}
-function pick(lang: Lang): void {
-  setLang(lang);
-  syncLangButtons();
-}
-langEn.addEventListener('click', () => pick('en'));
-langAm.addEventListener('click', () => pick('am'));
+wireMutePause($('#muteBtn'), $('#pauseBtn'), game, sfx);
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) game.pause();
@@ -106,13 +94,11 @@ document.addEventListener('visibilitychange', () => {
 
 const loop = new GameLoop(
   (dt) => game.update(dt),
-  () => {
-    game.render(ctx);
-  },
+  () => game.render(ctx),
 );
 
 document.documentElement.lang = getLang();
 applyTranslations();
-syncLangButtons();
-showOverlay('menu');
+shell.refreshMenu();
+shell.showForState('menu');
 loop.start();

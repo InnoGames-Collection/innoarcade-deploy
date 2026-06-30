@@ -4,8 +4,10 @@
 // shell (routing, localStorage XP/stats, theme). Scoring now flows through the
 // GoPlay GameHost (server-only points), not a local store.
 
+import '../../styles/game-shell.css';
 import { sfx } from '../../engine/audio';
-import { createHost, type GameHost } from '../../platform/gameHost';
+import { renderRunRewardHtml } from '../../platform/freeGameShell';
+import { createHost, type FinishResult, type GameHost } from '../../platform/gameHost';
 
 // --- DOM helper -------------------------------------------------------------
 type Attrs = Record<string, string | EventListenerOrEventListenerObject>;
@@ -159,33 +161,40 @@ export function typeCatcher(onKey: (k: string) => void, tapTarget: HTMLElement):
 // --- scoring: GoPlay GameHost (server-only points) --------------------------
 let activeHost: GameHost | null = null;
 
-// Submit a finished run through the shared GameHost — identical to every other
-// game. The server awards the uniform flat points on a win (res.won); no
-// game-specific point formula, no leaderboard (these are free games), no store.
-export function recordResult(gameId: string, res: { won: boolean; score: number }): void {
+// Submit a finished free run: begin() opens the round token, finish() awards XP
+// with ranked:false (no leaderboard / attempt gating for these brain games).
+export async function recordResultAsync(
+  gameId: string,
+  res: { won: boolean; score: number },
+  durationMs = 0,
+): Promise<FinishResult | null> {
   const host = activeHost && activeHost.meta.id === gameId ? activeHost : createHost(gameId);
-  void host.startRound().then(() => host.finish(Math.max(0, res.score || 0), res.won)).catch(() => {});
+  activeHost = host;
+  try {
+    await host.begin();
+    return await host.finish(Math.max(0, res.score || 0), res.won, durationMs, { ranked: false });
+  } catch {
+    return null;
+  }
 }
 
-// Boot a native LexiQuest game: create its host, wire the EN/AM chrome buttons,
-// and hand the mount node to the game's render function.
+/** XP strip HTML for win modals and inline result panels. */
+export function formatResultBody(res: FinishResult | null): string {
+  return res ? renderRunRewardHtml(res) : '';
+}
+
+/** Paint the stage-bottom #runReward mount (game-shell HTML). */
+export function showRunReward(res: FinishResult | null): void {
+  const mount = document.getElementById('runReward');
+  if (!mount) return;
+  const html = formatResultBody(res);
+  mount.innerHTML = html;
+  mount.classList.toggle('hidden', !html);
+}
+
+// Boot a native LexiQuest game inside the free runner shell (game-shell HTML).
 export function mountLQ(gameId: string, render: (mount: HTMLElement) => void): void {
   activeHost = createHost(gameId);
-  // The chrome lang buttons (optional) just toggle the document lang; the puzzle
-  // content is English (these are English word/number/logic games).
-  void import('../../i18n').then(({ getLang, setLang, applyTranslations }) => {
-    const en = document.getElementById('langEn');
-    const am = document.getElementById('langAm');
-    const sync = (): void => {
-      en?.classList.toggle('active', getLang() === 'en');
-      am?.classList.toggle('active', getLang() === 'am');
-    };
-    en?.addEventListener('click', () => { setLang('en'); applyTranslations(); sync(); });
-    am?.addEventListener('click', () => { setLang('am'); applyTranslations(); sync(); });
-    document.documentElement.lang = getLang();
-    applyTranslations();
-    sync();
-  });
   const mount = document.getElementById('lq-mount');
   if (mount) render(mount);
 }

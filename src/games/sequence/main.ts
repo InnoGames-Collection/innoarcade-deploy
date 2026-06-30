@@ -1,7 +1,7 @@
 // Number Sequence — find the hidden rule, type the next number. Native GoPlay game.
 import '../../styles/base.css';
 import '../_lq/lq.css';
-import { el, toast, modal, keypad, mulberry32, dayNumber, randInt, sound, recordResult, mountLQ } from '../_lq/lq';
+import { el, toast, modal, keypad, mulberry32, dayNumber, randInt, sound, recordResultAsync, showRunReward, mountLQ } from '../_lq/lq';
 
 const ROUNDS = 8;
 
@@ -77,7 +77,7 @@ function render(mount: HTMLElement): void {
     }
 
     function nextRound(): void {
-      if (round >= ROUNDS) return finish();
+      if (round >= ROUNDS) { void finish(); return; }
       const level = Math.min(4, 1 + Math.floor(round / 2));
       const pool = GENERATORS.filter((g) => g.d === level);
       item = pool[Math.floor(rnd() * pool.length)].make(rnd);
@@ -114,10 +114,11 @@ function render(mount: HTMLElement): void {
       }
     }
 
-    function finish(): void {
+    async function finish(): Promise<void> {
       const won = score >= Math.ceil(ROUNDS * 0.6);
       sound(won ? 'win' : 'bad');
-      recordResult('sequence', { won, score });
+      const res = await recordResultAsync('sequence', { won, score });
+      showRunReward(res);
       card.innerHTML = '';
       card.appendChild(el('p', { class: 'prompt', text: score === ROUNDS ? '🔢 Pattern master!' : `You solved ${score} of ${ROUNDS}` }));
       card.appendChild(el('div', { class: 'mt' },

@@ -3,14 +3,20 @@
 // records / submits. winRate tunes the target needed to count as a "win".
 
 import '../../styles/base.css';
+import '../../styles/game-shell.css';
 import './style.css';
-import { applyTranslations, getLang, setLang, t, type Lang } from '../../i18n';
+import { applyTranslations, getLang, t } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { createHost } from '../../platform/gameHost';
+import { ensureToast, paintInlineReward, renderFreeHudHtml, startFreeRound } from '../../platform/freeGameShell';
 
 const host = createHost('tap-game');
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
+
+const freeHud = $('#freeHud');
+const runReward = $('#runReward');
+const toast = ensureToast('tap-game-toast');
 
 function play(type: 'tap' | 'win' | 'lose' | 'click'): void {
   switch (type) {
@@ -35,9 +41,11 @@ const message = $('#tg-message');
 const startBtn = $('#tg-start-btn') as HTMLButtonElement;
 const hint = $('#tg-hint');
 
-function setHUD(): void {
-  $('#tg-hud-cost').textContent = host.costCoins > 0 ? `${host.costCoins} 🪙` : t('arc.free');
-  $('#tg-hud-win').textContent = `+${host.winPoints} ${t('arc.pts')}`;
+function mountFreeHud(): void {
+  freeHud.innerHTML = renderFreeHudHtml(host);
+}
+
+function refreshGoal(): void {
   if (!isPlaying) message.textContent = t('tg.goal').replace('{n}', String(targetScore));
 }
 
@@ -87,12 +95,8 @@ function spawnTarget(type: 'regular' | 'golden' | 'poison' = 'regular'): void {
 
 async function startGame(): Promise<void> {
   if (isPlaying) return;
-  // Host gate — free games pass instantly; tournament games would charge here.
-  const begin = await host.begin();
-  if (!begin.ok) {
-    message.textContent = begin.reason === 'auth' ? t('arc.signIn') : t('arc.needCoins');
-    return;
-  }
+  if (!(await startFreeRound(host, toast))) return;
+  runReward.innerHTML = '';
   play('click');
   isPlaying = true;
   score = 0;
@@ -112,12 +116,12 @@ async function startGame(): Promise<void> {
     if (timeLeft <= 3) timeEl.style.color = '#ff4444';
     if (timeLeft <= 0) {
       if (timerInterval) clearInterval(timerInterval);
-      endGame();
+      void endGame();
     }
   }, 1000);
 }
 
-function endGame(): void {
+async function endGame(): Promise<void> {
   isPlaying = false;
   timeEl.style.color = '';
   document.querySelectorAll('.tg-target-btn').forEach((el) => el.remove());
@@ -129,30 +133,12 @@ function endGame(): void {
   startBtn.disabled = false;
   startBtn.textContent = t('arc.playAgain');
   hint.style.display = '';
-  host.finish(score, isWin);
+  await paintInlineReward(host, runReward, score, isWin);
 }
 
 startBtn.addEventListener('click', () => void startGame());
 
-// --- Language switch --------------------------------------------------------
-const langEn = $('#langEn');
-const langAm = $('#langAm');
-function syncLangButtons(): void {
-  const lang = getLang();
-  langEn.classList.toggle('active', lang === 'en');
-  langAm.classList.toggle('active', lang === 'am');
-  setHUD();
-}
-function pick(lang: Lang): void {
-  setLang(lang);
-  applyTranslations();
-  if (!isPlaying) startBtn.textContent = score > 0 ? t('arc.playAgain') : t('arc.start');
-  syncLangButtons();
-}
-langEn.addEventListener('click', () => pick('en'));
-langAm.addEventListener('click', () => pick('am'));
-
 document.documentElement.lang = getLang();
 applyTranslations();
-syncLangButtons();
-setHUD();
+mountFreeHud();
+refreshGoal();

@@ -6,46 +6,49 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🫧</text></svg>" />
     <title>Bubble Pop — GoPlay</title>
   </head>
-  <body>
-    <div id="stage">
+  <body class="game-shell" data-game="bubble-pop">
+    <div id="stage" class="game-shell-stage">
       <canvas id="game" width="480" height="720"></canvas>
 
-      <div id="hud">
-        <button id="closeBtn" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-        <button id="muteBtn" aria-label="Sound">🔊</button>
-        <button id="pauseBtn" aria-label="Pause">⏸</button>
-      </div>
+      <button id="closeBtn" class="gp-close gp-close-corner hidden" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
 
-      <div id="menuOverlay" class="overlay">
-        <div class="panel">
-          <h1>Bubble Pop</h1>
-          <p class="subtitle" data-i18n="game.bubblePop.desc"></p>
-          <p class="controls" data-i18n="bp.controls"></p>
-          <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
-          <div class="lang-switch" role="group" aria-label="Language">
-            <button id="langEn" class="lang-btn">EN</button>
-            <button id="langAm" class="lang-btn">አማ</button>
+      <div id="hud" class="hidden">
+        <div class="hud-top">
+          <div class="hud-buttons">
+            <button id="muteBtn" aria-label="Sound">🔊</button>
+            <button id="pauseBtn" aria-label="Pause">⏸</button>
           </div>
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         </div>
       </div>
 
-      <div id="pauseOverlay" class="overlay hidden">
-        <div class="panel">
+      <div id="menuOverlay" class="game-overlay">
+        <div class="game-panel panel-clean">
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <div class="shell-free-menu" id="freeMenu"></div>
+          <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
+        </div>
+      </div>
+
+      <div id="pauseOverlay" class="game-overlay hidden">
+        <div class="game-panel">
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
           <h2 data-i18n="td.paused">Paused</h2>
           <button id="resumeBtn" class="btn primary" data-i18n="td.resume">Resume</button>
           <button id="restartBtn" class="btn" data-i18n="td.restart">Play again</button>
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         </div>
       </div>
 
-      <div id="overOverlay" class="overlay hidden">
-        <div class="panel">
-          <h2 data-i18n="td.gameOver">Game over</h2>
-          <p id="finalScore" class="score"></p>
-          <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
-          <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
+      <div id="overOverlay" class="game-overlay hidden">
+        <div class="game-panel">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <h2 data-i18n="td.gameOver">Game over</h2>
+          <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
+          <div class="shell-over-final">
+            <div class="shell-over-stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
+            <div class="shell-over-stat"><span data-i18n="td.best">Best</span><strong id="finalBest">0</strong></div>
+          </div>
+          <div class="shell-run-reward" id="runReward"></div>
+          <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
         </div>
       </div>
     </div>

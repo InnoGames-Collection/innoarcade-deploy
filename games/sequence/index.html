@@ -6,17 +6,14 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>" />
     <title>Sequence — GoPlay</title>
   </head>
-  <body>
-    <div id="stage">
+  <body class="game-shell" data-game="sequence">
+    <div id="stage" class="game-shell-stage lq-stage">
       <header class="topbar">
         <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         <span class="game-name">🔗 Sequence</span>
-        <div class="lang-switch" role="group" aria-label="Language">
-          <button id="langEn" class="lang-btn">EN</button>
-          <button id="langAm" class="lang-btn">አማ</button>
-        </div>
       </header>
       <div id="lq-mount"></div>
+      <div class="shell-run-reward hidden" id="runReward"></div>
     </div>
     <script type="module" src="/src/games/sequence/main.ts"></script>
   </body>

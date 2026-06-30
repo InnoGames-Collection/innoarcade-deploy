@@ -1,8 +1,8 @@
 // Shared multiple-choice quiz runner — ported from the vendored quiz-engine.js.
 // Used by Vocabulary, Spell Check and Logic Riddles. A finished run reports to
-// the GoPlay GameHost via recordResult (server-only points; no local store).
+// the GoPlay GameHost via recordResultAsync (server-only XP; no local store).
 
-import { el, modal, shuffled, sound, recordResult } from './lq';
+import { el, modal, shuffled, sound, recordResultAsync, formatResultBody, showRunReward } from './lq';
 
 export interface Choice { label: string; correct: boolean; }
 export interface McqOpts<T> {
@@ -44,7 +44,7 @@ export function mcqQuiz<T>(opts: McqOpts<T>): (mount: HTMLElement) => void {
       }
 
       function nextQuestion(): void {
-        if (idx >= items.length) return finish();
+        if (idx >= items.length) { void finish(); return; }
         const item = items[idx];
         qCard.innerHTML = '';
         qCard.appendChild(el('div', { class: 'sub', text: `Question ${idx + 1} of ${items.length}` }));
@@ -82,15 +82,17 @@ export function mcqQuiz<T>(opts: McqOpts<T>): (mount: HTMLElement) => void {
         }
       }
 
-      function finish(): void {
+      async function finish(): Promise<void> {
         const won = score >= Math.ceil(items.length * 0.7);
         sound(won ? 'win' : 'bad');
-        recordResult(opts.gameId, { won, score });
+        const res = await recordResultAsync(opts.gameId, { won, score });
+        showRunReward(res);
         const body = (opts.resultBody && opts.resultBody(score, items.length)) ||
           `You got <b>${score} of ${items.length}</b> correct.`;
+        const reward = formatResultBody(res);
         qCard.innerHTML = '';
         qCard.appendChild(el('div', { class: 'prompt', text: opts.resultTitle(score, items.length) }));
-        const div = el('div'); div.innerHTML = body; qCard.appendChild(div);
+        const div = el('div'); div.innerHTML = body + (reward ? `<div class="shell-run-reward">${reward}</div>` : ''); qCard.appendChild(div);
         qCard.appendChild(el('div', { class: 'mt' }, el('button', { class: 'btn primary', text: 'Play again', onclick: newRun })));
         fillEl.style.width = '100%';
       }
