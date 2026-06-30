@@ -37,6 +37,8 @@ export interface GameMeta {
   scoreAm: string;
   /** Marks the flagship builds we polished for the partner demo. */
   featured?: boolean;
+  /** Frozen release tag — do not change game code unless the operator explicitly requests it. */
+  stable?: string;
   /** Per-game play tuning for the shared game host (platform/gameHost.ts):
    *   • winRate — base win chance (0–100) for chance games.
    *   • winScore — win threshold for skill/engine games (score ≥ this = a win).
@@ -82,7 +84,7 @@ const ALL_GAMES: GameMeta[] = [
     nameEn: 'Ethiorunner',
     nameAm: 'ኢትዮሯጭ',
     genreEn: 'Runner · Tournament', genreAm: 'ሩጫ · ውድድር',
-    mode: 'tournament', tournament: 'daily', icon: '🏃', accent: '#e2563a', thumb: ['#7a2d1a', '#2a0f08'],
+    mode: 'tournament', tournament: 'daily', stable: 'v1', icon: '🏃', accent: '#e2563a', thumb: ['#7a2d1a', '#2a0f08'],
     scoreEn: 'Score', scoreAm: 'ነጥብ',
   },
   {

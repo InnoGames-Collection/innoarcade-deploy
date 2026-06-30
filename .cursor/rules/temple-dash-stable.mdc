@@ -1,0 +1,22 @@
+---
+description: EthioRunner (temple-dash) is stable v1 — do not modify without explicit user request
+globs: src/games/temple-dash/**,games/temple-dash/**
+alwaysApply: false
+---
+
+# EthioRunner — stable v1
+
+`temple-dash` is tagged `stable: 'v1'` in `src/platform/catalog.ts`. See `STABLE.md`.
+
+## Do not change
+
+Unless the user **explicitly** asks to modify EthioRunner:
+
+- Do not edit files under `src/games/temple-dash/` or `games/temple-dash/`
+- Do not refactor runner tournament logic into shared modules by editing runner files
+- Do not change runner scoring, skins, canvas, or tournament UX
+
+## Instead
+
+- Copy runner **patterns** into new shared code (e.g. `gameTournamentPanel.ts`) or target games (`memory-match`, `fruit-slice`)
+- Fix platform/hub/backend issues without touching runner game code

@@ -12,9 +12,12 @@ import { applyTranslations, getLang, setLang, t, type Lang } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { openTournamentEntryForGame } from '../../hub/tournamentEntry';
 import { createHost } from '../../platform/gameHost';
+import { refreshGameTournamentPanel } from '../../platform/gameTournamentPanel';
 import { loadTournaments, loadMyEntries } from '../../platform/tournaments';
 
-const host = createHost('memory-match');
+const GAME_ID = 'memory-match';
+const host = createHost(GAME_ID);
+const tourneyMount = (): HTMLElement => $('#mmTourney');
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
@@ -53,12 +56,11 @@ const message = $('#mm-message');
 const restartBtn = $('#mm-restart-btn');
 const playBtn = $('#mm-play-btn') as HTMLButtonElement;
 
-function setHUD(): void {
-  $('#mm-hud-cost').textContent = host.costCoins > 0 ? `${host.costCoins} 🪙` : t('mm.free');
-  $('#mm-hud-win').textContent = String(host.attemptsLeft);
+async function refreshTournamentPanel(): Promise<void> {
+  await refreshGameTournamentPanel(GAME_ID, tourneyMount());
 }
 
-// Score (doc-style normalization input): rewards pairs found, speed (time left)
+// --- Language switch --------------------------------------------------------
 // and efficiency (fewer moves). No win/lose — the score itself is the reward.
 function liveScore(): number {
   const used = ROUND_SECONDS - secondsLeft;
@@ -120,8 +122,8 @@ async function startPlay(): Promise<void> {
     const res = await host.begin();
     if (!res.ok) {
       if (res.reason === 'coins') {
-        openTournamentEntryForGame('memory-match', {
-          onEntered: () => { void startPlay(); },
+        openTournamentEntryForGame(GAME_ID, {
+          onEntered: () => { void refreshTournamentPanel().then(() => startPlay()); },
           onPlay: () => { void startPlay(); },
         });
         return;
@@ -141,7 +143,7 @@ async function startPlay(): Promise<void> {
     canFlip = false;            // locked during the preview
     secondsLeft = ROUND_SECONDS;
     refreshStats();
-    setHUD();
+    void refreshTournamentPanel();
     play('flip');
     revealAll(true);            // 1-second preview (what the old Peek did)
     window.setTimeout(() => {
@@ -173,7 +175,7 @@ function endRound(why: 'time' | 'cleared'): void {
   message.textContent = (why === 'cleared' ? t('mm.cleared') : t('mm.timeUp')).replace('{n}', String(finalScore));
   message.style.color = '#ffd700';
   void host.finish(finalScore, false, durationMs, { ranked: rankedThisRun }).then((r) => {
-    setHUD();
+    void refreshTournamentPanel();
     if (rankedThisRun && r.rank) message.textContent += ` · #${r.rank}/${r.total}`;
   });
 }
@@ -226,12 +228,12 @@ function syncLangButtons(): void {
   const lang = getLang();
   langEn.classList.toggle('active', lang === 'en');
   langAm.classList.toggle('active', lang === 'am');
-  setHUD();
 }
 function pick(lang: Lang): void {
   setLang(lang);
   applyTranslations();
   syncLangButtons();
+  void refreshTournamentPanel();
   if (!playing && roundOver) message.textContent = t('mm.tapPlay');
 }
 langEn.addEventListener('click', () => pick('en'));
@@ -240,10 +242,8 @@ langAm.addEventListener('click', () => pick('am'));
 document.documentElement.lang = getLang();
 applyTranslations();
 syncLangButtons();
-setHUD();
 buildBoard();
 message.textContent = t('mm.tapPlay');
 
-// Hydrate the live tournament + attempt bank so cost/attempts show before Play.
-void Promise.all([loadTournaments(), loadMyEntries()]).then(() => setHUD());
+void Promise.all([loadTournaments(), loadMyEntries()]).then(() => refreshTournamentPanel());
 
