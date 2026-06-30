@@ -40,6 +40,24 @@ trigger. Safe to re-run.
 > OTP echo. This (public/shared) demo signs in with **Test phone numbers**
 > instead. If `dev_otps` already exists, drop it: `drop table public.dev_otps;`.
 
+### 1b. Apply tournament migrations (Memory Match + RP)
+
+After `schema.sql`, run these **in order** in the SQL Editor (each file is
+idempotent — safe to re-run the latest ones after updates):
+
+| Migration | Purpose |
+| --------- | ------- |
+| `20260629140000_winners_rp_mask_fix.sql` | RP boards, masked names, winners view |
+| `20260630150000_rp_par_baseline.sql` | `game_id_from_tournament`, `rp_for`, p95 baseline |
+| `20260630160000_early_stage_economy.sql` | Coin packs, tournament fees/attempts |
+| `20260630170000_memory_match_scoring.sql` | Memory Match scoring par (superseded by later) |
+| `20260630180000_memory_match_rp_leaderboard_fix.sql` | Leaderboard tie-break, RP backfill |
+| `20260630190000_memory_match_rp_par_3600.sql` | Memory Match RP par = 3600 |
+| `20260630200000_memory_match_scoring_finalize.sql` | Scoring formula doc + RP sync |
+
+Memory Match raw score (client): `3000 − spent×27 + pairs×100 − (moves−pairs)×52`
+(max **3600**). Hub ranks by **RP**; in-game boards show **raw** bests.
+
 ## 2. Deploy the Edge Functions
 
 Dashboard → **Edge Functions → Create a function**, paste each file, Deploy — or
@@ -49,6 +67,10 @@ CLI (`config.toml` is included, so `verify_jwt` is set correctly per function):
 supabase login
 supabase link --project-ref aopmkdefqykctrxhflaq
 supabase functions deploy submit-score
+supabase functions deploy start-round
+supabase functions deploy enter-tournament
+supabase functions deploy runner-submit
+supabase functions deploy runner-enter
 supabase functions deploy buy-coins
 supabase functions deploy payment-callback   # config.toml sets verify_jwt=false
 supabase functions deploy enter-tournament

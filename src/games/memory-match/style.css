@@ -8,6 +8,7 @@
   align-items: center;
   padding: 14px 12px 28px;
   gap: 14px;
+  position: relative;
 }
 
 .topbar {
@@ -321,6 +322,31 @@
   text-align: left;
 }
 .mm-over-board { display: flex; flex-direction: column; gap: 3px; }
+
+/* --- toast (runner parity) ------------------------------------------------ */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(26px, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  background: rgba(20, 24, 44, 0.95);
+  border: 1px solid rgba(0, 212, 170, 0.45);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  max-width: min(92vw, 420px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  animation: mm-toast-in 0.3s ease;
+  z-index: 60;
+  pointer-events: none;
+}
+@keyframes mm-toast-in {
+  from { transform: translate(-50%, 12px); opacity: 0; }
+}
 .mm-peek:hover:not(:disabled) { background: #fff !important; border-color: #fff !important; color: #0b1521 !important; }
 .mm-pause-btn {
   background: rgba(255, 255, 255, 0.08);

@@ -9,6 +9,7 @@ import { createHost } from '../../platform/gameHost';
 import { refreshGameTournamentPanel, tournamentBoardHtml } from '../../platform/gameTournamentPanel';
 import { leaderboardRemote, playerStandingRemote } from '../../platform/backend';
 import { isConfigured } from '../../platform/supabase';
+import { currentUser } from '../../platform/auth';
 import { loadTournaments, loadMyEntries, myEntry, getTournamentForGame } from '../../platform/tournaments';
 
 const GAME_ID = 'memory-match';
@@ -44,6 +45,20 @@ let starting = false;
 /** Frozen final score for this attempt (shown after round ends). */
 let lastFinalScore = 0;
 let serverBest = 0;
+let toastT = 0;
+
+function showToast(msg: string): void {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  clearTimeout(toastT);
+  toastT = window.setTimeout(() => el.classList.add('hidden'), 2800);
+}
+
+function attemptsLeft(): number {
+  const tour = getTournamentForGame(GAME_ID);
+  return tour ? (myEntry(tour.id)?.left ?? 0) : 0;
+}
 
 const grid = $('#mm-grid');
 const timeEl = $('#mm-time');
@@ -93,19 +108,17 @@ function scoreDisplayText(): string {
   return SCORE_PLACEHOLDER;
 }
 
-function attemptsLeft(): number {
-  const tour = getTournamentForGame(GAME_ID);
-  return tour ? (myEntry(tour.id)?.left ?? 0) : 0;
+function tournamentPlayLabel(): string {
+  const left = attemptsLeft();
+  return left > 0 ? `▶ ${t('td.playTournament')} · 🎟️ ${left}` : t('td.playTournament');
 }
 
-function playLabel(): string {
+function updateActionButtons(): void {
   const left = attemptsLeft();
-  return left > 0 ? `▶ ${t('mm.play')} · 🎟️ ${left}` : t('mm.play');
-}
-
-function playAgainLabel(): string {
-  const left = attemptsLeft();
-  return left > 0 ? `▶ ${t('td.restart')} · 🎟️ ${left}` : t('td.restart');
+  const playLabel = tournamentPlayLabel();
+  if (phase === 'idle') playBtn.textContent = playLabel;
+  if (phase === 'over') $('#mmAgainBtn').textContent = playLabel;
+  restartBtn.textContent = left > 0 ? t('td.restart') : t('td.playTournament');
 }
 
 function setPhase(next: Phase): void {
@@ -115,12 +128,7 @@ function setPhase(next: Phase): void {
   resumeBtn.classList.toggle('hidden', next !== 'paused');
   restartBtn.classList.toggle('hidden', next !== 'paused');
   grid.classList.toggle('mm-paused', next === 'paused' || next === 'over');
-
-  if (next === 'idle') playBtn.textContent = playLabel();
-}
-
-function updateAgainBtn(): void {
-  $('#mmAgainBtn').textContent = playAgainLabel();
+  updateActionButtons();
 }
 
 function showOverOverlay(final: number): void {
@@ -130,7 +138,7 @@ function showOverOverlay(final: number): void {
   $('#mmNewBest').classList.add('hidden');
   $('#mmRunReward').innerHTML = `<span class="mm-rr-pending">…</span>`;
   $('#mmBoardOver').innerHTML = '';
-  updateAgainBtn();
+  updateActionButtons();
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
 }
@@ -144,8 +152,7 @@ function hideOverOverlay(): void {
 async function refreshTournamentPanel(): Promise<void> {
   const snap = await refreshGameTournamentPanel(GAME_ID, tourneyMount());
   if (snap) serverBest = snap.serverBest;
-  if (phase === 'idle') playBtn.textContent = playLabel();
-  else if (phase === 'over') updateAgainBtn();
+  updateActionButtons();
 }
 
 async function submitRound(score: number, cleared: boolean, durationMs: number): Promise<void> {
@@ -163,6 +170,12 @@ async function submitRound(score: number, cleared: boolean, durationMs: number):
     res = await host.finish(score, cleared, durationMs, { ranked: rankedThisRun });
   } catch {
     reward.innerHTML = `<span class="mm-rr-note">${t('td.signInToRank')}</span>`;
+    showToast(t('td.signInToRank'));
+    return;
+  }
+  if (rankedThisRun && res.rank == null) {
+    reward.innerHTML = `<span class="mm-rr-note">${t('td.signInToRank')}</span>`;
+    showToast(t('td.signInToRank'));
     return;
   }
   serverBest = res.best ?? serverBest;
@@ -258,6 +271,10 @@ async function onPlayOrEnter(): Promise<void> {
 
 async function beginRankedRound(): Promise<void> {
   if (starting) return;
+  if (isConfigured() && !(await currentUser())) {
+    showToast(t('td.signInToRank'));
+    return;
+  }
   starting = true;
   try {
     await host.startRound();
@@ -282,6 +299,7 @@ async function beginRankedRound(): Promise<void> {
     }, 1000);
   } catch {
     setPhase('idle');
+    showToast(t('td.signInToRank'));
   } finally {
     starting = false;
   }
@@ -390,7 +408,7 @@ function pick(lang: Lang): void {
   applyTranslations();
   syncLangButtons();
   void refreshTournamentPanel();
-  if (phase === 'over') updateAgainBtn();
+  updateActionButtons();
 }
 langEn.addEventListener('click', () => pick('en'));
 langAm.addEventListener('click', () => pick('am'));
