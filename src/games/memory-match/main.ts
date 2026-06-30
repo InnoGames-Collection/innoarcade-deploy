@@ -1,19 +1,13 @@
-// Memory Match — a skill game a built-in GoPlay game.
-//
-// The original used page-global hooks (window.currentGameWin, currentCoinsCost,
-// currentPointsWin, playSound). Those are replaced by the shared GameHost: it
-// owns the economy/best-score wiring, so the same logic drops straight onto the
-// InnoArcade platform and, by flipping the catalog `mode`, could become a
-// tournament with no change here.
+// Memory Match — tournament weekly game (GoPlay / InnoArcade).
 
 import '../../styles/base.css';
 import './style.css';
-import { applyTranslations, getLang, setLang, type Lang } from '../../i18n';
+import { applyTranslations, getLang, setLang, t, type Lang } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { openTournamentEntryForGame } from '../../hub/tournamentEntry';
 import { createHost } from '../../platform/gameHost';
 import { refreshGameTournamentPanel } from '../../platform/gameTournamentPanel';
-import { loadTournaments, loadMyEntries } from '../../platform/tournaments';
+import { loadTournaments, loadMyEntries, myEntry, getTournamentForGame } from '../../platform/tournaments';
 
 const GAME_ID = 'memory-match';
 const host = createHost(GAME_ID);
@@ -21,7 +15,6 @@ const tourneyMount = (): HTMLElement => $('#mmTourney');
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
-// Map the GoPlay sound names onto the engine's synthesised SFX.
 function play(type: 'flip' | 'match' | 'nomatch' | 'win' | 'lose' | 'click'): void {
   switch (type) {
     case 'flip': case 'click': sfx.click(); break;
@@ -31,7 +24,7 @@ function play(type: 'flip' | 'match' | 'nomatch' | 'win' | 'lose' | 'click'): vo
   }
 }
 
-const ROUND_SECONDS = 120; // 2-minute bounded round
+const ROUND_SECONDS = 120;
 const emojis = ['🍎', '🍊', '🍋', '🍇', '🍓', '🍑'];
 
 let cards: string[] = [];
@@ -39,27 +32,43 @@ let flipped: HTMLElement[] = [];
 let moves = 0;
 let pairs = 0;
 let canFlip = false;
-let roundOver = true;     // idle until the player presses Play
+let roundOver = true;
 let playing = false;
 let rankedThisRun = false;
 let secondsLeft = ROUND_SECONDS;
 let timerId = 0;
-let roundSeq = 0;    // invalidates stale preview/timer callbacks across restarts
-let starting = false; // re-entrancy lock so a rapid double-tap can't double-charge
+let roundSeq = 0;
+let starting = false;
 
 const grid = $('#mm-grid');
 const timeEl = $('#mm-time');
 const movesEl = $('#mm-moves');
 const pairsEl = $('#mm-pairs');
 const scoreEl = $('#mm-score');
-const restartBtn = $('#mm-restart-btn');
+const restartBtn = $('#mm-restart-btn') as HTMLButtonElement;
 const playBtn = $('#mm-play-btn') as HTMLButtonElement;
+
+function attemptsLeft(): number {
+  const tour = getTournamentForGame(GAME_ID);
+  return tour ? (myEntry(tour.id)?.left ?? 0) : 0;
+}
+
+function playLabel(): string {
+  const left = attemptsLeft();
+  return left > 0 ? `▶ ${t('mm.play')} · 🎟️ ${left}` : t('mm.play');
+}
+
+function updateActionButtons(): void {
+  const label = playLabel();
+  playBtn.textContent = label;
+  restartBtn.textContent = attemptsLeft() > 0 ? t('mm.replay') : label;
+}
 
 async function refreshTournamentPanel(): Promise<void> {
   await refreshGameTournamentPanel(GAME_ID, tourneyMount());
+  updateActionButtons();
 }
 
-// Score: pairs found, time left, move efficiency.
 function liveScore(): number {
   const used = ROUND_SECONDS - secondsLeft;
   return Math.max(0, pairs * 100 + Math.max(0, ROUND_SECONDS - used) * 2 - moves * 5);
@@ -101,7 +110,6 @@ function buildBoard(): void {
   refreshStats();
 }
 
-// Reveal/hide all unmatched cards (the 1-second preview shown when a round starts).
 function revealAll(show: boolean): void {
   document.querySelectorAll<HTMLElement>('.mm-card').forEach((card) => {
     if (card.classList.contains('matched')) return;
@@ -110,49 +118,56 @@ function revealAll(show: boolean): void {
   });
 }
 
-// Start a paid round: consume a banked attempt or buy the next block (pay-once →
-// N attempts); if refused, play a free practice round. Each Play/Replay reshuffles
-// the board, shows a 1-second preview of all cards, then starts the 2-min timer.
-async function startPlay(): Promise<void> {
+async function onEnter(): Promise<void> {
+  openTournamentEntryForGame(GAME_ID, {
+    onEntered: () => { void refreshTournamentPanel(); },
+    onPlay: () => { void onPlayOrEnter(); },
+  });
+}
+
+/** Runner-style: entry modal when attempts = 0; startRound only when banked. */
+async function onPlayOrEnter(): Promise<void> {
+  if (starting) return;
+  if (attemptsLeft() <= 0) {
+    await onEnter();
+    return;
+  }
+  await beginRankedRound();
+}
+
+async function beginRankedRound(): Promise<void> {
   if (starting) return;
   starting = true;
   try {
-    const res = await host.begin();
-    if (!res.ok) {
-      if (res.reason === 'coins') {
-        openTournamentEntryForGame(GAME_ID, {
-          onEntered: () => { void refreshTournamentPanel().then(() => startPlay()); },
-          onPlay: () => { void startPlay(); },
-        });
-        return;
-      }
-      return;
-    }
+    await host.startRound();
     rankedThisRun = true;
-    const seq = ++roundSeq;     // supersede any in-flight round (mid-round Replay)
+    const seq = ++roundSeq;
     clearInterval(timerId);
-    buildBoard();               // reshuffle
+    buildBoard();
     playing = true;
     roundOver = false;
-    canFlip = false;            // locked during the preview
+    canFlip = false;
     secondsLeft = ROUND_SECONDS;
     refreshStats();
     void refreshTournamentPanel();
     play('flip');
-    revealAll(true);            // 1-second preview (what the old Peek did)
+    revealAll(true);
     window.setTimeout(() => {
-      if (seq !== roundSeq) return; // a newer round replaced this one
+      if (seq !== roundSeq) return;
       revealAll(false);
       canFlip = true;
-      timerId = window.setInterval(() => tick(seq), 1000); // timer starts AFTER preview
+      timerId = window.setInterval(() => tick(seq), 1000);
     }, 1000);
+  } catch {
+    // Auth / network — ranked round not started.
   } finally {
     starting = false;
+    updateActionButtons();
   }
 }
 
 function tick(seq: number): void {
-  if (seq !== roundSeq) return; // stale timer from a superseded round
+  if (seq !== roundSeq) return;
   secondsLeft -= 1;
   refreshStats();
   if (secondsLeft <= 0) endRound('time');
@@ -209,10 +224,9 @@ function checkMatch(): void {
   }
 }
 
-playBtn.addEventListener('click', () => void startPlay());
-restartBtn.addEventListener('click', () => { play('click'); void startPlay(); });
+playBtn.addEventListener('click', () => void onPlayOrEnter());
+restartBtn.addEventListener('click', () => { play('click'); void onPlayOrEnter(); });
 
-// --- Language switch --------------------------------------------------------
 const langEn = $('#langEn');
 const langAm = $('#langAm');
 function syncLangButtons(): void {
@@ -233,6 +247,6 @@ document.documentElement.lang = getLang();
 applyTranslations();
 syncLangButtons();
 buildBoard();
+updateActionButtons();
 
 void Promise.all([loadTournaments(), loadMyEntries()]).then(() => refreshTournamentPanel());
-

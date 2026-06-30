@@ -9,11 +9,13 @@
   <body>
     <div id="stage">
       <header class="topbar">
-        <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         <span class="game-name" data-i18n="mm.title">Memory Match</span>
-        <div class="lang-switch" role="group" aria-label="Language">
-          <button id="langEn" class="lang-btn">EN</button>
-          <button id="langAm" class="lang-btn">አማ</button>
+        <div class="topbar-actions">
+          <div class="lang-switch" role="group" aria-label="Language">
+            <button id="langEn" class="lang-btn" type="button">EN</button>
+            <button id="langAm" class="lang-btn" type="button">አማ</button>
+          </div>
+          <button type="button" class="gp-close" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         </div>
       </header>
 
