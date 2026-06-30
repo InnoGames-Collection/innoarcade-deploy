@@ -1,12 +1,14 @@
 // Memory Match — weekly tournament game (GoPlay / InnoArcade).
 
 import '../../styles/base.css';
+import '../../styles/game-shell.css';
 import './style.css';
-import { applyTranslations, getLang, setLang, t, type Lang } from '../../i18n';
+import { applyTranslations, getLang, t } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { openTournamentEntryForGame } from '../../hub/tournamentEntry';
 import { createHost } from '../../platform/gameHost';
-import { refreshGameTournamentPanel, tournamentBoardHtml } from '../../platform/gameTournamentPanel';
+import { renderShellMenuTournamentHtml, tournamentBoardHtml } from '../../platform/gameTournamentPanel';
+import { balance } from '../../platform/wallet';
 import { leaderboardRemote, playerStandingRemote } from '../../platform/backend';
 import { isConfigured } from '../../platform/supabase';
 import { currentUser } from '../../platform/auth';
@@ -14,7 +16,6 @@ import { loadTournaments, loadMyEntries, myEntry, getTournamentForGame } from '.
 
 const GAME_ID = 'memory-match';
 const host = createHost(GAME_ID);
-const tourneyMount = (): HTMLElement => $('#mmTourney');
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
@@ -29,14 +30,14 @@ const ROUND_SECONDS = 120;
 const PAIR_COUNT = 6;
 const emojis = ['🍎', '🍊', '🍋', '🍇', '🍓', '🍑'];
 
-type Phase = 'idle' | 'playing' | 'paused' | 'over';
+type Phase = 'menu' | 'playing' | 'paused' | 'over';
 
 let cards: string[] = [];
 let flipped: HTMLElement[] = [];
 let moves = 0;
 let pairs = 0;
 let canFlip = false;
-let phase: Phase = 'idle';
+let phase: Phase = 'menu';
 let rankedThisRun = false;
 let secondsLeft = ROUND_SECONDS;
 let timerId = 0;
@@ -46,6 +47,10 @@ let starting = false;
 let lastFinalScore = 0;
 let serverBest = 0;
 let toastT = 0;
+
+function gameTitle(): string {
+  return getLang() === 'am' ? host.meta.nameAm : host.meta.nameEn;
+}
 
 function showToast(msg: string): void {
   const el = $('#toast');
@@ -65,10 +70,20 @@ const timeEl = $('#mm-time');
 const movesEl = $('#mm-moves');
 const pairsEl = $('#mm-pairs');
 const scoreEl = $('#mm-score');
-const playBtn = $('#mm-play-btn') as HTMLButtonElement;
+const startBtn = $('#mmStartBtn') as HTMLButtonElement;
 const pauseBtn = $('#mm-pause-btn') as HTMLButtonElement;
 const resumeBtn = $('#mm-resume-btn') as HTMLButtonElement;
 const restartBtn = $('#mm-restart-btn') as HTMLButtonElement;
+
+function showMenu(): void {
+  $('#menuOverlay').classList.remove('hidden');
+  $('#memory-match-wrapper').classList.add('hidden');
+}
+
+function showGame(): void {
+  $('#menuOverlay').classList.add('hidden');
+  $('#memory-match-wrapper').classList.remove('hidden');
+}
 
 function playSfx(type: 'flip' | 'match' | 'nomatch' | 'win' | 'lose' | 'click'): void {
   switch (type) {
@@ -116,14 +131,15 @@ function tournamentPlayLabel(): string {
 function updateActionButtons(): void {
   const left = attemptsLeft();
   const playLabel = tournamentPlayLabel();
-  if (phase === 'idle') playBtn.textContent = playLabel;
+  if (phase === 'menu') startBtn.textContent = playLabel;
   if (phase === 'over') $('#mmAgainBtn').textContent = playLabel;
   restartBtn.textContent = left > 0 ? t('td.restart') : t('hub.play');
 }
 
 function setPhase(next: Phase): void {
   phase = next;
-  playBtn.classList.toggle('hidden', next !== 'idle');
+  if (next === 'menu') showMenu();
+  else showGame();
   pauseBtn.classList.toggle('hidden', next !== 'playing');
   resumeBtn.classList.toggle('hidden', next !== 'paused');
   restartBtn.classList.toggle('hidden', next !== 'paused');
@@ -150,8 +166,29 @@ function hideOverOverlay(): void {
 }
 
 async function refreshTournamentPanel(): Promise<void> {
-  const snap = await refreshGameTournamentPanel(GAME_ID, tourneyMount());
-  if (snap) serverBest = snap.serverBest;
+  const mount = $('#mmTourney');
+  if (!isConfigured()) {
+    mount.innerHTML = '';
+    return;
+  }
+  await currentUser();
+  await Promise.all([loadTournaments(), loadMyEntries()]);
+  const tourney = getTournamentForGame(GAME_ID);
+  if (!tourney) {
+    mount.innerHTML = '';
+    return;
+  }
+
+  const [walletCoins, standing, board] = await Promise.all([
+    balance(),
+    playerStandingRemote(tourney.id),
+    leaderboardRemote(tourney.id, 5),
+  ]);
+  serverBest = standing?.score ?? 0;
+  const left = myEntry(tourney.id)?.left ?? 0;
+  mount.innerHTML = renderShellMenuTournamentHtml(
+    gameTitle(), '🧩', walletCoins, serverBest, left, board,
+  );
   updateActionButtons();
 }
 
@@ -288,7 +325,6 @@ async function beginRankedRound(): Promise<void> {
     secondsLeft = ROUND_SECONDS;
     refreshStats();
     setPhase('playing');
-    void refreshTournamentPanel();
     playSfx('flip');
     revealAll(true);
     window.setTimeout(() => {
@@ -298,7 +334,7 @@ async function beginRankedRound(): Promise<void> {
       timerId = window.setInterval(() => tick(seq), 1000);
     }, 1000);
   } catch {
-    setPhase('idle');
+    setPhase('menu');
     showToast(t('td.signInToRank'));
   } finally {
     starting = false;
@@ -325,7 +361,7 @@ function resumeRound(): void {
 async function restartRound(): Promise<void> {
   if (phase !== 'paused') return;
   abortRound();
-  setPhase('idle');
+  setPhase('menu');
   await onPlayOrEnter();
 }
 
@@ -390,33 +426,14 @@ function checkMatch(): void {
   }
 }
 
-playBtn.addEventListener('click', () => { playSfx('click'); void onPlayOrEnter(); });
+startBtn.addEventListener('click', () => { playSfx('click'); void onPlayOrEnter(); });
 $('#mmAgainBtn').addEventListener('click', () => { playSfx('click'); void onPlayOrEnter(); });
 pauseBtn.addEventListener('click', () => { playSfx('click'); pauseRound(); });
 resumeBtn.addEventListener('click', () => { playSfx('click'); resumeRound(); });
 restartBtn.addEventListener('click', () => { playSfx('click'); void restartRound(); });
 
-const langEn = $('#langEn');
-const langAm = $('#langAm');
-function syncLangButtons(): void {
-  const lang = getLang();
-  langEn.classList.toggle('active', lang === 'en');
-  langAm.classList.toggle('active', lang === 'am');
-}
-function pick(lang: Lang): void {
-  setLang(lang);
-  applyTranslations();
-  syncLangButtons();
-  void refreshTournamentPanel();
-  updateActionButtons();
-}
-langEn.addEventListener('click', () => pick('en'));
-langAm.addEventListener('click', () => pick('am'));
-
 document.documentElement.lang = getLang();
 applyTranslations();
-syncLangButtons();
-buildBoard();
-setPhase('idle');
+setPhase('menu');
 
 void Promise.all([loadTournaments(), loadMyEntries()]).then(() => refreshTournamentPanel());

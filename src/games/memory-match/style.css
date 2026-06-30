@@ -1,69 +1,38 @@
-/* Memory Match — a built-in GoPlay game; markup/art kept, chrome adapted
-   to the InnoArcade page shell (topbar + language switch). */
+/* Memory Match — playfield stays dark; menu/overlays use game-shell.css (hub light). */
 
-#stage {
+body.game-shell[data-game="memory-match"] {
+  margin: 0;
+  background: #07090f;
   min-height: 100dvh;
+}
+
+.mm-stage {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  min-height: 100dvh;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   padding: 14px 12px 28px;
-  gap: 14px;
-  position: relative;
 }
 
-.topbar {
-  width: 100%;
-  max-width: 520px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  position: relative;
+.mm-backdrop {
+  position: absolute;
+  inset: 14px 12px 28px;
+  border-radius: clamp(16px, 4vw, 24px);
+  background:
+    radial-gradient(120% 90% at 50% 20%, rgba(255, 107, 157, 0.35) 0%, transparent 55%),
+    linear-gradient(180deg, #0b1521 0%, #162436 100%);
+  z-index: 0;
 }
-.topbar .game-name {
-  font-weight: 800;
-  letter-spacing: 0.3px;
-  color: var(--text);
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  padding-right: 4px;
-}
-.topbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.topbar-actions .gp-close {
-  position: static;
-  width: 2rem;
-  height: 2rem;
-  font-size: 0.95rem;
-}
-.back-link {
-  color: var(--muted);
-  text-decoration: none;
-  font-size: 0.9rem;
-}
-.back-link:hover { color: var(--text); }
 
-.lang-switch { display: flex; gap: 6px; }
-.lang-btn {
-  background: transparent;
-  border: 1px solid var(--muted);
-  color: var(--muted);
-  border-radius: 999px;
-  padding: 3px 10px;
-  font: inherit;
-  font-size: 0.78rem;
-  cursor: pointer;
+.mm-stage > .game-overlay {
+  z-index: 8;
 }
-.lang-btn.active { border-color: var(--accent); color: var(--accent); }
 
-/* --- GoPlay memory-match (scoped) ----------------------------------------- */
 #memory-match-wrapper {
   --pink: #ff6b9d;
   --teal: #00d4aa;
@@ -71,6 +40,7 @@
   --hud-bg: #162436;
   --border-color: #2a3e56;
   position: relative;
+  z-index: 4;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -81,56 +51,11 @@
   font-family: inherit;
   color: #fff;
   width: 100%;
-  max-width: 520px;
-  margin: 0 auto;
   box-sizing: border-box;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
   border: 2px solid var(--border-color);
 }
 #memory-match-wrapper * { box-sizing: border-box; }
-
-/* --- Tournament panel (shared layout — see gameTournamentPanel.ts) ---------- */
-.game-tourney {
-  width: 100%;
-  margin: 0 0 12px;
-  padding: 10px 12px;
-  border: 1px solid rgba(0, 212, 170, 0.35);
-  border-radius: 14px;
-  background: rgba(22, 36, 54, 0.85);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.game-tourney:empty { display: none; }
-.gt-head { display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; }
-.gt-title { font-weight: 800; color: #fff; }
-.gt-coins { color: var(--teal); font-weight: 800; }
-.gt-best { font-size: 0.82rem; color: rgba(255, 255, 255, 0.85); }
-.gt-best strong { color: #ffd700; font-size: 1rem; }
-.gt-status { font-size: 0.82rem; color: #fff; }
-.gt-attempts strong { color: var(--teal); }
-.gt-board { display: flex; flex-direction: column; gap: 3px; }
-.gt-row {
-  display: grid;
-  grid-template-columns: 28px 1fr auto;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-size: 0.82rem;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.04);
-}
-.gt-row.me { background: rgba(0, 212, 170, 0.18); font-weight: 700; }
-.gt-rank { text-align: center; }
-.gt-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.gt-score { color: var(--pink); font-variant-numeric: tabular-nums; font-weight: 700; }
-.gt-empty { font-size: 0.8rem; color: rgba(255, 255, 255, 0.55); text-align: center; margin: 4px 0; }
-.gt-board-sep {
-  height: 1px;
-  margin: 4px 0;
-  background: rgba(255, 255, 255, 0.12);
-}
 
 .mm-stats {
   display: grid;
@@ -245,61 +170,36 @@
   color: var(--pink);
 }
 
-/* --- Game-over overlay (runner parity) ------------------------------------ */
+/* Game-over overlay inside the playfield wrapper */
 .mm-over-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(8, 10, 22, 0.72);
-  backdrop-filter: blur(5px);
-  padding: 14px;
   border-radius: inherit;
 }
+
 .mm-over-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 11px;
-  text-align: center;
-  background: var(--hud-bg);
-  border: 1px solid rgba(0, 212, 170, 0.35);
-  border-radius: 16px;
-  padding: 22px 20px;
-  width: min(320px, 96%);
-  max-height: 92%;
-  overflow-y: auto;
-  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.55);
 }
-.mm-over-panel h2 {
-  margin: 0;
-  font-size: 1.25rem;
-  color: var(--teal);
-}
-.mm-new-best {
-  margin: 0;
-  color: var(--pink);
-  font-weight: 700;
-  font-size: 0.9rem;
-}
+
 .mm-over-final {
   display: flex;
   gap: 20px;
+  justify-content: center;
 }
+
 .mm-over-stat {
   display: flex;
   flex-direction: column;
   gap: 4px;
   font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--shell-muted, #5f7262);
 }
+
 .mm-over-stat strong {
   font-size: 1.35rem;
-  color: #fff;
+  color: var(--shell-text, #14271a);
   font-variant-numeric: tabular-nums;
 }
+
 .mm-run-reward {
   display: flex;
   flex-wrap: wrap;
@@ -308,22 +208,22 @@
   align-items: center;
   margin: 4px 0;
   font-size: 0.86rem;
-  color: #fff;
   min-height: 1.2em;
 }
-.mm-rr-stat b { color: rgba(255, 255, 255, 0.55); font-weight: 600; margin-right: 3px; }
-.mm-rr-note { color: rgba(255, 255, 255, 0.55); font-size: 0.82rem; }
-.mm-rr-pending { color: rgba(255, 255, 255, 0.55); }
+
+.mm-rr-stat b { color: var(--shell-muted, #5f7262); font-weight: 600; margin-right: 3px; }
+.mm-rr-note { color: var(--shell-muted, #5f7262); font-size: 0.82rem; }
+.mm-rr-pending { color: var(--shell-muted, #5f7262); }
+
 .mm-over-board-wrap { width: 100%; margin-top: 2px; }
 .mm-over-board-wrap h3 {
   font-size: 0.82rem;
   margin: 0 0 6px;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--shell-muted, #5f7262);
   text-align: left;
 }
 .mm-over-board { display: flex; flex-direction: column; gap: 3px; }
 
-/* --- toast (runner parity) ------------------------------------------------ */
 .toast {
   position: fixed;
   left: 50%;

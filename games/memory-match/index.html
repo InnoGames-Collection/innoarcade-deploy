@@ -6,21 +6,19 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>" />
     <title>Memory Match — GoPlay</title>
   </head>
-  <body>
-    <div id="stage">
-      <header class="topbar">
-        <span class="game-name" data-i18n="mm.title">Memory Match</span>
-        <div class="topbar-actions">
-          <div class="lang-switch" role="group" aria-label="Language">
-            <button id="langEn" class="lang-btn" type="button">EN</button>
-            <button id="langAm" class="lang-btn" type="button">አማ</button>
-          </div>
-          <button type="button" class="gp-close" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-        </div>
-      </header>
+  <body class="game-shell" data-game="memory-match">
+    <div id="stage" class="mm-stage">
+      <div id="mmBackdrop" class="mm-backdrop" aria-hidden="true"></div>
 
-      <div id="memory-match-wrapper">
-        <div class="game-tourney" id="mmTourney" aria-live="polite"></div>
+      <div id="menuOverlay" class="game-overlay">
+        <div class="game-panel panel-clean">
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <div class="shell-tourney" id="mmTourney" aria-live="polite"></div>
+          <button type="button" id="mmStartBtn" class="btn primary" data-i18n="hub.play">Play</button>
+        </div>
+      </div>
+
+      <div id="memory-match-wrapper" class="hidden">
         <div class="mm-stats">
           <div class="mm-stat"><span class="mm-stat-label" data-i18n="mm.time">Time</span><span class="mm-stat-value" id="mm-time">2:00</span></div>
           <div class="mm-stat"><span class="mm-stat-label" data-i18n="mm.moves">Moves</span><span class="mm-stat-value" id="mm-moves">0</span></div>
@@ -29,16 +27,16 @@
         </div>
         <div class="mm-grid" id="mm-grid"></div>
         <div class="mm-actions">
-          <button type="button" class="mm-action-btn mm-peek" id="mm-play-btn" data-i18n="mm.play">Play</button>
           <button type="button" class="mm-action-btn mm-pause-btn hidden" id="mm-pause-btn" aria-label="Pause">⏸</button>
           <button type="button" class="mm-action-btn mm-peek hidden" id="mm-resume-btn" data-i18n="td.resume">Resume</button>
           <button type="button" class="mm-action-btn hidden" id="mm-restart-btn" data-i18n="mm.restart">Restart</button>
         </div>
 
-        <div id="mmOverOverlay" class="mm-over-overlay hidden" aria-hidden="true">
-          <div class="mm-over-panel">
+        <div id="mmOverOverlay" class="game-overlay mm-over-overlay hidden" aria-hidden="true">
+          <div class="game-panel mm-over-panel">
+            <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
             <h2 data-i18n="td.gameOver">Game over</h2>
-            <p id="mmNewBest" class="mm-new-best hidden" data-i18n="td.newBest"></p>
+            <p id="mmNewBest" class="new-best hidden" data-i18n="td.newBest"></p>
             <div class="mm-over-final">
               <div class="mm-over-stat"><span data-i18n="td.score">Score</span><strong id="mmFinalScore">0</strong></div>
               <div class="mm-over-stat"><span data-i18n="td.best">Best</span><strong id="mmFinalBest">0</strong></div>
@@ -48,7 +46,7 @@
               <h3 data-i18n="td.leaderboard">Leaderboard</h3>
               <div class="mm-over-board" id="mmBoardOver"></div>
             </div>
-            <button type="button" class="mm-action-btn mm-peek" id="mmAgainBtn" data-i18n="td.restart">Play again</button>
+            <button type="button" class="btn primary" id="mmAgainBtn" data-i18n="td.restart">Play again</button>
           </div>
         </div>
       </div>

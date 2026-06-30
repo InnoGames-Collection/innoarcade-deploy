@@ -6,7 +6,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍉</text></svg>" />
     <title>Fruit Slice — GoPlay</title>
   </head>
-  <body>
+  <body class="game-shell" data-game="fruit-slice">
     <div id="stage">
       <canvas id="game" width="480" height="720"></canvas>
 
@@ -21,16 +21,16 @@
         </div>
       </div>
 
-      <div id="menuOverlay" class="overlay">
-        <div class="panel panel-clean">
+      <div id="menuOverlay" class="game-overlay">
+        <div class="game-panel panel-clean">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-          <div class="fs-tourney" id="fsTourney" aria-live="polite"></div>
+          <div class="shell-tourney" id="fsTourney" aria-live="polite"></div>
           <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
         </div>
       </div>
 
-      <div id="pauseOverlay" class="overlay hidden">
-        <div class="panel">
+      <div id="pauseOverlay" class="game-overlay hidden">
+        <div class="game-panel">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
           <h2 data-i18n="td.paused">Paused</h2>
           <button id="resumeBtn" class="btn primary" data-i18n="td.resume">Resume</button>
@@ -38,8 +38,8 @@
         </div>
       </div>
 
-      <div id="overOverlay" class="overlay hidden">
-        <div class="panel fs-over-panel">
+      <div id="overOverlay" class="game-overlay hidden">
+        <div class="game-panel fs-over-panel">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
           <h2 data-i18n="td.gameOver">Game over</h2>
           <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>

@@ -5,22 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍉</text></svg>" />
     <title>Fruit Slice — GoPlay</title>
-    <script type="module" crossorigin src="../../assets/fruitSlice-CA3kdwuc.js"></script>
+    <script type="module" crossorigin src="../../assets/fruitSlice-CdgHjkqT.js"></script>
     <link rel="modulepreload" crossorigin href="../../assets/modulepreload-polyfill-B5Qt9EMX.js">
     <link rel="modulepreload" crossorigin href="../../assets/tournaments-BEISpIV0.js">
     <link rel="modulepreload" crossorigin href="../../assets/audio-CVDxiKn6.js">
+    <link rel="modulepreload" crossorigin href="../../assets/index-B-YGA0Vr.js">
+    <link rel="modulepreload" crossorigin href="../../assets/gameTournamentPanel-KWUYgQJF.js">
     <link rel="modulepreload" crossorigin href="../../assets/currency-6Vn0SSos.js">
     <link rel="modulepreload" crossorigin href="../../assets/gameHost-DmnvC8IQ.js">
-    <link rel="modulepreload" crossorigin href="../../assets/index-B-YGA0Vr.js">
     <link rel="modulepreload" crossorigin href="../../assets/tournamentEntry-D0MTrUaf.js">
-    <link rel="modulepreload" crossorigin href="../../assets/gameTournamentPanel-DUgl8a2x.js">
     <link rel="modulepreload" crossorigin href="../../assets/loop-BDek7L7e.js">
     <link rel="modulepreload" crossorigin href="../../assets/input-DF-0NnhL.js">
     <link rel="modulepreload" crossorigin href="../../assets/storage-CInvdOsc.js">
     <link rel="stylesheet" crossorigin href="../../assets/audio-CrCdc_l1.css">
-    <link rel="stylesheet" crossorigin href="../../assets/fruitSlice-D8dopzcx.css">
+    <link rel="stylesheet" crossorigin href="../../assets/gameTournamentPanel-C6pv7_Ox.css">
+    <link rel="stylesheet" crossorigin href="../../assets/fruitSlice-DuE4G8Cc.css">
   </head>
-  <body>
+  <body class="game-shell" data-game="fruit-slice">
     <div id="stage">
       <canvas id="game" width="480" height="720"></canvas>
 
@@ -35,16 +36,16 @@
         </div>
       </div>
 
-      <div id="menuOverlay" class="overlay">
-        <div class="panel panel-clean">
+      <div id="menuOverlay" class="game-overlay">
+        <div class="game-panel panel-clean">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-          <div class="fs-tourney" id="fsTourney" aria-live="polite"></div>
+          <div class="shell-tourney" id="fsTourney" aria-live="polite"></div>
           <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
         </div>
       </div>
 
-      <div id="pauseOverlay" class="overlay hidden">
-        <div class="panel">
+      <div id="pauseOverlay" class="game-overlay hidden">
+        <div class="game-panel">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
           <h2 data-i18n="td.paused">Paused</h2>
           <button id="resumeBtn" class="btn primary" data-i18n="td.resume">Resume</button>
@@ -52,8 +53,8 @@
         </div>
       </div>
 
-      <div id="overOverlay" class="overlay hidden">
-        <div class="panel fs-over-panel">
+      <div id="overOverlay" class="game-overlay hidden">
+        <div class="game-panel fs-over-panel">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
           <h2 data-i18n="td.gameOver">Game over</h2>
           <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>

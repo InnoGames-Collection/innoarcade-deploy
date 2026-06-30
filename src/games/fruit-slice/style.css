@@ -4,7 +4,7 @@ body {
   overflow: hidden;
 }
 
-body {
+body.game-shell {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,7 +73,7 @@ body {
   border-radius: 50%;
   border: none;
   background: rgba(10, 12, 26, 0.55);
-  color: var(--text);
+  color: #f3efe4;
   font-size: 1.05rem;
   cursor: pointer;
   transition: transform 0.1s;
@@ -83,141 +83,36 @@ body {
   transform: scale(0.9);
 }
 
-.overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(8, 10, 22, 0.66);
-  backdrop-filter: blur(5px);
-  padding: 16px;
-  pointer-events: auto;
-  z-index: 8;
-}
-
-.panel {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 13px;
-  text-align: center;
-  background: var(--panel);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  padding: 26px 30px;
-  padding-top: 38px;
-  width: min(330px, 92%);
-  max-height: 90%;
-  overflow-y: auto;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
-}
-
-.panel h2 {
-  font-size: 1.35rem;
-  color: var(--accent);
-}
-
-.panel-clean {
-  padding-top: 38px;
-}
-
-.new-best {
-  color: var(--accent);
-  font-weight: 700;
-}
-
 .hidden {
   display: none !important;
 }
 
-.btn {
-  display: inline-block;
-  padding: 0.65rem 1.6rem;
-  border-radius: 999px;
-  border: 2px solid var(--accent);
-  background: transparent;
-  color: var(--text);
-  font-size: 1rem;
-  font-family: inherit;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: center;
-  transition: transform 0.1s ease;
-}
-
-.btn:active {
-  transform: scale(0.96);
-}
-
-.btn.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #221a08;
-  font-weight: 700;
-}
-
-/* --- Tournament panel (runner parity) ------------------------------------- */
-.fs-tourney {
-  width: 100%;
-  margin: 6px 0 10px;
-  padding: 10px 12px;
-  border: 1px solid rgba(255, 206, 84, 0.28);
-  border-radius: 12px;
-  background: rgba(20, 24, 44, 0.55);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.fs-tourney:empty { display: none; }
-.ft-head { display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; }
-.ft-title { font-weight: 700; color: var(--text); }
-.ft-coins { color: var(--accent); font-weight: 700; }
-.ft-best { font-size: 0.82rem; color: rgba(255, 255, 255, 0.85); }
-.ft-best strong { color: #ffb347; font-size: 1rem; }
-.ft-status { font-size: 0.82rem; color: var(--text); }
-.ft-attempts strong { color: var(--accent); }
-.fs-board { display: flex; flex-direction: column; gap: 3px; }
-.fb-row {
-  display: grid;
-  grid-template-columns: 28px 1fr auto;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-size: 0.82rem;
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.03);
-}
-.fb-row.me { background: rgba(240, 168, 50, 0.16); font-weight: 700; }
-.fb-rank { text-align: center; }
-.fb-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.fb-score { color: var(--accent); font-variant-numeric: tabular-nums; }
-.fb-empty { font-size: 0.8rem; color: var(--muted); text-align: center; margin: 4px 0; }
-
-/* --- Game-over overlay ---------------------------------------------------- */
+/* --- Game-over panel extras (shell base from game-shell.css) ---------------- */
 .fs-over-panel {
-  gap: 11px;
   align-items: stretch;
+  gap: 11px;
 }
+
 .fs-over-final {
   display: flex;
   gap: 20px;
   justify-content: center;
 }
+
 .fs-over-stat {
   display: flex;
   flex-direction: column;
   gap: 4px;
   font-size: 0.82rem;
-  color: var(--muted);
+  color: var(--shell-muted);
 }
+
 .fs-over-stat strong {
   font-size: 1.35rem;
-  color: var(--text);
+  color: var(--shell-text);
   font-variant-numeric: tabular-nums;
 }
+
 .fs-run-reward {
   display: flex;
   flex-wrap: wrap;
@@ -226,35 +121,19 @@ body {
   align-items: center;
   margin: 4px 0;
   font-size: 0.86rem;
-  color: var(--text);
   min-height: 1.2em;
 }
-.fs-rr-stat b { color: var(--muted); font-weight: 600; margin-right: 3px; }
-.fs-rr-note { color: var(--muted); font-size: 0.82rem; }
-.fs-rr-pending { color: var(--muted); }
+
+.fs-rr-stat b { color: var(--shell-muted); font-weight: 600; margin-right: 3px; }
+.fs-rr-note { color: var(--shell-muted); font-size: 0.82rem; }
+.fs-rr-pending { color: var(--shell-muted); }
+
 .fs-over-board-wrap { width: 100%; margin-top: 2px; }
 .fs-over-board-wrap h3 {
   font-size: 0.82rem;
   margin: 0 0 6px;
-  color: var(--muted);
+  color: var(--shell-muted);
   text-align: left;
 }
-.fs-over-board { display: flex; flex-direction: column; gap: 3px; }
 
-/* Reuse shared leaderboard row styles on game-over board. */
-.fs-over-board .gt-row,
-.fs-over-board .fb-row {
-  display: grid;
-  grid-template-columns: 28px 1fr auto;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-size: 0.82rem;
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.03);
-}
-.fs-over-board .gt-row.me,
-.fs-over-board .fb-row.me { background: rgba(240, 168, 50, 0.16); font-weight: 700; }
-.fs-over-board .gt-score,
-.fs-over-board .fb-score { color: var(--accent); font-variant-numeric: tabular-nums; font-weight: 700; }
+.fs-over-board { display: flex; flex-direction: column; gap: 3px; }

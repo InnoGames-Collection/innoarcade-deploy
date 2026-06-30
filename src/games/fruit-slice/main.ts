@@ -1,12 +1,13 @@
 import '../../styles/base.css';
+import '../../styles/game-shell.css';
 import { GameHost } from '../../platform/gameHost';
 import { openTournamentEntryForGame } from '../../hub/tournamentEntry';
-import { tournamentBoardHtml } from '../../platform/gameTournamentPanel';
+import { renderShellMenuTournamentHtml, tournamentBoardHtml } from '../../platform/gameTournamentPanel';
 import { balance } from '../../platform/wallet';
 import { leaderboardRemote, playerStandingRemote } from '../../platform/backend';
 import { isConfigured } from '../../platform/supabase';
 import { currentUser } from '../../platform/auth';
-import { loadTournaments, loadMyEntries, myEntry, getTournamentForGame, type LeaderEntry } from '../../platform/tournaments';
+import { loadTournaments, loadMyEntries, myEntry, getTournamentForGame } from '../../platform/tournaments';
 import './style.css';
 import { applyTranslations, getLang, t } from '../../i18n';
 import { GameLoop } from '../../engine/loop';
@@ -32,26 +33,8 @@ let rankedThisRun = false;
 let serverBest = 0;
 let starting = false;
 
-function escHtml(s: string): string {
-  return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
-}
-
-function medal(rank: number): string {
-  return ['🥇', '🥈', '🥉'][rank - 1] ?? `${rank}`;
-}
-
 function gameTitle(): string {
   return getLang() === 'am' ? host.meta.nameAm : host.meta.nameEn;
-}
-
-function boardHtml(rows: LeaderEntry[]): string {
-  if (!rows.length) return `<p class="fb-empty">${t('td.noBoard')}</p>`;
-  return rows.map((r) => `
-    <div class="fb-row${r.isPlayer ? ' me' : ''}">
-      <span class="fb-rank">${medal(r.rank)}</span>
-      <span class="fb-name">${escHtml(r.isPlayer ? t('td.you') : r.name)}</span>
-      <span class="fb-score">${r.score.toLocaleString()}</span>
-    </div>`).join('');
 }
 
 // Minimal transient toast (this game has no toast element of its own).
@@ -127,14 +110,9 @@ async function refreshTournamentPanel(): Promise<void> {
   serverBest = standing?.score ?? 0;
   const left = myEntry(tourney.id)?.left ?? 0;
 
-  mount.innerHTML = `
-    <div class="ft-head">
-      <span class="ft-title">🍉 ${escHtml(gameTitle())}</span>
-      <span class="ft-coins">${walletCoins.toLocaleString()} 🪙</span>
-    </div>
-    <div class="ft-best">${t('td.yourBest')}: <strong>${serverBest.toLocaleString()}</strong></div>
-    ${left > 0 ? `<div class="ft-status"><span class="ft-attempts">🎟️ ${t('td.attemptsLeft')}: <strong>${left}</strong></span></div>` : ''}
-    <div class="fs-board">${boardHtml(board)}</div>`;
+  mount.innerHTML = renderShellMenuTournamentHtml(
+    gameTitle(), '🍉', walletCoins, serverBest, left, board,
+  );
 
   updateActionButtons();
 }

@@ -51,6 +51,25 @@ export function tournamentBoardHtml(rows: LeaderEntry[], standing?: LeaderEntry 
   return html || `<p class="gt-empty">${t('td.noBoard')}</p>`;
 }
 
+/** Menu tournament panel — game title (not cadence title), hub-aligned shell markup. */
+export function renderShellMenuTournamentHtml(
+  gameTitle: string,
+  gameIcon: string,
+  walletCoins: number,
+  serverBest: number,
+  attemptsLeft: number,
+  board: LeaderEntry[],
+): string {
+  return `
+    <div class="gt-head">
+      <span class="gt-title">${gameIcon} ${escHtml(gameTitle)}</span>
+      <span class="gt-coins">${walletCoins.toLocaleString()} 🪙</span>
+    </div>
+    <div class="gt-best">${t('td.yourBest')}: <strong>${serverBest.toLocaleString()}</strong></div>
+    ${attemptsLeft > 0 ? `<div class="gt-status"><span class="gt-attempts">🎟️ ${t('td.attemptsLeft')}: <strong>${attemptsLeft}</strong></span></div>` : ''}
+    <div class="gt-board">${tournamentBoardHtml(board)}</div>`;
+}
+
 export function renderTournamentPanelHtml(snap: TournamentPanelSnapshot): string {
   const tour = snap.tourney;
   if (!tour) return '';
