@@ -196,29 +196,43 @@
   100% { transform: scale(1); }
 }
 .mm-card:hover:not(.matched) { transform: translateY(-2px); background: #fff; border-color: #fff; color: var(--bg-solid); }
-.mm-actions { display: flex; gap: 10px; margin-top: clamp(0.75rem, 2vw, 1rem); }
-.mm-restart-btn {
+.mm-grid.mm-paused { opacity: 0.45; pointer-events: none; filter: saturate(0.7); }
+.mm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  width: 100%;
+  margin-top: clamp(0.75rem, 2vw, 1rem);
+}
+.mm-action-btn {
   background: var(--teal);
   color: #0a1628;
   border: 2px solid var(--teal);
-  padding: clamp(10px, 2.5vw, 14px) clamp(32px, 8vw, 46px);
-  font-size: clamp(0.85rem, 2.8vw, 1.1rem);
+  padding: clamp(10px, 2.5vw, 14px) clamp(24px, 6vw, 40px);
+  font-size: clamp(0.85rem, 2.8vw, 1.05rem);
   font-weight: 900;
   border-radius: 50px;
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.06em;
+  min-width: 8.5rem;
 }
-.mm-restart-btn:hover { transform: translateY(-2px); background: #fff; border-color: #fff; }
-.mm-restart-btn:active { transform: scale(0.97); }
-.mm-peek { background: rgba(255, 107, 157, 0.12); border: 1px solid var(--pink); color: var(--pink); box-shadow: none; }
+.mm-action-btn:hover:not(:disabled) { transform: translateY(-2px); background: #fff; border-color: #fff; }
+.mm-action-btn:active:not(:disabled) { transform: scale(0.97); }
+.mm-action-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.mm-peek {
+  background: rgba(255, 107, 157, 0.12);
+  border: 1px solid var(--pink);
+  color: var(--pink);
+}
 .mm-peek:hover:not(:disabled) { background: #fff !important; border-color: #fff !important; color: #0b1521 !important; }
-.mm-peek:disabled {
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  color: rgba(255, 255, 255, 0.2) !important;
-  background: transparent !important;
-  cursor: not-allowed;
-  box-shadow: none;
+.mm-pause-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--border-color);
+  color: #fff;
 }
+.mm-pause-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.16); border-color: #fff; color: #fff; }
+.hidden { display: none !important; }

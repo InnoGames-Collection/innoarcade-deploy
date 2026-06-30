@@ -12,7 +12,7 @@ create or replace function public.game_par(p_game text)
 returns numeric language sql immutable set search_path = public as $$
   select case p_game
     when 'temple-dash'   then 1500
-    when 'memory-match'  then 400
+    when 'memory-match'  then 2200
     when 'fruit-slice'   then 60
     when 'orbit-blast'   then 3000
     when 'merge-2048'    then 5000

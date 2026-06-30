@@ -1,4 +1,4 @@
-// Memory Match — tournament weekly game (GoPlay / InnoArcade).
+// Memory Match — weekly tournament game (GoPlay / InnoArcade).
 
 import '../../styles/base.css';
 import './style.css';
@@ -15,25 +15,25 @@ const tourneyMount = (): HTMLElement => $('#mmTourney');
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
-function play(type: 'flip' | 'match' | 'nomatch' | 'win' | 'lose' | 'click'): void {
-  switch (type) {
-    case 'flip': case 'click': sfx.click(); break;
-    case 'match': case 'win': sfx.coin(); break;
-    case 'nomatch': sfx.slide(); break;
-    case 'lose': sfx.crash(); break;
-  }
-}
+/** Score = timeGain + pairGain − moveLoss (clamped ≥ 0). */
+const TIME_BASE = 3000;
+const TIME_DRAIN_PER_SEC = 25;
+const PAIR_GAIN = 100;
+/** Penalty per non-productive flip (moves − pairs); no move cap required. */
+const WASTED_MOVE_LOSS = 40;
 
 const ROUND_SECONDS = 120;
+const PAIR_COUNT = 6;
 const emojis = ['🍎', '🍊', '🍋', '🍇', '🍓', '🍑'];
+
+type Phase = 'idle' | 'playing' | 'paused' | 'over';
 
 let cards: string[] = [];
 let flipped: HTMLElement[] = [];
 let moves = 0;
 let pairs = 0;
 let canFlip = false;
-let roundOver = true;
-let playing = false;
+let phase: Phase = 'idle';
 let rankedThisRun = false;
 let secondsLeft = ROUND_SECONDS;
 let timerId = 0;
@@ -45,8 +45,40 @@ const timeEl = $('#mm-time');
 const movesEl = $('#mm-moves');
 const pairsEl = $('#mm-pairs');
 const scoreEl = $('#mm-score');
-const restartBtn = $('#mm-restart-btn') as HTMLButtonElement;
 const playBtn = $('#mm-play-btn') as HTMLButtonElement;
+const pauseBtn = $('#mm-pause-btn') as HTMLButtonElement;
+const resumeBtn = $('#mm-resume-btn') as HTMLButtonElement;
+const restartBtn = $('#mm-restart-btn') as HTMLButtonElement;
+
+function playSfx(type: 'flip' | 'match' | 'nomatch' | 'win' | 'lose' | 'click'): void {
+  switch (type) {
+    case 'flip': case 'click': sfx.click(); break;
+    case 'match': case 'win': sfx.coin(); break;
+    case 'nomatch': sfx.slide(); break;
+    case 'lose': sfx.crash(); break;
+  }
+}
+
+function spentSeconds(): number {
+  return ROUND_SECONDS - Math.max(0, secondsLeft);
+}
+
+function timeGain(): number {
+  return Math.max(0, TIME_BASE - spentSeconds() * TIME_DRAIN_PER_SEC);
+}
+
+function pairGain(): number {
+  return pairs * PAIR_GAIN;
+}
+
+/** Failed two-card tries only — never penalises flips that found a pair. */
+function moveLoss(): number {
+  return Math.max(0, moves - pairs) * WASTED_MOVE_LOSS;
+}
+
+function computeScore(): number {
+  return Math.max(0, timeGain() + pairGain() - moveLoss());
+}
 
 function attemptsLeft(): number {
   const tour = getTournamentForGame(GAME_ID);
@@ -58,30 +90,39 @@ function playLabel(): string {
   return left > 0 ? `▶ ${t('mm.play')} · 🎟️ ${left}` : t('mm.play');
 }
 
-function updateActionButtons(): void {
-  const label = playLabel();
-  playBtn.textContent = label;
-  restartBtn.textContent = attemptsLeft() > 0 ? t('mm.replay') : label;
+function playAgainLabel(): string {
+  const left = attemptsLeft();
+  return left > 0 ? `▶ ${t('td.restart')} · 🎟️ ${left}` : t('td.restart');
+}
+
+function setPhase(next: Phase): void {
+  phase = next;
+  playBtn.classList.toggle('hidden', next !== 'idle' && next !== 'over');
+  pauseBtn.classList.toggle('hidden', next !== 'playing');
+  resumeBtn.classList.toggle('hidden', next !== 'paused');
+  restartBtn.classList.toggle('hidden', next !== 'paused');
+  grid.classList.toggle('mm-paused', next === 'paused');
+
+  if (next === 'idle') playBtn.textContent = playLabel();
+  else if (next === 'over') playBtn.textContent = playAgainLabel();
 }
 
 async function refreshTournamentPanel(): Promise<void> {
   await refreshGameTournamentPanel(GAME_ID, tourneyMount());
-  updateActionButtons();
+  if (phase === 'idle') playBtn.textContent = playLabel();
+  else if (phase === 'over') playBtn.textContent = playAgainLabel();
 }
 
-function liveScore(): number {
-  const used = ROUND_SECONDS - secondsLeft;
-  return Math.max(0, pairs * 100 + Math.max(0, ROUND_SECONDS - used) * 2 - moves * 5);
-}
 function fmtTime(s: number): string {
   const m = Math.floor(s / 60), ss = s % 60;
   return `${m}:${ss.toString().padStart(2, '0')}`;
 }
+
 function refreshStats(): void {
   timeEl.textContent = fmtTime(Math.max(0, secondsLeft));
   movesEl.textContent = String(moves);
-  pairsEl.textContent = `${pairs}/6`;
-  scoreEl.textContent = String(liveScore());
+  pairsEl.textContent = `${pairs}/${PAIR_COUNT}`;
+  scoreEl.textContent = String(computeScore());
 }
 
 function shuffle<T>(a: T[]): T[] {
@@ -118,6 +159,14 @@ function revealAll(show: boolean): void {
   });
 }
 
+function abortRound(): void {
+  roundSeq++;
+  clearInterval(timerId);
+  timerId = 0;
+  canFlip = false;
+  flipped = [];
+}
+
 async function onEnter(): Promise<void> {
   openTournamentEntryForGame(GAME_ID, {
     onEntered: () => { void refreshTournamentPanel(); },
@@ -125,9 +174,8 @@ async function onEnter(): Promise<void> {
   });
 }
 
-/** Runner-style: entry modal when attempts = 0; startRound only when banked. */
 async function onPlayOrEnter(): Promise<void> {
-  if (starting) return;
+  if (starting || phase === 'playing' || phase === 'paused') return;
   if (attemptsLeft() <= 0) {
     await onEnter();
     return;
@@ -141,16 +189,14 @@ async function beginRankedRound(): Promise<void> {
   try {
     await host.startRound();
     rankedThisRun = true;
-    const seq = ++roundSeq;
-    clearInterval(timerId);
+    abortRound();
+    const seq = roundSeq;
     buildBoard();
-    playing = true;
-    roundOver = false;
-    canFlip = false;
     secondsLeft = ROUND_SECONDS;
     refreshStats();
+    setPhase('playing');
     void refreshTournamentPanel();
-    play('flip');
+    playSfx('flip');
     revealAll(true);
     window.setTimeout(() => {
       if (seq !== roundSeq) return;
@@ -159,36 +205,57 @@ async function beginRankedRound(): Promise<void> {
       timerId = window.setInterval(() => tick(seq), 1000);
     }, 1000);
   } catch {
-    // Auth / network — ranked round not started.
+    setPhase('idle');
   } finally {
     starting = false;
-    updateActionButtons();
   }
 }
 
-function tick(seq: number): void {
-  if (seq !== roundSeq) return;
-  secondsLeft -= 1;
-  refreshStats();
-  if (secondsLeft <= 0) endRound('time');
+function pauseRound(): void {
+  if (phase !== 'playing') return;
+  clearInterval(timerId);
+  timerId = 0;
+  canFlip = false;
+  setPhase('paused');
 }
 
-function endRound(_why: 'time' | 'cleared'): void {
-  if (roundOver) return;
-  roundOver = true;
-  playing = false;
-  canFlip = false;
-  clearInterval(timerId);
-  const finalScore = liveScore();
-  const durationMs = (ROUND_SECONDS - Math.max(0, secondsLeft)) * 1000;
+function resumeRound(): void {
+  if (phase !== 'paused') return;
+  const seq = roundSeq;
+  canFlip = flipped.length < 2;
+  setPhase('playing');
+  timerId = window.setInterval(() => tick(seq), 1000);
+}
+
+/** Abandon the in-progress round without submitting (runner-style restart). */
+async function restartRound(): Promise<void> {
+  if (phase !== 'paused') return;
+  abortRound();
+  setPhase('idle');
+  await onPlayOrEnter();
+}
+
+function tick(seq: number): void {
+  if (seq !== roundSeq || phase !== 'playing') return;
+  secondsLeft -= 1;
+  refreshStats();
+  if (secondsLeft <= 0) endRound();
+}
+
+function endRound(): void {
+  if (phase !== 'playing' && phase !== 'paused') return;
+  abortRound();
+  const finalScore = computeScore();
+  const durationMs = spentSeconds() * 1000;
+  setPhase('over');
   void host.finish(finalScore, false, durationMs, { ranked: rankedThisRun }).then(() => {
     void refreshTournamentPanel();
   });
 }
 
 function flipCard(card: HTMLElement): void {
-  if (!playing || !canFlip || card.classList.contains('flipped') || card.classList.contains('matched')) return;
-  play('flip');
+  if (phase !== 'playing' || !canFlip || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+  playSfx('flip');
   card.classList.add('flipped');
   card.textContent = card.dataset.e!;
   flipped.push(card);
@@ -208,24 +275,27 @@ function checkMatch(): void {
     pairs++;
     flipped = [];
     canFlip = true;
-    play('match');
+    playSfx('match');
     refreshStats();
-    if (pairs === 6) { play('win'); endRound('cleared'); }
+    if (pairs === PAIR_COUNT) { playSfx('win'); endRound(); }
   } else {
-    play('nomatch');
+    playSfx('nomatch');
     setTimeout(() => {
+      if (phase !== 'playing') return;
       c1.classList.remove('flipped');
       c2.classList.remove('flipped');
       c1.textContent = '❓';
       c2.textContent = '❓';
       flipped = [];
-      if (!roundOver) canFlip = true;
+      canFlip = true;
     }, 900);
   }
 }
 
-playBtn.addEventListener('click', () => void onPlayOrEnter());
-restartBtn.addEventListener('click', () => { play('click'); void onPlayOrEnter(); });
+playBtn.addEventListener('click', () => { playSfx('click'); void onPlayOrEnter(); });
+pauseBtn.addEventListener('click', () => { playSfx('click'); pauseRound(); });
+resumeBtn.addEventListener('click', () => { playSfx('click'); resumeRound(); });
+restartBtn.addEventListener('click', () => { playSfx('click'); void restartRound(); });
 
 const langEn = $('#langEn');
 const langAm = $('#langAm');
@@ -247,6 +317,6 @@ document.documentElement.lang = getLang();
 applyTranslations();
 syncLangButtons();
 buildBoard();
-updateActionButtons();
+setPhase('idle');
 
 void Promise.all([loadTournaments(), loadMyEntries()]).then(() => refreshTournamentPanel());

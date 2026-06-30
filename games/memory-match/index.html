@@ -29,8 +29,10 @@
         </div>
         <div class="mm-grid" id="mm-grid"></div>
         <div class="mm-actions">
-          <button class="mm-restart-btn mm-peek" id="mm-play-btn" data-i18n="mm.play">Play</button>
-          <button class="mm-restart-btn" id="mm-restart-btn" data-i18n="mm.replay">Replay</button>
+          <button type="button" class="mm-action-btn mm-peek" id="mm-play-btn" data-i18n="mm.play">Play</button>
+          <button type="button" class="mm-action-btn mm-pause-btn hidden" id="mm-pause-btn" aria-label="Pause">⏸</button>
+          <button type="button" class="mm-action-btn mm-peek hidden" id="mm-resume-btn" data-i18n="td.resume">Resume</button>
+          <button type="button" class="mm-action-btn hidden" id="mm-restart-btn" data-i18n="mm.restart">Restart</button>
         </div>
       </div>
     </div>

@@ -30,6 +30,7 @@ const MAX_SCORE: Record<string, number> = {
   'orbit-blast': 100_000,
   'temple-dash': 1_000_000,
   'merge-2048': 5_000_000,
+  'memory-match': 5_000,
   _default: 2_000_000,
 };
 
@@ -43,7 +44,7 @@ const GAME_SCORING: Record<string, ScoreCfg> = {
   'orbit-blast': { par: 3000 }, 'merge-2048': { par: 5000 }, 'temple-dash': { par: 1500 },
   'metro-rush': { par: 1500 }, 'candy-crunch': { par: 300 }, 'dot-link': { par: 200 },
   'brick-blitz': { par: 300 }, 'fruit-slice': { par: 60 }, 'sky-hopper': { par: 100 },
-  'bubble-pop': { par: 300 }, 'memory-match': { par: 100 }, 'tap-game': { par: 50 },
+  'bubble-pop': { par: 300 }, 'memory-match': { par: 2200 }, 'tap-game': { par: 50 },
   'dice-roll': { par: 300 }, 'scratch-card': { par: 100 }, 'lucky-box': { par: 300 },
   'spin-wheel': { par: 300 }, 'luckyslot': { par: 300 }, 'popblast': { par: 200 },
   'crash-game': { par: 300 },
