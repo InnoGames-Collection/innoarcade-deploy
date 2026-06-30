@@ -237,9 +237,9 @@ const FAQ: Array<{ q: { en: string; am: string }; a: { en: string; am: string } 
       am: 'አገልጋዩ ነጥብን ከአፈጻጸምዎ፣ ከጨዋታው አስቸጋሪነት እና (ለጊዜ-ተኮር ጨዋታዎች) ከፍጥነትዎ ያሰላል። ስሌቱ ለሁሉም ጨዋታዎች ተመሳሳይ ሆኖ በአገልጋዩ በኩል ስለሚሰራ ሊጭበረበር አይችልም።' },
   },
   {
-    q: { en: 'How do tournaments and the seasonal competition work?', am: 'ውድድሮችና የወቅት ውድድር እንዴት ይሰራሉ?' },
-    a: { en: 'Tournament games rank players by their best valid score during the tournament window. Separately, a seasonal competition ranks everyone by Points earned that season; top finishers receive Coin prizes when the season closes, then season Points reset.',
-      am: 'የውድድር ጨዋታዎች ተጫዋቾችን በውድድሩ ጊዜ ባስመዘገቡት ምርጥ ትክክለኛ ውጤት ይደረድራሉ። በተጨማሪም የወቅት ውድድር ሁሉንም በወቅቱ ባገኙት ነጥብ ይደረድራል፤ ወቅቱ ሲዘጋ ከፍተኛ ያስመዘገቡ የሳንቲም ሽልማት ያገኛሉ፣ ከዚያም የወቅቱ ነጥብ ይታደሳል።' },
+    q: { en: 'How do tournaments work?', am: 'ውድድሮች እንዴት ይሰራሉ?' },
+    a: { en: 'Each tournament game runs on a fixed schedule — EthioRunner daily, Memory Match weekly, Fruit Slice monthly. Windows reset automatically when the period ends. Your best score in the current window is ranked by RP on the live leaderboard. The Winners tab shows top finishers from the previous completed window.',
+      am: 'እያንዳንዱ የውድድር ጨዋታ በተወሰነ ጊዜ ይከናወናል — EthioRunner ዕለታዊ፣ Memory Match ሳምንታዊ፣ Fruit Slice ወርሃዊ። ጊዜው ሲያልቅ በራሱ ይታደሳል። በአሁኑ ጊዜ ምርጥ ውጤትዎ በ RP በቀጥታ ደረጃ ጠረጴዛ ላይ ይደረድራል። Winners ትር የቀድሞው የተጠናቀቀ ጊዜ 10 ከፍተኛ ያሳያል።' },
   },
   {
     q: { en: 'What is my level and how do I level up?', am: 'ደረጃዬ ምንድን ነው፣ እንዴት እጨምራለሁ?' },

@@ -80,8 +80,17 @@ export interface LeaderEntry {
   rank: number;
   name: string;
   score: number;
+  /** Normalized rank points (0–100) when loaded from the server leaderboard view. */
+  rp?: number;
   isPlayer: boolean;
 }
+
+/** Shipped tournament game per cadence (one live window each). */
+export const CADENCE_GAME: Record<TournamentCadence, string> = {
+  daily: 'temple-dash',
+  weekly: 'memory-match',
+  monthly: 'fruit-slice',
+};
 
 // --- Active tournament windows ---------------------------------------------
 // Windows are derived from the calendar so a countdown is always live without
@@ -258,6 +267,10 @@ export function tournamentEntrants(t: Tournament): number {
 /** The single live tournament for a game (unified: one per game). */
 export function getTournamentForGame(gameId: string, now = Date.now()): Tournament | undefined {
   return activeTournaments(now).find((t) => t.gameId === gameId);
+}
+
+export function getLiveTournamentByCadence(cadence: TournamentCadence, now = Date.now()): Tournament | undefined {
+  return getTournamentForGame(CADENCE_GAME[cadence], now);
 }
 
 export interface PrizeSlot { rank: number; pct: number; coins: number; }

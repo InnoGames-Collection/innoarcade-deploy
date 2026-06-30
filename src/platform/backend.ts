@@ -355,7 +355,7 @@ export async function leaderboardRemote(tournamentId: string, limit = 50): Promi
   const sb = supabase();
   const { data, error } = await sb
     .from('leaderboard')
-    .select('rank, name, score, user_id')
+    .select('rank, name, score, rp, user_id')
     .eq('tournament_id', tournamentId)
     .order('rank', { ascending: true })
     .limit(limit);
@@ -365,6 +365,7 @@ export async function leaderboardRemote(tournamentId: string, limit = 50): Promi
     rank: r.rank as number,
     name: (r.name as string) ?? 'Player',
     score: r.score as number,
+    rp: r.rp != null ? Number(r.rp) : undefined,
     isPlayer: r.user_id === me,
   }));
 }

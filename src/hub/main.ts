@@ -6,12 +6,12 @@ import { openAccount } from './account';
 import { mountWallet, openStore } from './wallet';
 import { onAuthChange, currentUser, signOut, authAvailable } from '../platform/auth';
 import { sfx } from '../engine/audio';
-import { mergedLeaderboard, fetchWallets, fetchUnlocks, unlockGameRemote, fetchActiveSeason, fetchSeasonLeaderboard, fetchTournamentPeriodWinners, claimDailyLogin } from '../platform/backend';
-import { orderedCatalog, getGame, type GameMeta } from '../platform/catalog';
+import { leaderboardRemote, fetchWallets, fetchUnlocks, unlockGameRemote, fetchTournamentPeriodWinners, claimDailyLogin, mergedLeaderboard } from '../platform/backend';
+import { orderedCatalog, getGame, type GameMeta, type TournamentCadence } from '../platform/catalog';
 import {
-  activeTournaments, featuredTournament, tournamentGame, getTournamentForGame,
+  activeTournaments, tournamentGame, getTournamentForGame, getLiveTournamentByCadence,
   countdown, loadTournaments, loadMyEntries,
-  tournamentState, isPaid, isEntered, enterTournament, prizePool,
+  tournamentState, enterTournament,
   type Tournament, type LeaderEntry,
 } from '../platform/tournaments';
 import { balanceSync, balance, onWalletChange } from '../platform/wallet';
@@ -28,10 +28,6 @@ const tTitle = (x: Tournament): string => (lang() === 'am' ? x.titleAm : x.title
 
 function escapeHtml(s: string): string {
   return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
-}
-
-function thumbStyle(g: GameMeta): string {
-  return `background:linear-gradient(145deg, ${g.thumb[0]}, ${g.thumb[1]});`;
 }
 
 // --- Promo banner carousel --------------------------------------------------
@@ -86,41 +82,55 @@ function setupPromo(): void {
   }
 }
 
-// Shared row renderer — current season (name) or previous season (masked phone).
-function seasonLbRow(
-  r: { rank: number; lifetime: number; season?: number; avgRp?: number; isPlayer: boolean },
-  label: string,
-): string {
+// --- Live tournament leaderboards (daily / weekly / monthly) ----------------
+let liveCadence: TournamentCadence = 'daily';
+
+function tourLbRow(r: LeaderEntry): string {
   const medal = ['🥇', '🥈', '🥉'];
-  const rp = r.season ?? r.avgRp ?? 0;
+  const rp = r.rp ?? r.score;
   return `
     <div class="lb-row${r.rank <= 3 ? ' top' : ''}${r.isPlayer ? ' me' : ''}">
       <span class="lb-rank">${medal[r.rank - 1] ?? '#' + r.rank}</span>
-      <span class="lb-name">${escapeHtml(label)}</span>
-      <span class="lb-badge lvl">Level ${levelFor(r.lifetime)}</span>
-      <span class="lb-score">${rp.toLocaleString()} RP</span>
+      <span class="lb-name">${escapeHtml(r.isPlayer ? t('td.you') : r.name)}</span>
+      <span class="lb-score">${rp} RP</span>
     </div>`;
 }
 
-// --- Seasonal competition leaderboard (top players by season RP) ------------
-function renderGlobalBoard(): void {
+function renderLiveBoard(): void {
   const host = document.querySelector('#globalBoard');
+  const banner = document.querySelector('#liveBoardBanner');
   if (!host) return;
-  void fetchActiveSeason().then((s) => {
-    const banner = document.querySelector('#seasonBanner');
-    if (!banner) return;
-    if (!s) { banner.innerHTML = ''; return; }
+  const tour = getLiveTournamentByCadence(liveCadence);
+  const game = tour ? getGame(tour.gameId) : undefined;
+  if (!tour || !game) {
+    host.innerHTML = `<p class="pd-empty">${t('hub.unranked')}</p>`;
+    if (banner) banner.innerHTML = '';
+    return;
+  }
+  if (banner) {
     banner.innerHTML = `
-      <span class="sb-glow">🥇</span>
+      <span class="sb-glow">${game.icon}</span>
       <div class="sb-body">
-        <span class="sb-title">${t('hub.seasonRank')}</span>
-        <span class="sb-sub">${t('hub.seasonName')} ${escapeHtml(s.name)} · ${t('hub.endsIn')} <strong data-ends="${s.endsAt}">${fmt(s.endsAt)}</strong></span>
+        <span class="sb-title">${escapeHtml(tTitle(tour))}</span>
+        <span class="sb-sub">${escapeHtml(name(game))} · ${t('hub.endsIn')} <strong data-ends="${tour.endsAt}">${fmt(tour.endsAt)}</strong></span>
       </div>
       <span class="sb-meta">${t('hub.rankedByRp')}</span>`;
+  }
+  void leaderboardRemote(tour.id, 10).then((rows) => {
+    host.innerHTML = rows.length
+      ? rows.map(tourLbRow).join('')
+      : `<p class="pd-empty">${t('hub.noBoardYet')}</p>`;
   });
-  void fetchSeasonLeaderboard(10).then((rows) => {
-    if (!rows.length) { host.innerHTML = `<p class="pd-empty">${t('hub.unranked')}</p>`; return; }
-    host.innerHTML = rows.map((r) => seasonLbRow(r, r.name)).join('');
+}
+
+function setupLiveBoardTabs(): void {
+  document.querySelectorAll<HTMLButtonElement>('#liveBoardSeg .seg-btn').forEach((b) => {
+    b.addEventListener('click', () => {
+      liveCadence = (b.dataset.cadence as TournamentCadence) ?? 'daily';
+      document.querySelectorAll('#liveBoardSeg .seg-btn').forEach((x) => x.classList.remove('active'));
+      b.classList.add('active');
+      renderLiveBoard();
+    });
   });
 }
 
@@ -145,31 +155,7 @@ function renderMyStats(): void {
   }
 }
 
-// --- Tournament entry economy (CTA + confirm flow) --------------------------
-
-const STATE_LABEL: Record<string, () => string> = {
-  upcoming: () => t('hub.upcoming'), live: () => t('hub.live'),
-  ended: () => t('hub.ended'), settling: () => t('hub.ended'), settled: () => t('hub.settled'),
-};
-
-// The card's primary action, reflecting state / paid / entered.
-function entryCta(tour: Tournament, game: GameMeta, cls: string): string {
-  const state = tournamentState(tour);
-  const playable = state === 'live' || state === 'upcoming';
-  if (!playable) return `<span class="btn disabled ${cls}">${STATE_LABEL[state]?.() ?? ''}</span>`;
-  if (!isPaid(tour) || isEntered(tour.id)) {
-    return `<a class="btn primary ${cls}" href="${game.route}" data-play="${tour.id}">${t('hub.playNow')}</a>`;
-  }
-  return `<button class="btn primary ${cls}" data-enter="${tour.id}">${t('hub.enterTournament')} · ${tour.entryFeeCoins} 🪙</button>`;
-}
-
-// Small free/fee + pool badges for a tournament card.
-function economyBadges(tour: Tournament): string {
-  const fee = isPaid(tour)
-    ? `<span class="econ-badge fee">${t('hub.entry')}: ${tour.entryFeeCoins} 🪙</span>`
-    : `<span class="econ-badge free">${t('hub.freeEntry')}</span>`;
-  return `${fee}<span class="econ-badge pool">${t('hub.pool')}: ${prizePool(tour).toLocaleString()} 🪙</span>`;
-}
+// --- Tournament entry economy (confirm flow) --------------------------------
 
 // Attach handlers to register buttons / play links inside a freshly-rendered root.
 function wireEntryCtas(): void {
@@ -185,79 +171,6 @@ function wireEntryCtas(): void {
   document.querySelectorAll<HTMLAnchorElement>('[data-play]').forEach((a) => {
     a.addEventListener('click', () => { void enterTournament(a.dataset.play!).catch(() => {}); });
   });
-}
-
-// --- Featured tournament hero ----------------------------------------------
-function renderFeatured(): void {
-  const host = $('#featured');
-  const tour = featuredTournament();
-  const game = tour ? tournamentGame(tour) : undefined;
-  if (!tour || !game) { host.innerHTML = ''; return; }
-  // The board + your-rank start empty and are filled by refreshFeatured() from
-  // the server (no local simulation).
-  const top3: LeaderEntry[] = [];
-  const me = undefined as LeaderEntry | undefined;
-
-  const fcStyle = game.cover
-    ? `background-image:url('${game.cover}');background-size:cover;background-position:center;`
-    : thumbStyle(game);
-  host.innerHTML = `
-    <article class="featured-card" style="${fcStyle}">
-      <div class="fc-info">
-        <span class="fc-badge">🏆 ${escapeHtml(tTitle(tour))}</span>
-        <h3 class="fc-title">${escapeHtml(name(game))}</h3>
-        <p class="fc-genre">${escapeHtml(genre(game))}</p>
-        <div class="fc-meta">
-          <div class="fc-countdown" id="fcCountdown"></div>
-          <div class="fc-prize">${t('hub.prize')}: <strong>${tour.prizeCoins.toLocaleString()}</strong> ${t('hub.coins')} 🪙</div>
-        </div>
-        <div class="fc-econ">${economyBadges(tour)}</div>
-        ${entryCta(tour, game, 'fc-cta')}
-      </div>
-      <div class="fc-board">
-        <div class="fc-board-head">${t('hub.leaderboard')}</div>
-        <ol class="leader-list">
-          ${top3.map((r) => `
-            <li class="leader-row${r.isPlayer ? ' me' : ''}">
-              <span class="lr-rank">${r.rank}</span>
-              <span class="lr-name">${escapeHtml(r.name)}</span>
-              <span class="lr-score">${r.score.toLocaleString()}</span>
-            </li>`).join('')}
-        </ol>
-        <div class="fc-yourrank">
-          ${me
-            ? `${t('hub.yourRank')}: <strong>#${me.rank}</strong>`
-            : `<span class="muted-small">${t('hub.unranked')}</span>`}
-        </div>
-      </div>
-      <div class="fc-glyph">${game.icon}</div>
-    </article>`;
-}
-
-// After the instant (seed) render, blend in real Supabase scores and patch the
-// featured leaderboard + your-rank in place. No-ops offline / before any real
-// scores exist, so the seed field stays visible.
-async function refreshFeatured(): Promise<void> {
-  const tour = featuredTournament();
-  if (!tour) return;
-  const board = await mergedLeaderboard(tour.id);
-  if (!board.length) return;
-  const list = document.querySelector('#featured .leader-list');
-  if (list) {
-    list.innerHTML = board.slice(0, 3).map((r) => `
-      <li class="leader-row${r.isPlayer ? ' me' : ''}">
-        <span class="lr-rank">${r.rank}</span>
-        <span class="lr-name">${escapeHtml(r.name)}</span>
-        <span class="lr-score">${r.score.toLocaleString()}</span>
-      </li>`).join('');
-  }
-  const me = board.find((e) => e.isPlayer);
-  const yr = document.querySelector('#featured .fc-yourrank');
-  if (yr) {
-    yr.innerHTML = me
-      ? `${t('hub.yourRank')}: <strong>#${me.rank}</strong>`
-      : `<span class="muted-small">${t('hub.unranked')}</span>`;
-  }
 }
 
 // --- Games library (flat, ordered) ------------------------------------------
@@ -524,14 +437,11 @@ function fmt(end: number): string {
 }
 
 function tickCountdowns(): void {
-  const tour = featuredTournament();
-  const fc = document.querySelector('#fcCountdown');
-  if (fc && tour) fc.innerHTML = `<span class="cd-label">${t('hub.endsIn')}</span> <span class="cd-val">${fmt(tour.endsAt)}</span>`;
   document.querySelectorAll<HTMLElement>('.tc-count, .dc-count').forEach((el) => {
     const end = Number(el.dataset.ends);
     el.innerHTML = `<span class="cd-label">${t('hub.endsIn')}</span> <strong>${fmt(end)}</strong>`;
   });
-  // Value-only countdowns (season header + coming-award banner).
+  // Value-only countdowns (live board banner + draw cards).
   document.querySelectorAll<HTMLElement>('strong[data-ends]').forEach((el) => {
     el.textContent = fmt(Number(el.dataset.ends));
   });
@@ -541,26 +451,24 @@ function tickCountdowns(): void {
 function renderAll(): void {
   renderPromo();
   renderMyStats();
-  renderFeatured();
   wireEntryCtas();
   renderGames();
   renderDraws();
+  renderLiveBoard();
   renderWinners();
-  renderGlobalBoard();
   applyTranslations();
   const search = document.querySelector<HTMLInputElement>('#gameSearch');
   if (search) search.placeholder = t('hub.searchGames');
   tickCountdowns();
-  void refreshFeatured(); // swap in real scores once they load
 }
 
 // Load authoritative tournament config + the player's entries (online), then
 // re-render so cards reflect real state. No-ops to local data offline.
 async function refreshData(): Promise<void> {
   await Promise.all([loadTournaments(), loadMyEntries()]);
-  renderFeatured();
   wireEntryCtas();
-  renderGames(); // live badge reflects the loaded tournament
+  renderGames();
+  renderLiveBoard();
 }
 
 function syncLangButtons(): void {
@@ -655,7 +563,7 @@ function mountSignInGate(): void {
 }
 
 // Nav active-state on scroll (top nav + mobile bottom nav).
-const sections = ['games', 'topPlayers', 'winners', 'dashboard'];
+const sections = ['games', 'topPlayers', 'winners'];
 function syncNavActive(): void {
   let current = sections[0];
   for (const id of sections) {
@@ -777,6 +685,7 @@ renderAll();
 onWalletChange(renderMyStats);
 onCurrencyChange(renderMyStats);
 setupBrowse();
+setupLiveBoardTabs();
 setupWinnersTabs();
 syncNavActive();
 mountSettings();
