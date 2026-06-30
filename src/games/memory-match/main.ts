@@ -15,11 +15,11 @@ const tourneyMount = (): HTMLElement => $('#mmTourney');
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
-/** Score = pairGain − moveLoss + timeGain (server submit). Live HUD uses time accrued (+25/s). */
+/** End-of-attempt score only (not shown live during play). */
 const TIME_BASE = 3000;
 const TIME_DRAIN_PER_SEC = 25;
 const PAIR_GAIN = 100;
-/** Penalty per non-productive flip (moves − pairs); no move cap required. */
+/** Penalty per wasted two-card try (moves − pairs). */
 const WASTED_MOVE_LOSS = 40;
 
 const ROUND_SECONDS = 120;
@@ -65,73 +65,29 @@ function spentSeconds(): number {
   return ROUND_SECONDS - Math.max(0, secondsLeft);
 }
 
-/** Speed bonus at submit: 3000 − spent×25 (same pool as live accrual, opposite side). */
+/** timeGain = 3000 − spent×25 */
 function timeGain(): number {
   return Math.max(0, TIME_BASE - spentSeconds() * TIME_DRAIN_PER_SEC);
-}
-
-/** Live time component — +25 each elapsed second (always increases while the clock runs). */
-function timeAccrued(): number {
-  return spentSeconds() * TIME_DRAIN_PER_SEC;
 }
 
 function pairGain(): number {
   return pairs * PAIR_GAIN;
 }
 
-/** Failed two-card tries only — never penalises flips that found a pair. */
 function moveLoss(): number {
   return Math.max(0, moves - pairs) * WASTED_MOVE_LOSS;
 }
 
-/** Tournament submit: progress + remaining-time bonus. */
-function finalScore(): number {
-  return Math.max(0, progressScore() + timeGain());
+/** score = timeGain + pairGain − moveLoss */
+function computeScore(): number {
+  return Math.max(0, timeGain() + pairGain() - moveLoss());
 }
 
-/** Pairs − wasted flips. */
-function progressScore(): number {
-  return Math.max(0, pairGain() - moveLoss());
-}
+const SCORE_PLACEHOLDER = '—';
 
-/** Full score while playing — rises every second (+25) and on each match (+100). */
-function liveScore(): number {
-  return Math.max(0, progressScore() + timeAccrued());
-}
-
-function displayScore(): number {
-  if (phase === 'over') return lastFinalScore;
-  if (phase === 'idle') return 0;
-  return liveScore();
-}
-
-function bumpScoreStat(): void {
-  scoreEl.closest('.mm-stat-score')?.classList.remove('mm-score-bump');
-  void scoreEl.offsetWidth;
-  scoreEl.closest('.mm-stat-score')?.classList.add('mm-score-bump');
-}
-
-/** Smooth step to the authoritative submit score when it differs from live. */
-function animateScoreTo(from: number, to: number, done: () => void): void {
-  if (from === to) {
-    scoreEl.textContent = String(to);
-    bumpScoreStat();
-    done();
-    return;
-  }
-  const t0 = performance.now();
-  const dur = 450;
-  const step = (now: number): void => {
-    const p = Math.min(1, (now - t0) / dur);
-    scoreEl.textContent = String(Math.round(from + (to - from) * p));
-    if (p < 1) requestAnimationFrame(step);
-    else {
-      scoreEl.textContent = String(to);
-      bumpScoreStat();
-      done();
-    }
-  };
-  requestAnimationFrame(step);
+function scoreDisplayText(): string {
+  if (phase === 'over') return String(lastFinalScore);
+  return SCORE_PLACEHOLDER;
 }
 
 function attemptsLeft(): number {
@@ -176,7 +132,13 @@ function refreshStats(): void {
   timeEl.textContent = fmtTime(Math.max(0, secondsLeft));
   movesEl.textContent = String(moves);
   pairsEl.textContent = `${pairs}/${PAIR_COUNT}`;
-  scoreEl.textContent = String(displayScore());
+  scoreEl.textContent = scoreDisplayText();
+}
+
+function bumpScoreStat(): void {
+  scoreEl.closest('.mm-stat-score')?.classList.remove('mm-score-bump');
+  void scoreEl.offsetWidth;
+  scoreEl.closest('.mm-stat-score')?.classList.add('mm-score-bump');
 }
 
 function shuffle<T>(a: T[]): T[] {
@@ -301,15 +263,14 @@ function tick(seq: number): void {
 function endRound(): void {
   if (phase !== 'playing' && phase !== 'paused') return;
   abortRound();
-  const live = liveScore();
-  lastFinalScore = finalScore();
+  lastFinalScore = computeScore();
   const durationMs = spentSeconds() * 1000;
   setPhase('over');
-  animateScoreTo(live, lastFinalScore, () => {
-    void host.finish(lastFinalScore, false, durationMs, { ranked: rankedThisRun }).then((r) => {
-      void refreshTournamentPanel();
-      if (r.isRecord) bumpScoreStat();
-    });
+  scoreEl.textContent = String(lastFinalScore);
+  bumpScoreStat();
+  void host.finish(lastFinalScore, false, durationMs, { ranked: rankedThisRun }).then((r) => {
+    void refreshTournamentPanel();
+    if (r.isRecord) bumpScoreStat();
   });
 }
 
