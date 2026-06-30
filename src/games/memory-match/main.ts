@@ -15,7 +15,7 @@ const tourneyMount = (): HTMLElement => $('#mmTourney');
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
-/** Score = timeGain + pairGain − moveLoss (clamped ≥ 0). */
+/** Score = timeGain + pairGain − moveLoss at submit; live HUD shows progress only. */
 const TIME_BASE = 3000;
 const TIME_DRAIN_PER_SEC = 25;
 const PAIR_GAIN = 100;
@@ -76,8 +76,20 @@ function moveLoss(): number {
   return Math.max(0, moves - pairs) * WASTED_MOVE_LOSS;
 }
 
-function computeScore(): number {
-  return Math.max(0, timeGain() + pairGain() - moveLoss());
+/** Final score = progress + time bonus (submitted to server). */
+function finalScore(): number {
+  return Math.max(0, progressScore() + timeGain());
+}
+
+/** Live HUD while playing: pairs − wasted moves only (no clock drain). */
+function progressScore(): number {
+  return Math.max(0, pairGain() - moveLoss());
+}
+
+function displayScore(): number {
+  if (phase === 'over') return finalScore();
+  if (phase === 'idle') return 0;
+  return progressScore();
 }
 
 function attemptsLeft(): number {
@@ -122,7 +134,7 @@ function refreshStats(): void {
   timeEl.textContent = fmtTime(Math.max(0, secondsLeft));
   movesEl.textContent = String(moves);
   pairsEl.textContent = `${pairs}/${PAIR_COUNT}`;
-  scoreEl.textContent = String(computeScore());
+  scoreEl.textContent = String(displayScore());
 }
 
 function shuffle<T>(a: T[]): T[] {
@@ -245,10 +257,11 @@ function tick(seq: number): void {
 function endRound(): void {
   if (phase !== 'playing' && phase !== 'paused') return;
   abortRound();
-  const finalScore = computeScore();
+  const submitted = finalScore();
+  scoreEl.textContent = String(submitted);
   const durationMs = spentSeconds() * 1000;
   setPhase('over');
-  void host.finish(finalScore, false, durationMs, { ranked: rankedThisRun }).then(() => {
+  void host.finish(submitted, false, durationMs, { ranked: rankedThisRun }).then(() => {
     void refreshTournamentPanel();
   });
 }
