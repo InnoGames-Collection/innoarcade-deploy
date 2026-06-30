@@ -6,8 +6,8 @@ import { applyTranslations, getLang, setLang, t, type Lang } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { openTournamentEntryForGame } from '../../hub/tournamentEntry';
 import { createHost } from '../../platform/gameHost';
-import { leaderboardRemote } from '../../platform/backend';
 import { refreshGameTournamentPanel, tournamentBoardHtml } from '../../platform/gameTournamentPanel';
+import { leaderboardRemote, playerStandingRemote } from '../../platform/backend';
 import { isConfigured } from '../../platform/supabase';
 import { loadTournaments, loadMyEntries, myEntry, getTournamentForGame } from '../../platform/tournaments';
 
@@ -172,7 +172,11 @@ async function submitRound(score: number, cleared: boolean, durationMs: number):
   reward.innerHTML = `<span class="mm-rr-stat"><b>${t('td.rank')}</b> #${res.rank ?? '—'}/${res.total ?? '—'}</span>
     <span class="mm-rr-stat"><b>${t('td.best')}</b> ${serverBest.toLocaleString()}</span>`;
   const tour = getTournamentForGame(GAME_ID);
-  if (tour) boardOver.innerHTML = tournamentBoardHtml(await leaderboardRemote(tour.id, 5));
+  if (tour) {
+    const board = await leaderboardRemote(tour.id, 5);
+    const standing = await playerStandingRemote(tour.id);
+    boardOver.innerHTML = tournamentBoardHtml(board, standing);
+  }
   void refreshTournamentPanel();
 }
 

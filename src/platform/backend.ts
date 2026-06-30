@@ -386,10 +386,16 @@ export async function playerStandingRemote(tournamentId: string): Promise<Leader
   if (!me) return undefined;
   const { data, error } = await sb
     .from('leaderboard')
-    .select('rank, name, score, user_id')
+    .select('rank, name, score, rp, user_id')
     .eq('tournament_id', tournamentId)
     .eq('user_id', me)
     .maybeSingle();
   if (error || !data) return undefined;
-  return { rank: data.rank as number, name: (data.name as string) ?? 'You', score: data.score as number, isPlayer: true };
+  return {
+    rank: data.rank as number,
+    name: (data.name as string) ?? 'You',
+    score: data.score as number,
+    rp: data.rp != null ? Number(data.rp) : undefined,
+    isPlayer: true,
+  };
 }

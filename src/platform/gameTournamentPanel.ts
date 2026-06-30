@@ -16,8 +16,11 @@ export interface TournamentPanelSnapshot {
   tourney?: Tournament;
   walletCoins: number;
   serverBest: number;
+  playerRank?: number;
   attemptsLeft: number;
   board: LeaderEntry[];
+  /** Full standing row when the player is outside the visible top-N. */
+  playerStanding?: LeaderEntry;
 }
 
 function escHtml(s: string): string {
@@ -28,15 +31,24 @@ function medal(rank: number): string {
   return ['🥇', '🥈', '🥉'][rank - 1] ?? `${rank}`;
 }
 
-/** Top-N rows ranked by raw score (runner parity — not RP). */
-export function tournamentBoardHtml(rows: LeaderEntry[]): string {
-  if (!rows.length) return `<p class="gt-empty">${t('td.noBoard')}</p>`;
-  return rows.map((r) => `
+function boardRowHtml(r: LeaderEntry): string {
+  return `
     <div class="gt-row${r.isPlayer ? ' me' : ''}">
       <span class="gt-rank">${medal(r.rank)}</span>
       <span class="gt-name">${escHtml(r.isPlayer ? t('td.you') : r.name)}</span>
       <span class="gt-score">${r.score.toLocaleString()}</span>
-    </div>`).join('');
+    </div>`;
+}
+
+/** Top-N rows from the server board (ranked by RP; cells show raw best). */
+export function tournamentBoardHtml(rows: LeaderEntry[], standing?: LeaderEntry | null): string {
+  const playerInBoard = rows.some((r) => r.isPlayer);
+  if (!rows.length && !standing) return `<p class="gt-empty">${t('td.noBoard')}</p>`;
+  let html = rows.map(boardRowHtml).join('');
+  if (standing && !playerInBoard) {
+    html += `<div class="gt-board-sep" aria-hidden="true"></div>${boardRowHtml(standing)}`;
+  }
+  return html || `<p class="gt-empty">${t('td.noBoard')}</p>`;
 }
 
 export function renderTournamentPanelHtml(snap: TournamentPanelSnapshot): string {
@@ -49,9 +61,9 @@ export function renderTournamentPanelHtml(snap: TournamentPanelSnapshot): string
       <span class="gt-title">🏆 ${escHtml(title)}</span>
       <span class="gt-coins">${snap.walletCoins.toLocaleString()} 🪙</span>
     </div>
-    <div class="gt-best">${t('td.yourBest')}: <strong>${snap.serverBest.toLocaleString()}</strong></div>
+    <div class="gt-best">${t('td.yourBest')}: <strong>${snap.serverBest.toLocaleString()}</strong>${snap.playerRank ? ` · ${t('hub.yourRank')} <strong>#${snap.playerRank}</strong>` : ''}</div>
     ${left > 0 ? `<div class="gt-status"><span class="gt-attempts">🎟️ ${t('td.attemptsLeft')}: <strong>${left}</strong></span></div>` : ''}
-    <div class="gt-board">${tournamentBoardHtml(snap.board)}</div>`;
+    <div class="gt-board">${tournamentBoardHtml(snap.board, snap.playerStanding)}</div>`;
 }
 
 /** Load tournament state from the server and paint the panel. Returns snapshot for callers. */
@@ -78,12 +90,15 @@ export async function refreshGameTournamentPanel(
     leaderboardRemote(tourney.id, boardLimit),
   ]);
   const attemptsLeft = myEntry(tourney.id)?.left ?? 0;
+  const playerInBoard = board.some((r) => r.isPlayer);
   const snap: TournamentPanelSnapshot = {
     tourney,
     walletCoins,
     serverBest: standing?.score ?? 0,
+    playerRank: standing?.rank,
     attemptsLeft,
     board,
+    playerStanding: standing && !playerInBoard ? standing : undefined,
   };
   mount.innerHTML = renderTournamentPanelHtml(snap);
   return snap;

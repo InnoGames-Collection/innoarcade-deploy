@@ -122,7 +122,8 @@ Deno.serve(async (req: Request) => {
         .from('runner_scores').select('best, plays')
         .eq('user_id', user.id).eq('tournament_id', String(tid)).maybeSingle();
       best = Math.max(Number(prev?.best ?? 0), score);
-      // Normalize raw → RP (doc §4.2); the board ranks by best RP.
+      // Normalize raw → RP (doc §4.2); refresh p95 baseline then rank by best RP.
+      await admin.rpc('refresh_game_stats');
       const { data: rpVal } = await admin.rpc('rp_for', { p_game: GAME_ID, p_raw: best });
       bestRp = Number(rpVal ?? 0);
       await admin.from('runner_scores').upsert({

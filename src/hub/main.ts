@@ -6,7 +6,7 @@ import { openAccount } from './account';
 import { mountWallet, openStore } from './wallet';
 import { onAuthChange, currentUser, signOut, authAvailable } from '../platform/auth';
 import { sfx } from '../engine/audio';
-import { leaderboardRemote, fetchWallets, fetchUnlocks, unlockGameRemote, fetchTournamentPeriodWinners, claimDailyLogin, mergedLeaderboard } from '../platform/backend';
+import { leaderboardRemote, fetchWallets, fetchUnlocks, unlockGameRemote, fetchTournamentPeriodWinners, claimDailyLogin, mergedLeaderboard, playerStandingRemote } from '../platform/backend';
 import { orderedCatalog, getGame, type GameMeta, type TournamentCadence } from '../platform/catalog';
 import {
   activeTournaments, tournamentGame, getTournamentForGame, getLiveTournamentByCadence,
@@ -116,10 +116,15 @@ function renderLiveBoard(): void {
       </div>
       <span class="sb-meta">${t('hub.rankedByRp')}</span>`;
   }
-  void leaderboardRemote(tour.id, 10).then((rows) => {
-    host.innerHTML = rows.length
+  void Promise.all([leaderboardRemote(tour.id, 10), playerStandingRemote(tour.id)]).then(([rows, me]) => {
+    const playerInBoard = rows.some((r) => r.isPlayer);
+    let html = rows.length
       ? rows.map(tourLbRow).join('')
       : `<p class="pd-empty">${t('hub.noBoardYet')}</p>`;
+    if (me && !playerInBoard) {
+      html += `<div class="lb-sep" aria-hidden="true"></div>${tourLbRow({ ...me, isPlayer: true, rp: me.rp })}`;
+    }
+    host.innerHTML = html;
   });
 }
 

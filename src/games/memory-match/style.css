@@ -125,6 +125,11 @@
 .gt-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gt-score { color: var(--pink); font-variant-numeric: tabular-nums; font-weight: 700; }
 .gt-empty { font-size: 0.8rem; color: rgba(255, 255, 255, 0.55); text-align: center; margin: 4px 0; }
+.gt-board-sep {
+  height: 1px;
+  margin: 4px 0;
+  background: rgba(255, 255, 255, 0.12);
+}
 
 .mm-stats {
   display: grid;

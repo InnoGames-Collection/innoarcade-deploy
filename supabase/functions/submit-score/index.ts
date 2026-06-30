@@ -44,7 +44,7 @@ const GAME_SCORING: Record<string, ScoreCfg> = {
   'orbit-blast': { par: 3000 }, 'merge-2048': { par: 5000 }, 'temple-dash': { par: 1500 },
   'metro-rush': { par: 1500 }, 'candy-crunch': { par: 300 }, 'dot-link': { par: 200 },
   'brick-blitz': { par: 300 }, 'fruit-slice': { par: 60 }, 'sky-hopper': { par: 100 },
-  'bubble-pop': { par: 300 }, 'memory-match': { par: 2200 }, 'tap-game': { par: 50 },
+  'bubble-pop': { par: 300 }, 'memory-match': { par: 3200 }, 'tap-game': { par: 50 },
   'dice-roll': { par: 300 }, 'scratch-card': { par: 100 }, 'lucky-box': { par: 300 },
   'spin-wheel': { par: 300 }, 'luckyslot': { par: 300 }, 'popblast': { par: 200 },
   'crash-game': { par: 300 },
@@ -247,7 +247,8 @@ Deno.serve(async (req: Request) => {
   const isRecord = score > prevBest;
   const best = Math.max(prevBest, score);
 
-  // Normalize raw → RP (doc §4.2); the tournament board ranks by best RP.
+  // Normalize raw → RP (doc §4.2); refresh p95 baseline then rank by best RP.
+  await admin.rpc('refresh_game_stats');
   const { data: rpVal } = await admin.rpc('rp_for', { p_game: gameId, p_raw: best });
   const { error: upErr } = await admin.from('scores').upsert({
     user_id: user.id,
