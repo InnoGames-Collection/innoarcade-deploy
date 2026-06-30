@@ -76,6 +76,7 @@ function showOverlay(state: GameState): void {
   for (const [key, el] of Object.entries(overlays)) {
     el.classList.toggle('hidden', key !== state);
   }
+  $('#hud').classList.toggle('hidden', state !== 'playing');
 }
 
 game.onStateChange = showOverlay;

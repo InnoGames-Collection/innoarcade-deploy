@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍉</text></svg>" />
     <title>Fruit Slice — GoPlay</title>
-    <script type="module" crossorigin src="../../assets/fruitSlice-A7FpYWs9.js"></script>
+    <script type="module" crossorigin src="../../assets/fruitSlice-BwwiyfC8.js"></script>
     <link rel="modulepreload" crossorigin href="../../assets/modulepreload-polyfill-B5Qt9EMX.js">
     <link rel="modulepreload" crossorigin href="../../assets/tournaments-BEISpIV0.js">
     <link rel="modulepreload" crossorigin href="../../assets/audio-CVDxiKn6.js">
@@ -18,59 +18,54 @@
     <link rel="modulepreload" crossorigin href="../../assets/input-DF-0NnhL.js">
     <link rel="modulepreload" crossorigin href="../../assets/storage-CInvdOsc.js">
     <link rel="stylesheet" crossorigin href="../../assets/audio-CrCdc_l1.css">
-    <link rel="stylesheet" crossorigin href="../../assets/fruitSlice-D3ibnmy0.css">
+    <link rel="stylesheet" crossorigin href="../../assets/fruitSlice-CAc2YO9E.css">
   </head>
   <body>
     <div id="stage">
-      <header class="topbar">
-        <span class="game-name">Fruit Slice</span>
-        <div class="topbar-actions">
-          <div class="lang-switch" role="group" aria-label="Language">
-            <button id="langEn" class="lang-btn" type="button">EN</button>
-            <button id="langAm" class="lang-btn" type="button">አማ</button>
-          </div>
-          <button type="button" class="gp-close" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+      <canvas id="game" width="480" height="720"></canvas>
+
+      <div id="fsStageChrome" class="fs-stage-chrome">
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button id="langEn" class="lang-btn" type="button">EN</button>
+          <button id="langAm" class="lang-btn" type="button">አማ</button>
         </div>
-      </header>
+        <button type="button" class="gp-close" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+      </div>
 
-      <div class="fs-body">
-        <canvas id="game" width="480" height="720"></canvas>
+      <div id="hud">
+        <button id="muteBtn" aria-label="Sound">🔊</button>
+        <button id="pauseBtn" aria-label="Pause">⏸</button>
+      </div>
 
-        <div id="hud">
-          <button id="muteBtn" aria-label="Sound">🔊</button>
-          <button id="pauseBtn" aria-label="Pause">⏸</button>
+      <div id="menuOverlay" class="overlay">
+        <div class="panel panel-clean">
+          <div class="game-tourney" id="fsTourney" aria-live="polite"></div>
+          <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
         </div>
+      </div>
 
-        <div id="menuOverlay" class="overlay">
-          <div class="panel panel-clean">
-            <div class="game-tourney" id="fsTourney" aria-live="polite"></div>
-            <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
-          </div>
+      <div id="pauseOverlay" class="overlay hidden">
+        <div class="panel">
+          <h2 data-i18n="td.paused">Paused</h2>
+          <button id="resumeBtn" class="btn primary" data-i18n="td.resume">Resume</button>
+          <button id="restartBtn" class="btn" data-i18n="td.restart">Play again</button>
         </div>
+      </div>
 
-        <div id="pauseOverlay" class="overlay hidden">
-          <div class="panel">
-            <h2 data-i18n="td.paused">Paused</h2>
-            <button id="resumeBtn" class="btn primary" data-i18n="td.resume">Resume</button>
-            <button id="restartBtn" class="btn" data-i18n="td.restart">Play again</button>
+      <div id="overOverlay" class="overlay hidden">
+        <div class="panel fs-over-panel">
+          <h2 data-i18n="td.gameOver">Game over</h2>
+          <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
+          <div class="fs-over-final">
+            <div class="fs-over-stat"><span data-i18n="td.score">Score</span><strong id="fsFinalScore">0</strong></div>
+            <div class="fs-over-stat"><span data-i18n="td.best">Best</span><strong id="fsFinalBest">0</strong></div>
           </div>
-        </div>
-
-        <div id="overOverlay" class="overlay hidden">
-          <div class="panel fs-over-panel">
-            <h2 data-i18n="td.gameOver">Game over</h2>
-            <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
-            <div class="fs-over-final">
-              <div class="fs-over-stat"><span data-i18n="td.score">Score</span><strong id="fsFinalScore">0</strong></div>
-              <div class="fs-over-stat"><span data-i18n="td.best">Best</span><strong id="fsFinalBest">0</strong></div>
-            </div>
-            <div class="fs-run-reward" id="fsRunReward"></div>
-            <div class="fs-over-board-wrap">
-              <h3 data-i18n="td.leaderboard">Leaderboard</h3>
-              <div class="fs-over-board" id="fsBoardOver"></div>
-            </div>
-            <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
+          <div class="fs-run-reward" id="fsRunReward"></div>
+          <div class="fs-over-board-wrap">
+            <h3 data-i18n="td.leaderboard">Leaderboard</h3>
+            <div class="fs-over-board" id="fsBoardOver"></div>
           </div>
+          <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
         </div>
       </div>
     </div>
