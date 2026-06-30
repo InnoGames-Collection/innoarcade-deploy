@@ -11,7 +11,7 @@ import { Particles } from '../../engine/particles';
 import { ScreenFx } from '../../engine/fx';
 import type { AssetStore } from '../../engine/assets';
 import type { Action } from '../../engine/input';
-import { DEFAULT_SKIN_ID, SKIN_ASPECT, WALK_FRAMES } from './art';
+import { DEFAULT_SKIN_ID, SKIN_ASPECT, WALK_FRAMES, WALK_PHASE_RATE } from './art';
 
 export const W = 480;
 export const H = 720;
@@ -164,7 +164,7 @@ export class TempleDash {
     this.elapsed += dt;
     this.speed = Math.min(MAX_SPEED, BASE_SPEED + this.elapsed * ACCEL);
     this.dist += this.speed * dt;
-    this.walkPhase += dt * (this.speed / BASE_SPEED) * 14;
+    this.walkPhase += dt * (this.speed / BASE_SPEED) * WALK_PHASE_RATE;
 
     // Kick up a puff of dust each time a foot plants (run frame changes) while
     // grounded — a big part of selling speed.
@@ -560,7 +560,7 @@ export class TempleDash {
       : sliding
         ? `${this.skinId}_slide`
         : `${this.skinId}_walk${(Math.floor(this.walkPhase) % WALK_FRAMES) + 1}`;
-    const bob = running ? Math.abs(Math.sin(this.walkPhase * Math.PI)) * 5 * pr : 0;
+    const bob = running ? Math.abs(Math.sin(this.walkPhase * Math.PI / WALK_FRAMES)) * 4 * pr : 0;
     const lean = running ? -0.07 : jumping ? -0.12 : 0;
     const slideScale = 0.62;
     const drawH = sliding ? charH * slideScale : charH;

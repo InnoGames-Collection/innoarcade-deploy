@@ -119,7 +119,7 @@ export function openTournamentEntry(opts: TournamentEntryOptions): void {
   }
 
   const m = entryShell('');
-  renderEntryBody(m, tour, { onEntered, playHref, onPlay });
+  void balance().then(() => renderEntryBody(m, tour, { onEntered, playHref, onPlay }));
 }
 
 function renderEntryBody(
@@ -160,6 +160,8 @@ function renderEntryBody(
     });
   } else {
     card.innerHTML = `
+      <p class="entry-summary">${t('hub.entrySummary').replace('{fee}', String(fee)).replace('{attempts}', String(tour.attempts))}</p>
+      <p class="entry-notice">${t('hub.entryJoinHint').replace('{fee}', String(fee))}</p>
       <p class="entry-err" id="err"></p>
       ${actionRow(`<button type="button" class="btn primary" id="confirm">${t('hub.ok')}</button>`)}`;
 
@@ -214,6 +216,7 @@ function injectStyles(): void {
       background:#fff; color:#14271a; border-radius:16px; padding:22px;
       box-shadow:0 20px 50px rgba(20,30,60,.3); display:flex; flex-direction:column; gap:10px; }
     .entry-card h3 { font-size:1.15rem; margin:0; color:#14271a; font-weight:800; }
+    .entry-summary { font-size:.95rem; font-weight:800; margin:0; text-align:center; color:#14271a; }
     .entry-notice { font-size:.82rem; color:#5f7262; margin:0; line-height:1.45; text-align:center; }
     .entry-err { font-size:.8rem; color:#d64545; min-height:1em; margin:0; text-align:center; }
     .entry-actions { display:flex; gap:8px; }

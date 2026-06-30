@@ -11,6 +11,8 @@ const urls = import.meta.glob(['./kenney/*.png', './skins/*.png', './skins/**/*.
 }) as Record<string, string>;
 
 export const WALK_FRAMES = 6;
+/** Stride animation rate at base run speed (lower = slower leg cycle). */
+export const WALK_PHASE_RATE = 8;
 
 /** Normalized sprite canvas (keep in sync with skins/ethio_f/manifest.json). */
 export const SKIN_SPRITE_W = 515;
