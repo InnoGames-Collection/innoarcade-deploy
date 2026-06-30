@@ -107,20 +107,45 @@
 .gt-empty { font-size: 0.8rem; color: rgba(255, 255, 255, 0.55); text-align: center; margin: 4px 0; }
 
 .mm-stats {
-  display: flex;
-  gap: clamp(10px, 3vw, 1.8rem);
-  margin-bottom: clamp(0.8rem, 2vw, 1.2rem);
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+  margin-bottom: clamp(0.75rem, 2vw, 1rem);
 }
 .mm-stat {
-  background: var(--hud-bg);
-  padding: 0.5rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 52px;
+  padding: 8px 4px;
   border-radius: 12px;
-  border: 2px solid var(--border-color);
+  background: linear-gradient(180deg, rgba(22, 36, 54, 0.95) 0%, rgba(15, 26, 40, 0.98) 100%);
+  border: 1px solid var(--border-color);
+  text-align: center;
 }
-.mm-stat-label { font-size: 0.82rem; opacity: 0.85; margin-right: 0.35rem; }
-.mm-stat-value { font-size: 1.3rem; font-weight: 900; color: var(--pink); }
+.mm-stat-score {
+  border-color: rgba(255, 107, 157, 0.45);
+  background: linear-gradient(180deg, rgba(255, 107, 157, 0.12) 0%, rgba(22, 36, 54, 0.95) 100%);
+}
+.mm-stat-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.1;
+}
+.mm-stat-value {
+  font-size: clamp(0.95rem, 3.2vw, 1.15rem);
+  font-weight: 900;
+  color: var(--pink);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.mm-stat-score .mm-stat-value { color: #ffd700; }
 .mm-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -152,15 +177,7 @@
   100% { transform: scale(1); }
 }
 .mm-card:hover:not(.matched) { transform: translateY(-2px); background: #fff; border-color: #fff; color: var(--bg-solid); }
-.mm-message {
-  font-size: clamp(0.85rem, 2.8vw, 1.05rem);
-  font-weight: 700;
-  margin-bottom: clamp(0.8rem, 2vw, 1.2rem);
-  min-height: 28px;
-  color: var(--pink);
-  text-align: center;
-}
-.mm-actions { display: flex; gap: 10px; }
+.mm-actions { display: flex; gap: 10px; margin-top: clamp(0.75rem, 2vw, 1rem); }
 .mm-restart-btn {
   background: var(--teal);
   color: #0a1628;

@@ -8,7 +8,7 @@
 
 import '../../styles/base.css';
 import './style.css';
-import { applyTranslations, getLang, setLang, t, type Lang } from '../../i18n';
+import { applyTranslations, getLang, setLang, type Lang } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { openTournamentEntryForGame } from '../../hub/tournamentEntry';
 import { createHost } from '../../platform/gameHost';
@@ -52,7 +52,6 @@ const timeEl = $('#mm-time');
 const movesEl = $('#mm-moves');
 const pairsEl = $('#mm-pairs');
 const scoreEl = $('#mm-score');
-const message = $('#mm-message');
 const restartBtn = $('#mm-restart-btn');
 const playBtn = $('#mm-play-btn') as HTMLButtonElement;
 
@@ -60,8 +59,7 @@ async function refreshTournamentPanel(): Promise<void> {
   await refreshGameTournamentPanel(GAME_ID, tourneyMount());
 }
 
-// --- Language switch --------------------------------------------------------
-// and efficiency (fewer moves). No win/lose — the score itself is the reward.
+// Score: pairs found, time left, move efficiency.
 function liveScore(): number {
   const used = ROUND_SECONDS - secondsLeft;
   return Math.max(0, pairs * 100 + Math.max(0, ROUND_SECONDS - used) * 2 - moves * 5);
@@ -128,13 +126,9 @@ async function startPlay(): Promise<void> {
         });
         return;
       }
-      if (res.reason === 'auth') message.textContent = t('td.signInToRank');
-      else message.textContent = t('td.enterFirst');
       return;
     }
     rankedThisRun = true;
-    message.textContent = '';
-    message.style.color = '';
     const seq = ++roundSeq;     // supersede any in-flight round (mid-round Replay)
     clearInterval(timerId);
     buildBoard();               // reshuffle
@@ -164,7 +158,7 @@ function tick(seq: number): void {
   if (secondsLeft <= 0) endRound('time');
 }
 
-function endRound(why: 'time' | 'cleared'): void {
+function endRound(_why: 'time' | 'cleared'): void {
   if (roundOver) return;
   roundOver = true;
   playing = false;
@@ -172,11 +166,8 @@ function endRound(why: 'time' | 'cleared'): void {
   clearInterval(timerId);
   const finalScore = liveScore();
   const durationMs = (ROUND_SECONDS - Math.max(0, secondsLeft)) * 1000;
-  message.textContent = (why === 'cleared' ? t('mm.cleared') : t('mm.timeUp')).replace('{n}', String(finalScore));
-  message.style.color = '#ffd700';
-  void host.finish(finalScore, false, durationMs, { ranked: rankedThisRun }).then((r) => {
+  void host.finish(finalScore, false, durationMs, { ranked: rankedThisRun }).then(() => {
     void refreshTournamentPanel();
-    if (rankedThisRun && r.rank) message.textContent += ` · #${r.rank}/${r.total}`;
   });
 }
 
@@ -234,7 +225,6 @@ function pick(lang: Lang): void {
   applyTranslations();
   syncLangButtons();
   void refreshTournamentPanel();
-  if (!playing && roundOver) message.textContent = t('mm.tapPlay');
 }
 langEn.addEventListener('click', () => pick('en'));
 langAm.addEventListener('click', () => pick('am'));
@@ -243,7 +233,6 @@ document.documentElement.lang = getLang();
 applyTranslations();
 syncLangButtons();
 buildBoard();
-message.textContent = t('mm.tapPlay');
 
 void Promise.all([loadTournaments(), loadMyEntries()]).then(() => refreshTournamentPanel());
 
