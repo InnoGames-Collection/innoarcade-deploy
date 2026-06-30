@@ -4,13 +4,13 @@
 
 import type { SheetDef } from '../../engine/assets';
 
-const urls = import.meta.glob(['./kenney/*.png', './skins/*.png', './skins/**/*.png'], {
+const urls = import.meta.glob(['./kenney/*.png', './skins/*.png', './skins/**/*.png', '!./skins/**/run/**', '!./skins/**/img/**'], {
   eager: true,
   query: '?url',
   import: 'default',
 }) as Record<string, string>;
 
-export const WALK_FRAMES = 2;
+export const WALK_FRAMES = 6;
 
 /** Normalized sprite canvas (keep in sync with skins/ethio_f/manifest.json). */
 export const SKIN_SPRITE_W = 515;
@@ -31,7 +31,11 @@ export const SKINS: Skin[] = [
   { id: DEFAULT_SKIN_ID, nameEn: 'Ethio Star', nameAm: 'ኢትዮ ኮከብ', cost: 0, thumb: './skins/ethio_f.png' },
 ];
 
-const POSES = ['stand', 'walk1', 'walk2', 'jump', 'slide'] as const;
+const POSES = [
+  'stand',
+  'walk1', 'walk2', 'walk3', 'walk4', 'walk5', 'walk6',
+  'jump', 'slide',
+] as const;
 
 function assetUrl(relativePath: string): string {
   const suffix = relativePath.replace('./', '');

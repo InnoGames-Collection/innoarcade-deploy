@@ -2,10 +2,9 @@
 /**
  * Phase 1 — ethio_f skin prep: checkerboard removal, trim, foot-anchor normalize.
  *
- * Input:  src/games/temple-dash/skins/ethio_f/img/*.jpeg
- * Output: src/games/temple-dash/skins/ethio_f/{stand,walk1,walk2,walk3,jump,slide,hit,thumb}.png
- *
- * Only processes Set A (June 30 12:36–12:42, no cape). Skips male/champion and Set B.
+ * Input:  skins/ethio_f/run/run_*.png  → walk1…walk6 (6-frame rear run cycle)
+ *         skins/ethio_f/img/*.jpeg      → stand, jump, slide, hit
+ * Output: skins/ethio_f/{stand,walk1…walk6,jump,slide,hit}.png
  */
 
 import { readdir, mkdir, writeFile } from 'node:fs/promises';
@@ -17,13 +16,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const SKIN_DIR = join(ROOT, 'src/games/temple-dash/skins/ethio_f');
 const INPUT_DIR = join(SKIN_DIR, 'img');
+const RUN_DIR = join(SKIN_DIR, 'run');
+const RUN_FRAMES = 6;
 
-/** WhatsApp timestamp fragment → output pose name (rear-view Set A only). */
+/** WhatsApp timestamp fragment → output pose (non-run poses). */
 const POSE_MAP = {
   '12.36.51': 'stand',
-  '12.40.45': 'slide', // rear crouch — not 12.38.46 horizontal dive
-  '12.39.17': 'walk1',
-  '12.39.52': 'walk2',
+  '12.40.45': 'slide',
   '12.40.29': 'jump',
   '12.42.33': 'hit',
 };
@@ -115,6 +114,14 @@ function footCenterX(rgba, width, height, alphaThreshold = 16) {
   return count ? sumX / count : width / 2;
 }
 
+function poseFromRunFilename(name) {
+  const m = name.match(/run_(\d+)/i);
+  if (!m) return null;
+  const n = Number(m[1]);
+  if (n < 1 || n > RUN_FRAMES) return null;
+  return `walk${n}`;
+}
+
 function poseFromFilename(name) {
   for (const [stamp, pose] of Object.entries(POSE_MAP)) {
     if (name.includes(stamp)) return pose;
@@ -147,26 +154,36 @@ async function loadProcessed(filePath) {
 
 async function main() {
   await mkdir(SKIN_DIR, { recursive: true });
-  const files = await readdir(INPUT_DIR);
   const jobs = [];
 
-  for (const file of files.sort()) {
+  for (const file of (await readdir(RUN_DIR)).sort()) {
+    if (!/\.(jpe?g|png|webp)$/i.test(file)) continue;
+    const pose = poseFromRunFilename(file);
+    if (!pose) {
+      console.log(`skip  run/${file} (expected run_1 … run_${RUN_FRAMES})`);
+      continue;
+    }
+    jobs.push({ file: `run/${file}`, pose, path: join(RUN_DIR, file) });
+  }
+
+  for (const file of (await readdir(INPUT_DIR)).sort()) {
     if (!/\.(jpe?g|png|webp)$/i.test(file)) continue;
     const pose = poseFromFilename(file);
     if (!pose) {
-      console.log(`skip  ${file} (not in Set A pose map)`);
+      console.log(`skip  img/${file} (not in pose map)`);
       continue;
     }
-    jobs.push({ file, pose, path: join(INPUT_DIR, file) });
+    jobs.push({ file: `img/${file}`, pose, path: join(INPUT_DIR, file) });
   }
 
   if (jobs.length === 0) {
-    console.error(`No Set A images found in ${INPUT_DIR}`);
-    console.error('Expected WhatsApp JPEGs with timestamps matching POSE_MAP in the script.');
+    console.error('No pose images found.');
+    console.error(`  Run cycle: ${RUN_DIR}/run_1.png … run_${RUN_FRAMES}.png`);
+    console.error(`  Other poses: ${INPUT_DIR} (WhatsApp JPEGs)`);
     process.exit(1);
   }
 
-  console.log(`Processing ${jobs.length} poses from ${INPUT_DIR}\n`);
+  console.log(`Processing ${jobs.length} poses\n`);
 
   const processed = new Map();
   for (const job of jobs) {
@@ -218,12 +235,16 @@ async function main() {
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   console.log(`wrote ${manifestPath}`);
 
-  const missing = ['stand', 'walk1', 'walk2', 'jump', 'slide'].filter((p) => !processed.has(p));
+  const required = [
+    'stand', 'jump', 'slide',
+    ...Array.from({ length: RUN_FRAMES }, (_, i) => `walk${i + 1}`),
+  ];
+  const missing = required.filter((p) => !processed.has(p));
   if (missing.length) {
     console.warn(`\nWarning: missing gameplay poses: ${missing.join(', ')}`);
     process.exitCode = 1;
   } else {
-    console.log('\nDone — run cycle uses walk1 + walk2 (2 rear-view strides).');
+    console.log(`\nDone — ${RUN_FRAMES}-frame run cycle (walk1…walk${RUN_FRAMES}).`);
   }
 }
 

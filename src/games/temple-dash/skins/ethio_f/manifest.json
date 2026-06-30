@@ -4,6 +4,78 @@
     "height": 732
   },
   "poses": {
+    "walk1": {
+      "file": "walk1.png",
+      "crop": {
+        "width": 163,
+        "height": 445
+      },
+      "footX": 48.54952380952381,
+      "placedAt": {
+        "left": 209,
+        "top": 279
+      }
+    },
+    "walk2": {
+      "file": "walk2.png",
+      "crop": {
+        "width": 166,
+        "height": 421
+      },
+      "footX": 61.3248730964467,
+      "placedAt": {
+        "left": 196,
+        "top": 303
+      }
+    },
+    "walk3": {
+      "file": "walk3.png",
+      "crop": {
+        "width": 150,
+        "height": 451
+      },
+      "footX": 57.74705349048051,
+      "placedAt": {
+        "left": 200,
+        "top": 273
+      }
+    },
+    "walk4": {
+      "file": "walk4.png",
+      "crop": {
+        "width": 160,
+        "height": 426
+      },
+      "footX": 61.06497461928934,
+      "placedAt": {
+        "left": 196,
+        "top": 298
+      }
+    },
+    "walk5": {
+      "file": "walk5.png",
+      "crop": {
+        "width": 164,
+        "height": 441
+      },
+      "footX": 88.11670020120724,
+      "placedAt": {
+        "left": 169,
+        "top": 283
+      }
+    },
+    "walk6": {
+      "file": "walk6.png",
+      "crop": {
+        "width": 162,
+        "height": 426
+      },
+      "footX": 60.348813209494324,
+      "placedAt": {
+        "left": 197,
+        "top": 298
+      }
+    },
     "stand": {
       "file": "stand.png",
       "crop": {
@@ -14,30 +86,6 @@
       "placedAt": {
         "left": 146,
         "top": 41
-      }
-    },
-    "walk1": {
-      "file": "walk1.png",
-      "crop": {
-        "width": 221,
-        "height": 644
-      },
-      "footX": 105.58472344161545,
-      "placedAt": {
-        "left": 152,
-        "top": 80
-      }
-    },
-    "walk2": {
-      "file": "walk2.png",
-      "crop": {
-        "width": 255,
-        "height": 496
-      },
-      "footX": 116.45543107647346,
-      "placedAt": {
-        "left": 141,
-        "top": 228
       }
     },
     "jump": {
