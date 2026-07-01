@@ -5,32 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍉</text></svg>" />
     <title>Fruit Slice — GoPlay</title>
-    <script type="module" crossorigin src="../../assets/fruitSlice-nQL_KdmR.js"></script>
-    <link rel="modulepreload" crossorigin href="../../assets/index-C8-u7fWW.js">
+    <script type="module" crossorigin src="../../assets/fruitSlice-DZOFC7vY.js"></script>
+    <link rel="modulepreload" crossorigin href="../../assets/index-Bt8ztSlW.js">
     <link rel="modulepreload" crossorigin href="../../assets/tournaments-DZKwqbUy.js">
     <link rel="modulepreload" crossorigin href="../../assets/audio-DcUQypDK.js">
     <link rel="modulepreload" crossorigin href="../../assets/gameHost-CoM1iB_N.js">
-    <link rel="modulepreload" crossorigin href="../../assets/tournamentEntry-DCvPGaEJ.js">
-    <link rel="modulepreload" crossorigin href="../../assets/gameTournamentPanel-XSECnifQ.js">
+    <link rel="modulepreload" crossorigin href="../../assets/tournamentEntry-BP0714rn.js">
+    <link rel="modulepreload" crossorigin href="../../assets/gameTournamentPanel-Co36pFuW.js">
     <link rel="modulepreload" crossorigin href="../../assets/loop-BDek7L7e.js">
     <link rel="modulepreload" crossorigin href="../../assets/input-DF-0NnhL.js">
-    <link rel="modulepreload" crossorigin href="../../assets/storage-CInvdOsc.js">
     <link rel="stylesheet" crossorigin href="../../assets/audio-CrCdc_l1.css">
     <link rel="stylesheet" crossorigin href="../../assets/gameHost-DhAGoIcW.css">
-    <link rel="stylesheet" crossorigin href="../../assets/fruitSlice-D9Pt6RwH.css">
+    <link rel="stylesheet" crossorigin href="../../assets/fruitSlice-BtUc-7uR.css">
   </head>
   <body class="game-shell" data-game="fruit-slice">
-    <div id="stage" class="game-shell-stage">
-      <canvas id="game" width="480" height="720"></canvas>
+    <div id="stage" class="fs-stage game-shell-stage">
+      <div id="fsBackdrop" class="fs-backdrop" aria-hidden="true"></div>
 
-      <button id="closeBtn" class="gp-close gp-close-corner hidden" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-
-      <div id="hud">
-        <div class="hud-top">
-          <div class="hud-buttons">
-            <button id="muteBtn" aria-label="Sound">🔊</button>
-            <button id="pauseBtn" aria-label="Pause">⏸</button>
-          </div>
+      <div id="fsPlayFrame" class="fs-playframe hidden">
+        <button id="closeBtn" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+        <div class="fs-stats">
+          <div class="fs-stat"><span class="fs-stat-label" data-i18n="td.score">Score</span><span class="fs-stat-value" id="fsScore">0</span></div>
+          <div class="fs-stat"><span class="fs-stat-label" data-i18n="fs.combo">Combo</span><span class="fs-stat-value" id="fsCombo">—</span></div>
+          <div class="fs-stat fs-stat-lives"><span class="fs-stat-label" data-i18n="fs.lives">Lives</span><span class="fs-stat-value" id="fsLives">3</span></div>
+        </div>
+        <div class="fs-canvas-wrap">
+          <canvas id="game" width="480" height="720"></canvas>
+        </div>
+        <div id="hud" class="fs-hud">
+          <button type="button" id="muteBtn" aria-label="Sound">🔊</button>
+          <button type="button" id="pauseBtn" class="fs-pause-btn" data-i18n="td.pause">Pause</button>
         </div>
       </div>
 
@@ -69,6 +73,8 @@
         </div>
       </div>
     </div>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
   </body>
 </html>

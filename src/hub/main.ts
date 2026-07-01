@@ -214,7 +214,10 @@ const HOWTO: Record<string, { en: string; am: string }> = {
   'candy-crunch': { en: 'Swap adjacent candies to line up 3+ of a colour. Clear the board’s goals before moves run out.', am: 'ተጎራባች ከረሜላዎችን ቀይረው 3+ ተመሳሳይ ቀለም ያሰልፉ።' },
   'dot-link': { en: 'Drag to connect dots of the same colour without crossing lines. Fill the board to clear it.', am: 'ተመሳሳይ ቀለም ያላቸውን ነጥቦች ሳያቋርጡ ያገናኙ።' },
   'brick-blitz': { en: 'Move the paddle to bounce the ball and break every brick. Don’t let the ball fall.', am: 'ኳሷን ለመመለስና ሁሉንም ጡቦች ለመስበር ፓዱን ያንቀሳቅሱ።' },
-  'fruit-slice': { en: 'Swipe across flying fruit to slice it. Avoid the bombs and keep your combo going.', am: 'የሚበሩ ፍራፍሬዎችን ለመቁረጥ ያንሸራትቱ። ቦምቦችን ያስወግዱ።' },
+  'fruit-slice': {
+    en: 'Monthly tournament: enter with coins for attempts, then swipe to slice flying fruit (+10 each). Bombs cost 10 points but do not end the run. Miss 3 fruits (lives) and the run ends — your best score ranks on the monthly leaderboard.',
+    am: 'ወርሃዊ ውድድር፦ ለሙከራዎች በሳንቲም ግቡ፣ ከዚያ የሚበሩ ፍራፍሬዎችን በመንሸራተት ይቁረጡ (+10 እያንዳንዱ)። ቦምቦች 10 ነጥብ ይቀንሳሉ ነገር ግን ጨዋታው አይቆምም። 3 ፍራፍሬ ካመለጡ (ሕይወት) ጨዋታው ያበቃል — ምርጥ ነጥብዎ በወርሃዊ ደረጃ ላይ ይሰላል።',
+  },
   'sky-hopper': { en: 'Tap to hop upward from platform to platform. Climb as high as you can without falling.', am: 'ከመድረክ ወደ መድረክ ለመዝለል ይንኩ። ሳይወድቁ ከፍ ብለው ይውጡ።' },
   'bubble-pop': { en: 'Aim and shoot bubbles to group 3+ of a colour and pop them. Clear the board to win.', am: '3+ ተመሳሳይ ቀለም ለማሰባሰብ አረፋዎችን ይተኩሱ።' },
   'tap-game': { en: 'Tap as fast and accurately as you can before the timer runs out. Higher taps, higher score.', am: 'ሰዓቱ ከማለቁ በፊት በፍጥነትና በትክክል ይንኩ።' },

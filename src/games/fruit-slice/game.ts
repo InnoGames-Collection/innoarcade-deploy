@@ -2,7 +2,6 @@
 // Enterprise-grade with particle effects, screen shake, and progressive difficulty.
 
 import { sfx } from '../../engine/audio';
-import { getHighScore, setHighScore } from '../../engine/storage';
 import type { Action } from '../../engine/input';
 
 export const W = 480;
@@ -54,10 +53,9 @@ export class FruitSlice {
   score = 0;
   combo = 0;
   lives = 3;
-  best = getHighScore('fruit-slice');
 
   onStateChange: (s: GameState) => void = () => {};
-  onGameOver: (score: number, record: boolean, durationMs: number) => void = () => {};
+  onGameOver: (score: number, durationMs: number) => void = () => {};
 
   private time = 0;
   // Difficulty ramp: spawn rate + object speed scale up with elapsed time, so the
@@ -245,11 +243,7 @@ export class FruitSlice {
       this.combo = 0;
       if (this.lives <= 0) {
         this.setState('gameOver');
-        this.onGameOver(this.score, this.score > this.best, Math.floor(this.time * 1000));
-        if (this.score > this.best) {
-          setHighScore('fruit-slice', this.score);
-          this.best = this.score;
-        }
+        this.onGameOver(this.score, Math.floor(this.time * 1000));
       }
     }
     this.fruits = this.fruits.filter((f) => f.y <= H || f.sliced);
@@ -318,24 +312,6 @@ export class FruitSlice {
     ctx.lineTo(W, H);
     ctx.closePath();
     ctx.fill();
-
-    if (this.state === 'playing' || this.state === 'paused') {
-      ctx.fillStyle = 'rgba(20, 10, 35, 0.55)';
-      ctx.fillRect(0, 0, W, 52);
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 16px sans-serif';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillText(`Score: ${this.score}`, 16, 34);
-      ctx.fillStyle = '#ff8a8a';
-      ctx.fillText(`♥ ${this.lives}`, 16, H - 18);
-      if (this.combo > 1) {
-        ctx.textAlign = 'center';
-        ctx.fillStyle = `hsl(${this.combo * 20}, 100%, 50%)`;
-        ctx.font = 'bold 20px sans-serif';
-        ctx.fillText(`${this.combo}x`, W / 2, 34);
-      }
-    }
 
     for (const bomb of this.bombs) {
       ctx.fillStyle = '#333';

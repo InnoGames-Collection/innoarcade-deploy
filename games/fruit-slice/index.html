@@ -7,17 +7,22 @@
     <title>Fruit Slice — GoPlay</title>
   </head>
   <body class="game-shell" data-game="fruit-slice">
-    <div id="stage" class="game-shell-stage">
-      <canvas id="game" width="480" height="720"></canvas>
+    <div id="stage" class="fs-stage game-shell-stage">
+      <div id="fsBackdrop" class="fs-backdrop" aria-hidden="true"></div>
 
-      <button id="closeBtn" class="gp-close gp-close-corner hidden" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-
-      <div id="hud">
-        <div class="hud-top">
-          <div class="hud-buttons">
-            <button id="muteBtn" aria-label="Sound">🔊</button>
-            <button id="pauseBtn" aria-label="Pause">⏸</button>
-          </div>
+      <div id="fsPlayFrame" class="fs-playframe hidden">
+        <button id="closeBtn" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+        <div class="fs-stats">
+          <div class="fs-stat"><span class="fs-stat-label" data-i18n="td.score">Score</span><span class="fs-stat-value" id="fsScore">0</span></div>
+          <div class="fs-stat"><span class="fs-stat-label" data-i18n="fs.combo">Combo</span><span class="fs-stat-value" id="fsCombo">—</span></div>
+          <div class="fs-stat fs-stat-lives"><span class="fs-stat-label" data-i18n="fs.lives">Lives</span><span class="fs-stat-value" id="fsLives">3</span></div>
+        </div>
+        <div class="fs-canvas-wrap">
+          <canvas id="game" width="480" height="720"></canvas>
+        </div>
+        <div id="hud" class="fs-hud">
+          <button type="button" id="muteBtn" aria-label="Sound">🔊</button>
+          <button type="button" id="pauseBtn" class="fs-pause-btn" data-i18n="td.pause">Pause</button>
         </div>
       </div>
 
@@ -56,6 +61,8 @@
         </div>
       </div>
     </div>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
     <script type="module" src="/src/games/fruit-slice/main.ts"></script>
   </body>
