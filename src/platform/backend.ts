@@ -49,7 +49,20 @@ export async function submitPlayRemote(
 // Anti-cheat: ask the server to open a round and return a single-use signed
 // token to hand back to submit-score. Empty string when unconfigured or when
 // the signing secret isn't set (token-optional mode) — never throws.
-export interface StartRoundResult { token: string; attemptsLeft?: number }
+export interface StartRoundResult { token: string; attemptsLeft?: number; blocked?: boolean }
+
+async function parseStartRoundError(error: unknown): Promise<Pick<StartRoundResult, 'attemptsLeft' | 'blocked'>> {
+  try {
+    const ctx = (error as { context?: Response }).context;
+    if (!ctx?.json) return { blocked: true };
+    const body = await ctx.json() as { attemptsLeft?: number; error?: string };
+    if (body.attemptsLeft != null) return { attemptsLeft: Number(body.attemptsLeft), blocked: true };
+    if (body.error === 'no attempts left' || body.error === 'not entered') {
+      return { attemptsLeft: 0, blocked: true };
+    }
+  } catch { /* ignore */ }
+  return { blocked: true };
+}
 
 export async function startRoundRemote(gameId: string, ranked = true): Promise<StartRoundResult> {
   if (!isConfigured()) return { token: '' };
@@ -57,12 +70,15 @@ export async function startRoundRemote(gameId: string, ranked = true): Promise<S
     const { data, error } = await (await getSupabase()).functions.invoke('start-round', {
       body: { gameId, ranked },
     });
-    if (error) return { token: '' };
+    if (error) {
+      const parsed = await parseStartRoundError(error);
+      return { token: '', ...parsed };
+    }
     return {
       token: (data?.token as string) ?? '',
       attemptsLeft: data?.attemptsLeft != null ? Number(data.attemptsLeft) : undefined,
     };
-  } catch { return { token: '' }; }
+  } catch { return { token: '', blocked: true }; }
 }
 
 // Per-game cosmetic skin selection, persisted on the player's profile (the only

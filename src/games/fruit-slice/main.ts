@@ -234,13 +234,59 @@ game.onGameOver = (score, durationMs) => {
   void submitRun(score, durationMs, score >= host.winScore);
 };
 
+function hideGameOverForReplay(): void {
+  overlays.gameOver.classList.add('hidden');
+  $('#fsPlayFrame').classList.remove('hidden');
+  $('#fsBackdrop').classList.add('hidden');
+}
+
+async function beginRankedRound(): Promise<void> {
+  if (starting) return;
+  starting = true;
+  const replay = game.state === 'gameOver';
+  if (replay) hideGameOverForReplay();
+  try {
+    const left = await host.startRound();
+    if (isConfigured() && host.isTournament && left === 0) {
+      if (replay) showOverlay('gameOver');
+      await onEnter();
+      return;
+    }
+    rankedThisRun = true;
+    game.start();
+    syncAttemptsUi();
+    void refreshTournamentPanel();
+  } catch {
+    if (replay) showOverlay('gameOver');
+    else showOverlay('menu');
+    if (!(await promptIfSessionExpired(showToast))) showToast(t('td.submitFailed'));
+  } finally {
+    starting = false;
+  }
+}
+
 async function onPlayOrEnter(): Promise<void> {
   if (starting) return;
   if (game.state === 'playing' || game.state === 'paused') return;
-  if (attemptsLeft() <= 0) {
+
+  if (!isConfigured()) {
+    starting = true;
+    try {
+      if (game.state === 'gameOver') hideGameOverForReplay();
+      rankedThisRun = false;
+      game.start();
+    } finally {
+      starting = false;
+    }
+    return;
+  }
+
+  // Menu / pause restart: local cache gate. Game-over replay: server decides via start-round.
+  if (game.state !== 'gameOver' && attemptsLeft() <= 0) {
     await onEnter();
     return;
   }
+
   await beginRankedRound();
 }
 
@@ -249,23 +295,6 @@ async function onEnter(): Promise<void> {
     onEntered: () => { void refreshTournamentPanel(); },
     onPlay: () => { void onPlayOrEnter(); },
   });
-}
-
-async function beginRankedRound(): Promise<void> {
-  if (starting) return;
-  starting = true;
-  try {
-    await host.startRound();
-    rankedThisRun = true;
-    game.start();
-    syncAttemptsUi();
-    void refreshTournamentPanel();
-  } catch {
-    showOverlay('menu');
-    if (!(await promptIfSessionExpired(showToast))) showToast(t('td.submitFailed'));
-  } finally {
-    starting = false;
-  }
 }
 
 const input = new Input(document.body);
