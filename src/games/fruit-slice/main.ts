@@ -51,8 +51,7 @@ function canvasLayout(): { scale: number; offX: number; offY: number } {
 function renderFrame(): void {
   const { scale, offX, offY } = canvasLayout();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.fillStyle = '#2d1b4e';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   const s = scale * dpr;
   ctx.setTransform(s, 0, 0, s, offX * dpr, offY * dpr);
   game.render(ctx);

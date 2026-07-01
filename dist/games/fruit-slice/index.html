@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍉</text></svg>" />
     <title>Fruit Slice — GoPlay</title>
-    <script type="module" crossorigin src="../../assets/fruitSlice-BJElbN8G.js"></script>
+    <script type="module" crossorigin src="../../assets/fruitSlice-CxIVvvxM.js"></script>
     <link rel="modulepreload" crossorigin href="../../assets/index-CAj-D6Q5.js">
     <link rel="modulepreload" crossorigin href="../../assets/tournaments-DNo1mKQV.js">
     <link rel="modulepreload" crossorigin href="../../assets/audio-BK7Wz9uw.js">
@@ -16,7 +16,7 @@
     <link rel="modulepreload" crossorigin href="../../assets/input-DF-0NnhL.js">
     <link rel="stylesheet" crossorigin href="../../assets/audio-DmlIPLOZ.css">
     <link rel="stylesheet" crossorigin href="../../assets/sessionAuth-CdtBVGxN.css">
-    <link rel="stylesheet" crossorigin href="../../assets/fruitSlice-C8pEAE1F.css">
+    <link rel="stylesheet" crossorigin href="../../assets/fruitSlice-D-cRKKgr.css">
   </head>
   <body class="game-shell" data-game="fruit-slice">
     <div id="stage" class="fs-stage game-shell-stage">
@@ -25,18 +25,39 @@
       <div id="fsPlayFrame" class="fs-playframe hidden">
         <button id="closeBtn" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         <div class="fs-stats">
-          <div class="fs-stat fs-stat-time"><span class="fs-stat-label" data-i18n="fs.time">Time</span><span class="fs-stat-value" id="fsTime">0:00</span></div>
-          <div class="fs-stat"><span class="fs-stat-label" data-i18n="td.score">Score</span><span class="fs-stat-value" id="fsScore">0</span></div>
-          <div class="fs-stat"><span class="fs-stat-label" data-i18n="fs.combo">Combo</span><span class="fs-stat-value" id="fsCombo">—</span></div>
-          <div class="fs-stat fs-stat-lives"><span class="fs-stat-label" data-i18n="fs.lives">Lives</span><span class="fs-stat-value" id="fsLives">5</span></div>
+          <div class="fs-stat fs-stat-time">
+            <span class="fs-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M12 5V3M5 3l2 2M19 3l-2 2"/></svg></span>
+            <span class="fs-stat-label" data-i18n="fs.time">Time</span>
+            <span class="fs-stat-value" id="fsTime">0:00</span>
+          </div>
+          <div class="fs-stat fs-stat-score">
+            <span class="fs-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.3L12 14.8 7.2 16.8l.9-5.3L4.2 7.7l5.4-.8L12 2z"/></svg></span>
+            <span class="fs-stat-label" data-i18n="td.score">Score</span>
+            <span class="fs-stat-value" id="fsScore">0</span>
+          </div>
+          <div class="fs-stat fs-stat-combo">
+            <span class="fs-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 00-4 12.7V22l4-2 4 2v-7.3A7 7 0 0012 2zm0 3a4 4 0 110 8 4 4 0 010-8z"/></svg></span>
+            <span class="fs-stat-label" data-i18n="fs.combo">Combo</span>
+            <span class="fs-stat-value" id="fsCombo">—</span>
+          </div>
+          <div class="fs-stat fs-stat-lives">
+            <span class="fs-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.5-9.5-9C.5 8.5 3 5 6.5 5 9 5 11 6.5 12 8c1-1.5 3-3 5.5-3 3.5 0 6 3.5 4.5 7-2.5 4.5-9.5 9-9.5 9z"/></svg></span>
+            <span class="fs-stat-label" data-i18n="fs.lives">Lives</span>
+            <span class="fs-stat-value" id="fsLives">5</span>
+          </div>
         </div>
         <div class="fs-canvas-wrap">
+          <div class="fs-canvas-watermark" aria-hidden="true"></div>
           <canvas id="game" width="480" height="720"></canvas>
         </div>
         <div id="hud" class="fs-hud">
           <button type="button" id="muteBtn" aria-label="Sound">🔊</button>
           <button type="button" id="pauseBtn" class="fs-pause-btn" data-i18n="td.pause">Pause</button>
         </div>
+        <p class="fs-footer-tag" aria-hidden="true">
+          Connecting Ethiopia
+          <span class="fs-footer-tag-am">ኢትዮጵያን በቴክኖሎጂ እናጣራለን</span>
+        </p>
       </div>
 
       <div id="menuOverlay" class="game-overlay">
