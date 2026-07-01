@@ -58,6 +58,10 @@ body.game-shell[data-game="fruit-slice"] {
   z-index: 8;
 }
 
+#overOverlay.game-overlay {
+  z-index: 12;
+}
+
 #closeBtn {
   position: absolute;
   top: 10px;

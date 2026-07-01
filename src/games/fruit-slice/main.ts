@@ -21,6 +21,14 @@ const host = new GameHost(GAME_ID);
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
+type Phase = 'menu' | 'playing' | 'paused' | 'over';
+
+let phase: Phase = 'menu';
+let rankedThisRun = false;
+let serverBest = 0;
+let starting = false;
+let toastT = 0;
+
 const canvas = $('#game') as unknown as HTMLCanvasElement;
 const ctx = canvas.getContext('2d')!;
 const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -38,7 +46,6 @@ function canvasLayout(): { scale: number; offX: number; offY: number } {
   const wrap = canvas.parentElement!;
   const cw = wrap.clientWidth;
   const ch = wrap.clientHeight;
-  // Fill the frame width; crop vertically if the stage is taller than the box.
   const scale = cw / W;
   const drawH = H * scale;
   return {
@@ -47,6 +54,8 @@ function canvasLayout(): { scale: number; offX: number; offY: number } {
     offY: (ch - drawH) / 2,
   };
 }
+
+const game = new FruitSlice();
 
 function renderFrame(): void {
   const { scale, offX, offY } = canvasLayout();
@@ -64,13 +73,6 @@ window.addEventListener('resize', resizeCanvas);
 if (canvas.parentElement) {
   new ResizeObserver(() => resizeCanvas()).observe(canvas.parentElement);
 }
-
-const game = new FruitSlice();
-
-let rankedThisRun = false;
-let serverBest = 0;
-let starting = false;
-let toastT = 0;
 
 function gameTitle(): string {
   return getLang() === 'am' ? host.meta.nameAm : host.meta.nameEn;
@@ -96,18 +98,72 @@ function tournamentPlayLabel(): string {
 
 function updateActionButtons(): void {
   const playLabel = tournamentPlayLabel();
-  const againBtn = $('#againBtn') as HTMLButtonElement;
-  const startBtn = $('#startBtn') as HTMLButtonElement;
-  startBtn.textContent = playLabel;
-  againBtn.textContent = playLabel;
-  againBtn.disabled = false;
-  startBtn.disabled = false;
-  $('#restartBtn').textContent = attemptsLeft() > 0 ? t('td.restart') : t('hub.play');
+  if (phase === 'menu') ($('#startBtn') as HTMLButtonElement).textContent = playLabel;
+  if (phase === 'over') ($('#againBtn') as HTMLButtonElement).textContent = playLabel;
+  ($('#restartBtn') as HTMLButtonElement).textContent = attemptsLeft() > 0 ? t('td.restart') : t('hub.play');
 }
 
 function syncAttemptsUi(): void {
   updateActionButtons();
 }
+
+function showMenu(): void {
+  $('#menuOverlay').classList.remove('hidden');
+  $('#fsPlayFrame').classList.add('hidden');
+  $('#fsBackdrop').classList.remove('hidden');
+  hideOverOverlay();
+}
+
+function showGame(): void {
+  $('#menuOverlay').classList.add('hidden');
+  $('#fsPlayFrame').classList.remove('hidden');
+  $('#fsBackdrop').classList.add('hidden');
+  if (phase === 'playing' || phase === 'paused') {
+    updatePlayHud();
+    requestAnimationFrame(() => resizeCanvas());
+  }
+}
+
+function setPhase(next: Phase): void {
+  phase = next;
+  if (next === 'menu') showMenu();
+  else showGame();
+  $('#closeBtn').classList.toggle('hidden', next === 'menu' || next === 'over');
+  $('#pauseOverlay').classList.toggle('hidden', next !== 'paused');
+  updateActionButtons();
+}
+
+function showOverOverlay(final: number): void {
+  const overlay = $('#overOverlay');
+  $('#fsFinalScore').textContent = final.toLocaleString();
+  $('#fsFinalBest').textContent = '—';
+  $('#newBest').classList.add('hidden');
+  $('#fsRunReward').innerHTML = `<span class="shell-rr-pending">…</span>`;
+  $('#fsBoardOver').innerHTML = '';
+  $('#closeBtn').classList.add('hidden');
+  updateActionButtons();
+  overlay.classList.remove('hidden');
+  overlay.setAttribute('aria-hidden', 'false');
+}
+
+function hideOverOverlay(): void {
+  const overlay = $('#overOverlay');
+  overlay.classList.add('hidden');
+  overlay.setAttribute('aria-hidden', 'true');
+}
+
+function syncShellFromGameState(state: GameState): void {
+  if (state === 'menu') setPhase('menu');
+  else if (state === 'playing') {
+    hideOverOverlay();
+    setPhase('playing');
+  } else if (state === 'paused') setPhase('paused');
+}
+
+game.onStateChange = (state: GameState) => {
+  if (state === 'gameOver') return;
+  syncShellFromGameState(state);
+};
 
 function fmtTime(s: number): string {
   const m = Math.floor(s / 60);
@@ -122,27 +178,6 @@ function updatePlayHud(): void {
   $('#fsLives').textContent = String(game.lives);
   $('#fsCombo').textContent = game.combo > 1 ? `${game.combo}×` : '—';
 }
-
-const overlays: Record<string, HTMLElement> = {
-  menu: $('#menuOverlay'),
-  paused: $('#pauseOverlay'),
-  gameOver: $('#overOverlay'),
-};
-
-function showOverlay(state: GameState): void {
-  for (const [key, el] of Object.entries(overlays)) {
-    el.classList.toggle('hidden', key !== state);
-  }
-  const inRun = state === 'playing' || state === 'paused';
-  $('#fsPlayFrame').classList.toggle('hidden', !inRun);
-  $('#fsBackdrop').classList.toggle('hidden', inRun);
-  if (inRun) {
-    updatePlayHud();
-    requestAnimationFrame(() => resizeCanvas());
-  }
-}
-
-game.onStateChange = showOverlay;
 
 async function refreshTournamentPanel(): Promise<void> {
   const mount = $('#fsTourney');
@@ -171,15 +206,6 @@ async function refreshTournamentPanel(): Promise<void> {
     { hideBestIfOnBoard: true },
   );
 
-  updateActionButtons();
-}
-
-function showGameOverOverlay(score: number): void {
-  $('#fsFinalScore').textContent = score.toLocaleString();
-  $('#fsFinalBest').textContent = serverBest > 0 ? serverBest.toLocaleString() : '—';
-  $('#newBest').classList.add('hidden');
-  $('#fsRunReward').innerHTML = `<span class="shell-rr-pending">…</span>`;
-  $('#fsBoardOver').innerHTML = '';
   updateActionButtons();
 }
 
@@ -230,71 +256,49 @@ async function submitRun(score: number, durationMs: number, isWin: boolean): Pro
 }
 
 game.onGameOver = (score, durationMs) => {
-  showGameOverOverlay(score);
+  setPhase('over');
+  showOverOverlay(score);
   void submitRun(score, durationMs, score >= host.winScore);
 };
-
-function hideGameOverForReplay(): void {
-  overlays.gameOver.classList.add('hidden');
-  $('#fsPlayFrame').classList.remove('hidden');
-  $('#fsBackdrop').classList.add('hidden');
-}
-
-async function beginRankedRound(): Promise<void> {
-  if (starting) return;
-  starting = true;
-  const replay = game.state === 'gameOver';
-  if (replay) hideGameOverForReplay();
-  try {
-    const left = await host.startRound();
-    if (isConfigured() && host.isTournament && left === 0) {
-      if (replay) showOverlay('gameOver');
-      await onEnter();
-      return;
-    }
-    rankedThisRun = true;
-    game.start();
-    syncAttemptsUi();
-    void refreshTournamentPanel();
-  } catch {
-    if (replay) showOverlay('gameOver');
-    else showOverlay('menu');
-    if (!(await promptIfSessionExpired(showToast))) showToast(t('td.submitFailed'));
-  } finally {
-    starting = false;
-  }
-}
-
-async function onPlayOrEnter(): Promise<void> {
-  if (starting) return;
-  if (game.state === 'playing' || game.state === 'paused') return;
-
-  if (!isConfigured()) {
-    starting = true;
-    try {
-      if (game.state === 'gameOver') hideGameOverForReplay();
-      rankedThisRun = false;
-      game.start();
-    } finally {
-      starting = false;
-    }
-    return;
-  }
-
-  // Menu / pause restart: local cache gate. Game-over replay: server decides via start-round.
-  if (game.state !== 'gameOver' && attemptsLeft() <= 0) {
-    await onEnter();
-    return;
-  }
-
-  await beginRankedRound();
-}
 
 async function onEnter(): Promise<void> {
   openTournamentEntryForGame(GAME_ID, {
     onEntered: () => { void refreshTournamentPanel(); },
     onPlay: () => { void onPlayOrEnter(); },
   });
+}
+
+async function onPlayOrEnter(): Promise<void> {
+  if (starting || phase === 'playing' || phase === 'paused') return;
+  if (attemptsLeft() <= 0) {
+    await onEnter();
+    return;
+  }
+  await beginRankedRound();
+}
+
+async function beginRankedRound(): Promise<void> {
+  if (starting) return;
+  starting = true;
+  try {
+    await host.startRound();
+    rankedThisRun = true;
+    hideOverOverlay();
+    game.start();
+    syncAttemptsUi();
+    void refreshTournamentPanel();
+  } catch {
+    setPhase('menu');
+    if (!(await promptIfSessionExpired(showToast))) showToast(t('td.submitFailed'));
+  } finally {
+    starting = false;
+  }
+}
+
+async function restartRound(): Promise<void> {
+  if (phase !== 'paused') return;
+  hideOverOverlay();
+  await beginRankedRound();
 }
 
 const input = new Input(document.body);
@@ -339,7 +343,7 @@ canvas.addEventListener('pointerleave', () => {
 
 $('#startBtn').addEventListener('click', () => void onPlayOrEnter());
 $('#againBtn').addEventListener('click', () => void onPlayOrEnter());
-$('#restartBtn').addEventListener('click', () => void onPlayOrEnter());
+$('#restartBtn').addEventListener('click', () => void restartRound());
 $('#resumeBtn').addEventListener('click', () => game.resume());
 $('#pauseBtn').addEventListener('click', () => {
   if (game.state === 'playing') game.pause();
@@ -363,8 +367,7 @@ const loop = new GameLoop(
 
 document.documentElement.lang = getLang();
 applyTranslations();
-updateActionButtons();
-showOverlay('menu');
+setPhase('menu');
 loop.start();
 
 void Promise.all([loadTournaments(), loadMyEntries()]).then(() => refreshTournamentPanel());
