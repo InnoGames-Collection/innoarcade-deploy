@@ -36,7 +36,7 @@ const STR = {
 };
 const t = (k: keyof typeof STR.en): string => (STR[getLang()] ?? STR.en)[k];
 
-export async function mountWallet(): Promise<void> {
+export async function mountWallet(opts?: { skipHydrate?: boolean }): Promise<void> {
   injectStyles();
   // The top-right balance display is the #topBalances strip (rendered by the hub:
   // points + coins + a Buy button). This module owns only the store/checkout and
@@ -48,8 +48,10 @@ export async function mountWallet(): Promise<void> {
   // already-signed-in user (otherwise needsSignInToBuy() can wrongly prompt
   // sign-in during the session-restore race).
   await currentUser();
-  await loadConfig();
-  await balance();
+  if (!opts?.skipHydrate) {
+    await loadConfig();
+    await balance();
+  }
   void resumePendingCheckout();
 }
 

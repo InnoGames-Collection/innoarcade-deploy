@@ -156,6 +156,93 @@ export function activeTournaments(now = Date.now()): Tournament[] {
   return remoteCache ?? derivedTournaments(now);
 }
 
+export interface TournamentRow {
+  id: string;
+  game_id: string;
+  title_en: string;
+  title_am: string;
+  type: string;
+  entry_fee_coins: number;
+  attempts: number;
+  prize_model: string;
+  sponsored_prize: number;
+  prize_tiers: unknown;
+  starts_at: string;
+  ends_at: string;
+  state: string;
+}
+
+export interface PoolRow {
+  tournament_id: string;
+  entrants: number;
+  fees_total: number;
+  pool: number;
+}
+
+export interface EntryRow {
+  tournament_id: string;
+  fee_paid: number;
+  prize_won: number;
+  entered_at: string;
+  attempts_purchased: number;
+  attempts_used: number;
+}
+
+function applyTournamentRows(data: TournamentRow[]): void {
+  const rows = data.filter((r) => getGame(String(r.game_id)) && r.state === 'live');
+  remoteCache = rows.length ? rows.map((r) => {
+    stateCache[String(r.id)] = r.state as TournamentState;
+    const cadence = cadenceOf(String(r.id));
+    const t: Tournament = {
+      id: String(r.id), gameId: String(r.game_id),
+      titleEn: String(r.title_en), titleAm: String(r.title_am),
+      type: r.type as TournamentType,
+      entryFeeCoins: Number(r.entry_fee_coins ?? 0),
+      prizeModel: r.prize_model as PrizeModel,
+      sponsoredPrize: Number(r.sponsored_prize ?? 0),
+      prizeTiers: (r.prize_tiers as PrizeTier[]) ?? DEFAULT_TIERS,
+      prizeCoins: 0,
+      cadence,
+      attempts: Number(r.attempts ?? CADENCE_ATTEMPTS[cadence]),
+      startsAt: new Date(r.starts_at as string).getTime(),
+      endsAt: new Date(r.ends_at as string).getTime(),
+    };
+    return t;
+  }) : null;
+}
+
+function applyPoolRows(data: PoolRow[]): void {
+  for (const k of Object.keys(poolCache)) delete poolCache[k];
+  data.forEach((r) => {
+    poolCache[String(r.tournament_id)] = {
+      entrants: Number(r.entrants ?? 0), fees: Number(r.fees_total ?? 0), pool: Number(r.pool ?? 0),
+    };
+  });
+}
+
+/** Hydrate tournament + pool caches from a bootstrap payload. */
+export function applyTournamentsBootstrap(tournaments: TournamentRow[], pools: PoolRow[]): void {
+  applyTournamentRows(tournaments);
+  applyPoolRows(pools);
+  for (const t of activeTournaments()) t.prizeCoins = prizePool(t);
+}
+
+function applyEntryRows(data: EntryRow[]): void {
+  enteredCache.clear();
+  for (const k of Object.keys(entryCache)) delete entryCache[k];
+  for (const r of data) {
+    const id = String(r.tournament_id);
+    enteredCache.add(id);
+    const purchased = Number(r.attempts_purchased ?? 0), used = Number(r.attempts_used ?? 0);
+    entryCache[id] = { purchased, used, left: Math.max(0, purchased - used) };
+  }
+}
+
+/** Hydrate entry caches from a bootstrap payload. */
+export function applyMyEntriesBootstrap(data: EntryRow[]): void {
+  applyEntryRows(data);
+}
+
 // Refresh the tournament list, server state and real prize pools from the
 // backend into the sync caches so the hub's instant render is authoritative.
 export async function loadTournaments(): Promise<Tournament[]> {
@@ -167,33 +254,8 @@ export async function loadTournaments(): Promise<Tournament[]> {
       .select('id, game_id, title_en, title_am, type, entry_fee_coins, attempts, prize_model, sponsored_prize, prize_tiers, starts_at, ends_at, state')
       .order('starts_at', { ascending: false });
     if (error) throw error;
-    // Only surface tournaments whose game is in the live catalog, and only the
-    // latest live window per game (settled history stays in the table).
-    const rows = (data ?? []).filter((r) => getGame(String(r.game_id)) && r.state === 'live');
-    // An empty/absent tournaments table means the operator hasn't created any —
-    // keep using the calendar-derived defaults (null) rather than blanking the
-    // list, otherwise getTournament() can't resolve the visible cards.
-    remoteCache = rows.length ? rows.map((r) => {
-      stateCache[String(r.id)] = r.state as TournamentState;
-      const cadence = cadenceOf(String(r.id));
-      const t: Tournament = {
-        id: String(r.id), gameId: String(r.game_id),
-        titleEn: String(r.title_en), titleAm: String(r.title_am),
-        type: r.type as TournamentType,
-        entryFeeCoins: Number(r.entry_fee_coins ?? 0),
-        prizeModel: r.prize_model as PrizeModel,
-        sponsoredPrize: Number(r.sponsored_prize ?? 0),
-        prizeTiers: (r.prize_tiers as PrizeTier[]) ?? DEFAULT_TIERS,
-        prizeCoins: 0,
-        cadence,
-        attempts: Number(r.attempts ?? CADENCE_ATTEMPTS[cadence]),
-        startsAt: new Date(r.starts_at as string).getTime(),
-        endsAt: new Date(r.ends_at as string).getTime(),
-      };
-      return t;
-    }) : null;
+    applyTournamentRows((data ?? []) as TournamentRow[]);
     await loadPools();
-    // Recompute headline pools now that real entrant data is in.
     for (const t of activeTournaments()) t.prizeCoins = prizePool(t);
   } catch {
     remoteCache = null; // server unreachable → calendar-derived defaults
@@ -208,12 +270,7 @@ async function loadPools(): Promise<void> {
     const { data } = await (await getSupabase())
       .from('tournament_pools')
       .select('tournament_id, entrants, fees_total, pool');
-    for (const k of Object.keys(poolCache)) delete poolCache[k];
-    (data ?? []).forEach((r) => {
-      poolCache[String(r.tournament_id)] = {
-        entrants: Number(r.entrants ?? 0), fees: Number(r.fees_total ?? 0), pool: Number(r.pool ?? 0),
-      };
-    });
+    applyPoolRows((data ?? []) as PoolRow[]);
   } catch { /* view may be absent before the migration — pools read as 0 */ }
 }
 
@@ -357,25 +414,18 @@ export async function myEntries(): Promise<TournamentEntry[]> {
   try {
     const sb = (await getSupabase());
     const me = (await sb.auth.getUser()).data.user?.id;
-    if (!me) { enteredCache.clear(); return []; }
+    if (!me) { applyEntryRows([]); return []; }
     const { data } = await sb
       .from('tournament_entries')
       .select('tournament_id, fee_paid, prize_won, entered_at, attempts_purchased, attempts_used')
       .eq('user_id', me);
-    enteredCache.clear();
-    for (const k of Object.keys(entryCache)) delete entryCache[k];
-    return (data ?? []).map((r) => {
-      const id = String(r.tournament_id);
-      enteredCache.add(id);
-      const purchased = Number(r.attempts_purchased ?? 0), used = Number(r.attempts_used ?? 0);
-      entryCache[id] = { purchased, used, left: Math.max(0, purchased - used) };
-      return {
-        tournamentId: id,
-        feePaid: Number(r.fee_paid),
-        prizeWon: Number(r.prize_won),
-        enteredAt: new Date(r.entered_at as string).getTime(),
-      };
-    });
+    applyEntryRows((data ?? []) as EntryRow[]);
+    return (data ?? []).map((r) => ({
+      tournamentId: String(r.tournament_id),
+      feePaid: Number(r.fee_paid),
+      prizeWon: Number(r.prize_won),
+      enteredAt: new Date(r.entered_at as string).getTime(),
+    }));
   } catch { return []; }
 }
 

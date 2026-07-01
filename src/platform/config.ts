@@ -142,14 +142,19 @@ export function winRateOverride(): number | null {
 // Pull operator overrides from `app_config` (key 'app', a single JSONB row) and
 // merge over the defaults. Keeps the baked-in defaults when unconfigured or on
 // a transient read error (last-known cache stays in place).
+/** Hydrate the config cache from a server payload (bootstrap or admin write). */
+export function applyConfigRemote(remote: Partial<AppConfig>): AppConfig {
+  cache = { ...DEFAULT_CONFIG, ...remote };
+  return cache;
+}
+
 export async function loadConfig(): Promise<AppConfig> {
   if (!isConfigured()) return cache;
   try {
     const { data, error } = await (await getSupabase())
       .from('app_config').select('value').eq('key', 'app').maybeSingle();
     if (error) throw error;
-    const remote = (data?.value ?? {}) as Partial<AppConfig>;
-    cache = { ...DEFAULT_CONFIG, ...remote };
+    applyConfigRemote((data?.value ?? {}) as Partial<AppConfig>);
   } catch { /* keep last-known cache */ }
   return cache;
 }

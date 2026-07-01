@@ -18,8 +18,9 @@ import { balanceSync, balance, onWalletChange } from '../platform/wallet';
 import { openTournamentEntry } from './tournamentEntry';
 import { activeDraws, myTickets, enterDraw, NotEnoughPointsError, hydrateTickets, loadDraws, myOdds } from '../platform/draws';
 import { xp as xpBal, onCurrencyChange, setBalance, setLifetime, xpLifetime } from '../platform/currency';
-import { levelFor, economyNeedsAuth, WINNER_ETB_PRIZES, type WinnerCadence } from '../platform/config';
+import { levelFor, economyNeedsAuth, WINNER_ETB_PRIZES, loadConfig, type WinnerCadence } from '../platform/config';
 import { getSupabase, isConfigured } from '../platform/supabase';
+import { bootstrapHubData, type HubBootstrapResult } from '../platform/hubBootstrap';
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 const lang = (): Lang => getLang();
@@ -671,43 +672,77 @@ mountSignInGate();
 // Hydrate the points balance from the server (the authority); refresh on load
 // and whenever auth changes, then re-render the top balance strip.
 let dailyClaimed = false; // once per page load (the server is idempotent per day)
-function hydratePoints(): void {
-  void fetchWallets().then((w) => {
-    if (w) { setBalance('xp', w.xp); setLifetime(w.lifetime); renderMyStats(); }
-    // Daily-login XP streak (doc §3.1) — claim once when signed in.
-    if (w && !dailyClaimed) {
-      dailyClaimed = true;
-      void claimDailyLogin().then((d) => {
-        if (d && d.award > 0) { setBalance('xp', d.xp); setLifetime(d.lifetime); renderMyStats(); }
-      });
-    }
-  });
+function hydratePointsAfterBootstrap(boot: HubBootstrapResult): void {
+  if (!boot.ok || !boot.hadUser) {
+    void fetchWallets().then((w) => {
+      if (w) { setBalance('xp', w.xp); setLifetime(w.lifetime); }
+      if (w && !dailyClaimed) {
+        dailyClaimed = true;
+        void claimDailyLogin().then((d) => {
+          if (d && d.award > 0) { setBalance('xp', d.xp); setLifetime(d.lifetime); }
+        });
+      }
+    });
+  } else if (!dailyClaimed) {
+    dailyClaimed = true;
+    void claimDailyLogin().then((d) => {
+      if (d && d.award > 0) { setBalance('xp', d.xp); setLifetime(d.lifetime); }
+    });
+  }
   void loadDraws().then(() => hydrateTickets()).then(() => renderDraws());
   renderWinners();
-  void fetchUnlocks().then((ids) => {
-    unlockedSet.clear(); ids.forEach((id) => unlockedSet.add(id)); renderGames();
-  });
+  if (boot.ok && boot.hadUser) {
+    unlockedSet.clear();
+    boot.unlocks.forEach((id) => unlockedSet.add(id));
+    renderGames();
+  } else {
+    void fetchUnlocks().then((ids) => {
+      unlockedSet.clear(); ids.forEach((id) => unlockedSet.add(id)); renderGames();
+    });
+  }
+}
+
+async function runBackendHydration(): Promise<void> {
+  await mountWallet({ skipHydrate: true });
+  const boot = await bootstrapHubData();
+  if (!boot.ok) {
+    await loadConfig();
+    await balance();
+    await Promise.all([loadTournaments(), loadMyEntries()]);
+  }
+  wireEntryCtas();
+  renderGames();
+  renderLiveBoard();
+  hydratePointsAfterBootstrap(boot);
 }
 
 /** Paint the hub first, then load the Supabase SDK chunk and hydrate server data. */
 function startBackendHydration(): void {
-  const run = (): void => {
-    void mountWallet();
-    void refreshData();
-    hydratePoints();
-  };
   if (!isConfigured()) {
-    run();
+    void runBackendHydration();
     return;
   }
   requestAnimationFrame(() => {
-    void getSupabase().then(run);
+    void getSupabase().then(() => runBackendHydration());
   });
 }
 
 startBackendHydration();
 // Re-pull wallet/entries/standing when the player signs in or out.
-onAuthChange(() => { void refreshData(); hydratePoints(); });
+onAuthChange(() => {
+  void (async () => {
+    const boot = await bootstrapHubData();
+    if (!boot.ok) {
+      await refreshData();
+      await balance();
+    } else {
+      wireEntryCtas();
+      renderGames();
+      renderLiveBoard();
+    }
+    hydratePointsAfterBootstrap(boot);
+  })();
+});
 setInterval(tickCountdowns, 1000);
 setupPromo();
 restartPromoTimer();

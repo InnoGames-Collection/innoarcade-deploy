@@ -35,6 +35,12 @@ export function balanceSync(): number {
   return cached;
 }
 
+/** Hydrate the coin cache from a server payload (bootstrap or economy call). */
+export function setBalanceFromServer(coins: number): void {
+  cached = Math.max(0, Math.floor(Number(coins) || 0));
+  emit();
+}
+
 /** Authoritative balance, read from `profiles.coins` for the signed-in player. */
 export async function balance(): Promise<number> {
   if (!isConfigured()) { cached = 0; emit(); return 0; }
