@@ -11,7 +11,7 @@ import { registerPwa } from '../../engine/pwa';
 import { fetchSkins, setSkinRemote, leaderboardRemote, playerStandingRemote } from '../../platform/backend';
 import { GameHost } from '../../platform/gameHost';
 import { openTournamentEntryForGame } from '../../hub/tournamentEntry';
-import { openSignIn } from '../../hub/signin';
+import { promptIfSessionExpired } from '../../platform/sessionAuth';
 import { renderShellMenuTournamentHtml, tournamentBoardHtml } from '../../platform/gameTournamentPanel';
 import { getGame } from '../../platform/catalog';
 import {
@@ -109,8 +109,7 @@ function run(assets: AssetStore, assetsReady: Promise<void>): void {
       game.start();
       updateActionButtons();
     } catch {
-      showToast(t('td.signInToRank'));
-      if (isConfigured() && !(await currentUser())) openSignIn();
+      if (!(await promptIfSessionExpired(showToast))) showToast(t('td.submitFailed'));
     } finally {
       updateActionButtons();
     }
@@ -240,11 +239,14 @@ function run(assets: AssetStore, assetsReady: Promise<void>): void {
     const boardOver = $('#runnerBoardOver');
     if (!isConfigured()) { reward.innerHTML = ''; boardOver.innerHTML = ''; return; }
     reward.innerHTML = `<span class="shell-rr-pending">…</span>`;
-    let res;
-    try {
-      res = await host.finish(score, score >= host.winScore, durationMs, { ranked: true });
-    } catch {
-      reward.innerHTML = `<span class="shell-rr-note">${t('td.signInToRank')}</span>`;
+    const res = await host.finish(score, score >= host.winScore, durationMs, { ranked: true });
+    if (res.rank == null) {
+      if (await promptIfSessionExpired(showToast)) {
+        reward.innerHTML = `<span class="shell-rr-note">${t('td.sessionExpired')}</span>`;
+      } else {
+        reward.innerHTML = `<span class="shell-rr-note">${t('td.submitFailed')}</span>`;
+        showToast(t('td.submitFailed'));
+      }
       return;
     }
     serverBest = res.best ?? serverBest;

@@ -2,9 +2,10 @@ import '../styles/base.css';
 import './hub.css';
 import { applyTranslations, getLang, setLang, t, type Lang } from '../i18n';
 import { openSignIn } from './signin';
+import { mountSignInGate } from '../platform/signInGate';
 import { openAccount } from './account';
 import { mountWallet, openStore } from './wallet';
-import { onAuthChange, currentUser, signOut, authAvailable } from '../platform/auth';
+import { onAuthChange, currentUser, signOut } from '../platform/auth';
 import { sfx } from '../engine/audio';
 import { leaderboardRemote, fetchWallets, fetchUnlocks, unlockGameRemote, fetchTournamentPeriodWinners, claimDailyLogin, playerStandingRemote } from '../platform/backend';
 import { orderedCatalog, getGame, type GameMeta, type TournamentCadence } from '../platform/catalog';
@@ -529,28 +530,6 @@ function mountSettings(): void {
 // unauthenticated visitor sees a blocking sign-in surface and cannot reach the
 // games until they sign in with a phone number + OTP. (Only enforced when an
 // auth backend is configured; otherwise the local demo stays open.)
-function mountSignInGate(): void {
-  if (!authAvailable()) return;
-  const show = (): void => {
-    if (document.getElementById('signinGate')) return;
-    const g = document.createElement('div');
-    g.id = 'signinGate';
-    g.className = 'signin-gate';
-    g.innerHTML = `
-      <div class="sg-card">
-        <div class="sg-brand"><span class="sg-icon">🎮</span> GoPlay</div>
-        <h2>${t('gate.title')}</h2>
-        <p>${t('gate.sub')}</p>
-        <button class="btn primary" id="sgBtn">📱 ${t('gate.cta')}</button>
-      </div>`;
-    document.body.appendChild(g);
-    g.querySelector('#sgBtn')!.addEventListener('click', () => openSignIn());
-  };
-  const hide = (): void => document.getElementById('signinGate')?.remove();
-  void currentUser().then((u) => (u ? hide() : show()));
-  onAuthChange((u) => (u ? hide() : show()));
-}
-
 function setupDeferredSections(): void {
   const arm = (id: string, onSeen: () => void): void => {
     const el = document.getElementById(id);

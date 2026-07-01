@@ -2,7 +2,7 @@ import '../../styles/base.css';
 import '../../styles/game-shell.css';
 import { GameHost } from '../../platform/gameHost';
 import { openTournamentEntryForGame } from '../../hub/tournamentEntry';
-import { openSignIn } from '../../hub/signin';
+import { promptIfSessionExpired } from '../../platform/sessionAuth';
 import { renderShellMenuTournamentHtml, tournamentBoardHtml } from '../../platform/gameTournamentPanel';
 import { balance } from '../../platform/wallet';
 import { leaderboardRemote, playerStandingRemote } from '../../platform/backend';
@@ -49,6 +49,9 @@ function renderFrame(): void {
 
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
+if (canvas.parentElement) {
+  new ResizeObserver(() => resizeCanvas()).observe(canvas.parentElement);
+}
 
 const game = new FruitSlice();
 
@@ -109,7 +112,10 @@ function showOverlay(state: GameState): void {
   const inRun = state === 'playing' || state === 'paused';
   $('#fsPlayFrame').classList.toggle('hidden', !inRun);
   $('#fsBackdrop').classList.toggle('hidden', inRun);
-  if (inRun) updatePlayHud();
+  if (inRun) {
+    updatePlayHud();
+    requestAnimationFrame(() => resizeCanvas());
+  }
 }
 
 game.onStateChange = showOverlay;
@@ -152,6 +158,15 @@ function showGameOverOverlay(score: number): void {
   updateActionButtons();
 }
 
+async function failRankedSubmit(reward: HTMLElement): Promise<void> {
+  if (await promptIfSessionExpired(showToast)) {
+    reward.innerHTML = `<span class="fs-rr-note">${t('td.sessionExpired')}</span>`;
+    return;
+  }
+  reward.innerHTML = `<span class="fs-rr-note">${t('td.submitFailed')}</span>`;
+  showToast(t('td.submitFailed'));
+}
+
 async function submitRun(score: number, durationMs: number, isWin: boolean): Promise<void> {
   const reward = $('#fsRunReward');
   const boardOver = $('#fsBoardOver');
@@ -162,19 +177,9 @@ async function submitRun(score: number, durationMs: number, isWin: boolean): Pro
     return;
   }
   reward.innerHTML = `<span class="fs-rr-pending">…</span>`;
-  let res;
-  try {
-    res = await host.finish(score, isWin, durationMs, { ranked: rankedThisRun });
-  } catch {
-    reward.innerHTML = `<span class="fs-rr-note">${t('td.signInToRank')}</span>`;
-    if (isConfigured() && !(await currentUser())) openSignIn();
-    else showToast(t('td.signInToRank'));
-    return;
-  }
+  const res = await host.finish(score, isWin, durationMs, { ranked: rankedThisRun });
   if (rankedThisRun && res.rank == null) {
-    reward.innerHTML = `<span class="fs-rr-note">${t('td.signInToRank')}</span>`;
-    if (!(await currentUser())) openSignIn();
-    else showToast(t('td.signInToRank'));
+    await failRankedSubmit(reward);
     return;
   }
   serverBest = res.best ?? serverBest;
@@ -218,10 +223,6 @@ async function onPlayOrEnter(): Promise<void> {
 
 async function beginRankedRound(): Promise<void> {
   if (starting) return;
-  if (isConfigured() && !(await currentUser())) {
-    openSignIn();
-    return;
-  }
   starting = true;
   try {
     await host.startRound();
@@ -231,8 +232,7 @@ async function beginRankedRound(): Promise<void> {
     void refreshTournamentPanel();
   } catch {
     showOverlay('menu');
-    if (isConfigured() && !(await currentUser())) openSignIn();
-    else showToast(t('td.signInToRank'));
+    if (!(await promptIfSessionExpired(showToast))) showToast(t('td.submitFailed'));
   } finally {
     starting = false;
   }

@@ -24,6 +24,7 @@ import { submitPlayRemote, startRoundRemote, leaderboardRemote, playerStandingRe
 import { setBalance, setLifetime } from './currency';
 import { winRateOverride, BASE_POINTS } from './config';
 import { currentUser } from './auth';
+import './signInGate';
 
 export type BeginBlock = 'coins' | 'auth';
 export interface BeginResult {

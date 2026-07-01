@@ -1,0 +1,53 @@
+/* Mandatory sign-in gate — hub + direct game URLs */
+.signin-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 9985;
+  display: grid;
+  place-items: center;
+  padding: 1.4rem;
+  background: var(--grad-hero, linear-gradient(160deg, #2a6e0a, #11400a));
+}
+
+.sg-card {
+  width: min(380px, 94vw);
+  background: #fff;
+  color: var(--text, #14271a);
+  border-radius: 20px;
+  padding: 2rem 1.6rem;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(8, 30, 8, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.sg-brand {
+  font-weight: 900;
+  font-size: 1.3rem;
+  background: var(--grad-brand, linear-gradient(135deg, #4f9e16, #2a6e0a));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.sg-brand .sg-icon {
+  -webkit-text-fill-color: initial;
+}
+
+.sg-card h2 {
+  font-size: 1.4rem;
+  margin: 0.2rem 0 0;
+}
+
+.sg-card p {
+  color: var(--muted, #5f7262);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  margin: 0 0 0.4rem;
+}
+
+.sg-card .btn.primary {
+  padding: 0.8rem;
+  font-size: 1.02rem;
+}

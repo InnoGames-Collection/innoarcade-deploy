@@ -5,7 +5,7 @@
 import { GameHost, type FinishResult } from './gameHost';
 import { getLang, t } from '../i18n';
 import { isConfigured } from './supabase';
-import { currentUser } from './auth';
+import { promptIfSessionExpired } from './sessionAuth';
 
 export function gameTitle(host: GameHost): string {
   return getLang() === 'am' ? host.meta.nameAm : host.meta.nameEn;
@@ -52,13 +52,13 @@ export async function submitFreeRun(
 }
 
 export async function startFreeRound(host: GameHost, toast?: (msg: string) => void): Promise<boolean> {
-  if (isConfigured() && !(await currentUser())) {
-    toast?.(t('td.signInToRank'));
-    return false;
-  }
   const begin = await host.begin();
   if (!begin.ok) {
-    toast?.(begin.reason === 'auth' ? t('td.signInToRank') : t('arc.signIn'));
+    if (begin.reason === 'auth') {
+      await promptIfSessionExpired(toast);
+    } else {
+      toast?.(t('td.needCoins'));
+    }
     return false;
   }
   return true;
@@ -145,9 +145,13 @@ export async function paintGameOver(
   if (!res) {
     els.finalBest.textContent = localBest.toLocaleString();
     els.newBest.classList.toggle('hidden', !isRecord);
-    els.reward.innerHTML = isConfigured()
-      ? `<span class="shell-rr-note">${t('td.signInToRank')}</span>`
-      : '';
+    if (await promptIfSessionExpired()) {
+      els.reward.innerHTML = `<span class="shell-rr-note">${t('td.sessionExpired')}</span>`;
+    } else if (isConfigured()) {
+      els.reward.innerHTML = `<span class="shell-rr-note">${t('td.submitFailed')}</span>`;
+    } else {
+      els.reward.innerHTML = '';
+    }
     return null;
   }
   const displayBest = Math.max(localBest, score, res.best ?? 0);
@@ -168,9 +172,13 @@ export async function paintInlineReward(
   mount.innerHTML = '<span class="shell-rr-pending">…</span>';
   const res = await submitFreeRun(host, score, isWin, durationMs);
   if (!res) {
-    mount.innerHTML = isConfigured()
-      ? `<span class="shell-rr-note">${t('td.signInToRank')}</span>`
-      : '';
+    if (await promptIfSessionExpired()) {
+      mount.innerHTML = `<span class="shell-rr-note">${t('td.sessionExpired')}</span>`;
+    } else if (isConfigured()) {
+      mount.innerHTML = `<span class="shell-rr-note">${t('td.submitFailed')}</span>`;
+    } else {
+      mount.innerHTML = '';
+    }
     return null;
   }
   mount.innerHTML = renderRunRewardHtml(res);

@@ -13,6 +13,7 @@ body.game-shell[data-game="memory-match"] {
   position: relative;
   width: min(100%, 520px);
   height: fit-content;
+  min-height: min(calc(100dvh - 20px), 560px);
   max-height: min(calc(100dvh - 20px), 560px);
   margin: auto;
 }

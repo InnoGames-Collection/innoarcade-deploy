@@ -6,7 +6,7 @@ import './style.css';
 import { applyTranslations, getLang, t } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { openTournamentEntryForGame } from '../../hub/tournamentEntry';
-import { openSignIn } from '../../hub/signin';
+import { promptIfSessionExpired } from '../../platform/sessionAuth';
 import { createHost } from '../../platform/gameHost';
 import { renderShellMenuTournamentHtml, tournamentBoardHtml } from '../../platform/gameTournamentPanel';
 import { balance } from '../../platform/wallet';
@@ -202,6 +202,15 @@ async function refreshTournamentPanel(): Promise<void> {
   updateActionButtons();
 }
 
+async function failRankedSubmit(reward: HTMLElement): Promise<void> {
+  if (await promptIfSessionExpired(showToast)) {
+    reward.innerHTML = `<span class="mm-rr-note">${t('td.sessionExpired')}</span>`;
+    return;
+  }
+  reward.innerHTML = `<span class="mm-rr-note">${t('td.submitFailed')}</span>`;
+  showToast(t('td.submitFailed'));
+}
+
 async function submitRound(score: number, cleared: boolean, durationMs: number): Promise<void> {
   const reward = $('#mmRunReward');
   const boardOver = $('#mmBoardOver');
@@ -212,17 +221,9 @@ async function submitRound(score: number, cleared: boolean, durationMs: number):
     return;
   }
   reward.innerHTML = `<span class="mm-rr-pending">…</span>`;
-  let res;
-  try {
-    res = await host.finish(score, cleared, durationMs, { ranked: rankedThisRun });
-  } catch {
-    reward.innerHTML = `<span class="mm-rr-note">${t('td.signInToRank')}</span>`;
-    showToast(t('td.signInToRank'));
-    return;
-  }
+  const res = await host.finish(score, cleared, durationMs, { ranked: rankedThisRun });
   if (rankedThisRun && res.rank == null) {
-    reward.innerHTML = `<span class="mm-rr-note">${t('td.signInToRank')}</span>`;
-    showToast(t('td.signInToRank'));
+    await failRankedSubmit(reward);
     return;
   }
   serverBest = res.best ?? serverBest;
@@ -322,10 +323,6 @@ async function onPlayOrEnter(): Promise<void> {
 
 async function beginRankedRound(): Promise<void> {
   if (starting) return;
-  if (isConfigured() && !(await currentUser())) {
-    openSignIn();
-    return;
-  }
   starting = true;
   try {
     await host.startRound();
@@ -337,8 +334,7 @@ async function beginRankedRound(): Promise<void> {
     startRoundWithBlink();
   } catch {
     setPhase('menu');
-    if (isConfigured() && !(await currentUser())) openSignIn();
-    else showToast(t('td.signInToRank'));
+    if (!(await promptIfSessionExpired(showToast))) showToast(t('td.submitFailed'));
   } finally {
     starting = false;
   }

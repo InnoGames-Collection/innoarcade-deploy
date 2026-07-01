@@ -8,6 +8,8 @@ import '../../styles/game-shell.css';
 import { sfx } from '../../engine/audio';
 import { renderRunRewardHtml } from '../../platform/freeGameShell';
 import { createHost, type FinishResult, type GameHost } from '../../platform/gameHost';
+import { promptIfSessionExpired } from '../../platform/sessionAuth';
+import { isConfigured } from '../../platform/supabase';
 
 // --- DOM helper -------------------------------------------------------------
 type Attrs = Record<string, string | EventListenerOrEventListenerObject>;
@@ -172,8 +174,14 @@ export async function recordResultAsync(
   activeHost = host;
   try {
     await host.begin();
-    return await host.finish(Math.max(0, res.score || 0), res.won, durationMs, { ranked: false });
+    const out = await host.finish(Math.max(0, res.score || 0), res.won, durationMs, { ranked: false });
+    if (isConfigured() && typeof out.points !== 'number') {
+      await promptIfSessionExpired();
+      return null;
+    }
+    return out;
   } catch {
+    await promptIfSessionExpired();
     return null;
   }
 }

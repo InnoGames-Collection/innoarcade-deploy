@@ -22,6 +22,7 @@ body.game-shell[data-game="fruit-slice"] {
   position: relative;
   width: min(100%, 520px);
   height: fit-content;
+  min-height: min(calc(100dvh - 20px), 560px);
   max-height: min(calc(100dvh - 20px), 720px);
   margin: auto;
 }
