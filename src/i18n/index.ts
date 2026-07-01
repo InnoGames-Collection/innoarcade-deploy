@@ -30,6 +30,7 @@ const en = {
   'td.start': 'Tap or press Space to start',
   'td.controls': 'Swipe or use arrow keys · ◀ ▶ change lane · ▲ jump · ▼ slide',
   'td.paused': 'Paused',
+  'td.pause': 'Pause',
   'td.resume': 'Resume',
   'td.restart': 'Play again',
   'td.gameOver': 'Game over',
@@ -172,6 +173,7 @@ const en = {
   'hub.attemptsPerEntry': 'Attempts included',
   'hub.entryJoinHint': 'Tap Enter to join — {fee} coins from your balance.',
   'hub.needCoinToPlay': 'You need {fee} coin to play',
+  'hub.needCoinsToPlay': 'You need {fee} coins to play',
   'hub.entrySummary': '{fee} coins · {attempts} attempts',
   'hub.needCoinsShort': 'Need {fee} coins — buy a pack below, then tap Enter.',
   'hub.joining': 'Joining…',
@@ -370,6 +372,7 @@ const am: Dict = {
   'td.start': 'ለመጀመር ይንኩ ወይም Space ይጫኑ',
   'td.controls': 'ያንሸራትቱ ወይም የቀስት ቁልፎችን ይጠቀሙ · ◀ ▶ መስመር · ▲ ዝላይ · ▼ መንሸራተት',
   'td.paused': 'ቆሟል',
+  'td.pause': 'ላፍታ አቁም',
   'td.resume': 'ቀጥል',
   'td.restart': 'እንደገና ተጫወት',
   'td.gameOver': 'ጨዋታው አበቃ',
@@ -512,6 +515,7 @@ const am: Dict = {
   'hub.attemptsPerEntry': 'የተካተቱ ሙከራዎች',
   'hub.entryJoinHint': 'ለመግባት Enter ይንኩ — {fee} ሳንቲም ከቀሪ ሂሳብዎ.',
   'hub.needCoinToPlay': 'ለመጫወት {fee} ሳንቲም ያስፈልግዎታል',
+  'hub.needCoinsToPlay': 'ለመጫወት {fee} ሳንቲሞች ያስፈልግዎታል',
   'hub.entrySummary': '{fee} ሳንቲም · {attempts} ሙከራዎች',
   'hub.needCoinsShort': '{fee} ሳንቲም ያስፈልጋል — ከታች ጥቅል ይግዙ፣ ከዚያ Enter ይንኩ.',
   'hub.joining': 'በመግባት ላይ…',
@@ -698,6 +702,12 @@ export function setLang(next: Lang): void {
 
 export function t(key: I18nKey): string {
   return dicts[lang][key] ?? en[key];
+}
+
+/** Entry-fee copy with correct singular/plural coin wording. */
+export function needCoinToPlayMessage(fee: number): string {
+  const key: I18nKey = fee === 1 ? 'hub.needCoinToPlay' : 'hub.needCoinsToPlay';
+  return t(key).replace('{fee}', String(fee));
 }
 
 export function applyTranslations(root: ParentNode = document): void {

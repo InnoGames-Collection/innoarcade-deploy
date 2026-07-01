@@ -281,7 +281,7 @@ function buildBoard(): void {
     card.className = 'mm-card';
     card.dataset.i = String(i);
     card.dataset.e = emoji;
-    card.textContent = '❓';
+    card.textContent = '?';
     card.addEventListener('click', () => flipCard(card));
     grid.appendChild(card);
   });
@@ -292,7 +292,7 @@ function revealAll(show: boolean): void {
   document.querySelectorAll<HTMLElement>('.mm-card').forEach((card) => {
     if (card.classList.contains('matched')) return;
     if (show) { card.textContent = card.dataset.e!; card.classList.add('flipped'); }
-    else if (!flipped.includes(card)) { card.textContent = '❓'; card.classList.remove('flipped'); }
+    else if (!flipped.includes(card)) { card.textContent = '?'; card.classList.remove('flipped'); }
   });
 }
 
@@ -334,20 +334,7 @@ async function beginRankedRound(): Promise<void> {
     hideOverOverlay();
     scoreEl.closest('.mm-stat-score')?.classList.remove('mm-score-bump');
     abortRound();
-    const seq = roundSeq;
-    buildBoard();
-    secondsLeft = ROUND_SECONDS;
-    refreshStats();
-    setPhase('playing');
-    syncAttemptsUi();
-    playSfx('flip');
-    revealAll(true);
-    window.setTimeout(() => {
-      if (seq !== roundSeq) return;
-      revealAll(false);
-      canFlip = true;
-      timerId = window.setInterval(() => tick(seq), 1000);
-    }, 1000);
+    startRoundWithBlink();
   } catch {
     setPhase('menu');
     if (isConfigured() && !(await currentUser())) openSignIn();
@@ -355,6 +342,24 @@ async function beginRankedRound(): Promise<void> {
   } finally {
     starting = false;
   }
+}
+
+/** Briefly reveal all cards, then start the timer — used on Play and Play again. */
+function startRoundWithBlink(): void {
+  const seq = roundSeq;
+  buildBoard();
+  secondsLeft = ROUND_SECONDS;
+  refreshStats();
+  setPhase('playing');
+  syncAttemptsUi();
+  playSfx('flip');
+  revealAll(true);
+  window.setTimeout(() => {
+    if (seq !== roundSeq) return;
+    revealAll(false);
+    canFlip = true;
+    timerId = window.setInterval(() => tick(seq), 1000);
+  }, 1000);
 }
 
 function pauseRound(): void {
@@ -373,12 +378,12 @@ function resumeRound(): void {
   timerId = window.setInterval(() => tick(seq), 1000);
 }
 
-/** Abandon the in-progress round without submitting (runner-style restart). */
+/** Abandon the in-progress round and start fresh with the preview blink. */
 async function restartRound(): Promise<void> {
   if (phase !== 'paused') return;
   abortRound();
-  setPhase('menu');
-  await onPlayOrEnter();
+  hideOverOverlay();
+  await beginRankedRound();
 }
 
 function tick(seq: number): void {
@@ -433,8 +438,8 @@ function checkMatch(): void {
       if (phase !== 'playing') return;
       c1.classList.remove('flipped');
       c2.classList.remove('flipped');
-      c1.textContent = '❓';
-      c2.textContent = '❓';
+      c1.textContent = '?';
+      c2.textContent = '?';
       flipped = [];
       canFlip = true;
       refreshStats();

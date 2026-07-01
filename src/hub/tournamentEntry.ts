@@ -1,6 +1,6 @@
 // Unified tournament entry: buy coins, pay, and confirmed entry.
 
-import { t } from '../i18n';
+import { t, needCoinToPlayMessage } from '../i18n';
 import { maskPhone } from '../platform/phone';
 import { normalizePhone } from '../platform/auth';
 import { openSignIn } from './signin';
@@ -42,15 +42,32 @@ function entryShell(inner: string): HTMLElement {
   return m;
 }
 
-/** Close entry modal and continue — skip stacked "You're in!" overlay when already on a game page. */
-function finishEntrySuccess(
-  m: HTMLElement,
+/** Close the entry modal, then open a fresh success mini-window (not stacked on the entry card). */
+function showJoinedSuccess(
+  entryModal: HTMLElement,
   opts: { onEntered?: () => void; playHref?: string; onPlay?: () => void },
 ): void {
-  m.remove();
-  opts.onEntered?.();
-  if (opts.onPlay) opts.onPlay();
-  else if (opts.playHref) window.location.assign(opts.playHref);
+  entryModal.remove();
+  injectStyles();
+  const m = document.createElement('div');
+  m.className = 'entry-modal entry-modal-joined';
+  m.innerHTML = `
+    <div class="entry-scrim"></div>
+    <div class="entry-card">
+      <div class="entry-joined">
+        <div class="ej-burst">✅</div>
+        <h3>${t('hub.joined')}</h3>
+        <button type="button" class="btn primary" id="playNow">${t('hub.playNow')}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  m.querySelector('.entry-scrim')!.addEventListener('click', () => m.remove());
+  m.querySelector('#playNow')!.addEventListener('click', () => {
+    m.remove();
+    opts.onEntered?.();
+    if (opts.onPlay) opts.onPlay();
+    else if (opts.playHref) window.location.assign(opts.playHref);
+  });
 }
 
 function actionRow(confirmHtml: string): string {
@@ -58,10 +75,6 @@ function actionRow(confirmHtml: string): string {
     ${confirmHtml}
     <button type="button" class="btn ghost" id="cancel">${t('hub.cancel')}</button>
   </div>`;
-}
-
-function needCoinMessage(fee: number): string {
-  return t('hub.needCoinToPlay').replace('{fee}', String(fee));
 }
 
 async function tryEnterAfterPurchase(
@@ -76,7 +89,7 @@ async function tryEnterAfterPurchase(
   }
   try {
     await enterTournament(tour.id);
-    finishEntrySuccess(m, opts);
+    showJoinedSuccess(m, opts);
   } catch (e) {
     if (e instanceof SignInRequiredError) { m.remove(); openSignIn(); return; }
     if (e instanceof InsufficientCoinsError) {
@@ -161,7 +174,7 @@ function renderEntryBody(
     });
   } else {
     card.innerHTML = `
-      <p class="entry-summary">${esc(needCoinMessage(fee))}</p>
+      <p class="entry-summary">${esc(needCoinToPlayMessage(fee))}</p>
       <p class="entry-err" id="err"></p>
       ${actionRow(`<button type="button" class="btn primary" id="confirm">${t('hub.ok')}</button>`)}`;
 
@@ -170,7 +183,7 @@ function renderEntryBody(
       btn.disabled = true;
       try {
         await enterTournament(tour.id);
-        finishEntrySuccess(m, opts);
+        showJoinedSuccess(m, opts);
       } catch (e) {
         if (e instanceof SignInRequiredError) { m.remove(); openSignIn(); return; }
         if (e instanceof InsufficientCoinsError) {
@@ -230,6 +243,9 @@ function injectStyles(): void {
     .entry-pkg.sel { border-color:#2f8fe6; box-shadow:0 0 0 2px rgba(47,143,230,.25); background:#f4f9ff; }
     .ep-coins { font-weight:900; font-size:.95rem; color:#7a5212; }
     .ep-price { font-size:.72rem; font-weight:700; color:#5f7262; }
+    .entry-joined { text-align:center; display:flex; flex-direction:column; gap:12px; align-items:center; padding:12px 4px; }
+    .entry-joined h3 { color:#14271a; font-size:1.2rem; margin:0; }
+    .ej-burst { font-size:3rem; line-height:1; }
     .btn { display:inline-flex; align-items:center; justify-content:center; width:100%;
       padding:.7rem 1rem; border-radius:10px; font:inherit; font-weight:700; cursor:pointer;
       text-decoration:none; border:1px solid transparent; box-sizing:border-box; }

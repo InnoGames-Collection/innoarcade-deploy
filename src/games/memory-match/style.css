@@ -143,10 +143,14 @@ body.game-shell[data-game="memory-match"] {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(1.6rem, 5.5vw, 2.1rem);
+  font-size: clamp(1.8rem, 6vw, 2.4rem);
   transition: all 0.2s;
   border: 2px solid var(--mm-green-dark);
   font-weight: 900;
+  line-height: 1;
+}
+.mm-card:not(.flipped):not(.matched) {
+  color: #fff;
 }
 .mm-card.flipped, .mm-card.matched {
   background: #fff;
@@ -279,6 +283,10 @@ body.game-shell[data-game="memory-match"] {
   background: #ffffff;
   border-color: var(--shell-line);
   color: var(--mm-blue);
+  text-transform: none;
+  letter-spacing: 0.02em;
+  min-width: 7rem;
+  font-size: clamp(0.9rem, 2.8vw, 1rem);
 }
 .mm-pause-btn:hover:not(:disabled) {
   background: rgba(31, 116, 224, 0.08);
