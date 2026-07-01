@@ -289,8 +289,8 @@ function openHowTo(g: GameMeta): void {
   m.querySelector('.howto-x')!.addEventListener('click', close);
 }
 
-// Browse state: the top segmented menu filters by tag (all / tournament / free).
-let gameFilter: 'all' | 'tournament' | 'free' = 'all';
+// Browse state: segmented menu filters by tournament / free (default: tournament).
+let gameFilter: 'tournament' | 'free' = 'tournament';
 let gameQuery = '';
 
 // A single flat library (no category sections), ordered by the catalog's
@@ -299,7 +299,7 @@ function renderGames(): void {
   const host = $('#gameGrid');
   const q = gameQuery.trim().toLowerCase();
   const pool = orderedCatalog().filter((g) => {
-    if (gameFilter !== 'all' && g.mode !== gameFilter) return false;
+    if (g.mode !== gameFilter) return false;
     if (q && !`${g.nameEn} ${g.nameAm} ${g.genreEn}`.toLowerCase().includes(q)) return false;
     return true;
   });
@@ -562,7 +562,7 @@ function setupBrowse(): void {
   }
   document.querySelectorAll<HTMLButtonElement>('#gameSeg .seg-btn').forEach((b) => {
     b.addEventListener('click', () => {
-      gameFilter = (b.dataset.filter as typeof gameFilter) ?? 'all';
+      gameFilter = (b.dataset.filter as typeof gameFilter) ?? 'tournament';
       document.querySelectorAll('#gameSeg .seg-btn').forEach((x) => x.classList.remove('active'));
       b.classList.add('active');
       renderGames();

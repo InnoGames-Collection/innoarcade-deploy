@@ -8,7 +8,7 @@ body.game-shell[data-game="memory-match"] {
 .mm-stage {
   position: relative;
   width: min(100%, 520px);
-  height: min(calc(100dvh - 20px), 780px);
+  height: min(calc(100dvh - 20px), 560px);
 }
 
 .mm-backdrop {
@@ -41,9 +41,9 @@ body.game-shell[data-game="memory-match"] {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: clamp(12px, 3vw, 20px);
-  padding-top: clamp(2.5rem, 6vw, 3rem);
+  justify-content: flex-start;
+  gap: clamp(8px, 2vw, 12px);
+  padding: clamp(2.5rem, 6vw, 2.75rem) clamp(12px, 3vw, 16px) clamp(10px, 2.5vw, 14px);
   background:
     var(--hub-stars),
     radial-gradient(120% 60% at 50% -10%, rgba(124, 201, 58, 0.12) 0%, transparent 55%),
@@ -82,7 +82,7 @@ body.game-shell[data-game="memory-match"] {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
   width: 100%;
-  margin-bottom: clamp(0.75rem, 2vw, 1rem);
+  flex-shrink: 0;
 }
 .mm-stat {
   display: flex;
@@ -90,8 +90,8 @@ body.game-shell[data-game="memory-match"] {
   align-items: center;
   justify-content: center;
   gap: 3px;
-  min-height: 52px;
-  padding: 8px 4px;
+  min-height: 46px;
+  padding: 6px 4px;
   border-radius: 12px;
   background: #ffffff;
   border: 1px solid var(--shell-line);
@@ -130,12 +130,12 @@ body.game-shell[data-game="memory-match"] {
 .mm-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: clamp(7px, 2vw, 11px);
-  margin-bottom: clamp(0.8rem, 2vw, 1.2rem);
+  gap: clamp(6px, 1.8vw, 9px);
+  flex-shrink: 0;
 }
 .mm-card {
-  width: clamp(50px, 13vw, 62px);
-  height: clamp(50px, 13vw, 62px);
+  width: clamp(52px, 14vw, 64px);
+  height: clamp(52px, 14vw, 64px);
   background: var(--mm-green);
   color: #fff;
   border-radius: clamp(10px, 3vw, 14px);
@@ -176,7 +176,8 @@ body.game-shell[data-game="memory-match"] {
   gap: 10px;
   justify-content: center;
   width: 100%;
-  margin-top: clamp(0.75rem, 2vw, 1rem);
+  margin-top: auto;
+  padding-top: 2px;
 }
 .mm-action-btn {
   background: var(--mm-green);
