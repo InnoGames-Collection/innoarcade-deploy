@@ -1,4 +1,4 @@
-/* Fruit Slice — Ethio Telecom–themed play shell (menu / game-over stay hub default) */
+/* Fruit Slice — hub-themed play shell (same backdrop pattern as memory-match) */
 
 html,
 body {
@@ -7,15 +7,6 @@ body {
 }
 
 body.game-shell[data-game="fruit-slice"] {
-  --et-blue: #005eb8;
-  --et-green: #4fb848;
-  --et-grad: linear-gradient(180deg, #005eb8 0%, #4fb848 52%, #0068c4 100%);
-  --et-stat-green: #4fb848;
-  --et-stat-blue: #1f74e0;
-  --et-pill-shadow: 0 4px 16px rgba(0, 40, 100, 0.22);
-  --et-dot-grid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='4' cy='4' r='1.6' fill='%23ffffff' fill-opacity='0.35'/%3E%3C/svg%3E");
-  --et-watermark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Ccircle cx='60' cy='60' r='56' fill='none' stroke='%23ffffff' stroke-width='3' opacity='0.22'/%3E%3Ctext x='60' y='78' text-anchor='middle' font-family='system-ui,sans-serif' font-size='64' font-weight='700' fill='%23ffffff' opacity='0.28'%3Ee%3C/text%3E%3C/svg%3E");
-
   padding: calc(10px + env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom));
   box-sizing: border-box;
   touch-action: none;
@@ -25,7 +16,6 @@ body.game-shell[data-game="fruit-slice"] {
   align-items: flex-start;
   justify-content: center;
   min-height: 100dvh;
-  background: linear-gradient(180deg, #004a94 0%, #003870 100%);
 }
 
 .fs-stage {
@@ -35,10 +25,8 @@ body.game-shell[data-game="fruit-slice"] {
   min-height: min(calc(100dvh - 20px), 560px);
   max-height: min(calc(100dvh - 20px), 720px);
   margin: auto;
-  border-radius: 16px;
 }
 
-/* Hub-white backdrop visible only behind menu / overlays */
 .fs-backdrop {
   position: absolute;
   inset: 0;
@@ -55,77 +43,38 @@ body.game-shell[data-game="fruit-slice"] {
   z-index: 4;
   display: flex;
   flex-direction: column;
-  gap: clamp(8px, 2vw, 12px);
-  min-height: min(calc(100dvh - 20px), 720px);
-  padding:
-    calc(clamp(2.25rem, 5.5vw, 2.75rem) + env(safe-area-inset-top, 0px))
-    clamp(12px, 3vw, 16px)
-    calc(clamp(10px, 2.5vw, 14px) + env(safe-area-inset-bottom, 0px));
+  gap: clamp(6px, 1.6vw, 10px);
+  padding: clamp(2.25rem, 5.5vw, 2.5rem) clamp(10px, 2.5vw, 14px) clamp(8px, 2vw, 12px);
+  background:
+    var(--hub-stars),
+    radial-gradient(120% 60% at 50% -10%, rgba(70, 192, 90, 0.12) 0%, transparent 55%),
+    #ffffff;
+  border: 2px solid #e6efdc;
   border-radius: inherit;
   box-sizing: border-box;
-  overflow: hidden;
-  background:
-    var(--et-dot-grid),
-    var(--et-grad);
-  background-size: 24px 24px, 100% 100%;
-}
-
-.fs-playframe::before,
-.fs-playframe::after {
-  content: '';
-  position: absolute;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.fs-playframe::before {
-  left: -20%;
-  right: -20%;
-  bottom: -8%;
-  height: 42%;
-  background: radial-gradient(ellipse 80% 100% at 50% 100%, rgba(79, 184, 72, 0.45) 0%, transparent 68%);
-}
-
-.fs-playframe::after {
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 28%;
-  opacity: 0.55;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 80' preserveAspectRatio='none'%3E%3Cpath d='M0 40 Q50 10 100 40 T200 40 T300 55 T400 35 L400 80 L0 80 Z' fill='%23004a94' fill-opacity='0.35'/%3E%3Cpath d='M0 55 Q80 75 160 50 T320 60 T400 45 L400 80 L0 80 Z' fill='%232a9e38' fill-opacity='0.25'/%3E%3C/svg%3E") center bottom / 100% 100% no-repeat;
-}
-
-.fs-playframe > *:not(.gp-close-corner) {
-  position: relative;
-  z-index: 1;
 }
 
 .fs-stage > .game-overlay {
   z-index: 8;
 }
 
-.fs-playframe .gp-close-corner {
-  z-index: 6;
-  top: max(10px, env(safe-area-inset-top, 0px));
+#closeBtn {
+  position: absolute;
+  top: 10px;
   right: 10px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.95);
-  color: var(--et-blue);
-  border: none;
-  box-shadow: 0 2px 10px rgba(0, 40, 100, 0.2);
-  font-weight: 800;
+  z-index: 6;
+  pointer-events: auto;
 }
 
-/* --- Stats bar (single white strip, plain text labels) -------------------- */
+/* Stats — single white strip (hub colors) */
 .fs-stats {
   display: flex;
   width: 100%;
   flex-shrink: 0;
   background: #ffffff;
   border-radius: 14px;
-  box-shadow: var(--et-pill-shadow);
+  border: 1px solid #e6efdc;
+  box-shadow: 0 2px 8px rgba(20, 45, 14, 0.08);
   overflow: hidden;
 }
 
@@ -140,7 +89,7 @@ body.game-shell[data-game="fruit-slice"] {
   min-height: 52px;
   padding: 8px 4px 7px;
   text-align: center;
-  border-right: 1px solid #e4eaf2;
+  border-right: 1px solid #e6efdc;
 }
 
 .fs-stat:last-child {
@@ -166,7 +115,7 @@ body.game-shell[data-game="fruit-slice"] {
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: #4a5568;
+  color: #5f7262;
   line-height: 1.1;
 }
 
@@ -179,77 +128,58 @@ body.game-shell[data-game="fruit-slice"] {
 
 .fs-stat-time .fs-stat-icon,
 .fs-stat-combo .fs-stat-icon {
-  color: var(--et-stat-green);
+  color: #157a47;
 }
 
 .fs-stat-time .fs-stat-value,
 .fs-stat-combo .fs-stat-value {
-  color: var(--et-stat-green);
+  color: #157a47;
 }
 
 .fs-stat-score .fs-stat-icon,
 .fs-stat-lives .fs-stat-icon {
-  color: var(--et-stat-blue);
+  color: #1f74e0;
 }
 
 .fs-stat-score .fs-stat-value,
 .fs-stat-lives .fs-stat-value {
-  color: var(--et-stat-blue);
+  color: #1f74e0;
 }
 
-/* --- Game canvas frame --------------------------------------------------- */
 .fs-canvas-wrap {
   position: relative;
   width: 100%;
   aspect-ratio: 2 / 3;
-  max-height: min(52dvh, 480px);
-  border-radius: 16px;
+  max-height: min(58dvh, 500px);
+  border-radius: 12px;
   overflow: hidden;
-  border: 3px solid rgba(255, 255, 255, 0.92);
-  box-shadow: 0 10px 28px rgba(0, 30, 80, 0.28);
-  background: var(--et-grad);
-}
-
-.fs-canvas-watermark {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    var(--et-dot-grid),
-    var(--et-watermark) center / min(58%, 220px) no-repeat,
-    var(--et-grad);
-  background-size: 20px 20px, auto, 100% 100%;
-  opacity: 1;
+  box-shadow: 0 8px 24px rgba(20, 45, 14, 0.18);
+  border: 2px solid rgba(70, 192, 90, 0.35);
+  background: #2d1b4e;
 }
 
 #game {
-  position: relative;
-  z-index: 1;
   display: block;
   width: 100%;
   height: 100%;
   cursor: crosshair;
   touch-action: none;
-  background: transparent;
 }
 
-/* --- Footer controls ----------------------------------------------------- */
 .fs-hud {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(10px, 3vw, 14px);
+  gap: 10px;
   width: 100%;
   flex-shrink: 0;
-  padding-top: 2px;
 }
 
 .fs-hud button {
   pointer-events: auto;
   font: inherit;
   cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.15s;
+  transition: transform 0.1s, background 0.15s;
 }
 
 .fs-hud button:active {
@@ -257,51 +187,29 @@ body.game-shell[data-game="fruit-slice"] {
 }
 
 #muteBtn {
-  width: 46px;
-  height: 46px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  border: none;
-  background: #ffffff;
-  color: var(--et-stat-green);
-  font-size: 1.15rem;
-  box-shadow: var(--et-pill-shadow);
-  flex-shrink: 0;
+  border: 1px solid #e6efdc;
+  background: #fff;
+  color: #14271a;
+  font-size: 1.05rem;
 }
 
 .fs-pause-btn {
   background: #ffffff;
-  border: none;
-  color: var(--et-stat-blue);
-  padding: clamp(11px, 2.8vw, 13px) clamp(28px, 8vw, 44px);
-  font-size: clamp(0.95rem, 2.9vw, 1.05rem);
+  border: 2px solid #e6efdc;
+  color: #1f74e0;
+  padding: clamp(10px, 2.5vw, 12px) clamp(24px, 6vw, 36px);
+  font-size: clamp(0.9rem, 2.8vw, 1rem);
   font-weight: 800;
   border-radius: 50px;
-  min-width: 8rem;
-  box-shadow: var(--et-pill-shadow);
+  min-width: 7rem;
 }
 
 .fs-pause-btn:hover {
-  box-shadow: 0 6px 20px rgba(0, 40, 100, 0.28);
-}
-
-.fs-footer-tag {
-  margin: 0;
-  padding: 0 8px;
-  text-align: center;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: rgba(255, 255, 255, 0.88);
-  line-height: 1.35;
-  text-shadow: 0 1px 2px rgba(0, 40, 80, 0.35);
-}
-
-.fs-footer-tag-am {
-  display: block;
-  font-size: 0.62rem;
-  font-weight: 600;
-  opacity: 0.9;
-  margin-top: 2px;
+  background: rgba(31, 116, 224, 0.08);
+  border-color: #1f74e0;
 }
 
 .hidden {
@@ -313,8 +221,8 @@ body.game-shell[data-game="fruit-slice"] {
   left: 50%;
   bottom: max(26px, env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
-  background: rgba(0, 50, 110, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(20, 39, 26, 0.92);
+  border: 1px solid rgba(79, 158, 22, 0.45);
   color: #fff;
   padding: 10px 18px;
   border-radius: 999px;
