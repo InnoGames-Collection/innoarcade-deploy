@@ -1,34 +1,5 @@
-/* Tap Game — ported from GoPlay; markup/art kept, chrome adapted to the
-   InnoArcade page shell. Shared topbar/lang styles match the other ports. */
+/* Tap Game — play area inside hub casual shell */
 
-#stage {
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 14px 12px 28px;
-  gap: 14px;
-}
-
-.topbar {
-  width: 100%;
-  max-width: 520px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.topbar .game-name { font-weight: 800; letter-spacing: 0.3px; color: var(--text); }
-.back-link { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
-.back-link:hover { color: var(--text); }
-.lang-switch { display: flex; gap: 6px; }
-.lang-btn {
-  background: transparent; border: 1px solid var(--muted); color: var(--muted);
-  border-radius: 999px; padding: 3px 10px; font: inherit; font-size: 0.78rem; cursor: pointer;
-}
-.lang-btn.active { border-color: var(--accent); color: var(--accent); }
-
-/* --- GoPlay tap-game (scoped) --------------------------------------------- */
 #tap-game-wrapper {
   --orange: #ff6b35;
   --fire: #ff4444;
@@ -93,15 +64,6 @@
 .tg-target-btn:active { transform: scale(0.88); }
 .tg-message {
   font-size: clamp(0.85rem, 2.8vw, 1.05rem); font-weight: 700;
-  margin-bottom: clamp(0.8rem, 2vw, 1.2rem); min-height: 28px;
+  min-height: 28px;
   color: var(--orange); text-align: center;
 }
-.tg-start-btn {
-  background: var(--orange); color: #fff; border: 2px solid var(--orange);
-  padding: clamp(10px, 2.5vw, 16px) clamp(36px, 9vw, 52px);
-  font-size: clamp(0.95rem, 3.5vw, 1.3rem); font-weight: 900; border-radius: 50px; cursor: pointer;
-  transition: all 0.2s; text-transform: uppercase; letter-spacing: 2px; font-family: inherit;
-}
-.tg-start-btn:hover:not(:disabled) { transform: translateY(-2px); background: #fff; border-color: #fff; color: var(--bg-solid); }
-.tg-start-btn:active { transform: scale(0.97); }
-.tg-start-btn:disabled { background: #333; border-color: #333; color: #666; cursor: not-allowed; }

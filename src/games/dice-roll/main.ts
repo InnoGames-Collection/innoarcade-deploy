@@ -1,21 +1,16 @@
-// Dice Roll — a chance game a built-in GoPlay game.
-// The outcome is decided locally with a CSPRNG at the configured win rate.
+// Dice Roll — chance doubles game with hub casual shell.
 
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
+import '../_casual/style.css';
 import './style.css';
 import { applyTranslations, getLang, t } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { createHost } from '../../platform/gameHost';
-import { ensureToast, paintInlineReward, renderFreeHudHtml, startFreeRound } from '../../platform/freeGameShell';
+import { wireFreeCasualShell } from '../../platform/freeGameShell';
 
 const host = createHost('dice-roll');
-
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
-
-const freeHud = $('#freeHud');
-const runReward = $('#runReward');
-const toast = ensureToast('dice-roll-toast');
 
 function chance(ratePct: number): boolean {
   const buf = new Uint32Array(1);
@@ -43,6 +38,7 @@ const message = $('#dr-message');
 const rollBtn = $('#dr-roll-btn') as HTMLButtonElement;
 
 let isRolling = false;
+let runStart = 0;
 
 function play(type: 'click' | 'tick' | 'stop'): void {
   switch (type) {
@@ -52,19 +48,24 @@ function play(type: 'click' | 'tick' | 'stop'): void {
   }
 }
 
-function mountFreeHud(): void {
-  freeHud.innerHTML = renderFreeHudHtml(host);
+function resetDice(): void {
+  isRolling = false;
+  rollBtn.disabled = false;
+  message.textContent = t('dr.tapRoll');
+  message.style.color = '';
 }
 
-function rollDice(): void {
-  if (isRolling) return;
-  void beginRoll();
-}
+const shell = wireFreeCasualShell(host, beginRoll);
 
 async function beginRoll(): Promise<void> {
-  if (!(await startFreeRound(host, toast))) return;
-  runReward.innerHTML = '';
+  resetDice();
+  runStart = Date.now();
+  message.textContent = t('dr.tapRoll');
+  rollBtn.disabled = false;
+}
 
+async function rollDice(): Promise<void> {
+  if (isRolling) return;
   isRolling = true;
   rollBtn.disabled = true;
   play('click');
@@ -73,20 +74,20 @@ async function beginRoll(): Promise<void> {
 
   let tick = 0;
   const ticks = 12;
-  const iv = setInterval(() => {
-    tick++;
-    play('tick');
-    const r = () => Math.random() * 600 + 300;
-    cube1.style.transform = `rotateX(${r()}deg) rotateY(${r()}deg) rotateZ(10deg)`;
-    cube2.style.transform = `rotateX(${r()}deg) rotateY(${r()}deg) rotateZ(-10deg)`;
-    if (tick >= ticks) {
-      clearInterval(iv);
-      void finishRoll();
-    }
-  }, 80);
-}
+  await new Promise<void>((resolve) => {
+    const iv = setInterval(() => {
+      tick++;
+      play('tick');
+      const r = () => Math.random() * 600 + 300;
+      cube1.style.transform = `rotateX(${r()}deg) rotateY(${r()}deg) rotateZ(10deg)`;
+      cube2.style.transform = `rotateX(${r()}deg) rotateY(${r()}deg) rotateZ(-10deg)`;
+      if (tick >= ticks) {
+        clearInterval(iv);
+        resolve();
+      }
+    }, 80);
+  });
 
-async function finishRoll(): Promise<void> {
   const isWin = chance(host.winRate);
   let v1 = dieFace();
   let v2: number;
@@ -104,24 +105,19 @@ async function finishRoll(): Promise<void> {
   cube2.style.transform = `rotateX(${rot2.x + spin}deg) rotateY(${rot2.y + spin}deg) rotateZ(0deg)`;
 
   setTimeout(() => play('stop'), 700);
-  await new Promise<void>((resolve) => {
-    setTimeout(() => {
-      isRolling = false;
-      rollBtn.disabled = false;
-      if (isWin) {
-        message.textContent = '🎉 ' + t('dr.win').replace('{p}', String(host.winPoints));
-        message.style.color = '#ffd700';
-      } else {
-        message.textContent = t('dr.lose').replace('{a}', String(v1)).replace('{b}', String(v2));
-        message.style.color = '';
-      }
-      resolve();
-    }, 1100);
-  });
-  await paintInlineReward(host, runReward, isWin ? 1 : 0, isWin);
+  await new Promise<void>((resolve) => setTimeout(resolve, 1100));
+
+  const summary = isWin
+    ? '🎉 ' + t('dr.win').replace('{p}', String(host.winPoints))
+    : t('dr.lose').replace('{a}', String(v1)).replace('{b}', String(v2));
+  message.textContent = summary;
+  message.style.color = isWin ? '#ffd700' : '';
+  isRolling = false;
+  rollBtn.disabled = true;
+  shell.finishPlay(isWin ? 1 : 0, isWin, summary, Date.now() - runStart);
 }
 
-rollBtn.addEventListener('click', rollDice);
+rollBtn.addEventListener('click', () => void rollDice());
 
 const s1 = dieFace();
 const s2 = dieFace();
@@ -130,5 +126,4 @@ cube2.style.transform = `rotateX(${rotationMapping[s2].x}deg) rotateY(${rotation
 
 document.documentElement.lang = getLang();
 applyTranslations();
-mountFreeHud();
-message.textContent = t('dr.tapRoll');
+shell.refreshMenu();

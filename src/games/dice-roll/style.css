@@ -1,33 +1,5 @@
-/* Dice Roll — ported from GoPlay; 3D plastic-dice art kept verbatim, chrome
-   adapted to the InnoArcade shell with a compact tournament strip. */
+/* Dice Roll — 3D dice inside hub casual shell */
 
-#stage {
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 14px 12px 28px;
-  gap: 14px;
-}
-.topbar {
-  width: 100%;
-  max-width: 460px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.topbar .game-name { font-weight: 800; letter-spacing: 0.3px; color: var(--text); }
-.back-link { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
-.back-link:hover { color: var(--text); }
-.lang-switch { display: flex; gap: 6px; }
-.lang-btn {
-  background: transparent; border: 1px solid var(--muted); color: var(--muted);
-  border-radius: 999px; padding: 3px 10px; font: inherit; font-size: 0.78rem; cursor: pointer;
-}
-.lang-btn.active { border-color: var(--accent); color: var(--accent); }
-
-/* --- GoPlay dice-roll (scoped) -------------------------------------------- */
 #dice-roll-wrapper {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: clamp(14px, 3vw, 20px);

@@ -388,3 +388,121 @@ export function renderFreeHudHtml(host: GameHost): string {
       <span class="shell-free-hud-xp">⭐ ${t('td.xpGained')}</span>
     </div>`;
 }
+
+export interface FreeCasualShell {
+  toast: (msg: string) => void;
+  refreshMenu: () => void;
+  /** Begin a round (auth + menu). Calls onStart when entry succeeds. */
+  play: () => Promise<void>;
+  /** Show game-over overlay and submit score in the background. */
+  finishPlay: (score: number, isWin: boolean, summary?: string, durationMs?: number) => void;
+}
+
+/** Hub shell for timed / chance casual games (Tap, Dice, etc.). */
+export function wireFreeCasualShell(
+  host: GameHost,
+  onStart: () => void | Promise<void>,
+): FreeCasualShell {
+  const toast = ensureToast(`${host.meta.id}-toast`);
+  let serverBest = 0;
+  let starting = false;
+  let phase: 'menu' | 'playing' | 'over' = 'menu';
+
+  const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
+
+  const refreshMenu = (): void => {
+    $('freeMenu').innerHTML = renderFreeMenuHtml(host, serverBest);
+  };
+
+  const hideOverOverlay = (): void => {
+    const overlay = $('overOverlay');
+    overlay.classList.add('hidden');
+    overlay.setAttribute('aria-hidden', 'true');
+  };
+
+  const showMenu = (): void => {
+    $('menuOverlay').classList.remove('hidden');
+    $('fcPlayFrame').classList.add('hidden');
+    $('fcBackdrop').classList.remove('hidden');
+    hideOverOverlay();
+  };
+
+  const showGame = (): void => {
+    $('menuOverlay').classList.add('hidden');
+    $('fcPlayFrame').classList.remove('hidden');
+    $('fcBackdrop').classList.add('hidden');
+  };
+
+  const setPhase = (next: typeof phase): void => {
+    phase = next;
+    if (next === 'menu') showMenu();
+    else showGame();
+    $('closeBtn').classList.toggle('hidden', next === 'menu' || next === 'over');
+  };
+
+  const finishPlay = (
+    score: number,
+    isWin: boolean,
+    summary = '',
+    durationMs = 0,
+  ): void => {
+    const isRecord = score > serverBest;
+    if (isRecord) serverBest = score;
+    refreshMenu();
+    const summaryEl = document.getElementById('fcOverSummary');
+    if (summaryEl) summaryEl.textContent = summary;
+    $('finalScore').textContent = score.toLocaleString();
+    $('finalBest').textContent = serverBest > 0 ? serverBest.toLocaleString() : '—';
+    $('newBest').classList.toggle('hidden', !isRecord);
+    $('runReward').innerHTML = '<span class="shell-rr-pending">…</span>';
+    $('closeBtn').classList.add('hidden');
+    $('overOverlay').classList.remove('hidden');
+    $('overOverlay').setAttribute('aria-hidden', 'false');
+    phase = 'over';
+
+    void (async () => {
+      const res = await submitFreeRun(host, score, isWin, durationMs);
+      if (!res) {
+        $('finalBest').textContent = serverBest.toLocaleString();
+        $('newBest').classList.toggle('hidden', !isRecord);
+        if (await promptIfSessionExpired(toast)) {
+          $('runReward').innerHTML = `<span class="shell-rr-note">${t('td.sessionExpired')}</span>`;
+        } else if (isConfigured()) {
+          $('runReward').innerHTML = `<span class="shell-rr-note">${t('td.submitFailed')}</span>`;
+        } else {
+          $('runReward').innerHTML = '';
+        }
+        return;
+      }
+      if (typeof res.best === 'number') serverBest = Math.max(serverBest, res.best);
+      $('finalBest').textContent = serverBest.toLocaleString();
+      $('newBest').classList.toggle('hidden', !isRecord && !res.isRecord);
+      $('runReward').innerHTML = renderRunRewardHtml(res);
+      refreshMenu();
+    })();
+  };
+
+  const play = async (): Promise<void> => {
+    if (starting || phase === 'playing') return;
+    starting = true;
+    try {
+      if (!(await startFreeRound(host, toast))) return;
+      hideOverOverlay();
+      setPhase('playing');
+      await onStart();
+    } finally {
+      starting = false;
+    }
+  };
+
+  wirePlayButtons(['startBtn', 'againBtn'], play);
+
+  void freeGameBestRemote(host.meta.id).then((best) => {
+    serverBest = best;
+    refreshMenu();
+  });
+
+  setPhase('menu');
+
+  return { toast, refreshMenu, play, finishPlay };
+}

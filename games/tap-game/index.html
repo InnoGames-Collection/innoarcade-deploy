@@ -6,27 +6,50 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👆</text></svg>" />
     <title>Tap Game — GoPlay</title>
   </head>
-  <body class="game-shell" data-game="tap-game">
-    <div id="stage">
-      <header class="topbar">
-        <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-        <span class="game-name" data-i18n="tg.title">Tap Game</span>
-      </header>
+  <body class="game-shell casual-shell" data-game="tap-game">
+    <div id="stage" class="fc-stage game-shell-stage">
+      <div id="fcBackdrop" class="fc-backdrop" aria-hidden="true"></div>
 
-      <div id="tap-game-wrapper">
-        <div id="freeHud"></div>
-        <div class="tg-stats">
-          <div class="tg-stat"><span class="tg-stat-label" data-i18n="tg.score">Score:</span><span class="tg-stat-value" id="tg-score">0</span></div>
-          <div class="tg-stat"><span class="tg-stat-label" data-i18n="tg.time">Time:</span><span class="tg-stat-value" id="tg-time">10</span></div>
+      <div id="fcPlayFrame" class="fc-playframe hidden">
+        <button id="closeBtn" class="gp-close gp-close-corner hidden" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+
+        <div id="tap-game-wrapper">
+          <div class="tg-stats">
+            <div class="tg-stat"><span class="tg-stat-label" data-i18n="tg.score">Score</span><span class="tg-stat-value" id="tg-score">0</span></div>
+            <div class="tg-stat"><span class="tg-stat-label" data-i18n="tg.time">Time</span><span class="tg-stat-value" id="tg-time">10</span></div>
+          </div>
+          <div class="tg-area" id="tg-area">
+            <div class="tg-hint" id="tg-hint" data-i18n="tg.hint">Tap the circles as fast as you can!</div>
+          </div>
+          <div class="tg-message" id="tg-message"></div>
         </div>
-        <div class="tg-area" id="tg-area">
-          <div class="tg-hint" id="tg-hint" data-i18n="tg.hint">Tap START then hit the circles!</div>
+      </div>
+
+      <div id="menuOverlay" class="game-overlay">
+        <div class="game-panel panel-clean">
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <div class="shell-free-menu" id="freeMenu"></div>
+          <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
         </div>
-        <div class="tg-message" id="tg-message"></div>
-        <div class="shell-run-reward" id="runReward"></div>
-        <button class="tg-start-btn" id="tg-start-btn" data-i18n="arc.start">START</button>
+      </div>
+
+      <div id="overOverlay" class="game-overlay hidden" aria-hidden="true">
+        <div class="game-panel">
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <h2 data-i18n="td.gameOver">Game over</h2>
+          <p id="fcOverSummary" class="fc-over-summary"></p>
+          <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
+          <div class="shell-over-final">
+            <div class="shell-over-stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
+            <div class="shell-over-stat"><span data-i18n="td.best">Best</span><strong id="finalBest">—</strong></div>
+          </div>
+          <div class="shell-run-reward" id="runReward"></div>
+          <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
+        </div>
       </div>
     </div>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
     <script type="module" src="/src/games/tap-game/main.ts"></script>
   </body>

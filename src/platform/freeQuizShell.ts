@@ -1,5 +1,5 @@
 // Continuous timed MCQ shell for free quiz games — menu / pause / game-over,
-// shuffled question deck, no answer reveal on wrong picks.
+// shuffled question deck (no repeats per session), no answer reveal on wrong picks.
 
 import { applyTranslations, getLang, t } from '../i18n';
 import { sfx } from '../engine/audio';
@@ -27,6 +27,8 @@ export interface FreeQuizShellConfig {
   bank: () => FreeQuizItem[];
   /** Session length in seconds (default 60). */
   runSeconds?: number;
+  /** Per-question limit in seconds (default 10). */
+  questionSeconds?: number;
   /** Points added per correct answer (default 10). */
   pointsPerCorrect?: number;
   /** Score ≥ this counts as a win (defaults to host.winScore). */
@@ -62,6 +64,7 @@ function buildDeck(bank: () => FreeQuizItem[]): FreeQuizItem[] {
 export function wireFreeQuizShell(config: FreeQuizShellConfig): void {
   const host = createHost(config.gameId);
   const runSeconds = config.runSeconds ?? 60;
+  const questionSeconds = config.questionSeconds ?? 10;
   const pointsPerCorrect = config.pointsPerCorrect ?? 10;
   const winThreshold = config.winScore ?? host.winScore;
 
@@ -77,6 +80,7 @@ export function wireFreeQuizShell(config: FreeQuizShellConfig): void {
   let locked = false;
   let runStart = 0;
   let runLeft = runSeconds;
+  let qLeft = questionSeconds;
   let runTimer: ReturnType<typeof setInterval> | undefined;
   let timerPaused = false;
   let finishPending = false;
@@ -141,7 +145,8 @@ export function wireFreeQuizShell(config: FreeQuizShellConfig): void {
   function updateStats(): void {
     const score = correct * pointsPerCorrect;
     $('#fqStatQ').textContent = phase === 'playing' ? String(answered + 1) : String(answered);
-    $('#fqStatTime').textContent = phase === 'playing' ? formatRunTime(runLeft) : '—';
+    $('#fqStatSession').textContent = phase === 'playing' ? formatRunTime(runLeft) : '—';
+    $('#fqStatQTime').textContent = phase === 'playing' ? `${Math.max(0, qLeft)}s` : '—';
     $('#fqStatScore').textContent = String(score);
   }
 
@@ -158,17 +163,21 @@ export function wireFreeQuizShell(config: FreeQuizShellConfig): void {
     timerPaused = false;
     runTimer = setInterval(() => {
       if (phase !== 'playing' || timerPaused) return;
+      if (!locked) {
+        qLeft--;
+        if (qLeft <= 0) {
+          questionTimeUp();
+          return;
+        }
+      }
       runLeft--;
       updateStats();
       if (runLeft <= 0) void finishRun();
     }, 1000);
   }
 
-  function nextItem(): FreeQuizItem {
-    if (deckIdx >= deck.length) {
-      deck = buildDeck(config.bank);
-      deckIdx = 0;
-    }
+  function nextItem(): FreeQuizItem | null {
+    if (deckIdx >= deck.length) return null;
     return deck[deckIdx++];
   }
 
@@ -180,6 +189,7 @@ export function wireFreeQuizShell(config: FreeQuizShellConfig): void {
     locked = false;
     finishPending = false;
     runLeft = runSeconds;
+    qLeft = questionSeconds;
     runStart = Date.now();
     setPhase('playing');
     showQuestion();
@@ -188,8 +198,13 @@ export function wireFreeQuizShell(config: FreeQuizShellConfig): void {
 
   function showQuestion(): void {
     if (phase !== 'playing' || finishPending) return;
-    locked = false;
     const q = nextItem();
+    if (!q) {
+      void finishRun();
+      return;
+    }
+    locked = false;
+    qLeft = questionSeconds;
     elQ.textContent = q.prompt;
     const order = shuffle([0, 1, 2, 3] as const);
     elOpts.innerHTML = order.map((oi) =>
@@ -199,6 +214,27 @@ export function wireFreeQuizShell(config: FreeQuizShellConfig): void {
       b.addEventListener('click', () => answer(q, Number(b.dataset.i), b));
     });
     updateStats();
+  }
+
+  function questionTimeUp(): void {
+    if (locked || phase !== 'playing' || finishPending) return;
+    locked = true;
+    answered++;
+    updateStats();
+    setTimeout(() => advanceAfterAnswer(), 400);
+  }
+
+  function advanceAfterAnswer(): void {
+    if (finishPending || phase !== 'playing') return;
+    if (runLeft <= 0) {
+      void finishRun();
+      return;
+    }
+    if (deckIdx >= deck.length) {
+      void finishRun();
+      return;
+    }
+    showQuestion();
   }
 
   function answer(q: FreeQuizItem, choice: number, btn: HTMLButtonElement): void {
@@ -215,11 +251,7 @@ export function wireFreeQuizShell(config: FreeQuizShellConfig): void {
     }
     answered++;
     updateStats();
-    setTimeout(() => {
-      if (finishPending || phase !== 'playing') return;
-      if (runLeft <= 0) void finishRun();
-      else showQuestion();
-    }, right ? 450 : 650);
+    setTimeout(() => advanceAfterAnswer(), right ? 450 : 650);
   }
 
   async function finishRun(): Promise<void> {
