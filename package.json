@@ -11,7 +11,8 @@
     "seed": "node supabase/seed.mjs",
     "setup:test-phones": "node supabase/push-test-phones.mjs",
     "verify:auth": "node supabase/verify-auth-setup.mjs",
-    "skins:ethio-f": "node scripts/process-ethio-f-skins.mjs"
+    "sprites:compress": "node scripts/compress-runner-sprites.mjs",
+    "skins:ethio-f": "node scripts/process-ethio-f-skins.mjs && node scripts/compress-runner-sprites.mjs"
   },
   "devDependencies": {
     "sharp": "^0.34.5",

@@ -23,7 +23,7 @@ import { isConfigured } from '../../platform/supabase';
 import { currentUser } from '../../platform/auth';
 import { sfx } from '../../engine/audio';
 import { TempleDash, W, H, GAME_ID, type GameState } from './game';
-import { sheetDefs, DEFAULT_SKIN_ID } from './art';
+import { kenneySheetDefs, skinSheetDefs, DEFAULT_SKIN_ID } from './art';
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
@@ -33,7 +33,10 @@ void boot();
 
 async function boot(): Promise<void> {
   const assets = new AssetStore();
-  const assetsReady = assets.load(sheetDefs()).catch(() => {});
+  const assetsReady = (async () => {
+    await assets.load(kenneySheetDefs());
+    await assets.load(skinSheetDefs());
+  })().catch(() => {});
   run(assets, assetsReady);
 }
 

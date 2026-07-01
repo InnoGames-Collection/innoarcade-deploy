@@ -7,7 +7,7 @@
  * Output: skins/ethio_f/{stand,walk1…walk6,jump,slide,hit}.png
  */
 
-import { readdir, mkdir, writeFile } from 'node:fs/promises';
+import { readdir, mkdir, writeFile, unlink } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -221,14 +221,18 @@ async function main() {
       .png({ compressionLevel: 9 })
       .toFile(outPath);
 
-    manifest.poses[pose] = { file: `${pose}.png`, crop: { width, height }, footX, placedAt: { left, top } };
-    console.log(`wrote ${outPath}`);
+    const webpPath = outPath.replace(/\.png$/, '.webp');
+    await sharp(outPath).webp({ quality: 82, alphaQuality: 90, effort: 4 }).toFile(webpPath);
+    await unlink(outPath);
+
+    manifest.poses[pose] = { file: `${pose}.webp`, crop: { width, height }, footX, placedAt: { left, top } };
+    console.log(`wrote ${webpPath}`);
   }
 
-  // Shop thumbnail = stand pose, copied for backward-compatible ./skins/ethio_f.png path.
-  const standPath = join(SKIN_DIR, 'stand.png');
-  const legacyThumb = join(SKIN_DIR, '..', 'ethio_f.png');
-  await sharp(standPath).png().toFile(legacyThumb);
+  // Shop thumbnail = stand pose (WebP for the bundled asset path).
+  const standWebp = join(SKIN_DIR, 'stand.webp');
+  const legacyThumb = join(SKIN_DIR, '..', 'ethio_f.webp');
+  await sharp(standWebp).webp({ quality: 82, alphaQuality: 90 }).toFile(legacyThumb);
   console.log(`wrote ${legacyThumb} (legacy shop thumb from stand)`);
 
   const manifestPath = join(SKIN_DIR, 'manifest.json');

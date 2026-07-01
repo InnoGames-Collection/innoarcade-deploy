@@ -1,14 +1,18 @@
-// Temple Dash runners — custom 3D-style skin PNGs. Animated skins ship one PNG per
-// pose under skins/<id>/; others reuse a single thumb for every pose. Kenney CC0
-// assets remain for obstacles/coins/backgrounds.
+// Temple Dash runners — custom 3D-style skin sprites. Animated skins ship one
+// WebP (or PNG fallback) per pose under skins/<id>/; Kenney CC0 PNGs for props.
 
 import type { SheetDef } from '../../engine/assets';
 
-const urls = import.meta.glob(['./kenney/*.png', './skins/*.png', './skins/**/*.png', '!./skins/**/run/**', '!./skins/**/img/**'], {
+const kenneyUrls = import.meta.glob('./kenney/*.png', {
   eager: true,
   query: '?url',
   import: 'default',
 }) as Record<string, string>;
+
+const skinUrls = import.meta.glob(
+  ['./skins/*.{png,webp}', './skins/**/*.{png,webp}', '!./skins/**/run/**', '!./skins/**/img/**'],
+  { eager: true, query: '?url', import: 'default' },
+) as Record<string, string>;
 
 export const WALK_FRAMES = 6;
 /** Stride animation rate at base run speed (lower = slower leg cycle). */
@@ -30,7 +34,7 @@ export interface Skin {
 }
 
 export const SKINS: Skin[] = [
-  { id: DEFAULT_SKIN_ID, nameEn: 'Ethio Star', nameAm: 'ኢትዮ ኮከብ', cost: 0, thumb: './skins/ethio_f.png' },
+  { id: DEFAULT_SKIN_ID, nameEn: 'Ethio Star', nameAm: 'ኢትዮ ኮከብ', cost: 0, thumb: './skins/ethio_f.webp' },
 ];
 
 const POSES = [
@@ -41,18 +45,23 @@ const POSES = [
 
 function assetUrl(relativePath: string): string {
   const suffix = relativePath.replace('./', '');
-  const key = Object.keys(urls).find((k) => k.endsWith(suffix));
-  return key ? urls[key] : '';
+  const webpSuffix = suffix.replace(/\.png$/, '.webp');
+  const webpKey = Object.keys(skinUrls).find((k) => k.endsWith(webpSuffix));
+  if (webpKey) return skinUrls[webpKey];
+  const key = Object.keys(skinUrls).find((k) => k.endsWith(suffix));
+  return key ? skinUrls[key] : '';
 }
 
 function skinThumbSrc(skin: Skin): string {
   return assetUrl(skin.thumb);
 }
 
-/** Per-pose PNG when present, otherwise the skin thumb (static skins). */
+/** Per-pose sprite when present (WebP preferred), otherwise the skin thumb. */
 function skinPoseSrc(skinId: string, pose: string): string {
-  const poseSrc = assetUrl(`./skins/${skinId}/${pose}.png`);
-  if (poseSrc) return poseSrc;
+  const webp = assetUrl(`./skins/${skinId}/${pose}.webp`);
+  if (webp) return webp;
+  const png = assetUrl(`./skins/${skinId}/${pose}.png`);
+  if (png) return png;
   const skin = SKINS.find((s) => s.id === skinId);
   return skin ? skinThumbSrc(skin) : '';
 }
@@ -62,14 +71,19 @@ export function skinThumbUrl(id: string): string {
   return skin ? skinThumbSrc(skin) : '';
 }
 
-/** Kenney environment sprites + per-pose aliases for each runner skin. */
-export function sheetDefs(): Record<string, SheetDef> {
+/** Kenney environment sprites (small — load first for backgrounds/obstacles). */
+export function kenneySheetDefs(): Record<string, SheetDef> {
   const defs: Record<string, SheetDef> = {};
-  for (const [path, url] of Object.entries(urls)) {
-    if (!path.includes('/kenney/')) continue;
+  for (const [path, url] of Object.entries(kenneyUrls)) {
     const name = path.slice(path.indexOf('/kenney/') + '/kenney/'.length, -'.png'.length);
     defs[name] = { src: url };
   }
+  return defs;
+}
+
+/** Runner skin pose sprites (WebP — load after Kenney). */
+export function skinSheetDefs(): Record<string, SheetDef> {
+  const defs: Record<string, SheetDef> = {};
   for (const skin of SKINS) {
     for (const pose of POSES) {
       const src = skinPoseSrc(skin.id, pose);
@@ -78,4 +92,9 @@ export function sheetDefs(): Record<string, SheetDef> {
     }
   }
   return defs;
+}
+
+/** Kenney environment sprites + per-pose aliases for each runner skin. */
+export function sheetDefs(): Record<string, SheetDef> {
+  return { ...kenneySheetDefs(), ...skinSheetDefs() };
 }
