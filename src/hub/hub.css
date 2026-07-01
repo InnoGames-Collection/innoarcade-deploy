@@ -59,8 +59,6 @@ body {
 .section-title { color: var(--text); }
 .section-eyebrow { color: var(--accent); }
 .cat-head h3 { color: var(--text); }
-.games-head .section-title { color: var(--text); }
-
 /* ---- top bar ---- */
 .topbar {
   position: sticky;
@@ -400,14 +398,31 @@ body {
 .ca-sub { font-size: 0.8rem; opacity: 0.92; }
 .ca-pot { font-weight: 900; font-size: 1.15rem; white-space: nowrap; }
 
-/* games toolbar — segmented filter + search */
-.games-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.8rem; margin-bottom: 1rem; }
-.games-head .section-title { margin-bottom: 0; }
-.games-tools { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+/* games toolbar — Tournament / Free tabs + search (no section heading) */
+.games-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+.games-head .seg { flex-shrink: 0; }
 .seg { display: inline-flex; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
 .seg-btn { border: none; background: none; color: var(--muted); font: inherit; font-size: 0.84rem; font-weight: 700; padding: 0.34rem 0.85rem; border-radius: 999px; cursor: pointer; white-space: nowrap; }
 .seg-btn.active { background: var(--accent); color: #fff; }
-.game-search { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 0.42rem 0.9rem; font: inherit; font-size: 0.86rem; width: 180px; color: var(--text); }
+.game-search {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.42rem 0.9rem;
+  font: inherit;
+  font-size: 0.86rem;
+  width: min(220px, 100%);
+  flex: 1 1 140px;
+  min-width: 0;
+  color: var(--text);
+}
 .game-search:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
 
 /* Light-green game cards: a soft green cover with a white "app icon" tile, so
@@ -533,9 +548,9 @@ html, body { max-width: 100%; overflow-x: hidden; }
   .bn-ico { font-size: 1.2rem; line-height: 1; }
   .bn-item.active { color: var(--accent); }
   .hub-main { padding-bottom: 4.5rem; }
-  .games-tools { width: 100%; }
-  .game-search { width: 100%; flex: 1; }
-  .seg { flex: 1; }
+  .games-head { flex-direction: column; align-items: stretch; }
+  .games-head .seg { width: 100%; }
+  .game-search { width: 100%; }
   .seg-btn { flex: 1; text-align: center; }
 }
 

@@ -31,16 +31,13 @@
 
       <section id="playerBar" class="player-bar-section" aria-label="Your balances"></section>
 
-      <section id="games" class="games-section">
+      <section id="games" class="games-section" aria-label="Games">
         <div class="games-head">
-          <h2 class="section-title">🎮 <span data-i18n="hub.available">Available games</span></h2>
-          <div class="games-tools">
-            <div class="seg" id="gameSeg" role="tablist">
-              <button class="seg-btn active" data-filter="tournament" data-i18n="hub.tournament">Tournament</button>
-              <button class="seg-btn" data-filter="free" data-i18n="arc.free">Free</button>
-            </div>
-            <input id="gameSearch" class="game-search" type="search" aria-label="Search games" />
+          <div class="seg" id="gameSeg" role="tablist" aria-label="Game categories">
+            <button class="seg-btn active" data-filter="tournament" data-i18n="hub.tournament">Tournament</button>
+            <button class="seg-btn" data-filter="free" data-i18n="arc.free">Free</button>
           </div>
+          <input id="gameSearch" class="game-search" type="search" data-i18n-placeholder="hub.searchGames" placeholder="Search games" aria-label="Search games" />
         </div>
         <div id="gameGrid"></div>
       </section>
