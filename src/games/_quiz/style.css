@@ -1,12 +1,12 @@
-/* Ethiopian Quiz — hub free-game shell + quiz card */
+/* Shared free-quiz shell — continuous timed MCQ */
 
 html,
-body {
+body.quiz-shell {
   height: 100%;
   overflow: hidden;
 }
 
-body.game-shell[data-game="ethiopian-quiz"] {
+body.game-shell.quiz-shell {
   padding: calc(10px + env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom));
   box-sizing: border-box;
   touch-action: manipulation;
@@ -18,7 +18,7 @@ body.game-shell[data-game="ethiopian-quiz"] {
   min-height: 100dvh;
 }
 
-.eq-stage {
+.fq-stage {
   position: relative;
   width: min(100%, 480px);
   height: fit-content;
@@ -27,7 +27,7 @@ body.game-shell[data-game="ethiopian-quiz"] {
   margin: auto;
 }
 
-.eq-backdrop {
+.fq-backdrop {
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -38,7 +38,7 @@ body.game-shell[data-game="ethiopian-quiz"] {
   z-index: 0;
 }
 
-.eq-playframe {
+.fq-playframe {
   position: relative;
   z-index: 4;
   display: flex;
@@ -54,7 +54,7 @@ body.game-shell[data-game="ethiopian-quiz"] {
   box-sizing: border-box;
 }
 
-.eq-stage > .game-overlay {
+.fq-stage > .game-overlay {
   z-index: 8;
 }
 
@@ -62,7 +62,7 @@ body.game-shell[data-game="ethiopian-quiz"] {
   z-index: 12;
 }
 
-#closeBtn {
+.fq-playframe #closeBtn {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -70,7 +70,7 @@ body.game-shell[data-game="ethiopian-quiz"] {
   pointer-events: auto;
 }
 
-.eq-stats {
+.fq-stats {
   display: flex;
   width: 100%;
   flex-shrink: 0;
@@ -81,7 +81,7 @@ body.game-shell[data-game="ethiopian-quiz"] {
   overflow: hidden;
 }
 
-.eq-stat {
+.fq-stat {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -91,7 +91,7 @@ body.game-shell[data-game="ethiopian-quiz"] {
   border-right: 1px solid #e6efdc;
 }
 
-.eq-stat-icon {
+.fq-stat-icon {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -101,20 +101,20 @@ body.game-shell[data-game="ethiopian-quiz"] {
   color: var(--game-accent);
 }
 
-.eq-stat-icon svg {
+.fq-stat-icon svg {
   width: 18px;
   height: 18px;
 }
 
-.eq-stat-score .eq-stat-icon {
+.fq-stat-score .fq-stat-icon {
   color: var(--shell-blue);
 }
 
-.eq-stat:last-child {
+.fq-stat:last-child {
   border-right: none;
 }
 
-.eq-stat-label {
+.fq-stat-label {
   font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -122,18 +122,18 @@ body.game-shell[data-game="ethiopian-quiz"] {
   color: var(--shell-muted);
 }
 
-.eq-stat-value {
+.fq-stat-value {
   font-size: 1rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: var(--game-accent);
 }
 
-.eq-stat-score .eq-stat-value {
+.fq-stat-score .fq-stat-value {
   color: var(--shell-blue);
 }
 
-.eq-card {
+.fq-card {
   flex: 1;
   min-height: 0;
   background: #ffffff;
@@ -147,21 +147,28 @@ body.game-shell[data-game="ethiopian-quiz"] {
   overflow-y: auto;
 }
 
-.eq-question {
+.fq-question {
   font-size: clamp(1.05rem, 4.2vw, 1.25rem);
   line-height: 1.35;
   margin: 0;
   min-height: 2.4em;
   color: var(--shell-text);
+  white-space: pre-line;
 }
 
-.eq-options {
+.fq-options {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.eq-opt {
+.fq-options.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.fq-opt {
   text-align: left;
   padding: 0.85rem 1rem;
   border: 1.5px solid #e6efdc;
@@ -175,41 +182,33 @@ body.game-shell[data-game="ethiopian-quiz"] {
   transition: border-color 0.12s, background 0.12s, transform 0.08s;
 }
 
-.eq-opt:hover {
+.fq-opt:hover {
   border-color: var(--game-accent);
 }
 
-.eq-opt:active {
+.fq-opt:active {
   transform: scale(0.99);
 }
 
-.eq-opt.ok {
+.fq-opt.ok {
   border-color: #1f9d55;
   background: #e7f8ee;
   color: #156b3a;
 }
 
-.eq-opt.bad {
+.fq-opt.bad {
   border-color: #d64545;
   background: #fdeaea;
   color: #a82626;
 }
 
-.eq-message {
-  min-height: 1.4em;
-  font-weight: 800;
-  font-size: 1rem;
-  text-align: center;
-  color: var(--shell-text);
-}
-
-.eq-hud {
+.fq-hud {
   display: flex;
   justify-content: center;
   padding-top: 2px;
 }
 
-.eq-pause-btn {
+.fq-pause-btn {
   border: none;
   border-radius: 999px;
   padding: 0.55rem 1.4rem;
@@ -221,7 +220,7 @@ body.game-shell[data-game="ethiopian-quiz"] {
   cursor: pointer;
 }
 
-.eq-over-summary {
+.fq-over-summary {
   margin: 0;
   font-size: 0.9rem;
   color: var(--shell-muted);
