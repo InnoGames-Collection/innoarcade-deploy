@@ -312,7 +312,7 @@ const WIN_SCORE: Record<string, number> = {
   'candy-crunch': 100, 'dot-link': 50, 'brick-blitz': 100, 'fruit-slice': 300,
   'sky-hopper': 30, 'bubble-pop': 100,
   'ethiopian-quiz': 60, 'spell': 70, 'vocab': 70, 'logic': 70, 'rhyme': 30,
-  'tap-game': 5,
+  'tap-game': 5, 'crosssum': 10, 'target24': 3, 'sequence': 5,
 };
 for (const g of CATALOG) {
   if (WIN_SCORE[g.id] != null) g.play = { ...(g.play ?? {}), winScore: WIN_SCORE[g.id] };

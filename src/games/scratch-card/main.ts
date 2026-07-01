@@ -1,22 +1,16 @@
-// Scratch Card — a chance game a built-in GoPlay game (free mode).
-// Outcome is decided locally with a CSPRNG at the configured win rate (the old
-// build trusted a forgeable server flag). The host records the result.
+// Scratch Card — chance scratch game with hub casual shell.
 
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
+import '../_casual/style.css';
 import './style.css';
 import { applyTranslations, getLang, t } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { createHost } from '../../platform/gameHost';
-import { ensureToast, paintInlineReward, renderFreeHudHtml, startFreeRound } from '../../platform/freeGameShell';
+import { wireFreeCasualShell } from '../../platform/freeGameShell';
 
 const host = createHost('scratch-card');
-
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
-
-const freeHud = $('#freeHud');
-const runReward = $('#runReward');
-const toast = ensureToast('scratch-card-toast');
 
 function chance(ratePct: number): boolean {
   const buf = new Uint32Array(1);
@@ -43,12 +37,11 @@ let timeLeft = 6.0;
 let timerInterval: ReturnType<typeof setInterval> | null = null;
 let isWin = false;
 let slots: string[] = [];
+let runStart = 0;
 
 const SYMBOLS = ['💎', '⭐', '💰', '🍒', '🍀', '🍎'];
 
-function mountFreeHud(): void {
-  freeHud.innerHTML = renderFreeHudHtml(host);
-}
+const shell = wireFreeCasualShell(host, () => initGame());
 
 function initGame(): void {
   if (timerInterval) clearInterval(timerInterval);
@@ -56,7 +49,6 @@ function initGame(): void {
   hasReported = false;
   gameActive = false;
   timeLeft = 6.0;
-  runReward.innerHTML = '';
 
   timerBar.style.width = '100%';
   timerBar.style.background = 'linear-gradient(90deg, #ff4444, #ff8800)';
@@ -68,6 +60,7 @@ function initGame(): void {
   const h = canvas.offsetHeight || 185;
   canvas.width = w * 2;
   canvas.height = h * 2;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.scale(2, 2);
   ctx.fillStyle = '#5b6d80';
   ctx.fillRect(0, 0, w, h);
@@ -117,10 +110,10 @@ function initGame(): void {
   });
 }
 
-async function startBlastTimer(): Promise<void> {
-  if (gameActive) return;
-  if (!(await startFreeRound(host, toast))) return;
+function startBlastTimer(): void {
+  if (gameActive || isScratched) return;
   gameActive = true;
+  runStart = Date.now();
   resetBtn.disabled = true;
   resetBtn.textContent = t('sc.scratchNow');
   message.textContent = t('sc.hurry');
@@ -152,8 +145,6 @@ function triggerBlastLoss(): void {
   sfx.crash();
   message.textContent = t('sc.blasted');
   message.style.color = '#ff4444';
-  resetBtn.disabled = false;
-  resetBtn.textContent = t('arc.playAgain');
   void report(false);
 }
 
@@ -209,28 +200,25 @@ function checkRevealed(): void {
       message.textContent = t('sc.noMatch');
       message.style.color = '#aaa';
     }
-    resetBtn.disabled = false;
-    resetBtn.textContent = t('arc.playAgain');
     void report(isWin);
   }
 }
 
-async function report(win: boolean): Promise<void> {
+function report(win: boolean): void {
   if (hasReported) return;
   hasReported = true;
-  await paintInlineReward(host, runReward, win ? host.winPoints : 0, win);
+  const summary = message.textContent;
+  shell.finishPlay(win ? host.winPoints : 0, win, summary ?? '', Date.now() - runStart);
 }
 
-canvas.addEventListener('mousedown', () => { if (!gameActive && !isScratched) void startBlastTimer(); });
-canvas.addEventListener('touchstart', () => { if (!gameActive && !isScratched) void startBlastTimer(); });
+canvas.addEventListener('mousedown', () => { if (!gameActive && !isScratched) startBlastTimer(); });
+canvas.addEventListener('touchstart', () => { if (!gameActive && !isScratched) startBlastTimer(); });
 canvas.addEventListener('mousemove', (e) => { if (e.buttons === 1) scratch(e); });
 canvas.addEventListener('touchmove', (e) => { e.preventDefault(); scratch(e); }, { passive: false });
 resetBtn.addEventListener('click', () => {
-  if (!gameActive && !isScratched) void startBlastTimer();
-  else initGame();
+  if (!gameActive && !isScratched) startBlastTimer();
 });
 
 document.documentElement.lang = getLang();
 applyTranslations();
-mountFreeHud();
-initGame();
+shell.refreshMenu();

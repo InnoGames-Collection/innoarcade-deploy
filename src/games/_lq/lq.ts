@@ -5,13 +5,13 @@
 // GoPlay GameHost (server-only points), not a local store.
 
 import '../../styles/game-shell.css';
+import '../_casual/style.css';
 import { sfx } from '../../engine/audio';
-import { renderRunRewardHtml } from '../../platform/freeGameShell';
+import { renderRunRewardHtml, wireFreeCasualShell } from '../../platform/freeGameShell';
+import { applyTranslations, getLang } from '../../i18n';
 import { createHost, type FinishResult, type GameHost } from '../../platform/gameHost';
 import { promptIfSessionExpired } from '../../platform/sessionAuth';
 import { isConfigured } from '../../platform/supabase';
-
-// --- DOM helper -------------------------------------------------------------
 type Attrs = Record<string, string | EventListenerOrEventListenerObject>;
 type Child = Node | string | null | undefined | Child[];
 
@@ -191,7 +191,7 @@ export function formatResultBody(res: FinishResult | null): string {
   return res ? renderRunRewardHtml(res) : '';
 }
 
-/** Paint the stage-bottom #runReward mount (game-shell HTML). */
+/** Paint the stage-bottom #runReward mount (legacy inline panels). */
 export function showRunReward(res: FinishResult | null): void {
   const mount = document.getElementById('runReward');
   if (!mount) return;
@@ -200,9 +200,32 @@ export function showRunReward(res: FinishResult | null): void {
   mount.classList.toggle('hidden', !html);
 }
 
-// Boot a native LexiQuest game inside the free runner shell (game-shell HTML).
+type LQFinishFn = (score: number, isWin: boolean, summary?: string, durationMs?: number) => void;
+let lqFinish: LQFinishFn | null = null;
+
+/** Report a completed brain-game run to the hub game-over overlay. */
+export function finishLQRound(
+  score: number,
+  isWin: boolean,
+  summary = '',
+  durationMs = 0,
+): void {
+  lqFinish?.(score, isWin, summary, durationMs);
+}
+
+/** Boot a native LexiQuest brain game inside the free hub shell. */
 export function mountLQ(gameId: string, render: (mount: HTMLElement) => void): void {
   activeHost = createHost(gameId);
-  const mount = document.getElementById('lq-mount');
-  if (mount) render(mount);
+  const shell = wireFreeCasualShell(activeHost, () => {
+    const mount = document.getElementById('lq-mount');
+    if (!mount) return;
+    mount.innerHTML = '';
+    render(mount);
+  });
+  lqFinish = (score, isWin, summary, durationMs) => {
+    shell.finishPlay(score, isWin, summary, durationMs);
+  };
+  document.documentElement.lang = getLang();
+  applyTranslations();
+  shell.refreshMenu();
 }

@@ -16,7 +16,14 @@
   --lq-shadow: 0 8px 22px rgba(47, 124, 14, 0.12);
 }
 
+.fc-playframe #lq-mount {
+  max-width: 100%;
+  margin: 0;
+  padding: 0 0 8px;
+}
+
 #lq-mount { max-width: 980px; margin: 0 auto; padding: 6px 12px 40px; color: var(--lq-text); }
+
 .lq-tagline { text-align: center; color: var(--lq-text-dim); margin: 2px 0 6px; font-size: 14px; }
 
 .type-catcher { position: absolute; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; font-size: 16px; }

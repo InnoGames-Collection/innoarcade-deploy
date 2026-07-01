@@ -1,22 +1,16 @@
-// Spin Wheel — a chance game a built-in GoPlay game.
-// Hold to charge spin speed, release to spin. The landing segment is decided by
-// a CSPRNG at the configured win rate; the wheel animation is steered to match.
+// Spin Wheel — hold-to-charge wheel with hub casual shell.
 
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
+import '../_casual/style.css';
 import './style.css';
 import { applyTranslations, getLang, t } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { createHost } from '../../platform/gameHost';
-import { ensureToast, paintInlineReward, renderFreeHudHtml, startFreeRound } from '../../platform/freeGameShell';
+import { wireFreeCasualShell } from '../../platform/freeGameShell';
 
 const host = createHost('spin-wheel');
-
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
-
-const freeHud = $('#freeHud');
-const runReward = $('#runReward');
-const toast = ensureToast('spin-wheel-toast');
 
 function chance(ratePct: number): boolean {
   const buf = new Uint32Array(1);
@@ -52,9 +46,19 @@ let currentRotation = 0;
 let isHolding = false;
 let spinSpeed = 0;
 let spinInterval: ReturnType<typeof setInterval> | null = null;
+let runStart = 0;
 
-function mountFreeHud(): void {
-  freeHud.innerHTML = renderFreeHudHtml(host);
+const shell = wireFreeCasualShell(host, resetRound);
+
+function resetRound(): void {
+  isSpinning = false;
+  isHolding = false;
+  spinSpeed = 0;
+  if (spinInterval) clearInterval(spinInterval);
+  spinBtn.disabled = false;
+  message.textContent = t('sw.holdStart');
+  message.style.color = '#ffffff';
+  drawWheel();
 }
 
 function drawWheel(): void {
@@ -116,11 +120,10 @@ function drawWheel(): void {
   ctx.fill();
 }
 
-async function startHolding(e: Event): Promise<void> {
+function startHolding(e: Event): void {
   if (isSpinning || isHolding) return;
   e.preventDefault();
-  if (!(await startFreeRound(host, toast))) return;
-  runReward.innerHTML = '';
+  runStart = Date.now();
   isHolding = true;
   spinSpeed = 0;
   sfx.click();
@@ -170,18 +173,21 @@ function spin(speed: number): void {
       canvas.style.transform = `rotate(${finalRotation}deg)`;
       setTimeout(() => {
         canvas.style.transition = '';
+        let summary: string;
         if (isWin) {
-          message.textContent = t('sw.won').replace('{p}', String(host.winPoints));
+          summary = t('sw.won').replace('{p}', String(host.winPoints));
+          message.textContent = summary;
           message.style.color = '#D18A04';
           sfx.coin();
         } else {
-          message.textContent = t('sw.tryAgain');
+          summary = t('sw.tryAgain');
+          message.textContent = summary;
           message.style.color = '#ffffff';
           sfx.crash();
         }
-        void paintInlineReward(host, runReward, isWin ? 1 : 0, isWin);
+        shell.finishPlay(isWin ? 1 : 0, isWin, summary, Date.now() - runStart);
         isSpinning = false;
-        spinBtn.disabled = false;
+        spinBtn.disabled = true;
         spinSpeed = 0;
       }, 1900);
     } else {
@@ -191,14 +197,12 @@ function spin(speed: number): void {
   }, 30);
 }
 
-spinBtn.addEventListener('mousedown', (e) => void startHolding(e));
-spinBtn.addEventListener('touchstart', (e) => void startHolding(e), { passive: false });
+spinBtn.addEventListener('mousedown', (e) => startHolding(e));
+spinBtn.addEventListener('touchstart', (e) => startHolding(e), { passive: false });
 window.addEventListener('mouseup', releaseSpin);
 window.addEventListener('touchend', releaseSpin);
 
 document.documentElement.lang = getLang();
 applyTranslations();
-mountFreeHud();
-message.textContent = t('sw.holdStart');
-drawWheel();
+shell.refreshMenu();
 window.addEventListener('resize', drawWheel);

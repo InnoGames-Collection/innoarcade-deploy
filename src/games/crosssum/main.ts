@@ -1,7 +1,7 @@
 // Nine Sums — place 1-9 once each so every row and column hits its sum. Native GoPlay game.
 import '../../styles/base.css';
 import '../_lq/lq.css';
-import { el, toast, modal, recordResultAsync, formatResultBody, showRunReward, mulberry32, dayNumber, shuffled, sound, mountLQ } from '../_lq/lq';
+import { el, toast, modal, finishLQRound, mulberry32, shuffled, sound, mountLQ } from '../_lq/lq';
 
 function render(mount: HTMLElement): void {
   let cleanup: (() => void) | null = null;
@@ -88,19 +88,7 @@ function render(mount: HTMLElement): void {
         [0, 1, 2].every((c) => board[0][c] + board[1][c] + board[2][c] === colSums[c]);
       if (ok) {
         over = true; sound('win');
-        void (async () => {
-          const res = await recordResultAsync('crosssum', { won: true, score: 10 });
-          showRunReward(res);
-          const reward = formatResultBody(res);
-          modal({
-            title: '🎉 All sums match!',
-            body: `Nine digits, six sums, zero mistakes.${reward ? `<div class="shell-run-reward">${reward}</div>` : ''}`,
-            actions: [
-              { label: 'New puzzle', primary: true, onClick: () => newRound(Math.floor(Math.random() * 1e9)) },
-              { label: 'Close' },
-            ],
-          });
-        })();
+        finishLQRound(10, true, 'All sums match!');
       } else {
         sound('bad');
         fb.textContent = "All cells filled, but the sums don't match yet.";
@@ -118,7 +106,7 @@ function render(mount: HTMLElement): void {
     return () => document.removeEventListener('keydown', physicalKey);
   }
 
-  newRound(dayNumber() * 911 + 1);
+  newRound(Math.floor(Math.random() * 1e9));
 }
 
 mountLQ('crosssum', render);

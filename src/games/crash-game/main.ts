@@ -1,24 +1,16 @@
-// Crash Game — a built-in GoPlay game.
-//
-// A rocket climbs a rising multiplier; cash out before it crashes. The crash
-// point is decided up-front by a CSPRNG at the configured win rate. The reward
-// scales with the multiplier the player banks.
+// Crash Game — rocket multiplier with hub casual shell.
 
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
+import '../_casual/style.css';
 import './style.css';
 import { applyTranslations, getLang, t } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { createHost } from '../../platform/gameHost';
-import { ensureToast, paintInlineReward, renderFreeHudHtml, startFreeRound } from '../../platform/freeGameShell';
+import { wireFreeCasualShell } from '../../platform/freeGameShell';
 
 const host = createHost('crash-game');
-
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
-
-const freeHud = $('#freeHud');
-const runReward = $('#runReward');
-const toast = ensureToast('crash-game-toast');
 
 function chance(ratePct: number): boolean {
   const buf = new Uint32Array(1);
@@ -58,10 +50,9 @@ let isExploding = false;
 let animationFrameId: number | null = null;
 let crashHistory = [1.45, 2.84, 1.08, 4.12, 1.67];
 let cashoutMultiplier = 1.0;
+let runStart = 0;
 
-function mountFreeHud(): void {
-  freeHud.innerHTML = renderFreeHudHtml(host);
-}
+const shell = wireFreeCasualShell(host, resetRound);
 
 function drawHistory(): void {
   const histEl = $('#cg-history');
@@ -267,19 +258,46 @@ function animate(): void {
   animationFrameId = requestAnimationFrame(animate);
 }
 
-async function startGame(): Promise<void> {
+function resetRound(): void {
+  if (gameInterval) clearInterval(gameInterval);
+  isPlaying = false;
+  hasCashedOut = false;
+  isExploding = false;
+  multiplier = 1.0;
+  cashoutMultiplier = 1.0;
+  autoInput.disabled = false;
+  multEl.textContent = '1.00x';
+  multEl.style.color = '#fff';
+  multEl.style.textShadow = '0 0 20px rgba(209,138,4,0.5)';
+  message.textContent = t('cg.instr');
+  btn.textContent = t('cg.start');
+  btn.classList.remove('cashout');
+  btn.disabled = false;
+  thrusterParticles = [];
+  explosionParticles = [];
+  pathPoints = [];
+  scrollX = 0;
+  scrollY = 0;
+  resizeCanvas();
+  rX = canvas.width * 0.08;
+  rY = canvas.height * 0.85;
+  targetRX = rX;
+  targetRY = rY;
+}
+
+function startGame(): void {
   if (isPlaying) {
-    cashOut();
+    void cashOut();
     return;
   }
-  if (!(await startFreeRound(host, toast))) return;
-  runReward.innerHTML = '';
+  if (btn.disabled) return;
 
   isPlaying = true;
   hasCashedOut = false;
   isExploding = false;
   multiplier = 1.0;
   cashoutMultiplier = 1.0;
+  runStart = Date.now();
 
   const isWin = chance(host.winRate);
   crashPoint = isWin ? 1.8 + Math.random() * 8.2 : 1.01 + Math.random() * 1.49;
@@ -315,10 +333,10 @@ async function startGame(): Promise<void> {
 
     const autoVal = parseFloat(autoInput.value);
     if (!isNaN(autoVal) && autoVal > 1.0 && multiplier >= autoVal) {
-      cashOut();
+      void cashOut();
       return;
     }
-    if (multiplier >= crashPoint) crash();
+    if (multiplier >= crashPoint) void crash();
   }, 75);
 }
 
@@ -340,10 +358,10 @@ async function cashOut(): Promise<void> {
     .replace('{p}', String(points));
   multEl.style.color = '#D18A04';
   multEl.style.textShadow = '0 0 30px rgba(209,138,4,0.8)';
-  btn.textContent = t('arc.playAgain');
+  btn.disabled = true;
   btn.classList.remove('cashout');
 
-  await paintInlineReward(host, runReward, points, true);
+  shell.finishPlay(points, true, message.textContent, Date.now() - runStart);
 }
 
 async function crash(): Promise<void> {
@@ -359,7 +377,7 @@ async function crash(): Promise<void> {
   message.textContent = t('cg.crashed');
   multEl.style.color = '#fca5a5';
   multEl.style.textShadow = '0 0 35px rgba(252,165,165,0.8)';
-  btn.textContent = t('arc.playAgain');
+  btn.disabled = true;
   btn.classList.remove('cashout');
 
   for (let i = 0; i < 75; i++) {
@@ -377,10 +395,10 @@ async function crash(): Promise<void> {
     });
   }
 
-  await paintInlineReward(host, runReward, 0, false);
+  shell.finishPlay(0, false, message.textContent, Date.now() - runStart);
 }
 
-btn.addEventListener('click', () => void startGame());
+btn.addEventListener('click', () => startGame());
 window.addEventListener('resize', () => {
   resizeCanvas();
   initStars();
@@ -388,9 +406,7 @@ window.addEventListener('resize', () => {
 
 document.documentElement.lang = getLang();
 applyTranslations();
-mountFreeHud();
-message.textContent = t('cg.instr');
-btn.textContent = t('cg.start');
+shell.refreshMenu();
 resizeCanvas();
 initStars();
 drawHistory();

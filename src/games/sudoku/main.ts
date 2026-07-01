@@ -1,7 +1,7 @@
 // Mini Sudoku — 6×6 grid, 2×3 boxes, uniqueness-checked puzzles. Native GoPlay game.
 import '../../styles/base.css';
 import '../_lq/lq.css';
-import { el, toast, modal, recordResultAsync, formatResultBody, showRunReward, mulberry32, dayNumber, shuffled, sound, mountLQ } from '../_lq/lq';
+import { el, toast, modal, finishLQRound, mulberry32, shuffled, sound, mountLQ } from '../_lq/lq';
 
 const N = 6, BR = 2, BC = 3;
 function boxOf(r: number, c: number): number { return Math.floor(r / BR) * (N / BC) + Math.floor(c / BC); }
@@ -153,17 +153,8 @@ function render(mount: HTMLElement): void {
       const secs = Math.round((Date.now() - t0) / 1000);
       sound('win');
       const score = Math.max(1, 30 - Math.floor(secs / 30));
-      const res = await recordResultAsync('sudoku', { won: true, score });
-      showRunReward(res);
-      const reward = formatResultBody(res);
-      modal({
-        title: '🎉 Solved!',
-        body: `Completed the ${difficulty} puzzle in <b>${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}</b>.${reward ? `<div class="shell-run-reward">${reward}</div>` : ''}`,
-        actions: [
-          { label: 'New puzzle', primary: true, onClick: () => newRound(Math.floor(Math.random() * 1e9)) },
-          { label: 'Close' },
-        ],
-      });
+      const timeStr = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+      finishLQRound(score, true, `Solved ${difficulty} in ${timeStr}`, Date.now() - t0);
     }
 
     function physicalKey(e: KeyboardEvent): void {
@@ -176,7 +167,7 @@ function render(mount: HTMLElement): void {
     return () => document.removeEventListener('keydown', physicalKey);
   }
 
-  newRound(dayNumber() * 5407 + 3);
+  newRound(Math.floor(Math.random() * 1e9));
 }
 
 mountLQ('sudoku', render);

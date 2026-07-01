@@ -1,7 +1,7 @@
 // Number Sequence — find the hidden rule, type the next number. Native GoPlay game.
 import '../../styles/base.css';
 import '../_lq/lq.css';
-import { el, toast, modal, keypad, mulberry32, dayNumber, randInt, sound, recordResultAsync, showRunReward, mountLQ } from '../_lq/lq';
+import { el, toast, modal, keypad, finishLQRound, mulberry32, randInt, sound, mountLQ } from '../_lq/lq';
 
 const ROUNDS = 8;
 
@@ -77,7 +77,7 @@ function render(mount: HTMLElement): void {
     }
 
     function nextRound(): void {
-      if (round >= ROUNDS) { void finish(); return; }
+      if (round >= ROUNDS) { finish(); return; }
       const level = Math.min(4, 1 + Math.floor(round / 2));
       const pool = GENERATORS.filter((g) => g.d === level);
       item = pool[Math.floor(rnd() * pool.length)].make(rnd);
@@ -114,15 +114,13 @@ function render(mount: HTMLElement): void {
       }
     }
 
-    async function finish(): Promise<void> {
+    function finish(): void {
       const won = score >= Math.ceil(ROUNDS * 0.6);
       sound(won ? 'win' : 'bad');
-      const res = await recordResultAsync('sequence', { won, score });
-      showRunReward(res);
-      card.innerHTML = '';
-      card.appendChild(el('p', { class: 'prompt', text: score === ROUNDS ? '🔢 Pattern master!' : `You solved ${score} of ${ROUNDS}` }));
-      card.appendChild(el('div', { class: 'mt' },
-        el('button', { class: 'btn primary', text: 'Play again', onclick: () => newRound(Math.floor(Math.random() * 1e9)) })));
+      const summary = score === ROUNDS
+        ? '🔢 Pattern master!'
+        : `You solved ${score} of ${ROUNDS}`;
+      finishLQRound(score, won, summary);
     }
 
     function physicalKey(e: KeyboardEvent): void {
@@ -133,7 +131,7 @@ function render(mount: HTMLElement): void {
     return () => document.removeEventListener('keydown', physicalKey);
   }
 
-  newRound(dayNumber() * 613 + 11);
+  newRound(Math.floor(Math.random() * 1e9));
 }
 
 mountLQ('sequence', render);

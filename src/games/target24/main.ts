@@ -1,7 +1,7 @@
 // Make 24 — combine four numbers with + − × ÷ to reach exactly 24. Native GoPlay game.
 import '../../styles/base.css';
 import '../_lq/lq.css';
-import { el, toast, modal, recordResultAsync, showRunReward, mulberry32, dayNumber, randInt, statsRow, sound, mountLQ } from '../_lq/lq';
+import { el, toast, modal, finishLQRound, mulberry32, randInt, sound, mountLQ } from '../_lq/lq';
 
 const TARGET = 24, ROUNDS = 5, EPS = 1e-9;
 
@@ -79,7 +79,7 @@ function render(mount: HTMLElement): void {
     }
 
     function nextRound(): void {
-      if (round >= ROUNDS) { void finish(); return; }
+      if (round >= ROUNDS) { finish(); return; }
       const vals = generate(rnd);
       nums = vals.map((v) => ({ val: v, label: String(v), used: false }));
       history = []; selIdx = -1; selOp = null;
@@ -149,23 +149,19 @@ function render(mount: HTMLElement): void {
       });
     }
 
-    async function finish(): Promise<void> {
+    function finish(): void {
       const won = solvedCount >= Math.ceil(ROUNDS * 0.6);
       sound(won ? 'win' : 'bad');
-      const res = await recordResultAsync('target24', { won, score: solvedCount });
-      showRunReward(res);
-      const q = mount.querySelector('.quiz-q')!;
-      q.innerHTML = '';
-      q.append(
-        el('p', { class: 'prompt', text: solvedCount === ROUNDS ? '🎯 Perfect round!' : `You solved ${solvedCount} of ${ROUNDS}` }),
-        statsRow([[solvedCount, 'solved'], [ROUNDS, 'puzzles']]),
-        el('div', { class: 'mt' }, el('button', { class: 'btn primary', text: 'Play again', onclick: () => newRound(Math.floor(Math.random() * 1e9)) })));
+      const summary = solvedCount === ROUNDS
+        ? '🎯 Perfect round!'
+        : `You solved ${solvedCount} of ${ROUNDS}`;
+      finishLQRound(solvedCount, won, summary);
     }
 
     return () => {};
   }
 
-  newRound(dayNumber() * 379 + 5);
+  newRound(Math.floor(Math.random() * 1e9));
 }
 
 mountLQ('target24', render);
