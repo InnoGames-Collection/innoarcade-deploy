@@ -1,23 +1,26 @@
-// Ethiopian Quiz — a knowledge/trivia game built for GoPlay.
-//
-// A round is 5 random multiple-choice questions about Ethiopia (EN + AM). The
-// score is the number answered correctly × 20 (so a perfect round = 100); a
-// "win" (≥ 3 correct) mints XP via the free game shell.
+// Ethiopian Quiz — free game with hub shell (menu / pause / game-over).
 
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
 import './style.css';
-import { applyTranslations, getLang } from '../../i18n';
+import { applyTranslations, getLang, t } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { createHost } from '../../platform/gameHost';
-import { ensureToast, paintInlineReward, renderFreeHudHtml, startFreeRound } from '../../platform/freeGameShell';
+import {
+  ensureToast,
+  renderFreeMenuHtml,
+  renderRunRewardHtml,
+  startFreeRound,
+  submitFreeRun,
+} from '../../platform/freeGameShell';
+import { promptIfSessionExpired } from '../../platform/sessionAuth';
+import { isConfigured } from '../../platform/supabase';
 
-const host = createHost('ethiopian-quiz');
+const GAME_ID = 'ethiopian-quiz';
+const host = createHost(GAME_ID);
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
-const freeHud = $('#freeHud');
-const runReward = $('#runReward');
-const toast = ensureToast('ethiopian-quiz-toast');
+type Phase = 'menu' | 'playing' | 'paused' | 'over';
 
 interface Q { en: string; am: string; opts: [string, string][]; answer: number; d: 1 | 2 | 3 }
 
@@ -59,18 +62,19 @@ const BANK: Q[] = [
 ];
 
 const STR = {
-  en: { title: 'Ethiopian Quiz', start: 'Start', next: 'Next', again: 'Play again',
-    correct: 'Correct! 🎉', wrong: 'Not quite.', q: 'Question', result: 'You scored',
-    of: 'of', timeup: '⏱ Time up!' },
-  am: { title: 'የኢትዮጵያ ጥያቄ', start: 'ጀምር', next: 'ቀጣይ', again: 'እንደገና ይጫወቱ',
-    correct: 'ትክክል! 🎉', wrong: 'አልተሳካም።', q: 'ጥያቄ', result: 'ያስመዘገቡት',
-    of: 'ከ', timeup: '⏱ ጊዜው አለቀ!' },
+  en: { correct: 'Correct! 🎉', wrong: 'Not quite.', timeup: '⏱ Time up!', of: 'of' },
+  am: { correct: 'ትክክል! 🎉', wrong: 'አልተሳካም።', timeup: '⏱ ጊዜው አለቀ!', of: 'ከ' },
 };
-const lang = (): 'en' | 'am' => (getLang() === 'am' ? 'am' : 'en');
-const s = (k: keyof typeof STR.en): string => STR[lang()][k];
 
 const ROUND = 5;
 const PER_Q_SECONDS = 10;
+const WIN_CORRECT = 3;
+
+let phase: Phase = 'menu';
+let starting = false;
+let sessionBest = 0;
+let toastT = 0;
+
 let round: Q[] = [];
 let idx = 0;
 let correct = 0;
@@ -78,15 +82,72 @@ let locked = false;
 let roundStart = 0;
 let qTimer: ReturnType<typeof setInterval> | undefined;
 let qLeft = 0;
+let timerPaused = false;
 
+const toast = ensureToast('ethiopian-quiz-toast');
 const elQ = $('#eq-question');
 const elOpts = $('#eq-options');
 const elMsg = $('#eq-message');
-const elProg = $('#eq-progress');
-const startBtn = $('#eq-start') as HTMLButtonElement;
 
-function mountFreeHud(): void {
-  freeHud.innerHTML = renderFreeHudHtml(host);
+const lang = (): 'en' | 'am' => (getLang() === 'am' ? 'am' : 'en');
+const s = (k: keyof typeof STR.en): string => STR[lang()][k];
+
+function showToast(msg: string): void {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  clearTimeout(toastT);
+  toastT = window.setTimeout(() => el.classList.add('hidden'), 2800);
+}
+
+function refreshMenu(): void {
+  $('#freeMenu').innerHTML = renderFreeMenuHtml(host, sessionBest);
+}
+
+function showMenu(): void {
+  $('#menuOverlay').classList.remove('hidden');
+  $('#eqPlayFrame').classList.add('hidden');
+  $('#eqBackdrop').classList.remove('hidden');
+  hideOverOverlay();
+}
+
+function showGame(): void {
+  $('#menuOverlay').classList.add('hidden');
+  $('#eqPlayFrame').classList.remove('hidden');
+  $('#eqBackdrop').classList.add('hidden');
+}
+
+function setPhase(next: Phase): void {
+  phase = next;
+  if (next === 'menu') showMenu();
+  else showGame();
+  $('#closeBtn').classList.toggle('hidden', next === 'menu' || next === 'over');
+  $('#pauseOverlay').classList.toggle('hidden', next !== 'paused');
+}
+
+function showOverOverlay(score: number, correctCount: number, isRecord: boolean): void {
+  const overlay = $('#overOverlay');
+  $('#finalScore').textContent = score.toLocaleString();
+  $('#finalBest').textContent = sessionBest > 0 ? sessionBest.toLocaleString() : '—';
+  $('#eqOverSummary').textContent = `${correctCount} ${s('of')} ${ROUND}`;
+  $('#newBest').classList.toggle('hidden', !isRecord);
+  $('#runReward').innerHTML = '<span class="shell-rr-pending">…</span>';
+  $('#closeBtn').classList.add('hidden');
+  overlay.classList.remove('hidden');
+  overlay.setAttribute('aria-hidden', 'false');
+}
+
+function hideOverOverlay(): void {
+  const overlay = $('#overOverlay');
+  overlay.classList.add('hidden');
+  overlay.setAttribute('aria-hidden', 'true');
+}
+
+function updateStats(): void {
+  const score = correct * 20;
+  $('#eqStatQ').textContent = round.length ? `${idx + 1}/${round.length}` : '—';
+  $('#eqStatTime').textContent = phase === 'playing' && !locked ? `${Math.max(0, qLeft)}s` : '—';
+  $('#eqStatScore').textContent = String(score);
 }
 
 function pickRound(): Q[] {
@@ -98,96 +159,200 @@ function pickRound(): Q[] {
     const q = pool[d].pop() ?? pool[3].pop() ?? pool[2].pop() ?? pool[1].pop();
     if (q && !picked.includes(q)) picked.push(q);
   }
-  for (const q of shuffle(BANK)) { if (picked.length >= ROUND) break; if (!picked.includes(q)) picked.push(q); }
+  for (const q of shuffle(BANK)) {
+    if (picked.length >= ROUND) break;
+    if (!picked.includes(q)) picked.push(q);
+  }
   return picked.slice(0, ROUND).sort((a, b) => a.d - b.d);
 }
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
   return a;
 }
 
-async function startRound(): Promise<void> {
-  if (!(await startFreeRound(host, toast))) return;
-  runReward.innerHTML = '';
+function clearQTimer(): void {
+  if (qTimer) {
+    clearInterval(qTimer);
+    qTimer = undefined;
+  }
+  timerPaused = false;
+}
+
+function startQTimer(): void {
+  clearQTimer();
+  timerPaused = false;
+  qTimer = setInterval(() => {
+    if (phase !== 'playing' || locked) return;
+    qLeft--;
+    updateStats();
+    if (qLeft <= 0) timeUp();
+  }, 1000);
+}
+
+function beginQuiz(): void {
   round = pickRound();
-  idx = 0; correct = 0; locked = false; roundStart = Date.now();
-  startBtn.style.display = 'none';
+  idx = 0;
+  correct = 0;
+  locked = false;
+  roundStart = Date.now();
+  elMsg.textContent = '';
+  setPhase('playing');
   showQuestion();
 }
 
-function clearQTimer(): void { if (qTimer) { clearInterval(qTimer); qTimer = undefined; } }
-function startQTimer(): void {
-  qLeft = PER_Q_SECONDS;
-  renderProg();
-  qTimer = setInterval(() => { qLeft--; renderProg(); if (qLeft <= 0) timeUp(); }, 1000);
-}
-function renderProg(): void {
-  elProg.textContent = `${s('q')} ${idx + 1} / ${round.length}  ·  ⏱ ${Math.max(0, qLeft)}s`;
-}
-function timeUp(): void {
-  if (locked) return;
-  locked = true;
-  clearQTimer();
-  elMsg.textContent = s('timeup');
-  setTimeout(() => { idx++; if (idx < round.length) showQuestion(); else void finishRound(); }, 900);
-}
-
 function showQuestion(): void {
+  if (phase !== 'playing') return;
   locked = false;
   elMsg.textContent = '';
   const q = round[idx];
   elQ.textContent = lang() === 'am' ? q.am : q.en;
   const order = shuffle(q.opts.map((_, i) => i));
   elOpts.innerHTML = order.map((oi) =>
-    `<button class="eq-opt" data-i="${oi}">${lang() === 'am' ? q.opts[oi][1] : q.opts[oi][0]}</button>`).join('');
-  elOpts.querySelectorAll<HTMLButtonElement>('.eq-opt').forEach((b) =>
-    b.addEventListener('click', () => answer(Number(b.dataset.i), b)));
+    `<button type="button" class="eq-opt" data-i="${oi}">${lang() === 'am' ? q.opts[oi][1] : q.opts[oi][0]}</button>`,
+  ).join('');
+  elOpts.querySelectorAll<HTMLButtonElement>('.eq-opt').forEach((b) => {
+    b.addEventListener('click', () => answer(Number(b.dataset.i), b));
+  });
+  qLeft = PER_Q_SECONDS;
+  updateStats();
   startQTimer();
 }
 
+function timeUp(): void {
+  if (locked || phase !== 'playing') return;
+  locked = true;
+  clearQTimer();
+  elMsg.textContent = s('timeup');
+  updateStats();
+  setTimeout(() => advanceQuestion(), 900);
+}
+
 function answer(choice: number, btn: HTMLButtonElement): void {
-  if (locked) return;
+  if (locked || phase !== 'playing') return;
   locked = true;
   clearQTimer();
   const q = round[idx];
   const right = choice === q.answer;
-  if (right) { correct++; btn.classList.add('ok'); sfx.coin(); }
-  else {
-    btn.classList.add('bad'); sfx.click();
-    const correctBtn = elOpts.querySelector<HTMLButtonElement>(`.eq-opt[data-i="${q.answer}"]`);
-    correctBtn?.classList.add('ok');
+  if (right) {
+    correct++;
+    btn.classList.add('ok');
+    sfx.coin();
+  } else {
+    btn.classList.add('bad');
+    sfx.click();
+    elOpts.querySelector<HTMLButtonElement>(`.eq-opt[data-i="${q.answer}"]`)?.classList.add('ok');
   }
   elMsg.textContent = right ? s('correct') : s('wrong');
-  setTimeout(() => {
-    idx++;
-    if (idx < round.length) showQuestion();
-    else void finishRound();
-  }, 1100);
+  updateStats();
+  setTimeout(() => advanceQuestion(), 1100);
 }
 
-async function finishRound(): Promise<void> {
+function advanceQuestion(): void {
+  if (phase !== 'playing') return;
+  idx++;
+  if (idx < round.length) showQuestion();
+  else finishRound();
+}
+
+function finishRound(): void {
+  clearQTimer();
   const score = correct * 20;
-  const isWin = correct >= 3;
-  elProg.textContent = '';
-  elQ.textContent = `${s('result')} ${correct} ${s('of')} ${round.length}`;
-  elOpts.innerHTML = '';
-  elMsg.textContent = isWin ? `🎉 +${host.winPoints} ⭐` : '';
-  startBtn.textContent = s('again');
-  startBtn.style.display = '';
+  const isWin = correct >= WIN_CORRECT;
+  const isRecord = score > sessionBest;
+  if (isRecord) sessionBest = score;
+  refreshMenu();
   const timeMs = Date.now() - roundStart;
-  await paintInlineReward(host, runReward, score, isWin, timeMs);
+  elQ.textContent = '';
+  elOpts.innerHTML = '';
+  elMsg.textContent = '';
+  updateStats();
+  setPhase('over');
+  showOverOverlay(score, correct, isRecord);
+  void submitRun(score, isWin, timeMs, isRecord);
 }
 
-function applyLang(): void {
-  applyTranslations();
-  mountFreeHud();
-  $('#eq-title').textContent = s('title');
-  startBtn.textContent = s('start');
+async function submitRun(
+  score: number,
+  isWin: boolean,
+  durationMs: number,
+  isRecord: boolean,
+): Promise<void> {
+  const reward = $('#runReward');
+  if (!isConfigured()) {
+    reward.innerHTML = '';
+    $('#finalBest').textContent = sessionBest.toLocaleString();
+    return;
+  }
+  reward.innerHTML = '<span class="shell-rr-pending">…</span>';
+  const res = await submitFreeRun(host, score, isWin, durationMs);
+  if (!res) {
+    $('#finalBest').textContent = sessionBest.toLocaleString();
+    $('#newBest').classList.toggle('hidden', !isRecord);
+    if (await promptIfSessionExpired(showToast)) {
+      reward.innerHTML = `<span class="shell-rr-note">${t('td.sessionExpired')}</span>`;
+    } else {
+      reward.innerHTML = `<span class="shell-rr-note">${t('td.submitFailed')}</span>`;
+    }
+    return;
+  }
+  if (typeof res.best === 'number') sessionBest = Math.max(sessionBest, res.best);
+  $('#finalBest').textContent = sessionBest.toLocaleString();
+  $('#newBest').classList.toggle('hidden', !isRecord && !res.isRecord);
+  reward.innerHTML = renderRunRewardHtml(res);
+  refreshMenu();
 }
 
-startBtn.addEventListener('click', () => { void startRound(); });
+async function onPlayOrEnter(): Promise<void> {
+  if (starting || phase === 'playing' || phase === 'paused') return;
+  starting = true;
+  try {
+    clearQTimer();
+    if (!(await startFreeRound(host, toast))) return;
+    hideOverOverlay();
+    beginQuiz();
+  } finally {
+    starting = false;
+  }
+}
+
+function pauseQuiz(): void {
+  if (phase !== 'playing' || locked) return;
+  clearQTimer();
+  timerPaused = true;
+  setPhase('paused');
+}
+
+function resumeQuiz(): void {
+  if (phase !== 'paused') return;
+  setPhase('playing');
+  if (timerPaused && !locked && idx < round.length) {
+    timerPaused = false;
+    startQTimer();
+  }
+}
+
+async function restartFromPause(): Promise<void> {
+  if (phase !== 'paused') return;
+  hideOverOverlay();
+  await onPlayOrEnter();
+}
+
+$('#startBtn').addEventListener('click', () => void onPlayOrEnter());
+$('#againBtn').addEventListener('click', () => void onPlayOrEnter());
+$('#restartBtn').addEventListener('click', () => void restartFromPause());
+$('#resumeBtn').addEventListener('click', () => resumeQuiz());
+$('#pauseBtn').addEventListener('click', () => pauseQuiz());
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && phase === 'playing') pauseQuiz();
+});
 
 document.documentElement.lang = getLang();
-applyLang();
+applyTranslations();
+refreshMenu();
+setPhase('menu');

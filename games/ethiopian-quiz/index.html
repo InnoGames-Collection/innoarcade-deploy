@@ -7,25 +7,72 @@
     <title>Ethiopian Quiz — GoPlay</title>
   </head>
   <body class="game-shell" data-game="ethiopian-quiz">
-    <div id="stage">
-      <header class="topbar">
-        <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-        <span class="game-name">🇪🇹 <span id="eq-title">Ethiopian Quiz</span></span>
-      </header>
+    <div id="stage" class="eq-stage game-shell-stage">
+      <div id="eqBackdrop" class="eq-backdrop" aria-hidden="true"></div>
 
-      <div id="eq-wrapper">
-        <div id="freeHud"></div>
+      <div id="eqPlayFrame" class="eq-playframe hidden">
+        <button id="closeBtn" class="gp-close gp-close-corner hidden" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+
+        <div class="eq-stats">
+          <div class="eq-stat">
+            <span class="eq-stat-label" data-i18n="eq.question">Question</span>
+            <span class="eq-stat-value" id="eqStatQ">—</span>
+          </div>
+          <div class="eq-stat">
+            <span class="eq-stat-label" data-i18n="mm.time">Time</span>
+            <span class="eq-stat-value" id="eqStatTime">—</span>
+          </div>
+          <div class="eq-stat eq-stat-score">
+            <span class="eq-stat-label" data-i18n="td.score">Score</span>
+            <span class="eq-stat-value" id="eqStatScore">0</span>
+          </div>
+        </div>
 
         <div class="eq-card" id="eq-card">
-          <div class="eq-progress" id="eq-progress"></div>
           <h2 class="eq-question" id="eq-question">…</h2>
           <div class="eq-options" id="eq-options"></div>
           <div class="eq-message" id="eq-message"></div>
+        </div>
+
+        <div class="eq-hud">
+          <button type="button" id="pauseBtn" class="eq-pause-btn" data-i18n="td.pause">Pause</button>
+        </div>
+      </div>
+
+      <div id="menuOverlay" class="game-overlay">
+        <div class="game-panel panel-clean">
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <div class="shell-free-menu" id="freeMenu"></div>
+          <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
+        </div>
+      </div>
+
+      <div id="pauseOverlay" class="game-overlay hidden">
+        <div class="game-panel">
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <h2 data-i18n="td.paused">Paused</h2>
+          <button id="resumeBtn" class="btn primary" data-i18n="td.resume">Resume</button>
+          <button id="restartBtn" class="btn" data-i18n="td.restart">Play again</button>
+        </div>
+      </div>
+
+      <div id="overOverlay" class="game-overlay hidden" aria-hidden="true">
+        <div class="game-panel">
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <h2 data-i18n="td.gameOver">Game over</h2>
+          <p id="eqOverSummary" class="eq-over-summary"></p>
+          <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
+          <div class="shell-over-final">
+            <div class="shell-over-stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
+            <div class="shell-over-stat"><span data-i18n="td.best">Best</span><strong id="finalBest">—</strong></div>
+          </div>
           <div class="shell-run-reward" id="runReward"></div>
-          <button class="eq-btn" id="eq-start">Start</button>
+          <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
         </div>
       </div>
     </div>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
     <script type="module" src="/src/games/ethiopian-quiz/main.ts"></script>
   </body>
