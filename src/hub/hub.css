@@ -472,9 +472,9 @@ body {
 /* compact balance chips in topbar */
 .top-balances { display: flex; align-items: center; gap: 0.25rem; margin-inline: auto; }
 /* player balance bar (Level / Points / Coins) — sits under the promo banner */
-.player-bar-section { display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; }
+.player-bar-section { display: flex; justify-content: center; align-items: center; gap: 0.5rem; flex-wrap: nowrap; }
 .player-bar-section:empty { display: none; }
-.player-bar-section .bal-chip { font-size: 0.82rem; padding: 0.3rem 0.7rem; }
+.player-bar-section .bal-chip { font-size: 0.82rem; padding: 0.3rem 0.7rem; flex: 1 1 0; min-width: 0; justify-content: center; }
 .bal-chip { display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.7rem; font-weight: 600;
   padding: 0.13rem 0.45rem; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,0.85); white-space: nowrap; }
 .bal-chip .bal-lbl { font-weight: 500; opacity: 0.85; margin-right: 0.15rem; }
@@ -521,7 +521,9 @@ body {
   .brand { font-size: 1rem; }
   .brand-icon { width: 1.7rem; height: 1.7rem; font-size: 1rem; }
   .top-balances { margin-inline: auto 0; gap: 0.25rem; min-width: 0; }
-  .bal-chip { font-size: 0.62rem; padding: 0.16rem 0.38rem; gap: 0.16rem; }
+  .player-bar-section { gap: 0.28rem; padding-inline: 0.15rem; }
+  .player-bar-section .bal-chip { font-size: 0.58rem; padding: 0.18rem 0.32rem; gap: 0.12rem; }
+  .player-bar-section .bal-chip .bal-lbl { font-size: 0.58rem; }
   /* Level / Points / Coins are the player's primary readout — keep all three in
      the header on mobile (the KPI dashboard strip was removed). */
   .auth-btn { font-size: 0.78rem !important; padding: 0.34rem 0.7rem !important; }

@@ -305,9 +305,9 @@ function renderGames(): void {
   const host = $('#gameGrid');
   const q = gameQuery.trim().toLowerCase();
   const pool = orderedCatalog().filter((g) => {
-    if (g.mode !== gameFilter) return false;
-    if (q && !`${g.nameEn} ${g.nameAm} ${g.genreEn}`.toLowerCase().includes(q)) return false;
-    return true;
+    const matchesSearch = !q || `${g.nameEn} ${g.nameAm} ${g.genreEn} ${g.genreAm}`.toLowerCase().includes(q);
+    const matchesTab = q ? true : g.mode === gameFilter;
+    return matchesTab && matchesSearch;
   });
   host.innerHTML = pool.length
     ? `<div class="cat-shelf">${pool.map(gameCard).join('')}</div>`

@@ -3,12 +3,18 @@
 body.game-shell[data-game="memory-match"] {
   padding: 10px;
   box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 100dvh;
 }
 
 .mm-stage {
   position: relative;
   width: min(100%, 520px);
-  height: min(calc(100dvh - 20px), 560px);
+  height: fit-content;
+  max-height: min(calc(100dvh - 20px), 560px);
+  margin: auto;
 }
 
 .mm-backdrop {
@@ -35,15 +41,14 @@ body.game-shell[data-game="memory-match"] {
   --mm-green-dark: #3d8010;
   --mm-blue: #1f74e0;
   --shell-line: #e6efdc;
-  position: absolute;
-  inset: 0;
+  position: relative;
   z-index: 4;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: clamp(8px, 2vw, 12px);
-  padding: clamp(2.5rem, 6vw, 2.75rem) clamp(12px, 3vw, 16px) clamp(10px, 2.5vw, 14px);
+  gap: clamp(6px, 1.6vw, 10px);
+  padding: clamp(2.25rem, 5.5vw, 2.5rem) clamp(12px, 3vw, 16px) clamp(8px, 2vw, 12px);
   background:
     var(--hub-stars),
     radial-gradient(120% 60% at 50% -10%, rgba(124, 201, 58, 0.12) 0%, transparent 55%),
@@ -176,8 +181,8 @@ body.game-shell[data-game="memory-match"] {
   gap: 10px;
   justify-content: center;
   width: 100%;
-  margin-top: auto;
-  padding-top: 2px;
+  margin-top: 0;
+  padding-top: 0;
 }
 .mm-action-btn {
   background: var(--mm-green);

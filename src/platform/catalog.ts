@@ -84,7 +84,7 @@ const ALL_GAMES: GameMeta[] = [
     nameEn: 'Ethiorunner',
     nameAm: 'ኢትዮሯጭ',
     genreEn: 'Runner · Tournament', genreAm: 'ሩጫ · ውድድር',
-    mode: 'tournament', tournament: 'daily', stable: 'v2', icon: '🏃', accent: '#e2563a', thumb: ['#7a2d1a', '#2a0f08'],
+    mode: 'tournament', tournament: 'daily', stable: 'v3', icon: '🏃', accent: '#e2563a', thumb: ['#7a2d1a', '#2a0f08'],
     scoreEn: 'Score', scoreAm: 'ነጥብ',
   },
   {
@@ -150,7 +150,7 @@ const ALL_GAMES: GameMeta[] = [
     route: 'games/memory-match/',
     nameEn: 'Memory Match', nameAm: 'ማች ማስታወሻ',
     genreEn: 'Puzzle · Tournament', genreAm: 'እንቆቅልሽ · ውድድር',
-    mode: 'tournament', tournament: 'weekly', icon: '🧩', accent: '#ff6b9d', thumb: ['#8c2b5c', '#0b1521'],
+    mode: 'tournament', tournament: 'weekly', stable: 'v1', icon: '🧩', accent: '#ff6b9d', thumb: ['#8c2b5c', '#0b1521'],
     scoreEn: 'Score', scoreAm: 'ነጥብ',
     play: { winPoints: 180, winRate: 50 },
   },
