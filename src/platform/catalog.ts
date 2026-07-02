@@ -219,16 +219,7 @@ const ALL_GAMES: GameMeta[] = [
     play: { winPoints: 150, winRate: 50 },
   },
   {
-    id: 'crash-game',
-    route: 'games/crash-game/',
-    nameEn: 'Crash Game', nameAm: 'ክራሽ ጨዋታ',
-    genreEn: 'Chance · Casual', genreAm: 'ዕድል · ቀላል',
-    mode: 'free', icon: '🚀', accent: '#d18a04', thumb: ['#2f0999', '#0b6655'],
-    scoreEn: 'Points', scoreAm: 'ነጥብ',
-    play: { winPoints: 50, winRate: 45 },
-  },
-  {
-    id: 'ethiopian-quiz',
+    id: 'popblast',
     route: 'games/ethiopian-quiz/',
     nameEn: 'Ethiopian Quiz', nameAm: 'የኢትዮጵያ ጥያቄ',
     genreEn: 'Trivia · Casual', genreAm: 'ጥያቄ · ቀላል',
@@ -295,7 +286,6 @@ const COVERS: Record<string, string> = {
   'bubble-pop': 'bubble_pop.webp',
   'tap-game': 'tap_game.webp',
   'scratch-card': 'scratch_card.webp',
-  'crash-game': 'crash_game.webp',
   'spell': 'spell_quiz.webp',
   'vocab': 'vocabulary_trivia.webp',
   'rhyme': 'rhyme_time.webp',
@@ -315,7 +305,7 @@ const WIN_SCORE: Record<string, number> = {
   // Composite quiz: correct×pts + speed bonus + session time left
   'ethiopian-quiz': 100, 'spell': 70, 'vocab': 70, 'logic': 70, 'rhyme': 60,
   // Brain: time-based formulas in _lq/scoring.ts
-  'sudoku': 120, 'crosssum': 110, 'target24': 70, 'sequence': 80,
+  'sudoku': 120, 'crosssum': 110, 'target24': 70, 'sequence': 150,
   'tap-game': 5,
 };
 for (const g of CATALOG) {
@@ -329,7 +319,6 @@ const GATE: Record<string, { minLevel: number; unlockCost: number }> = {
   'spin-wheel': { minLevel: 2, unlockCost: 50 },
   'target24': { minLevel: 2, unlockCost: 50 },
   'logic': { minLevel: 2, unlockCost: 50 },
-  'crash-game': { minLevel: 3, unlockCost: 100 },
   'sequence': { minLevel: 3, unlockCost: 100 },
 };
 for (const g of CATALOG) {
@@ -368,7 +357,6 @@ const FRONT = [
   'luckyslot',
   'spin-wheel',
   'target24',
-  'crash-game',
   'sequence',
   // Free — other casual / brain / arcade
   'tap-game',
