@@ -19,3 +19,4 @@ Unless the user **explicitly** asks to modify Memory Match:
 
 - Copy Memory Match **patterns** into shared modules or other games (e.g. `fruit-slice`)
 - Fix platform/hub/backend issues without touching Memory Match game code
+- If a shared change affects Memory Match, **tell the user** which shared file changed and why

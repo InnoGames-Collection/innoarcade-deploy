@@ -1,0 +1,21 @@
+---
+description: Spell Trivia is stable v1 — do not modify without explicit user request
+globs: src/games/spell/**,games/spell/**
+alwaysApply: false
+---
+
+# Spell Trivia — stable v1
+
+`spell` is tagged `stable: 'v1'` in `src/platform/catalog.ts`. See `STABLE.md`.
+
+## Do not change
+
+Unless the user **explicitly** asks to modify Spell Trivia:
+
+- Do not edit files under `src/games/spell/` or `games/spell/`
+- Do not change spelling bank wiring, scoring, or quiz UX in game-specific files
+
+## Instead
+
+- Fix quiz UX via shared modules (`freeQuizShell.ts`, `_quiz/style.css`, `freeShellNav.ts`, `_quiz/adapters.ts` only when all quiz games need it)
+- If a shared change affects Spell Trivia, **tell the user** which shared file changed and why

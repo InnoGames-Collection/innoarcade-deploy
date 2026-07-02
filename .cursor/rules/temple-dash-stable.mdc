@@ -21,3 +21,4 @@ Unless the user **explicitly** asks to modify EthioRunner:
 
 - Copy runner **patterns** into new shared code (e.g. `gameTournamentPanel.ts`) or target games (`fruit-slice`)
 - Fix platform/hub/backend issues without touching runner game code
+- If a shared change affects EthioRunner, **tell the user** which shared file changed and why

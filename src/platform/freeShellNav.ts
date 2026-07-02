@@ -11,9 +11,11 @@ export interface FreeShellNavHandlers {
   goMenu: () => void;
   /** Called when closing while playing; return false to cancel. */
   confirmAbandon?: () => boolean;
+  /** Leave the game entirely while playing (defaults to goMenu). */
+  abandonPlaying?: () => void;
 }
 
-function goHub(): void {
+export function goHub(): void {
   if (history.length > 1) history.back();
   else location.href = HUB_URL;
 }
@@ -25,12 +27,17 @@ export function wireFreeShellCloseButtons(
 ): void {
   const playingClose = stage.querySelector('#closeBtn');
   playingClose?.removeAttribute('onclick');
+  const leavePlaying = (): void => {
+    (handlers.abandonPlaying ?? handlers.goMenu)();
+  };
+
   playingClose?.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopImmediatePropagation();
-    if (handlers.getPhase() !== 'playing') return;
+    const phase = handlers.getPhase();
+    if (phase !== 'playing' && phase !== 'paused') return;
     if (handlers.confirmAbandon?.() === false) return;
-    handlers.goMenu();
+    leavePlaying();
   });
 
   stage.querySelectorAll<HTMLElement>('.gp-close, .gp-close-corner').forEach((btn) => {
@@ -40,10 +47,10 @@ export function wireFreeShellCloseButtons(
       e.preventDefault();
       const phase = handlers.getPhase();
       if (phase === 'menu' || phase === 'over') goHub();
-      else if (phase === 'paused') handlers.goMenu();
+      else if (phase === 'paused') leavePlaying();
       else if (phase === 'playing') {
         if (handlers.confirmAbandon?.() === false) return;
-        handlers.goMenu();
+        leavePlaying();
       }
     });
   });

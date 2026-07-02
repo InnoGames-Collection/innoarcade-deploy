@@ -18,6 +18,7 @@ wireFreeQuizShell({
   pointsPerCorrect: 20,
   winScore: 100,
   bank: () => QUIZ_BANK.map((q) => ({
+    id: String(q.id),
     prompt: publicPrompt(q.question),
     choices: q.opts,
     answer: q.answer,

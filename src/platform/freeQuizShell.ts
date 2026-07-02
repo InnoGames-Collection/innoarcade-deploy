@@ -11,12 +11,13 @@ import {
   startFreeRound,
   submitFreeRun,
 } from './freeGameShell';
-import { confirmAbandonRun, wireFreeShellCloseButtons } from './freeShellNav';
+import { goHub, wireFreeShellCloseButtons } from './freeShellNav';
 import { promptIfSessionExpired } from './sessionAuth';
 import { isConfigured } from './supabase';
 import { freeGameBestRemote } from './backend';
 
 export interface FreeQuizItem {
+  id?: string;
   prompt: string;
   choices: readonly [string, string, string, string];
   answer: 0 | 1 | 2 | 3;
@@ -38,6 +39,54 @@ export interface FreeQuizShellConfig {
   winScore?: number;
   /** Two-column option grid (spellings). */
   twoColOptions?: boolean;
+  /** Points deducted each time the player pauses (default: half of pointsPerCorrect, min 5). */
+  pauseCost?: number;
+}
+
+const RECENT_QUIZ_SESSIONS = 2;
+
+function normalizePrompt(prompt: string): string {
+  return prompt.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+function questionKey(item: FreeQuizItem): string {
+  const normalized = normalizePrompt(item.prompt);
+  return normalized || item.id || '';
+}
+
+function dedupeBank(items: FreeQuizItem[]): FreeQuizItem[] {
+  const seen = new Set<string>();
+  const out: FreeQuizItem[] = [];
+  for (const item of items) {
+    const key = questionKey(item);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
+  }
+  return out;
+}
+
+function loadRecentQuestionKeys(gameId: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(`quiz-recent:${gameId}`);
+    if (!raw) return new Set();
+    const sessions = JSON.parse(raw) as string[][];
+    return new Set(sessions.flat());
+  } catch {
+    return new Set();
+  }
+}
+
+function saveSessionQuestionKeys(gameId: string, keys: string[]): void {
+  try {
+    const raw = localStorage.getItem(`quiz-recent:${gameId}`);
+    const sessions = raw ? (JSON.parse(raw) as string[][]) : [];
+    sessions.push(keys);
+    while (sessions.length > RECENT_QUIZ_SESSIONS) sessions.shift();
+    localStorage.setItem(`quiz-recent:${gameId}`, JSON.stringify(sessions));
+  } catch {
+    /* ignore storage errors */
+  }
 }
 
 type Phase = 'menu' | 'playing' | 'paused' | 'over';
@@ -53,8 +102,12 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function buildDeck(bank: () => FreeQuizItem[], count: number): FreeQuizItem[] {
-  return shuffle(bank()).slice(0, count);
+function buildDeck(gameId: string, bank: () => FreeQuizItem[], count: number): FreeQuizItem[] {
+  const pool = dedupeBank(bank());
+  const recent = loadRecentQuestionKeys(gameId);
+  let candidates = pool.filter((item) => !recent.has(questionKey(item)));
+  if (candidates.length < count) candidates = pool;
+  return shuffle(candidates).slice(0, count);
 }
 
 export function wireFreeQuizShell(config: FreeQuizShellConfig): void {
@@ -62,6 +115,7 @@ export function wireFreeQuizShell(config: FreeQuizShellConfig): void {
   const questionCount = config.questionCount ?? QUIZ_QUESTIONS_PER_SESSION;
   const questionSeconds = config.questionSeconds ?? 10;
   const pointsPerCorrect = config.pointsPerCorrect ?? 10;
+  const pauseCost = config.pauseCost ?? Math.max(5, Math.floor(pointsPerCorrect / 2));
   const winThreshold = config.winScore ?? host.winScore;
 
   let phase: Phase = 'menu';
@@ -74,6 +128,8 @@ export function wireFreeQuizShell(config: FreeQuizShellConfig): void {
   let answered = 0;
   let correct = 0;
   let speedBonus = 0;
+  let pauseDeductions = 0;
+  let sessionQuestionKeys: string[] = [];
   let locked = false;
   let runStart = 0;
   let qLeft = questionSeconds;
@@ -89,7 +145,7 @@ export function wireFreeQuizShell(config: FreeQuizShellConfig): void {
   const stage = document.getElementById('stage') as HTMLElement;
 
   function liveScore(): number {
-    return correct * pointsPerCorrect + speedBonus;
+    return Math.max(0, correct * pointsPerCorrect + speedBonus - pauseDeductions);
   }
 
   function showToast(msg: string): void {
@@ -189,11 +245,13 @@ export function wireFreeQuizShell(config: FreeQuizShellConfig): void {
   }
 
   function beginQuiz(): void {
-    deck = buildDeck(config.bank, questionCount);
+    deck = buildDeck(config.gameId, config.bank, questionCount);
+    sessionQuestionKeys = deck.map(questionKey);
     deckIdx = 0;
     answered = 0;
     correct = 0;
     speedBonus = 0;
+    pauseDeductions = 0;
     locked = false;
     finishPending = false;
     qLeft = questionSeconds;
@@ -278,6 +336,7 @@ export function wireFreeQuizShell(config: FreeQuizShellConfig): void {
     updateStats();
     setPhase('over');
     showOverOverlay(score, isRecord);
+    saveSessionQuestionKeys(config.gameId, sessionQuestionKeys);
     void submitRun(score, isWin, timeMs, isRecord);
   }
 
@@ -334,6 +393,9 @@ export function wireFreeQuizShell(config: FreeQuizShellConfig): void {
     if (phase !== 'playing') return;
     clearQTimer();
     timerPaused = true;
+    pauseDeductions += pauseCost;
+    updateStats();
+    showToast(t('shell.pauseCost').replace('{cost}', String(pauseCost)));
     setPhase('paused');
   }
 
@@ -365,10 +427,7 @@ export function wireFreeQuizShell(config: FreeQuizShellConfig): void {
   wireFreeShellCloseButtons(stage, {
     getPhase: () => phase,
     goMenu,
-    confirmAbandon: () => {
-      if (phase !== 'playing') return true;
-      return confirmAbandonRun();
-    },
+    abandonPlaying: goHub,
   });
 
   document.documentElement.lang = getLang();

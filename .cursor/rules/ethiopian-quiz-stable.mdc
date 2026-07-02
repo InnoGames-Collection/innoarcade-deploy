@@ -1,0 +1,21 @@
+---
+description: Ethiopian Quiz is stable v1 — do not modify without explicit user request
+globs: src/games/ethiopian-quiz/**,games/ethiopian-quiz/**
+alwaysApply: false
+---
+
+# Ethiopian Quiz — stable v1
+
+`ethiopian-quiz` is tagged `stable: 'v1'` in `src/platform/catalog.ts`. See `STABLE.md`.
+
+## Do not change
+
+Unless the user **explicitly** asks to modify Ethiopian Quiz:
+
+- Do not edit files under `src/games/ethiopian-quiz/` or `games/ethiopian-quiz/`
+- Do not change question bank content, scoring, pause cost, or quiz UX in game-specific files
+
+## Instead
+
+- Fix quiz UX via shared modules (`freeQuizShell.ts`, `_quiz/style.css`, `freeShellNav.ts`)
+- If a shared change affects Ethiopian Quiz, **tell the user** which shared file changed and why

@@ -14,7 +14,7 @@ import {
   type FreePlayHeaderSlot,
 } from './freePlayHeader';
 import {
-  confirmAbandonRun,
+  goHub,
   wireFreeShellCloseButtons,
   type FreeShellPhase,
 } from './freeShellNav';
@@ -389,10 +389,7 @@ export function wireFreeEngineMain(b: FreeEngineBindings): FreeEngineShell {
     wireFreeShellCloseButtons(stage, {
       getPhase: () => phase,
       goMenu,
-      confirmAbandon: () => {
-        if (phase !== 'playing') return true;
-        return confirmAbandonRun();
-      },
+      abandonPlaying: goHub,
     });
   }
 
@@ -640,10 +637,7 @@ export function wireFreeCasualShell(
     wireFreeShellCloseButtons(stage, {
       getPhase: () => phase,
       goMenu,
-      confirmAbandon: () => {
-        if (options.skipAbandonConfirm || phase !== 'playing') return true;
-        return confirmAbandonRun();
-      },
+      abandonPlaying: goHub,
     });
   }
 

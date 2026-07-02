@@ -44,7 +44,11 @@ body.game-shell.casual-shell {
   display: flex;
   flex-direction: column;
   gap: clamp(8px, 2vw, 12px);
-  padding: clamp(2.25rem, 5.5vw, 2.5rem) clamp(10px, 2.5vw, 14px) clamp(10px, 2.5vw, 14px);
+  padding:
+    max(3rem, calc(10px + 2.1rem + 10px + env(safe-area-inset-top, 0px)))
+    max(48px, calc(10px + 2.1rem + 10px + env(safe-area-inset-right, 0px)))
+    clamp(10px, 2.5vw, 14px)
+    clamp(10px, 2.5vw, 14px);
   background:
     var(--hub-stars),
     radial-gradient(120% 60% at 50% -10%, rgba(79, 158, 22, 0.1) 0%, transparent 55%),
@@ -57,10 +61,7 @@ body.game-shell.casual-shell {
 }
 
 .fc-playframe #closeBtn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 6;
+  z-index: 20;
   pointer-events: auto;
 }
 
