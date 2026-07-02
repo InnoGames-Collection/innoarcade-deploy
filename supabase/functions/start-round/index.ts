@@ -63,7 +63,6 @@ Deno.serve(async (req: Request) => {
   let attemptsLeft: number | undefined;
 
   if (ranked) {
-    await admin.rpc('seed_tournaments');
     const { data: tid } = await admin.rpc('active_game_tournament', { p_game: gameId });
     const tournamentId = String(tid ?? '');
     if (tournamentId) {

@@ -1,17 +1,8 @@
-// Shared in-game tournament panel — mirrors EthioRunner's #runnerTourney layout.
-// Consumed by tournament games (memory-match, fruit-slice). EthioRunner keeps its
-// inline stable-v2 copy; new games use this module.
+// Shared in-game tournament panel markup for tournament games.
 
-import { getLang, t } from '../i18n';
-import { leaderboardRemote, playerStandingRemote } from './backend';
-import { balance } from './wallet';
-import { isConfigured } from './supabase';
-import { currentUser } from './auth';
+import { t } from '../i18n';
 import { type TournamentCadence } from './catalog';
-import {
-  getTournamentForGame, loadMyEntries, loadTournaments, myEntry,
-  type LeaderEntry, type Tournament,
-} from './tournaments';
+import { type LeaderEntry } from './tournaments';
 
 export interface ShellMenuTournamentOpts {
   cadence?: TournamentCadence;
@@ -26,17 +17,6 @@ function cadenceBadgeHtml(cadence: TournamentCadence): string {
     cadence === 'daily' ? 'td.daily' : cadence === 'weekly' ? 'td.weekly' : 'td.monthly',
   );
   return `<span class="gt-cadence"><span class="gt-cadence-badge gt-cadence-${cadence}">${label}</span> · ${t('hub.tournament')}</span>`;
-}
-
-export interface TournamentPanelSnapshot {
-  tourney?: Tournament;
-  walletCoins: number;
-  serverBest: number;
-  playerRank?: number;
-  attemptsLeft: number;
-  board: LeaderEntry[];
-  /** Full standing row when the player is outside the visible top-N. */
-  playerStanding?: LeaderEntry;
 }
 
 function escHtml(s: string): string {
@@ -67,7 +47,7 @@ export function tournamentBoardHtml(rows: LeaderEntry[], standing?: LeaderEntry 
   return html || `<p class="gt-empty">${t('td.noBoard')}</p>`;
 }
 
-/** Menu tournament panel — game title (not cadence title), hub-aligned shell markup. */
+/** Menu tournament panel — game title, wallet, best, attempts, leaderboard. */
 export function renderShellMenuTournamentHtml(
   gameTitle: string,
   gameIcon: string,
@@ -95,57 +75,4 @@ export function renderShellMenuTournamentHtml(
     ${hintRow}
     ${attemptsLeft > 0 ? `<div class="gt-status"><span class="gt-attempts">🎟️ ${t('td.attemptsLeft')}: <strong>${attemptsLeft}</strong></span></div>` : ''}
     <div class="gt-board">${tournamentBoardHtml(board)}</div>`;
-}
-
-export function renderTournamentPanelHtml(snap: TournamentPanelSnapshot): string {
-  const tour = snap.tourney;
-  if (!tour) return '';
-  const title = getLang() === 'am' ? tour.titleAm : tour.titleEn;
-  const left = snap.attemptsLeft;
-  return `
-    <div class="gt-head">
-      <span class="gt-title">🏆 ${escHtml(title)}</span>
-      <span class="gt-coins">${snap.walletCoins.toLocaleString()} 🪙</span>
-    </div>
-    <div class="gt-best">${t('td.yourBest')}: <strong>${snap.serverBest.toLocaleString()}</strong>${snap.playerRank ? ` · ${t('hub.yourRank')} <strong>#${snap.playerRank}</strong>` : ''}</div>
-    ${left > 0 ? `<div class="gt-status"><span class="gt-attempts">🎟️ ${t('td.attemptsLeft')}: <strong>${left}</strong></span></div>` : ''}
-    <div class="gt-board">${tournamentBoardHtml(snap.board, snap.playerStanding)}</div>`;
-}
-
-/** Load tournament state from the server and paint the panel. Returns snapshot for callers. */
-export async function refreshGameTournamentPanel(
-  gameId: string,
-  mount: HTMLElement,
-  boardLimit = 5,
-): Promise<TournamentPanelSnapshot | null> {
-  if (!isConfigured()) {
-    mount.innerHTML = '';
-    return null;
-  }
-  await currentUser();
-  await Promise.all([loadTournaments(), loadMyEntries()]);
-  const tourney = getTournamentForGame(gameId);
-  if (!tourney) {
-    mount.innerHTML = '';
-    return null;
-  }
-
-  const [walletCoins, standing, board] = await Promise.all([
-    balance(),
-    playerStandingRemote(tourney.id),
-    leaderboardRemote(tourney.id, boardLimit),
-  ]);
-  const attemptsLeft = myEntry(tourney.id)?.left ?? 0;
-  const playerInBoard = board.some((r) => r.isPlayer);
-  const snap: TournamentPanelSnapshot = {
-    tourney,
-    walletCoins,
-    serverBest: standing?.score ?? 0,
-    playerRank: standing?.rank,
-    attemptsLeft,
-    board,
-    playerStanding: standing && !playerInBoard ? standing : undefined,
-  };
-  mount.innerHTML = renderTournamentPanelHtml(snap);
-  return snap;
 }

@@ -7,15 +7,15 @@
     <link rel="manifest" href="../../manifest.webmanifest" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏃</text></svg>" />
     <title>Ethiorunner — GoPlay</title>
-    <script type="module" crossorigin src="../../assets/templeDash-C-gmyI3z.js"></script>
+    <script type="module" crossorigin src="../../assets/templeDash-DJjkCPme.js"></script>
     <link rel="modulepreload" crossorigin href="../../assets/index-CWrjH9mJ.js">
-    <link rel="modulepreload" crossorigin href="../../assets/tournaments-BboAadLm.js">
-    <link rel="modulepreload" crossorigin href="../../assets/audio-FS3Ihanx.js">
-    <link rel="modulepreload" crossorigin href="../../assets/sessionAuth-Ct4nGWrM.js">
+    <link rel="modulepreload" crossorigin href="../../assets/tournaments-O18Ov0Zz.js">
+    <link rel="modulepreload" crossorigin href="../../assets/audio-CLAb5Rzc.js">
+    <link rel="modulepreload" crossorigin href="../../assets/sessionAuth-Du9jM5hZ.js">
     <link rel="modulepreload" crossorigin href="../../assets/loop-BDek7L7e.js">
     <link rel="modulepreload" crossorigin href="../../assets/input-DF-0NnhL.js">
-    <link rel="modulepreload" crossorigin href="../../assets/tournamentEntry-BCRU_j5F.js">
-    <link rel="modulepreload" crossorigin href="../../assets/gameTournamentPanel-CAbP_I8s.js">
+    <link rel="modulepreload" crossorigin href="../../assets/tournamentEntry-BMvtaTU4.js">
+    <link rel="modulepreload" crossorigin href="../../assets/tournamentGameFlow-4MFClyqd.js">
     <link rel="modulepreload" crossorigin href="../../assets/fx-ccUjo7Ds.js">
     <link rel="stylesheet" crossorigin href="../../assets/audio-mZgmpMt7.css">
     <link rel="stylesheet" crossorigin href="../../assets/sessionAuth-BTDwwy4Y.css">
@@ -46,7 +46,7 @@
       <div id="menuOverlay" class="game-overlay">
         <div class="game-panel panel-clean">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-          <div class="shell-tourney" id="runnerTourney" aria-live="polite"></div>
+          <div class="shell-tourney" id="shellTourney" aria-live="polite"></div>
           <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
         </div>
       </div>
@@ -72,7 +72,7 @@
           <div class="shell-run-reward" id="runReward"></div>
           <div class="shell-over-board-wrap">
             <h3 data-i18n="td.leaderboard">Leaderboard</h3>
-            <div id="runnerBoardOver"></div>
+            <div id="shellBoardOver"></div>
           </div>
           <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
         </div>

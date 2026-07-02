@@ -1,32 +1,27 @@
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
 import './style.css';
-import { applyTranslations, getLang, t } from '../../i18n';
+import { applyTranslations, t } from '../../i18n';
 import { GameLoop } from '../../engine/loop';
 import { Input } from '../../engine/input';
 import { Viewport } from '../../engine/viewport';
 import { AssetStore } from '../../engine/assets';
 import { SettingsPanel } from '../../ui/settingsPanel';
 import { registerPwa } from '../../engine/pwa';
-import { fetchSkins, setSkinRemote, leaderboardRemote, playerStandingRemote } from '../../platform/backend';
+import { fetchSkins, setSkinRemote } from '../../platform/backend';
 import { createHost } from '../../platform/gameHost';
-import { openTournamentEntryForGame } from '../../hub/tournamentEntry';
-import { promptIfSessionExpired } from '../../platform/sessionAuth';
-import { renderShellMenuTournamentHtml, tournamentBoardHtml } from '../../platform/gameTournamentPanel';
-import { balance } from '../../platform/wallet';
-import { isConfigured } from '../../platform/supabase';
-import { currentUser } from '../../platform/auth';
-import { loadTournaments, loadMyEntries, myEntry, getTournamentForGame } from '../../platform/tournaments';
+import {
+  applyTournamentPlayLabels, promptTournamentEntry, refreshTournamentMenuPanel,
+  startTournamentRound, submitTournamentRound, tournamentAttemptsLeft,
+} from '../../platform/tournamentGameFlow';
 import { sfx } from '../../engine/audio';
 import { TempleDash, W, H, GAME_ID, type GameState } from './game';
 import { kenneySheetDefs, skinSheetDefs, DEFAULT_SKIN_ID } from './art';
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
-
 const host = createHost(GAME_ID);
 
 registerPwa();
-
 void boot();
 
 async function boot(): Promise<void> {
@@ -61,22 +56,61 @@ function run(assets: AssetStore, assetsReady: Promise<void>): void {
     over: $('#overOverlay'),
   };
 
+  let toastT = 0;
+  function showToast(msg: string): void {
+    const el = $('#toast');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+    clearTimeout(toastT);
+    toastT = window.setTimeout(() => el.classList.add('hidden'), 2800);
+  }
+
+  const playButtons = () => ({
+    start: document.querySelector<HTMLButtonElement>('#startBtn'),
+    again: document.querySelector<HTMLButtonElement>('#againBtn'),
+    restart: document.querySelector<HTMLButtonElement>('#restartBtn'),
+  });
+
+  function syncUi(): void {
+    applyTournamentPlayLabels(GAME_ID, playButtons());
+  }
+
   function showOverlay(state: GameState): void {
     for (const [k, el] of Object.entries(overlays)) el.classList.toggle('hidden', k !== state);
     document.querySelector('#closeBtn')?.classList.toggle('hidden', state !== 'playing');
   }
 
+  async function refreshPanel(): Promise<void> {
+    const snap = await refreshTournamentMenuPanel(GAME_ID, $('#shellTourney'));
+    if (snap) {
+      serverBest = snap.serverBest;
+      if (serverBest > game.best) game.best = serverBest;
+    }
+    syncUi();
+  }
+
   game.onStateChange = (s) => {
     showOverlay(s);
-    if (s === 'over' || s === 'menu') { void refreshTourney(); }
-    else updateActionButtons();
+    if (s === 'over' || s === 'menu') void refreshPanel();
+    else syncUi();
   };
 
   game.onGameOver = (score, _coins, record, durationMs) => {
     $('#finalScore').textContent = String(score);
     $('#finalBest').textContent = String(game.best);
     $('#newBest').classList.toggle('hidden', !record);
-    void submitRun(score, durationMs);
+    void submitTournamentRound(host, GAME_ID, score, score >= host.winScore, durationMs, rankedThisRun, {
+      rewardEl: $('#runReward'),
+      boardEl: $('#shellBoardOver'),
+      showToast,
+      onBest: (best, isRecord) => {
+        serverBest = best;
+        game.best = best;
+        $('#finalBest').textContent = best.toLocaleString();
+        $('#newBest').classList.toggle('hidden', !isRecord);
+      },
+      onSync: () => { syncUi(); void refreshPanel(); },
+    });
   };
 
   const input = new Input(document.body);
@@ -89,78 +123,30 @@ function run(assets: AssetStore, assetsReady: Promise<void>): void {
     game.handleAction(a);
   });
 
-  function gameTitle(): string {
-    return getLang() === 'am' ? host.meta.nameAm : host.meta.nameEn;
-  }
-
-  function attemptsLeft(): number {
-    const tour = getTournamentForGame(GAME_ID);
-    return tour ? (myEntry(tour.id)?.left ?? 0) : 0;
-  }
-
-  function tournamentPlayLabel(): string {
-    const left = attemptsLeft();
-    return left > 0 ? `▶ ${t('hub.play')} · 🎟️ ${left}` : t('hub.play');
-  }
-
-  function updateActionButtons(): void {
-    const playLabel = tournamentPlayLabel();
-    const startBtn = document.querySelector<HTMLButtonElement>('#startBtn');
-    const againBtn = document.querySelector<HTMLButtonElement>('#againBtn');
-    const restartBtn = document.querySelector<HTMLButtonElement>('#restartBtn');
-    const left = attemptsLeft();
-
-    if (startBtn) {
-      startBtn.disabled = false;
-      startBtn.textContent = playLabel;
-    }
-    if (againBtn) {
-      againBtn.disabled = false;
-      againBtn.textContent = playLabel;
-    }
-    if (restartBtn) {
-      restartBtn.disabled = false;
-      restartBtn.textContent = left > 0 ? t('td.restart') : t('hub.play');
-    }
-  }
-
-  async function onEnter(): Promise<void> {
-    openTournamentEntryForGame(GAME_ID, {
-      onEntered: () => { void refreshTourney(); },
-      onPlay: () => { void onPlayOrEnter(); },
-    });
-  }
-
   async function onPlayOrEnter(): Promise<void> {
     if (starting || game.state === 'playing' || game.state === 'paused') return;
-    if (attemptsLeft() <= 0) {
-      await onEnter();
+    if (tournamentAttemptsLeft(GAME_ID) <= 0) {
+      promptTournamentEntry(GAME_ID, () => { void refreshPanel(); }, () => { void onPlayOrEnter(); });
       return;
     }
-    await beginRankedRun();
+    await beginRun();
   }
 
-  async function beginRankedRun(): Promise<void> {
+  async function beginRun(): Promise<void> {
     if (starting) return;
     starting = true;
-    const startBtn = document.querySelector<HTMLButtonElement>('#startBtn');
-    const againBtn = document.querySelector<HTMLButtonElement>('#againBtn');
-    const restartBtn = document.querySelector<HTMLButtonElement>('#restartBtn');
-    for (const b of [startBtn, againBtn, restartBtn]) {
+    for (const b of Object.values(playButtons())) {
       if (b) { b.disabled = true; b.textContent = '…'; }
     }
     try {
       await assetsReady;
-      await host.startRound();
+      if (!(await startTournamentRound(host, showToast))) return;
       rankedThisRun = true;
       game.best = serverBest;
       game.start();
-      updateActionButtons();
-    } catch {
-      if (!(await promptIfSessionExpired(showToast))) showToast(t('td.submitFailed'));
-      updateActionButtons();
     } finally {
       starting = false;
+      syncUi();
     }
   }
 
@@ -184,15 +170,6 @@ function run(assets: AssetStore, assetsReady: Promise<void>): void {
     if (sk[GAME_ID] !== DEFAULT_SKIN_ID) void setSkinRemote(GAME_ID, DEFAULT_SKIN_ID);
   });
 
-  let toastT = 0;
-  function showToast(msg: string): void {
-    const el = $('#toast');
-    el.textContent = msg;
-    el.classList.remove('hidden');
-    clearTimeout(toastT);
-    toastT = window.setTimeout(() => el.classList.add('hidden'), 2800);
-  }
-
   function updateHud(): void {
     scoreVal.textContent = String(game.score);
     coinsVal.textContent = String(game.coins);
@@ -210,67 +187,8 @@ function run(assets: AssetStore, assetsReady: Promise<void>): void {
     if (sig !== chipSig) { powerChips.innerHTML = sig; chipSig = sig; }
   }
 
-  async function refreshTourney(): Promise<void> {
-    if (!isConfigured()) { $('#runnerTourney').innerHTML = ''; return; }
-    await currentUser();
-    await Promise.all([loadTournaments(), loadMyEntries()]);
-    const tourney = getTournamentForGame(GAME_ID);
-    if (!tourney) { $('#runnerTourney').innerHTML = ''; return; }
-
-    const [walletCoins, standing, board] = await Promise.all([
-      balance(), playerStandingRemote(tourney.id), leaderboardRemote(tourney.id, 5),
-    ]);
-    serverBest = standing?.score ?? 0;
-    game.best = serverBest;
-
-    const left = myEntry(tourney.id)?.left ?? 0;
-    $('#runnerTourney').innerHTML = renderShellMenuTournamentHtml(
-      gameTitle(), host.meta.icon ?? '🏃', walletCoins, serverBest, left, board,
-      { cadence: tourney.cadence },
-    );
-    updateActionButtons();
-  }
-
-  async function failRankedSubmit(reward: HTMLElement): Promise<void> {
-    if (await promptIfSessionExpired(showToast)) {
-      reward.innerHTML = `<span class="shell-rr-note">${t('td.sessionExpired')}</span>`;
-      return;
-    }
-    reward.innerHTML = `<span class="shell-rr-note">${t('td.submitFailed')}</span>`;
-    showToast(t('td.submitFailed'));
-  }
-
-  async function submitRun(score: number, durationMs: number): Promise<void> {
-    const reward = $('#runReward');
-    const boardOver = $('#runnerBoardOver');
-    if (!isConfigured()) { reward.innerHTML = ''; boardOver.innerHTML = ''; return; }
-    reward.innerHTML = `<span class="shell-rr-pending">…</span>`;
-    const res = await host.finish(score, score >= host.winScore, durationMs, { ranked: rankedThisRun });
-    if (rankedThisRun && res.rank == null) {
-      await failRankedSubmit(reward);
-      return;
-    }
-    serverBest = res.best ?? serverBest;
-    game.best = serverBest;
-    $('#finalBest').textContent = serverBest.toLocaleString();
-    $('#newBest').classList.toggle('hidden', !res.isRecord);
-    reward.innerHTML = `<span class="shell-rr-stat"><b>${t('td.rank')}</b> #${res.rank ?? '—'}/${res.total ?? '—'}</span>
-      <span class="shell-rr-stat"><b>${t('td.best')}</b> ${serverBest.toLocaleString()}</span>`;
-    if (typeof res.attemptsLeft === 'number') {
-      reward.innerHTML += `<span class="shell-rr-stat">🎟️ ${t('td.attemptsLeft')}: <strong>${res.attemptsLeft}</strong></span>`;
-    }
-    const tour = getTournamentForGame(GAME_ID);
-    if (tour) {
-      const board = await leaderboardRemote(tour.id, 5);
-      const standing = await playerStandingRemote(tour.id);
-      boardOver.innerHTML = tournamentBoardHtml(board, standing);
-    }
-    updateActionButtons();
-    void refreshTourney();
-  }
-
   applyTranslations();
-  void refreshTourney();
+  void refreshPanel();
   showOverlay('menu');
 
   const loop = new GameLoop(

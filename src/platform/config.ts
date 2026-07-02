@@ -20,7 +20,7 @@ export const BASE_POINTS = 100;
 // Mechanics doc §3.2 (L6/L8/L9 interpolated). Drives status, game unlocks, and
 // the tournament-tier funnel (L3 → Daily, L5 → Weekly, L10 → Monthly). Beyond
 // L10 the curve continues at +3000 XP/level. Mirrored server-side (runner-submit)
-// and in runner.ts — keep all three in sync.
+// and in config — keep in sync with edge functions.
 export const LEVEL_THRESHOLDS = [0, 150, 400, 800, 1500, 2200, 3000, 4000, 5000, 6000];
 
 export function levelFor(lifetimeXp: number): number {

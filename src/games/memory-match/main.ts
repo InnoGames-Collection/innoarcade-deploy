@@ -3,17 +3,13 @@
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
 import './style.css';
-import { applyTranslations, getLang, t } from '../../i18n';
+import { applyTranslations, getLang } from '../../i18n';
 import { sfx } from '../../engine/audio';
-import { openTournamentEntryForGame } from '../../hub/tournamentEntry';
-import { promptIfSessionExpired } from '../../platform/sessionAuth';
 import { createHost } from '../../platform/gameHost';
-import { renderShellMenuTournamentHtml, tournamentBoardHtml } from '../../platform/gameTournamentPanel';
-import { balance } from '../../platform/wallet';
-import { leaderboardRemote, playerStandingRemote } from '../../platform/backend';
-import { isConfigured } from '../../platform/supabase';
-import { currentUser } from '../../platform/auth';
-import { loadTournaments, loadMyEntries, myEntry, getTournamentForGame } from '../../platform/tournaments';
+import {
+  applyTournamentPlayLabels, promptTournamentEntry, refreshTournamentMenuPanel,
+  startTournamentRound, submitTournamentRound, tournamentAttemptsLeft,
+} from '../../platform/tournamentGameFlow';
 
 const GAME_ID = 'memory-match';
 const host = createHost(GAME_ID);
@@ -46,12 +42,7 @@ let roundSeq = 0;
 let starting = false;
 /** Frozen final score for this attempt (shown after round ends). */
 let lastFinalScore = 0;
-let serverBest = 0;
 let toastT = 0;
-
-function gameTitle(): string {
-  return getLang() === 'am' ? host.meta.nameAm : host.meta.nameEn;
-}
 
 function showToast(msg: string): void {
   const el = $('#toast');
@@ -59,11 +50,6 @@ function showToast(msg: string): void {
   el.classList.remove('hidden');
   clearTimeout(toastT);
   toastT = window.setTimeout(() => el.classList.add('hidden'), 2800);
-}
-
-function attemptsLeft(): number {
-  const tour = getTournamentForGame(GAME_ID);
-  return tour ? (myEntry(tour.id)?.left ?? 0) : 0;
 }
 
 const grid = $('#mm-grid');
@@ -76,6 +62,18 @@ const pauseBtn = $('#mm-pause-btn') as HTMLButtonElement;
 const resumeBtn = $('#mm-resume-btn') as HTMLButtonElement;
 const restartBtn = $('#mm-restart-btn') as HTMLButtonElement;
 
+function playButtons() {
+  return {
+    start: phase === 'menu' ? startBtn : null,
+    again: phase === 'over' ? ($('#mmAgainBtn') as HTMLButtonElement) : null,
+    restart: restartBtn,
+  };
+}
+
+function syncAttemptsUi(): void {
+  applyTournamentPlayLabels(GAME_ID, playButtons());
+}
+
 function showMenu(): void {
   $('#menuOverlay').classList.remove('hidden');
   $('#memory-match-wrapper').classList.add('hidden');
@@ -87,10 +85,6 @@ function showGame(): void {
   $('#menuOverlay').classList.add('hidden');
   $('#memory-match-wrapper').classList.remove('hidden');
   $('#mmBackdrop').classList.add('hidden');
-}
-
-function syncAttemptsUi(): void {
-  updateActionButtons();
 }
 
 function playSfx(type: 'flip' | 'match' | 'nomatch' | 'win' | 'lose' | 'click'): void {
@@ -131,19 +125,6 @@ function scoreDisplayText(): string {
   return SCORE_PLACEHOLDER;
 }
 
-function tournamentPlayLabel(): string {
-  const left = attemptsLeft();
-  return left > 0 ? `▶ ${t('hub.play')} · 🎟️ ${left}` : t('hub.play');
-}
-
-function updateActionButtons(): void {
-  const left = attemptsLeft();
-  const playLabel = tournamentPlayLabel();
-  if (phase === 'menu') startBtn.textContent = playLabel;
-  if (phase === 'over') $('#mmAgainBtn').textContent = playLabel;
-  restartBtn.textContent = left > 0 ? t('td.restart') : t('hub.play');
-}
-
 function setPhase(next: Phase): void {
   phase = next;
   if (next === 'menu') showMenu();
@@ -153,7 +134,7 @@ function setPhase(next: Phase): void {
   resumeBtn.classList.toggle('hidden', next !== 'paused');
   restartBtn.classList.toggle('hidden', next !== 'paused');
   grid.classList.toggle('mm-paused', next === 'paused' || next === 'over');
-  updateActionButtons();
+  syncAttemptsUi();
 }
 
 function showOverOverlay(final: number): void {
@@ -164,7 +145,7 @@ function showOverOverlay(final: number): void {
   $('#mmRunReward').innerHTML = `<span class="mm-rr-pending">…</span>`;
   $('#mmBoardOver').innerHTML = '';
   $('#mmCloseBtn').classList.add('hidden');
-  updateActionButtons();
+  syncAttemptsUi();
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
 }
@@ -176,73 +157,23 @@ function hideOverOverlay(): void {
 }
 
 async function refreshTournamentPanel(): Promise<void> {
-  const mount = $('#mmTourney');
-  if (!isConfigured()) {
-    mount.innerHTML = '';
-    return;
-  }
-  await currentUser();
-  await Promise.all([loadTournaments(), loadMyEntries()]);
-  const tourney = getTournamentForGame(GAME_ID);
-  if (!tourney) {
-    mount.innerHTML = '';
-    return;
-  }
-
-  const [walletCoins, standing, board] = await Promise.all([
-    balance(),
-    playerStandingRemote(tourney.id),
-    leaderboardRemote(tourney.id, 5),
-  ]);
-  serverBest = standing?.score ?? 0;
-  const left = myEntry(tourney.id)?.left ?? 0;
-  mount.innerHTML = renderShellMenuTournamentHtml(
-    gameTitle(), '🧩', walletCoins, serverBest, left, board,
-  );
-  updateActionButtons();
-}
-
-async function failRankedSubmit(reward: HTMLElement): Promise<void> {
-  if (await promptIfSessionExpired(showToast)) {
-    reward.innerHTML = `<span class="mm-rr-note">${t('td.sessionExpired')}</span>`;
-    return;
-  }
-  reward.innerHTML = `<span class="mm-rr-note">${t('td.submitFailed')}</span>`;
-  showToast(t('td.submitFailed'));
+  await refreshTournamentMenuPanel(GAME_ID, $('#mmTourney'));
+  syncAttemptsUi();
 }
 
 async function submitRound(score: number, cleared: boolean, durationMs: number): Promise<void> {
-  const reward = $('#mmRunReward');
-  const boardOver = $('#mmBoardOver');
-  if (!isConfigured()) {
-    reward.innerHTML = '';
-    boardOver.innerHTML = '';
-    $('#mmFinalBest').textContent = score.toLocaleString();
-    return;
-  }
-  reward.innerHTML = `<span class="mm-rr-pending">…</span>`;
-  const res = await host.finish(score, cleared, durationMs, { ranked: rankedThisRun });
-  if (rankedThisRun && res.rank == null) {
-    await failRankedSubmit(reward);
-    return;
-  }
-  serverBest = res.best ?? serverBest;
-  $('#mmFinalBest').textContent = serverBest.toLocaleString();
-  $('#mmNewBest').classList.toggle('hidden', !res.isRecord);
-  if (res.isRecord) bumpScoreStat();
-  reward.innerHTML = `<span class="mm-rr-stat"><b>${t('td.rank')}</b> #${res.rank ?? '—'}/${res.total ?? '—'}</span>
-    <span class="mm-rr-stat"><b>${t('td.best')}</b> ${serverBest.toLocaleString()}</span>`;
-  if (typeof res.attemptsLeft === 'number') {
-    reward.innerHTML += `<span class="mm-rr-stat">🎟️ ${t('td.attemptsLeft')}: <strong>${res.attemptsLeft}</strong></span>`;
-  }
-  const tour = getTournamentForGame(GAME_ID);
-  if (tour) {
-    const board = await leaderboardRemote(tour.id, 5);
-    const standing = await playerStandingRemote(tour.id);
-    boardOver.innerHTML = tournamentBoardHtml(board, standing);
-  }
-  syncAttemptsUi();
-  void refreshTournamentPanel();
+  await submitTournamentRound(host, GAME_ID, score, cleared, durationMs, rankedThisRun, {
+    rewardEl: $('#mmRunReward'),
+    boardEl: $('#mmBoardOver'),
+    cssPrefix: 'mm-rr',
+    showToast,
+    onBest: (best, isRecord) => {
+      $('#mmFinalBest').textContent = best.toLocaleString();
+      $('#mmNewBest').classList.toggle('hidden', !isRecord);
+      if (isRecord) bumpScoreStat();
+    },
+    onSync: () => { syncAttemptsUi(); void refreshTournamentPanel(); },
+  });
 }
 
 function fmtTime(s: number): string {
@@ -305,17 +236,10 @@ function abortRound(): void {
   flipped = [];
 }
 
-async function onEnter(): Promise<void> {
-  openTournamentEntryForGame(GAME_ID, {
-    onEntered: () => { void refreshTournamentPanel(); },
-    onPlay: () => { void onPlayOrEnter(); },
-  });
-}
-
 async function onPlayOrEnter(): Promise<void> {
   if (starting || phase === 'playing' || phase === 'paused') return;
-  if (attemptsLeft() <= 0) {
-    await onEnter();
+  if (tournamentAttemptsLeft(GAME_ID) <= 0) {
+    promptTournamentEntry(GAME_ID, () => { void refreshTournamentPanel(); }, () => { void onPlayOrEnter(); });
     return;
   }
   await beginRankedRound();
@@ -325,16 +249,16 @@ async function beginRankedRound(): Promise<void> {
   if (starting) return;
   starting = true;
   try {
-    await host.startRound();
+    if (!(await startTournamentRound(host, showToast))) {
+      setPhase('menu');
+      return;
+    }
     rankedThisRun = true;
     lastFinalScore = 0;
     hideOverOverlay();
     scoreEl.closest('.mm-stat-score')?.classList.remove('mm-score-bump');
     abortRound();
     startRoundWithBlink();
-  } catch {
-    setPhase('menu');
-    if (!(await promptIfSessionExpired(showToast))) showToast(t('td.submitFailed'));
   } finally {
     starting = false;
   }
@@ -374,7 +298,6 @@ function resumeRound(): void {
   timerId = window.setInterval(() => tick(seq), 1000);
 }
 
-/** Abandon the in-progress round and start fresh with the preview blink. */
 async function restartRound(): Promise<void> {
   if (phase !== 'paused') return;
   abortRound();
@@ -453,4 +376,4 @@ document.documentElement.lang = getLang();
 applyTranslations();
 setPhase('menu');
 
-void Promise.all([loadTournaments(), loadMyEntries()]).then(() => refreshTournamentPanel());
+void refreshTournamentPanel();

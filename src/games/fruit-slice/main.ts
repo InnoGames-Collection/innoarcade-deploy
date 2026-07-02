@@ -1,23 +1,19 @@
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
-import { GameHost } from '../../platform/gameHost';
-import { openTournamentEntryForGame } from '../../hub/tournamentEntry';
-import { promptIfSessionExpired } from '../../platform/sessionAuth';
-import { renderShellMenuTournamentHtml, tournamentBoardHtml } from '../../platform/gameTournamentPanel';
-import { balance } from '../../platform/wallet';
-import { leaderboardRemote, playerStandingRemote } from '../../platform/backend';
-import { isConfigured } from '../../platform/supabase';
-import { currentUser } from '../../platform/auth';
-import { loadTournaments, loadMyEntries, myEntry, getTournamentForGame } from '../../platform/tournaments';
+import { createHost } from '../../platform/gameHost';
+import {
+  applyTournamentPlayLabels, promptTournamentEntry, refreshTournamentMenuPanel,
+  startTournamentRound, submitTournamentRound, tournamentAttemptsLeft,
+} from '../../platform/tournamentGameFlow';
 import './style.css';
-import { applyTranslations, getLang, t } from '../../i18n';
+import { applyTranslations, getLang } from '../../i18n';
 import { GameLoop } from '../../engine/loop';
 import { Input } from '../../engine/input';
 import { sfx } from '../../engine/audio';
 import { FruitSlice, W, H, type GameState } from './game';
 
 const GAME_ID = 'fruit-slice';
-const host = new GameHost(GAME_ID);
+const host = createHost(GAME_ID);
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
@@ -25,7 +21,6 @@ type Phase = 'menu' | 'playing' | 'paused' | 'over';
 
 let phase: Phase = 'menu';
 let rankedThisRun = false;
-let serverBest = 0;
 let starting = false;
 let toastT = 0;
 
@@ -74,10 +69,6 @@ if (canvas.parentElement) {
   new ResizeObserver(() => resizeCanvas()).observe(canvas.parentElement);
 }
 
-function gameTitle(): string {
-  return getLang() === 'am' ? host.meta.nameAm : host.meta.nameEn;
-}
-
 function showToast(msg: string): void {
   const el = $('#toast');
   el.textContent = msg;
@@ -87,20 +78,15 @@ function showToast(msg: string): void {
 }
 
 function attemptsLeft(): number {
-  const tour = getTournamentForGame(GAME_ID);
-  return tour ? (myEntry(tour.id)?.left ?? 0) : 0;
-}
-
-function tournamentPlayLabel(): string {
-  const left = attemptsLeft();
-  return left > 0 ? `▶ ${t('hub.play')} · 🎟️ ${left}` : t('hub.play');
+  return tournamentAttemptsLeft(GAME_ID);
 }
 
 function updateActionButtons(): void {
-  const playLabel = tournamentPlayLabel();
-  if (phase === 'menu') ($('#startBtn') as HTMLButtonElement).textContent = playLabel;
-  if (phase === 'over') ($('#againBtn') as HTMLButtonElement).textContent = playLabel;
-  ($('#restartBtn') as HTMLButtonElement).textContent = attemptsLeft() > 0 ? t('td.restart') : t('hub.play');
+  applyTournamentPlayLabels(GAME_ID, {
+    start: phase === 'menu' ? ($('#startBtn') as HTMLButtonElement) : null,
+    again: phase === 'over' ? ($('#againBtn') as HTMLButtonElement) : null,
+    restart: $('#restartBtn') as HTMLButtonElement,
+  });
 }
 
 function syncAttemptsUi(): void {
@@ -180,79 +166,21 @@ function updatePlayHud(): void {
 }
 
 async function refreshTournamentPanel(): Promise<void> {
-  const mount = $('#fsTourney');
-  if (!isConfigured()) {
-    mount.innerHTML = '';
-    return;
-  }
-  await currentUser();
-  await Promise.all([loadTournaments(), loadMyEntries()]);
-  const tourney = getTournamentForGame(GAME_ID);
-  if (!tourney) {
-    mount.innerHTML = '';
-    return;
-  }
-
-  const [walletCoins, standing, board] = await Promise.all([
-    balance(),
-    playerStandingRemote(tourney.id),
-    leaderboardRemote(tourney.id, 5),
-  ]);
-  serverBest = standing?.score ?? 0;
-  const left = myEntry(tourney.id)?.left ?? 0;
-
-  mount.innerHTML = renderShellMenuTournamentHtml(
-    gameTitle(), '🍉', walletCoins, serverBest, left, board,
-    { hideBestIfOnBoard: true },
-  );
-
+  await refreshTournamentMenuPanel(GAME_ID, $('#fsTourney'), { hideBestIfOnBoard: true });
   updateActionButtons();
 }
 
-async function failRankedSubmit(reward: HTMLElement): Promise<void> {
-  if (await promptIfSessionExpired(showToast)) {
-    reward.innerHTML = `<span class="shell-rr-note">${t('td.sessionExpired')}</span>`;
-    return;
-  }
-  reward.innerHTML = `<span class="shell-rr-note">${t('td.submitFailed')}</span>`;
-  showToast(t('td.submitFailed'));
-}
-
 async function submitRun(score: number, durationMs: number, isWin: boolean): Promise<void> {
-  const reward = $('#fsRunReward');
-  const boardOver = $('#fsBoardOver');
-  if (!isConfigured()) {
-    reward.innerHTML = '';
-    boardOver.innerHTML = '';
-    $('#fsFinalBest').textContent = score.toLocaleString();
-    return;
-  }
-  reward.innerHTML = `<span class="shell-rr-pending">…</span>`;
-  try {
-    const res = await host.finish(score, isWin, durationMs, { ranked: rankedThisRun });
-    if (rankedThisRun && res.rank == null) {
-      await failRankedSubmit(reward);
-      return;
-    }
-    serverBest = res.best ?? serverBest;
-    $('#fsFinalBest').textContent = serverBest.toLocaleString();
-    $('#newBest').classList.toggle('hidden', !res.isRecord);
-    reward.innerHTML = `<span class="shell-rr-stat"><b>${t('td.rank')}</b> #${res.rank ?? '—'}/${res.total ?? '—'}</span>
-      <span class="shell-rr-stat"><b>${t('td.best')}</b> ${serverBest.toLocaleString()}</span>`;
-    if (typeof res.attemptsLeft === 'number') {
-      reward.innerHTML += `<span class="shell-rr-stat">🎟️ ${t('td.attemptsLeft')}: <strong>${res.attemptsLeft}</strong></span>`;
-    }
-    const tour = getTournamentForGame(GAME_ID);
-    if (tour) {
-      const board = await leaderboardRemote(tour.id, 5);
-      const standing = await playerStandingRemote(tour.id);
-      boardOver.innerHTML = tournamentBoardHtml(board, standing);
-    }
-    syncAttemptsUi();
-    void refreshTournamentPanel();
-  } catch {
-    await failRankedSubmit(reward);
-  }
+  await submitTournamentRound(host, GAME_ID, score, isWin, durationMs, rankedThisRun, {
+    rewardEl: $('#fsRunReward'),
+    boardEl: $('#fsBoardOver'),
+    showToast,
+    onBest: (best, isRecord) => {
+      $('#fsFinalBest').textContent = best.toLocaleString();
+      $('#newBest').classList.toggle('hidden', !isRecord);
+    },
+    onSync: () => { syncAttemptsUi(); void refreshTournamentPanel(); },
+  });
 }
 
 game.onGameOver = (score, durationMs) => {
@@ -262,10 +190,7 @@ game.onGameOver = (score, durationMs) => {
 };
 
 async function onEnter(): Promise<void> {
-  openTournamentEntryForGame(GAME_ID, {
-    onEntered: () => { void refreshTournamentPanel(); },
-    onPlay: () => { void onPlayOrEnter(); },
-  });
+  promptTournamentEntry(GAME_ID, () => { void refreshTournamentPanel(); }, () => { void onPlayOrEnter(); });
 }
 
 async function onPlayOrEnter(): Promise<void> {
@@ -281,15 +206,15 @@ async function beginRankedRound(): Promise<void> {
   if (starting) return;
   starting = true;
   try {
-    await host.startRound();
+    if (!(await startTournamentRound(host, showToast))) {
+      setPhase('menu');
+      return;
+    }
     rankedThisRun = true;
     hideOverOverlay();
     game.start();
     syncAttemptsUi();
     void refreshTournamentPanel();
-  } catch {
-    setPhase('menu');
-    if (!(await promptIfSessionExpired(showToast))) showToast(t('td.submitFailed'));
   } finally {
     starting = false;
   }
@@ -370,4 +295,4 @@ applyTranslations();
 setPhase('menu');
 loop.start();
 
-void Promise.all([loadTournaments(), loadMyEntries()]).then(() => refreshTournamentPanel());
+void refreshTournamentPanel();
