@@ -1,10 +1,29 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
+import fs from 'node:fs';
 import { fileURLToPath, URL } from 'node:url';
 
 const p = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
+/** Inline critical shell CSS into game pages so the Play menu paints before JS modules load. */
+function injectShellBoot(): Plugin {
+  const bootCss = fs.readFileSync(p('src/styles/shell-boot.css'), 'utf8');
+  return {
+    name: 'inject-shell-boot',
+    transformIndexHtml: {
+      order: 'pre',
+      handler(html, ctx) {
+        const file = ctx.filename.replace(/\\/g, '/');
+        if (!file.includes('/games/')) return html;
+        if (html.includes('id="shell-boot"')) return html;
+        return html.replace('</head>', `<style id="shell-boot">${bootCss}</style></head>`);
+      },
+    },
+  };
+}
+
 export default defineConfig({
   base: './',
+  plugins: [injectShellBoot()],
   build: {
     rollupOptions: {
       input: {

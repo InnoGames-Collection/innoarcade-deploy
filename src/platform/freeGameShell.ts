@@ -490,35 +490,41 @@ export function wireFreeCasualShell(
   let starting = false;
   let phase: FreeShellPhase = 'menu';
 
-  const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
-  const stage = document.getElementById('stage') as HTMLElement;
+  const $ = <T extends HTMLElement>(id: string): T | null => document.getElementById(id) as T | null;
+  const stage = document.getElementById('stage');
   const playFrame = $('fcPlayFrame');
+  if (!stage || !playFrame) {
+    console.error('[freeGameShell] missing #stage or #fcPlayFrame');
+  }
   const headerSlots = options.headerSlots ?? CASUAL_HEADER_SLOTS;
-  if (headerSlots.length) ensureFreePlayChrome(playFrame, headerSlots, { pauseable: options.pauseable });
-  const pauseUi = options.pauseable ? ensurePauseOverlay(stage) : null;
+  if (playFrame && headerSlots.length) {
+    ensureFreePlayChrome(playFrame, headerSlots, { pauseable: options.pauseable });
+  }
+  const pauseUi = options.pauseable && stage ? ensurePauseOverlay(stage) : null;
 
   const refreshMenu = (): void => {
-    $('freeMenu').innerHTML = renderFreeMenuHtml(host, serverBest);
+    const menu = $('freeMenu');
+    if (menu) menu.innerHTML = renderFreeMenuHtml(host, serverBest);
   };
 
   const hideOverOverlay = (): void => {
     const overlay = $('overOverlay');
-    overlay.classList.add('hidden');
-    overlay.setAttribute('aria-hidden', 'true');
+    overlay?.classList.add('hidden');
+    overlay?.setAttribute('aria-hidden', 'true');
   };
 
   const showMenu = (): void => {
-    $('menuOverlay').classList.remove('hidden');
-    playFrame.classList.add('hidden');
-    $('fcBackdrop').classList.remove('hidden');
+    $('menuOverlay')?.classList.remove('hidden');
+    playFrame?.classList.add('hidden');
+    $('fcBackdrop')?.classList.remove('hidden');
     pauseUi?.overlay.classList.add('hidden');
     hideOverOverlay();
   };
 
   const showGame = (): void => {
-    $('menuOverlay').classList.add('hidden');
-    playFrame.classList.remove('hidden');
-    $('fcBackdrop').classList.add('hidden');
+    $('menuOverlay')?.classList.add('hidden');
+    playFrame?.classList.remove('hidden');
+    $('fcBackdrop')?.classList.add('hidden');
     pauseUi?.overlay.classList.add('hidden');
   };
 
@@ -526,10 +532,10 @@ export function wireFreeCasualShell(
     phase = next;
     if (next === 'menu') showMenu();
     else if (next === 'paused') {
-      playFrame.classList.add('hidden');
+      playFrame?.classList.add('hidden');
       pauseUi?.overlay.classList.remove('hidden');
     } else showGame();
-    $('closeBtn').classList.toggle('hidden', next === 'menu' || next === 'over');
+    $('closeBtn')?.classList.toggle('hidden', next === 'menu' || next === 'over');
   };
 
   const goMenu = (): void => {
@@ -551,33 +557,38 @@ export function wireFreeCasualShell(
       summaryEl.textContent = summary;
       summaryEl.classList.toggle('hidden', !summary);
     }
-    $('finalScore').textContent = score.toLocaleString();
-    $('finalBest').textContent = serverBest > 0 ? serverBest.toLocaleString() : '—';
-    $('newBest').classList.toggle('hidden', !isRecord);
-    $('runReward').innerHTML = '<span class="shell-rr-pending">…</span>';
-    $('closeBtn').classList.add('hidden');
-    $('overOverlay').classList.remove('hidden');
-    $('overOverlay').setAttribute('aria-hidden', 'false');
+    const finalScore = $('finalScore');
+    if (finalScore) finalScore.textContent = score.toLocaleString();
+    const finalBest = $('finalBest');
+    const newBest = $('newBest');
+    const runReward = $('runReward');
+    const overOverlay = $('overOverlay');
+    if (finalBest) finalBest.textContent = serverBest > 0 ? serverBest.toLocaleString() : '—';
+    newBest?.classList.toggle('hidden', !isRecord);
+    if (runReward) runReward.innerHTML = '<span class="shell-rr-pending">…</span>';
+    $('closeBtn')?.classList.add('hidden');
+    overOverlay?.classList.remove('hidden');
+    overOverlay?.setAttribute('aria-hidden', 'false');
     phase = 'over';
 
     void (async () => {
       const res = await submitFreeRun(host, score, isWin, durationMs);
       if (!res) {
-        $('finalBest').textContent = serverBest.toLocaleString();
-        $('newBest').classList.toggle('hidden', !isRecord);
+        if (finalBest) finalBest.textContent = serverBest.toLocaleString();
+        newBest?.classList.toggle('hidden', !isRecord);
         if (await promptIfSessionExpired(toast)) {
-          $('runReward').innerHTML = `<span class="shell-rr-note">${t('td.sessionExpired')}</span>`;
+          if (runReward) runReward.innerHTML = `<span class="shell-rr-note">${t('td.sessionExpired')}</span>`;
         } else if (isConfigured()) {
-          $('runReward').innerHTML = `<span class="shell-rr-note">${t('td.submitFailed')}</span>`;
-        } else {
-          $('runReward').innerHTML = '';
+          if (runReward) runReward.innerHTML = `<span class="shell-rr-note">${t('td.submitFailed')}</span>`;
+        } else if (runReward) {
+          runReward.innerHTML = '';
         }
         return;
       }
       if (typeof res.best === 'number') serverBest = Math.max(serverBest, res.best);
-      $('finalBest').textContent = serverBest.toLocaleString();
-      $('newBest').classList.toggle('hidden', !isRecord && !res.isRecord);
-      $('runReward').innerHTML = renderRunRewardHtml(res);
+      if (finalBest) finalBest.textContent = serverBest.toLocaleString();
+      newBest?.classList.toggle('hidden', !isRecord && !res.isRecord);
+      if (runReward) runReward.innerHTML = renderRunRewardHtml(res);
       refreshMenu();
     })();
   };
@@ -616,7 +627,7 @@ export function wireFreeCasualShell(
 
   wirePlayButtons(['startBtn', 'againBtn'], play);
 
-  if (options.pauseable) {
+  if (options.pauseable && playFrame) {
     playFrame.querySelector('#fpPauseBtn')?.addEventListener('click', () => pause());
     pauseUi?.resumeBtn.addEventListener('click', () => resume());
     pauseUi?.restartBtn.addEventListener('click', () => void restartFromPause());
@@ -625,21 +636,24 @@ export function wireFreeCasualShell(
     });
   }
 
-  wireFreeShellCloseButtons(stage, {
-    getPhase: () => phase,
-    goMenu,
-    confirmAbandon: () => {
-      if (options.skipAbandonConfirm || phase !== 'playing') return true;
-      return confirmAbandonRun();
-    },
-  });
+  if (stage) {
+    wireFreeShellCloseButtons(stage, {
+      getPhase: () => phase,
+      goMenu,
+      confirmAbandon: () => {
+        if (options.skipAbandonConfirm || phase !== 'playing') return true;
+        return confirmAbandonRun();
+      },
+    });
+  }
+
+  refreshMenu();
+  setPhase('menu');
 
   void freeGameBestRemote(host.meta.id).then((best) => {
     serverBest = best;
     refreshMenu();
   });
-
-  setPhase('menu');
 
   return {
     toast,
@@ -649,7 +663,9 @@ export function wireFreeCasualShell(
     pause,
     resume,
     goMenu,
-    setHeader: (values) => setFreePlayHeaderValues(values, playFrame),
+    setHeader: (values) => {
+      if (playFrame) setFreePlayHeaderValues(values, playFrame);
+    },
     finishPlay,
   };
 }

@@ -22,7 +22,7 @@ body.game-shell.quiz-shell {
   position: relative;
   width: min(100%, 480px);
   height: fit-content;
-  min-height: 0;
+  min-height: min(calc(100dvh - 20px), 560px);
   max-height: min(calc(100dvh - 20px), 680px);
   margin: auto;
 }
