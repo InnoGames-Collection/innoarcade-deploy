@@ -1,10 +1,12 @@
 // Make 24 — combine four numbers with + − × ÷ to reach exactly 24. Native GoPlay game.
 import '../../styles/base.css';
 import '../_lq/lq.css';
-import { el, toast, finishLQRound, mulberry32, randInt, sound, mountLQ, setLQHeader } from '../_lq/lq';
+import { el, toast, finishLQRound, mulberry32, randInt, sound, mountLQ, setLQHeader, modal } from '../_lq/lq';
+import { lqHelp } from '../_lq/help';
 import { multiPuzzleScore } from '../_lq/scoring';
 import { escalateTier, scalingPenalty, tierLerp } from '../../platform/freeDifficulty';
 import { createHost } from '../../platform/gameHost';
+import { t } from '../../i18n';
 
 const TARGET = 24, ROUNDS = 5, EPS = 1e-9;
 const host = createHost('target24');
@@ -39,6 +41,36 @@ function generate(rnd: () => number, tier: number): number[] {
 
 interface Num { val: number; label: string; used: boolean; }
 
+function wireHeaderActions(undoFn: () => void): void {
+  const stats = document.getElementById('fpStats');
+  if (!stats) return;
+
+  let undoBtn = stats.querySelector('#fpUndoBtn') as HTMLButtonElement | null;
+  if (!undoBtn) {
+    stats.appendChild(el('div', { class: 'fp-stat fp-stat-action' },
+      el('button', {
+        id: 'fpUndoBtn',
+        class: 'fp-action-btn',
+        text: 'Undo',
+        'aria-label': 'Undo',
+        onclick: undoFn,
+      })));
+  } else {
+    undoBtn.onclick = undoFn;
+  }
+
+  if (!stats.querySelector('#fpHelpBtn')) {
+    stats.appendChild(el('div', { class: 'fp-stat fp-stat-action' },
+      el('button', {
+        id: 'fpHelpBtn',
+        class: 'fp-action-btn fp-action-btn--icon',
+        text: '?',
+        'aria-label': t('td.howto'),
+        onclick: () => modal({ title: t('td.howto'), body: lqHelp('target24') }),
+      })));
+  }
+}
+
 function render(mount: HTMLElement): void {
   let cleanup: (() => void) | null = null;
 
@@ -60,7 +92,6 @@ function render(mount: HTMLElement): void {
     let selIdx = -1;
     let selOp: string | null = null;
 
-    const sub = el('p', { class: 'sub center' });
     const chips = el('div', { class: 'chips' });
     const fb = el('div', { class: 'quiz-feedback center' });
     const ops = el('div', { class: 'op-row' });
@@ -74,9 +105,7 @@ function render(mount: HTMLElement): void {
       ops.appendChild(b);
     }
 
-    mount.appendChild(el('div', { class: 'game-toolbar' },
-      el('button', { class: 'btn', text: 'Undo', onclick: undo })));
-    mount.appendChild(el('div', { class: 'quiz-wrap' }, el('div', { class: 'quiz-q' }, sub, chips, ops, fb)));
+    mount.appendChild(el('div', { class: 'quiz-wrap' }, el('div', { class: 'quiz-q' }, chips, ops, fb)));
     updateHeader();
     nextRound();
 
@@ -97,9 +126,8 @@ function render(mount: HTMLElement): void {
       const vals = generate(rnd, tier);
       nums = vals.map((v) => ({ val: v, label: String(v), used: false }));
       history = []; selIdx = -1; selOp = null;
-      sub.textContent = `Puzzle ${round + 1} of ${ROUNDS} — make ${TARGET}`;
-      fb.textContent = 'Tap number · operation · number';
-      fb.className = 'quiz-feedback center dim';
+      fb.textContent = '';
+      fb.className = 'quiz-feedback center';
       updateHeader();
       paint();
     }
@@ -153,10 +181,12 @@ function render(mount: HTMLElement): void {
       undoCount++;
       penaltyTotal += scalingPenalty(undoCount);
       updateHeader();
-      fb.textContent = 'Tap number · operation · number';
-      fb.className = 'quiz-feedback center dim';
+      fb.textContent = '';
+      fb.className = 'quiz-feedback center';
       paint();
     }
+
+    wireHeaderActions(undo);
 
     function finish(): void {
       const elapsedMs = Date.now() - t0;
@@ -173,4 +203,9 @@ function render(mount: HTMLElement): void {
   newRound(Math.floor(Math.random() * 1e9));
 }
 
-mountLQ('target24', render);
+mountLQ('target24', render, {
+  headerSlots: [
+    { id: 'round', labelKey: 'shell.puzzle', icon: 'round' },
+    { id: 'score', labelKey: 'td.score', icon: 'score', score: true },
+  ],
+});
