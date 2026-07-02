@@ -83,8 +83,7 @@ function render(mount: HTMLElement): void {
       let over = false;
       const puzzleStart = Date.now();
 
-      const sub = el('p', { class: 'sub center', text: `Puzzle ${puzzleIdx + 1} of ${PUZZLES}` });
-      const gridEl = el('div', { class: 'sudoku', role: 'grid', style: `grid-template-columns: repeat(${N}, auto);` });
+      const gridEl = el('div', { class: 'sudoku', role: 'grid' });
       const cellEls: HTMLElement[][] = [];
       for (let r = 0; r < N; r++) {
         cellEls.push([]);
@@ -100,12 +99,11 @@ function render(mount: HTMLElement): void {
         }
       }
 
-      const pad = el('div', { class: 'kbd' },
+      const pad = el('div', { class: 'kbd sudoku-kbd' },
         el('div', { class: 'kbd-row' },
           [1, 2, 3, 4, 5, 6].map((v) => el('button', { class: 'key num', text: String(v), onclick: () => place(v) })),
           el('button', { class: 'key wide', text: '⌫', onclick: () => place(0) })));
 
-      mount.appendChild(sub);
       mount.appendChild(gridEl);
       mount.appendChild(pad);
       setLQHeader({ round: `${puzzleIdx + 1}/${PUZZLES}`, score: String(totalScore) });
@@ -178,4 +176,9 @@ function render(mount: HTMLElement): void {
   startSession(Math.floor(Math.random() * 1e9));
 }
 
-mountLQ('sudoku', render);
+mountLQ('sudoku', render, {
+  headerSlots: [
+    { id: 'round', labelKey: 'shell.puzzle', icon: 'round' },
+    { id: 'score', labelKey: 'td.score', icon: 'score', score: true },
+  ],
+});

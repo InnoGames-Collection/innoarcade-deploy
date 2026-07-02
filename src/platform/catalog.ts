@@ -71,6 +71,7 @@ const ALL_GAMES: GameMeta[] = [
     genreEn: 'Puzzle · Casual',
     genreAm: 'እንቆቅልሽ · ቀላል',
     mode: 'free',
+    stable: 'v1',
     icon: '🔢',
     accent: '#f0a832',
     thumb: ['#b8741b', '#5c3409'],
@@ -336,9 +337,17 @@ for (const g of CATALOG) {
   if (gate) { g.minLevel = gate.minLevel; g.unlockCost = gate.unlockCost; }
 }
 
-// Mark shipped free games as stable v1 (tournament titles keep their own tags).
+// Locked production games — explicit stable tags only (see STABLE.md).
+const STABLE_VERSIONS: Record<string, string> = {
+  'temple-dash': 'v3',
+  'memory-match': 'v1',
+  'ethiopian-quiz': 'v1',
+  'spell': 'v1',
+  'merge-2048': 'v1',
+};
 for (const g of CATALOG) {
-  if (g.mode === 'free' && !g.stable) g.stable = 'v1';
+  const tag = STABLE_VERSIONS[g.id];
+  if (tag) g.stable = tag;
 }
 
 // Display order for the flat catalog:

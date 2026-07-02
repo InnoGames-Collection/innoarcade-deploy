@@ -8,6 +8,7 @@ import '../../styles/game-shell.css';
 import '../_casual/style.css';
 import { sfx } from '../../engine/audio';
 import { renderRunRewardHtml, wireFreeCasualShell } from '../../platform/freeGameShell';
+import type { FreePlayHeaderSlot } from '../../platform/freePlayHeader';
 import { applyTranslations, getLang } from '../../i18n';
 import { createHost, type FinishResult, type GameHost } from '../../platform/gameHost';
 import { promptIfSessionExpired } from '../../platform/sessionAuth';
@@ -219,8 +220,16 @@ export function finishLQRound(
   lqFinish?.(score, isWin, _summary, durationMs);
 }
 
+export interface MountLQOptions {
+  headerSlots?: FreePlayHeaderSlot[];
+}
+
 /** Boot a native LexiQuest brain game inside the free hub shell. */
-export function mountLQ(gameId: string, render: (mount: HTMLElement) => void): void {
+export function mountLQ(
+  gameId: string,
+  render: (mount: HTMLElement) => void,
+  opts?: MountLQOptions,
+): void {
   activeHost = createHost(gameId);
   const shell = wireFreeCasualShell(activeHost, () => {
     const mount = document.getElementById('lq-mount');
@@ -228,7 +237,7 @@ export function mountLQ(gameId: string, render: (mount: HTMLElement) => void): v
     mount.innerHTML = '';
     render(mount);
   }, {
-    headerSlots: [
+    headerSlots: opts?.headerSlots ?? [
       { id: 'round', labelKey: 'eq.question', icon: 'question' },
       { id: 'score', labelKey: 'td.score', icon: 'score', score: true },
     ],

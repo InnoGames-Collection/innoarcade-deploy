@@ -1,0 +1,25 @@
+---
+description: Stable locked games — do not edit game folders unless the user explicitly requests it
+alwaysApply: true
+---
+
+# Stable games (locked)
+
+These games are **frozen** production releases. See `STABLE.md` for details.
+
+| Game | ID | Stable tag |
+|------|-----|------------|
+| Ethiorunner | `temple-dash` | v3 |
+| Memory Match | `memory-match` | v1 |
+| Ethiopian Quiz | `ethiopian-quiz` | v1 |
+| Spell Trivia | `spell` | v1 |
+| 2048 | `merge-2048` | v1 |
+
+## Rules
+
+1. **Do not edit** `src/games/<id>/` or `games/<id>/` for any stable game unless the user **explicitly** asks.
+2. **Prefer shared code** for cross-game fixes: `freeQuizShell.ts`, `freeGameShell.ts`, `freeShellNav.ts`, `_quiz/style.css`, `_casual/style.css`, `game-shell.css`, `tournamentGameFlow.ts`, i18n.
+3. **Notify the user** when a shared-platform change will affect a stable game (which file changed and which games pick it up).
+4. Copy patterns from stable games into new titles — do not refactor stable game code to share logic.
+
+Per-game rules also live in `.cursor/rules/*-stable.mdc`.

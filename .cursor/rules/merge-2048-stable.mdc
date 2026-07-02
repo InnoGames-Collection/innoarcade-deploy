@@ -1,0 +1,21 @@
+---
+description: 2048 (merge-2048) is stable v1 — do not modify without explicit user request
+globs: src/games/merge-2048/**,games/merge-2048/**
+alwaysApply: false
+---
+
+# 2048 — stable v1
+
+`merge-2048` is tagged `stable: 'v1'` in `src/platform/catalog.ts`. See `STABLE.md`.
+
+## Do not change
+
+Unless the user **explicitly** asks to modify 2048:
+
+- Do not edit files under `src/games/merge-2048/` or `games/merge-2048/`
+- Do not change board logic, scoring, hub-themed frame layout, or pause UX in game-specific files
+
+## Instead
+
+- Fix engine/casual UX via shared modules (`freeGameShell.ts`, `freeShellNav.ts`, `game-shell.css`)
+- If a shared change affects 2048, **tell the user** which shared file changed and why

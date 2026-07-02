@@ -20,6 +20,11 @@
   max-width: 100%;
   margin: 0;
   padding: 0 0 8px;
+  overflow-x: hidden;
+}
+
+.fc-playframe #lq-mount.fc-game-body {
+  width: 100%;
 }
 
 #lq-mount { max-width: 980px; margin: 0 auto; padding: 6px 12px 40px; color: var(--lq-text); }
@@ -100,9 +105,55 @@
 .rhyme-slot { display: flex; gap: 4px; }
 
 /* sudoku / nine sums */
-.sudoku { display: grid; gap: 2px; justify-content: center; margin: 14px auto; background: var(--lq-border); border: 3px solid var(--lq-text-dim); border-radius: 8px; padding: 2px; width: fit-content; }
-.sudoku .cell { --sud: 52px; width: var(--sud); height: var(--sud); display: flex; align-items: center; justify-content: center; background: var(--lq-surface); font-size: calc(var(--sud) * 0.45); font-weight: 700; cursor: pointer; color: var(--lq-accent); }
-@media (max-width: 480px) { .sudoku .cell { --sud: clamp(44px, 13.5vw, 52px); } }
+.sudoku {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 2px;
+  width: 100%;
+  max-width: min(100%, 360px);
+  margin: 14px auto;
+  background: var(--lq-border);
+  border: 3px solid var(--lq-text-dim);
+  border-radius: 8px;
+  padding: 2px;
+  box-sizing: border-box;
+}
+.sudoku .cell {
+  width: 100%;
+  aspect-ratio: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--lq-surface);
+  font-size: clamp(1rem, 5.2vw, 1.45rem);
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--lq-accent);
+}
+.kbd.sudoku-kbd {
+  width: 100%;
+  max-width: min(100%, 360px);
+  margin-left: auto;
+  margin-right: auto;
+}
+.kbd.sudoku-kbd .kbd-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  width: 100%;
+}
+.kbd.sudoku-kbd .key {
+  min-width: 0;
+  width: 100%;
+  height: clamp(40px, 11vw, 52px);
+  padding: 0 2px;
+  font-size: clamp(14px, 3.8vw, 18px);
+}
+.kbd.sudoku-kbd .key.wide {
+  min-width: 0;
+  font-size: clamp(16px, 4.2vw, 20px);
+}
 .sudoku .cell.given { color: var(--lq-text); font-weight: 800; cursor: default; background: var(--lq-surface-2); }
 .sudoku .cell.sel { outline: 3px solid var(--lq-accent); outline-offset: -3px; }
 .sudoku .cell.conflict { color: var(--lq-danger); }
