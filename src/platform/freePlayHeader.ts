@@ -2,7 +2,7 @@
 
 import { t } from '../i18n';
 
-export type FreeHeaderIcon = 'question' | 'time' | 'timer' | 'score' | 'round' | 'correct';
+export type FreeHeaderIcon = 'question' | 'time' | 'timer' | 'score' | 'round' | 'correct' | 'moves';
 
 export interface FreePlayHeaderSlot {
   id: string;
@@ -20,6 +20,7 @@ const ICONS: Record<FreeHeaderIcon, string> = {
   score: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.3L12 14.8 7.2 16.8l.9-5.3L4.2 7.7l5.4-.8L12 2z"/></svg>',
   round: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg>',
   correct: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
+  moves: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h16M4 16h16"/></svg>',
 };
 
 function slotLabel(slot: FreePlayHeaderSlot): string {
@@ -90,8 +91,30 @@ export function setFreePlayHeaderValues(
   }
 }
 
-/** Default casual header: timer + score. */
+/** No stats row — luck/chance games and compact brain puzzles. */
+export const NO_HEADER: FreePlayHeaderSlot[] = [];
+
+/** Timed reflex games: countdown + score. */
 export const CASUAL_HEADER_SLOTS: FreePlayHeaderSlot[] = [
   { id: 'time', labelKey: 'tg.time', icon: 'timer' },
   { id: 'score', labelKey: 'td.score', icon: 'score', score: true },
+];
+
+/** Puzzle rounds + score (sequence, multi-round brain games). */
+export const PUZZLE_ROUND_HEADER: FreePlayHeaderSlot[] = [
+  { id: 'round', labelKey: 'shell.puzzle', icon: 'round' },
+  { id: 'score', labelKey: 'td.score', icon: 'score', score: true },
+];
+
+/** Sudoku / cross-sum style: time, score, moves. */
+export const PUZZLE_STATS_HEADER: FreePlayHeaderSlot[] = [
+  { id: 'time', labelKey: 'tg.time', icon: 'timer' },
+  { id: 'score', labelKey: 'td.score', icon: 'score', score: true },
+  { id: 'moves', labelKey: 'shell.moves', icon: 'moves' },
+];
+
+/** Canvas puzzle: score + best (no session timer). */
+export const SCORE_BEST_HEADER: FreePlayHeaderSlot[] = [
+  { id: 'score', labelKey: 'td.score', icon: 'score', score: true },
+  { id: 'best', labelKey: 'td.best', icon: 'score' },
 ];

@@ -150,9 +150,14 @@ function run(assets: AssetStore, assetsReady: Promise<void>): void {
     }
   }
 
+  async function restartFromPause(): Promise<void> {
+    if (game.state !== 'paused') return;
+    await beginRun();
+  }
+
   $('#startBtn').addEventListener('click', () => void onPlayOrEnter());
   $('#againBtn').addEventListener('click', () => void onPlayOrEnter());
-  $('#restartBtn').addEventListener('click', () => void onPlayOrEnter());
+  $('#restartBtn').addEventListener('click', () => void restartFromPause());
   $('#resumeBtn').addEventListener('click', () => game.resume());
   $('#pauseBtn').addEventListener('click', () => {
     if (game.state === 'playing') game.pause();
