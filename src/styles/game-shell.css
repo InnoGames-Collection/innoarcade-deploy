@@ -23,8 +23,7 @@
 .game-shell[data-game="orbit-blast"] { --game-accent: #5b8cff; }
 .game-shell[data-game="merge-2048"] { --game-accent: #f0a832; }
 .game-shell[data-game="candy-crunch"] { --game-accent: #e85b9c; }
-.game-shell[data-game="dice-roll"] { --game-accent: #d18a04; }
-.game-shell[data-game="lucky-box"] { --game-accent: #c77dff; }
+.game-shell[data-game="lucky-box"] { --game-accent: #4f9e16; }
 .game-shell[data-game="spin-wheel"] { --game-accent: #d18a04; }
 .game-shell[data-game="luckyslot"] { --game-accent: #d18a04; }
 .game-shell[data-game="ethiopian-quiz"] { --game-accent: #3f9e16; }
@@ -36,7 +35,6 @@
 .game-shell[data-game="sky-hopper"] { --game-accent: #56b8e8; }
 .game-shell[data-game="bubble-pop"] { --game-accent: #7b6cf0; }
 .game-shell[data-game="tap-game"] { --game-accent: #ff6b35; }
-.game-shell[data-game="scratch-card"] { --game-accent: #f4d03f; }
 .game-shell[data-game="popblast"] { --game-accent: #e85b9c; }
 .game-shell[data-game="sudoku"] { --game-accent: #34b38a; }
 .game-shell[data-game="spell"] { --game-accent: #6a4cff; }
@@ -219,7 +217,7 @@
 /* Casual game boards — light card on hub backdrop (not legacy purple gradient) */
 .game-shell #slot-game-wrapper,
 .game-shell #popblast-game-wrapper,
-.game-shell #dice-roll-wrapper,
+.game-shell #lucky-box-wrapper,
 .game-shell #tap-game-wrapper {
   width: 100%;
   max-width: 520px;

@@ -198,7 +198,7 @@ const HOWTO: Record<string, { en: string; am: string }> = {
   'merge-2048': { en: 'Swipe to slide tiles; equal numbers merge and double. Keep merging to reach the 2048 tile.', am: 'ሰቆችን ያንሸራትቱ፤ እኩል ቁጥሮች ሲገናኙ ይዋሃዳሉ። 2048 ለመድረስ ይቀጥሉ።' },
   'spin-wheel': { en: 'Tap to spin the wheel. Where it stops decides your reward — land on a winning wedge to score.', am: 'መንኮራኩሩን ለማሽከርከር ይንኩ። የሚያርፍበት ቦታ ሽልማትዎን ይወስናል።' },
   'ethiopian-quiz': { en: 'Answer 5 multiple-choice questions about Ethiopia. Pick the correct option; 3+ correct wins points.', am: 'ስለ ኢትዮጵያ 5 ጥያቄዎችን ይመልሱ። ትክክለኛውን ይምረጡ፤ 3+ ሲያገኙ ነጥብ ያሸንፋሉ።' },
-  'dice-roll': { en: 'Tap Roll. Matching dice (doubles) win and award points. Roll again to push your score.', am: 'ጥሉ ይንኩ። ተመሳሳይ ዳይስ (ድርብ) ሲመጣ ያሸንፋሉ።' },
+  'tap-game': { en: 'Tap as fast and accurately as you can before the timer runs out. Higher taps, higher score.', am: 'ሰዓቱ ከማለቁ በፊት በፍጥነትና በትክክል ይንኩ።' },
   'lucky-box': { en: 'Pick a box to reveal what’s inside. Some boxes hold prizes — choose well to win points.', am: 'ሳጥን ይምረጡ፤ ውስጡን ይክፈቱ። አንዳንዶቹ ሽልማት አላቸው።' },
   'temple-dash': { en: 'Run, jump and slide to dodge obstacles. Survive as long as you can for a high score.', am: 'እንቅፋቶችን ለማምለጥ ይሩጡ፣ ይዝለሉ። በተቻለ መጠን ይኑሩ።' },
   'sudoku': { en: 'Fill the grid so every row, column and box has 1–9 with no repeats.', am: 'እያንዳንዱ ረድፍ፣ አምድ እና ሳጥን 1–9 እንዲይዝ ሰንጠረዡን ይሙሉ።' },
@@ -220,8 +220,6 @@ const HOWTO: Record<string, { en: string; am: string }> = {
   },
   'sky-hopper': { en: 'Tap to hop upward from platform to platform. Climb as high as you can without falling.', am: 'ከመድረክ ወደ መድረክ ለመዝለል ይንኩ። ሳይወድቁ ከፍ ብለው ይውጡ።' },
   'bubble-pop': { en: 'Aim and shoot bubbles to group 3+ of a colour and pop them. Clear the board to win.', am: '3+ ተመሳሳይ ቀለም ለማሰባሰብ አረፋዎችን ይተኩሱ።' },
-  'tap-game': { en: 'Tap as fast and accurately as you can before the timer runs out. Higher taps, higher score.', am: 'ሰዓቱ ከማለቁ በፊት በፍጥነትና በትክክል ይንኩ።' },
-  'scratch-card': { en: 'Scratch the card to reveal symbols. Match the winning symbols to score a prize.', am: 'ምልክቶችን ለማሳየት ካርዱን ይፋቁ። አሸናፊ ምልክቶችን ሲያዛምዱ ይሸልማሉ።' },
 };
 const howToText = (g: GameMeta): { en: string; am: string } =>
   HOWTO[g.id] ?? { en: `Tap Play to start ${g.nameEn}. Score as high as you can!`, am: `${g.nameAm}ን ለመጀመር ይጫወቱ።` };

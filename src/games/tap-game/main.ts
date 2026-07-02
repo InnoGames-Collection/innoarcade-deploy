@@ -12,8 +12,9 @@ import { wireFreeCasualShell } from '../../platform/freeGameShell';
 const host = createHost('tap-game');
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
+const SCORE_MULT = 10;
 const winRate = host.winRate;
-const targetScore = winRate >= 70 ? 4 : winRate <= 30 ? 7 : 5;
+const targetScore = (winRate >= 70 ? 4 : winRate <= 30 ? 7 : 5) * SCORE_MULT;
 
 let score = 0;
 let timeLeft = 10;
@@ -24,6 +25,10 @@ let runStart = 0;
 const area = $('#tg-area');
 const message = $('#tg-message');
 const hint = $('#tg-hint');
+
+function displayScore(): number {
+  return score * SCORE_MULT;
+}
 
 function play(type: 'tap' | 'win' | 'lose' | 'click'): void {
   switch (type) {
@@ -36,7 +41,7 @@ function play(type: 'tap' | 'win' | 'lose' | 'click'): void {
 function updateHud(): void {
   shell.setHeader({
     time: String(timeLeft),
-    score: String(score),
+    score: String(displayScore()),
   });
 }
 
@@ -137,13 +142,14 @@ async function startGame(): Promise<void> {
 function endGame(): void {
   isPlaying = false;
   document.querySelectorAll('.tg-target-btn').forEach((el) => el.remove());
-  const isWin = score >= targetScore;
+  const finalScore = displayScore();
+  const isWin = finalScore >= targetScore;
   play(isWin ? 'win' : 'lose');
   const summary = isWin
-    ? '🎉 ' + t('tg.win').replace('{s}', String(score))
-    : t('tg.lose').replace('{s}', String(score)).replace('{n}', String(targetScore));
+    ? '🎉 ' + t('tg.win').replace('{s}', String(finalScore))
+    : t('tg.lose').replace('{s}', String(finalScore)).replace('{n}', String(targetScore));
   message.textContent = summary;
-  shell.finishPlay(score, isWin, '', Date.now() - runStart);
+  shell.finishPlay(finalScore, isWin, '', Date.now() - runStart);
 }
 
 document.documentElement.lang = getLang();

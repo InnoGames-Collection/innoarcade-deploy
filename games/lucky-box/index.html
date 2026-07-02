@@ -6,7 +6,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>" />
     <title>Lucky Boxes — GoPlay</title>
   </head>
-  <body class="game-shell casual-shell" data-game="lucky-box">
+  <body class="game-shell casual-shell brain-shell" data-game="lucky-box">
     <div id="stage" class="fc-stage game-shell-stage">
       <div id="fcBackdrop" class="fc-backdrop" aria-hidden="true"></div>
 
@@ -15,19 +15,18 @@
 
         <div id="lucky-box-wrapper">
           <div class="lb-boxes-container" id="lb-boxes-container">
-            <div class="lb-box" data-index="0"><div class="lb-box-inner">📦</div><div class="lb-box-label"><span data-i18n="lb.box">Box</span> 1</div></div>
-            <div class="lb-box" data-index="1"><div class="lb-box-inner">📦</div><div class="lb-box-label"><span data-i18n="lb.box">Box</span> 2</div></div>
-            <div class="lb-box" data-index="2"><div class="lb-box-inner">📦</div><div class="lb-box-label"><span data-i18n="lb.box">Box</span> 3</div></div>
+            <div class="lb-box" data-index="0"><div class="lb-box-inner"></div></div>
+            <div class="lb-box" data-index="1"><div class="lb-box-inner"></div></div>
+            <div class="lb-box" data-index="2"><div class="lb-box-inner"></div></div>
           </div>
           <div class="lb-message" id="lb-message"></div>
           <div id="lb-gamble-container" class="lb-gamble-container">
-            <div class="lb-message lb-gamble-title" id="lb-gamble-title" data-i18n="lb.doubleOrNothing">⚡ DOUBLE OR NOTHING ⚡</div>
             <div class="lb-boxes-container">
-              <div class="lb-gamble-chest" data-gidx="0"><div class="lb-box-inner">🔮</div><div class="lb-box-label"><span data-i18n="lb.chest">Chest</span> A</div></div>
-              <div class="lb-gamble-chest" data-gidx="1"><div class="lb-box-inner">🔮</div><div class="lb-box-label"><span data-i18n="lb.chest">Chest</span> B</div></div>
+              <div class="lb-gamble-chest" data-gidx="0"><div class="lb-box-inner"></div></div>
+              <div class="lb-gamble-chest" data-gidx="1"><div class="lb-box-inner"></div></div>
             </div>
             <div class="lb-gamble-actions">
-              <button class="lb-reset-btn lb-cashout" id="lb-cashout-btn" data-i18n="lb.takeWin">TAKE WIN</button>
+              <button class="lb-cashout" id="lb-cashout-btn" data-i18n="lb.takeWin">Take win</button>
             </div>
           </div>
         </div>
@@ -41,16 +40,11 @@
         </div>
       </div>
 
-      <div id="overOverlay" class="game-overlay hidden" aria-hidden="true">
+      <div id="overOverlay" class="game-overlay chance-over hidden" aria-hidden="true">
         <div class="game-panel">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-          <h2 data-i18n="td.gameOver">Game over</h2>
-          <p id="fcOverSummary" class="fc-over-summary"></p>
-          <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
-          <div class="shell-over-final">
-            <div class="shell-over-stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
-            <div class="shell-over-stat"><span data-i18n="td.best">Best</span><strong id="finalBest">—</strong></div>
-          </div>
+          <h2 id="fcOverTitle" class="fc-over-headline"></h2>
+          <p id="fcOverScore" class="fc-over-score hidden"></p>
           <div class="shell-run-reward" id="runReward"></div>
           <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
         </div>

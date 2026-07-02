@@ -42,8 +42,6 @@ export default defineConfig({
         bubblePop: p('games/bubble-pop/index.html'),
         memoryMatch: p('games/memory-match/index.html'),
         tapGame: p('games/tap-game/index.html'),
-        diceRoll: p('games/dice-roll/index.html'),
-        scratchCard: p('games/scratch-card/index.html'),
         luckyBox: p('games/lucky-box/index.html'),
         spinWheel: p('games/spin-wheel/index.html'),
         luckyslot: p('games/luckyslot/index.html'),

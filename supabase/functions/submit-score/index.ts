@@ -45,7 +45,7 @@ const GAME_SCORING: Record<string, ScoreCfg> = {
   'metro-rush': { par: 1500 }, 'candy-crunch': { par: 300 }, 'dot-link': { par: 200 },
   'brick-blitz': { par: 300 }, 'fruit-slice': { par: 1200 }, 'sky-hopper': { par: 100 },
   'bubble-pop': { par: 300 }, 'memory-match': { par: 3600 }, 'tap-game': { par: 50 },
-  'dice-roll': { par: 300 }, 'scratch-card': { par: 100 }, 'lucky-box': { par: 300 },
+  'lucky-box': { par: 300 },
   'spin-wheel': { par: 300 }, 'luckyslot': { par: 300 }, 'popblast': { par: 200 },
   'ethiopian-quiz': { par: 100, timeWeight: 0.5, parTime: 60000 },
   'sudoku': { par: 30 }, 'crosssum': { par: 10 }, 'logic': { par: 5 }, 'rhyme': { par: 10 },

@@ -1,17 +1,25 @@
 // Nine Sums — place 1-9 once each so every row and column hits its sum. Native GoPlay game.
 import '../../styles/base.css';
 import '../_lq/lq.css';
-import { el, toast, finishLQRound, mulberry32, shuffled, sound, mountLQ, setLQHeader } from '../_lq/lq';
+import { el, toast, finishLQRound, mulberry32, shuffled, randInt, sound, mountLQ, setLQHeader } from '../_lq/lq';
 import { puzzleCompletionScore } from '../_lq/scoring';
 import { escalateTier } from '../../platform/freeDifficulty';
 import { createHost } from '../../platform/gameHost';
 
-const PUZZLES = 3;
 const host = createHost('crosssum');
+
+function crosssumKeypad(onKey: (v: number) => void): HTMLElement {
+  return el('div', { class: 'kbd crosssum-kbd', role: 'group', 'aria-label': 'Number pad' },
+    el('div', { class: 'kbd-row' },
+      [1, 2, 3, 4, 5, 6, 7, 8, 9].map((v) =>
+        el('button', { class: 'key num', text: String(v), onclick: () => onKey(v) })),
+      el('button', { class: 'key wide', text: '⌫', 'aria-label': 'Backspace', onclick: () => onKey(0) })));
+}
 
 function render(mount: HTMLElement): void {
   function startSession(seed: number): void {
     const rnd = mulberry32(seed);
+    const totalPuzzles = randInt(4, 6, rnd);
     let puzzleIdx = 0;
     let totalScore = 0;
     const sessionStart = Date.now();
@@ -36,8 +44,7 @@ function render(mount: HTMLElement): void {
       let mistakes = 0;
       const puzzleStart = Date.now();
 
-      const sub = el('p', { class: 'sub center', text: `Puzzle ${puzzleIdx + 1} of ${PUZZLES}` });
-      const gridEl = el('div', { class: 'sudoku', role: 'grid', style: 'grid-template-columns: repeat(4, auto);' });
+      const gridEl = el('div', { class: 'sudoku crosssum-grid', role: 'grid', style: 'grid-template-columns: repeat(4, auto);' });
       const cellEls: HTMLElement[][] = [];
       for (let r = 0; r < 3; r++) {
         cellEls.push([]);
@@ -52,16 +59,11 @@ function render(mount: HTMLElement): void {
       gridEl.appendChild(el('div', { class: 'cell sum-lbl', text: '' }));
 
       const fb = el('div', { class: 'quiz-feedback center' });
-      const mkKey = (v: number): HTMLElement => el('button', { class: 'key num', text: String(v), onclick: () => place(v) });
-      const padWrap = el('div', { class: 'kbd' },
-        el('div', { class: 'kbd-row' }, [1, 2, 3, 4, 5].map(mkKey)),
-        el('div', { class: 'kbd-row' }, [6, 7, 8, 9].map(mkKey), el('button', { class: 'key wide', text: '⌫', onclick: () => place(0) })));
+      const padWrap = crosssumKeypad(place);
 
-      mount.appendChild(sub);
-      mount.appendChild(gridEl);
-      mount.appendChild(fb);
+      mount.appendChild(el('div', { class: 'crosssum-wrap' }, gridEl, fb));
       mount.appendChild(padWrap);
-      setLQHeader({ round: `${puzzleIdx + 1}/${PUZZLES}`, score: String(totalScore) });
+      setLQHeader({ round: `${puzzleIdx + 1}/${totalPuzzles}`, score: String(totalScore) });
       paint();
 
       function paint(): void {
@@ -96,12 +98,12 @@ function render(mount: HTMLElement): void {
           const score = puzzleCompletionScore(elapsedMs, mistakes, { budgetSec: 360, mistakePenalty });
           totalScore += score;
           puzzleIdx++;
-          setLQHeader({ round: `${Math.min(puzzleIdx + 1, PUZZLES)}/${PUZZLES}`, score: String(totalScore) });
-          if (puzzleIdx >= PUZZLES) {
+          setLQHeader({ round: `${Math.min(puzzleIdx + 1, totalPuzzles)}/${totalPuzzles}`, score: String(totalScore) });
+          if (puzzleIdx >= totalPuzzles) {
             finishLQRound(
               totalScore,
               totalScore >= host.winScore,
-              `${PUZZLES}/${PUZZLES} puzzles`,
+              `${totalPuzzles}/${totalPuzzles} puzzles`,
               Date.now() - sessionStart,
             );
           } else {
@@ -112,7 +114,7 @@ function render(mount: HTMLElement): void {
           sound('bad');
           fb.textContent = "All cells filled, but the sums don't match yet.";
           fb.className = 'quiz-feedback bad center';
-          setTimeout(() => { fb.textContent = ''; }, 2000);
+          setTimeout(() => { fb.textContent = ''; fb.className = 'quiz-feedback center'; }, 2000);
         }
       }
 
@@ -131,4 +133,9 @@ function render(mount: HTMLElement): void {
   startSession(Math.floor(Math.random() * 1e9));
 }
 
-mountLQ('crosssum', render);
+mountLQ('crosssum', render, {
+  headerSlots: [
+    { id: 'round', labelKey: 'shell.puzzle', icon: 'round' },
+    { id: 'score', labelKey: 'td.score', icon: 'score', score: true },
+  ],
+});

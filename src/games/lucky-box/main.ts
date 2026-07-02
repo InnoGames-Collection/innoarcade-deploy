@@ -13,6 +13,8 @@ const host = createHost('lucky-box');
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 const inner = (el: Element): HTMLElement => el.querySelector('.lb-box-inner') as HTMLElement;
 
+const GIFT_ICON = `<svg class="lb-gift-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M22 7H2v5h20V7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 22V7M12 7H7.5a2.5 2.5 0 1 1 0-5C10.5 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13.5 2 12 7 12 7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
 function chance(ratePct: number): boolean {
   const buf = new Uint32Array(1);
   crypto.getRandomValues(buf);
@@ -41,27 +43,31 @@ let isGambleStage = false;
 let gambleResolved = false;
 let runStart = 0;
 
-const shell = wireFreeCasualShell(host, initGame);
+const shell = wireFreeCasualShell(host, initGame, { headerSlots: [], chanceOver: true });
 
 function finishRound(points: number, isWin: boolean): void {
   shell.finishPlay(points, isWin, '', Date.now() - runStart);
 }
 
+function setGiftIcon(box: HTMLElement): void {
+  inner(box).innerHTML = GIFT_ICON;
+}
+
 function initGame(): void {
   prizes = ['🎉', '😔', '😔'];
   gamePlayed = false;
-  message.textContent = t('lb.pick');
-  message.style.color = '';
+  message.textContent = '';
+  message.className = 'lb-message';
   boxes.forEach((box) => {
     box.classList.remove('opened');
-    inner(box).textContent = '📦';
+    setGiftIcon(box);
   });
   gambleContainer.style.display = 'none';
   gambleResolved = false;
   isGambleStage = false;
   gambleChests.forEach((c) => {
     c.classList.remove('opened');
-    inner(c).textContent = '🔮';
+    inner(c).innerHTML = GIFT_ICON;
   });
 }
 
@@ -95,12 +101,12 @@ function openBox(box: HTMLElement, index: number): void {
     if (isWin) {
       sfx.coin();
       isGambleStage = true;
-      message.textContent = t('lb.found');
-      message.style.color = '#ffd700';
+      message.textContent = t('lb.win');
+      message.className = 'lb-message lb-message--win';
       gambleContainer.style.display = 'flex';
     } else {
-      message.textContent = t('lb.wrong');
-      message.style.color = '#c77dff';
+      message.textContent = t('lb.lose');
+      message.className = 'lb-message lb-message--lose';
       sfx.crash();
       finishRound(0, false);
     }
@@ -128,12 +134,12 @@ function pickGamble(chest: HTMLElement, gidx: number): void {
   setTimeout(() => {
     gambleContainer.style.display = 'none';
     if (doubleWin) {
-      message.textContent = t('lb.double').replace('{p}', String(host.winPoints * 2));
-      message.style.color = '#ffd700';
+      message.textContent = t('lb.double');
+      message.className = 'lb-message lb-message--win';
       finishRound(host.winPoints * 2, true);
     } else {
-      message.textContent = t('lb.boom');
-      message.style.color = '#ff6b6b';
+      message.textContent = t('lb.lose');
+      message.className = 'lb-message lb-message--lose';
       finishRound(0, false);
     }
   }, 1400);
@@ -144,8 +150,8 @@ cashoutBtn.addEventListener('click', () => {
   gambleResolved = true;
   sfx.click();
   gambleContainer.style.display = 'none';
-  message.textContent = t('lb.cashedOut').replace('{p}', String(host.winPoints));
-  message.style.color = '#ffd700';
+  message.textContent = t('lb.win');
+  message.className = 'lb-message lb-message--win';
   finishRound(host.winPoints, true);
 });
 

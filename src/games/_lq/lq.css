@@ -256,6 +256,56 @@ body[data-game="sequence"] .quiz-feedback:empty {
   font-size: clamp(15px, 4vw, 19px);
 }
 
+body[data-game="crosssum"] #lq-mount {
+  padding: 0 8px 4px;
+}
+
+body[data-game="crosssum"] .fc-playframe {
+  padding-bottom: clamp(8px, 2vw, 12px);
+  gap: clamp(6px, 1.5vw, 10px);
+}
+
+.crosssum-wrap {
+  width: 100%;
+  max-width: min(100%, 360px);
+  margin: 0 auto;
+}
+
+.crosssum-grid {
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
+.kbd.crosssum-kbd {
+  width: 100%;
+  max-width: min(100%, 360px);
+  margin: 8px auto 0;
+}
+
+.kbd.crosssum-kbd .kbd-row {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 4px;
+  width: 100%;
+}
+
+.kbd.crosssum-kbd .key {
+  min-width: 0;
+  width: 100%;
+  height: clamp(40px, 11vw, 52px);
+  padding: 0 2px;
+  font-size: clamp(13px, 3.4vw, 17px);
+}
+
+.kbd.crosssum-kbd .key.wide {
+  min-width: 0;
+  font-size: clamp(15px, 4vw, 19px);
+}
+
+body[data-game="crosssum"] .quiz-feedback:empty {
+  display: none;
+}
+
 /* modal / toast */
 .modal-back { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
 .modal { background: var(--lq-surface); border-radius: 16px; padding: clamp(18px, 5vw, 26px); max-width: 440px; width: 100%; max-height: 82vh; overflow: auto; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3); text-align: center; color: var(--lq-text); }

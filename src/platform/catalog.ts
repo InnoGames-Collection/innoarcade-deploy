@@ -165,24 +165,6 @@ const ALL_GAMES: GameMeta[] = [
     play: { winPoints: 150, winRate: 50 },
   },
   {
-    id: 'dice-roll',
-    route: 'games/dice-roll/',
-    nameEn: 'Dice Roll', nameAm: 'ዳይስ ጨዋታ',
-    genreEn: 'Chance · Casual', genreAm: 'ዕድል · ቀላል',
-    mode: 'free', icon: '🎲', accent: '#d18a04', thumb: ['#2f0999', '#0b6655'],
-    scoreEn: 'Points', scoreAm: 'ነጥብ',
-    play: { winPoints: 90, winRate: 35 },
-  },
-  {
-    id: 'scratch-card',
-    route: 'games/scratch-card/',
-    nameEn: 'Scratch Card', nameAm: 'ስክራች ካርድ',
-    genreEn: 'Chance · Casual', genreAm: 'ዕድል · ቀላል',
-    mode: 'free', icon: '🎫', accent: '#f4d03f', thumb: ['#1a2530', '#111b24'],
-    scoreEn: 'Points', scoreAm: 'ነጥብ',
-    play: { winPoints: 80, winRate: 45 },
-  },
-  {
     id: 'lucky-box',
     route: 'games/lucky-box/',
     nameEn: 'Lucky Boxes', nameAm: 'ዕድለኛ ሳጥኖች',
@@ -271,7 +253,6 @@ const COVERS: Record<string, string> = {
   'orbit-blast': 'orbit_blast.webp',
   'luckyslot': 'lucky_slot.webp',
   'merge-2048': 'merge_2048.webp',
-  'dice-roll': 'dice_roll.webp',
   'lucky-box': 'lucky_boxes.webp',
   'spin-wheel': 'spin_wheel.webp',
   'memory-match': 'memory_match.webp',
@@ -285,7 +266,6 @@ const COVERS: Record<string, string> = {
   'sky-hopper': 'sky_hopper.webp',
   'bubble-pop': 'bubble_pop.webp',
   'tap-game': 'tap_game.webp',
-  'scratch-card': 'scratch_card.webp',
   'spell': 'spell_quiz.webp',
   'vocab': 'vocabulary_trivia.webp',
   'rhyme': 'rhyme_time.webp',
@@ -306,7 +286,7 @@ const WIN_SCORE: Record<string, number> = {
   'ethiopian-quiz': 100, 'spell': 70, 'vocab': 70, 'logic': 70, 'rhyme': 60,
   // Brain: time-based formulas in _lq/scoring.ts
   'sudoku': 120, 'crosssum': 110, 'target24': 70, 'sequence': 150,
-  'tap-game': 5,
+  'tap-game': 50,
 };
 for (const g of CATALOG) {
   if (WIN_SCORE[g.id] != null) g.play = { ...(g.play ?? {}), winScore: WIN_SCORE[g.id] };
@@ -360,8 +340,6 @@ const FRONT = [
   'sequence',
   // Free — other casual / brain / arcade
   'tap-game',
-  'dice-roll',
-  'scratch-card',
   'lucky-box',
   'crosssum',
   'popblast',
