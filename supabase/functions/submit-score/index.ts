@@ -206,6 +206,7 @@ Deno.serve(async (req: Request) => {
 
   // Resolve the game's single LIVE tournament window server-side (no client-built
   // id). If none is live, treat this as a practice run: award capped XP, unranked.
+  await admin.rpc('seed_tournaments');
   const { data: tid } = await admin.rpc('active_game_tournament', { p_game: gameId });
   const tournamentId = String(tid ?? '');
   if (!tournamentId) {

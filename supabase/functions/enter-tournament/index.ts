@@ -40,6 +40,9 @@ Deno.serve(async (req: Request) => {
 
   const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
+  // Ensure dated tournament windows exist before resolving the live id.
+  await admin.rpc('seed_tournaments');
+
   // Resolve the live tournament id: prefer the explicit id, else the game's
   // single live window (server-authoritative — no client date math).
   let tournamentId = String(body.tournamentId ?? '');
