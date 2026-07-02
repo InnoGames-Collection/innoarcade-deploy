@@ -88,39 +88,22 @@ body.game-shell.quiz-shell {
   background: linear-gradient(135deg, #6cc52f 0%, #4f9e16 100%);
   cursor: pointer;
 }
-</style>  <script type="module" crossorigin src="../../assets/merge2048-CLXubvoz.js"></script>
-  <link rel="modulepreload" crossorigin href="../../assets/index-DEte5GR6.js">
-  <link rel="modulepreload" crossorigin href="../../assets/tournaments-xKD9JS-1.js">
-  <link rel="modulepreload" crossorigin href="../../assets/audio-DXwr50ap.js">
-  <link rel="modulepreload" crossorigin href="../../assets/sessionAuth-wE7sFvGR.js">
-  <link rel="modulepreload" crossorigin href="../../assets/freeGameShell-CJIV4jZp.js">
+</style>  <script type="module" crossorigin src="../../assets/merge2048-BGH6xLoP.js"></script>
+  <link rel="modulepreload" crossorigin href="../../assets/index-CAZMuO-f.js">
+  <link rel="modulepreload" crossorigin href="../../assets/tournaments-BE7mscjI.js">
+  <link rel="modulepreload" crossorigin href="../../assets/audio-BwNYUYq8.js">
+  <link rel="modulepreload" crossorigin href="../../assets/sessionAuth-DMCU-eWn.js">
+  <link rel="modulepreload" crossorigin href="../../assets/freeGameShell-i2d1HQiQ.js">
   <link rel="modulepreload" crossorigin href="../../assets/loop-BDek7L7e.js">
   <link rel="modulepreload" crossorigin href="../../assets/input-DF-0NnhL.js">
   <link rel="modulepreload" crossorigin href="../../assets/fx-ccUjo7Ds.js">
   <link rel="stylesheet" crossorigin href="../../assets/audio-mZgmpMt7.css">
-  <link rel="stylesheet" crossorigin href="../../assets/sessionAuth-CZHFFNZH.css">
-  <link rel="stylesheet" crossorigin href="../../assets/merge2048-T03Pgdun.css">
+  <link rel="stylesheet" crossorigin href="../../assets/sessionAuth-0Wj-Zw4z.css">
+  <link rel="stylesheet" crossorigin href="../../assets/merge2048-Go4YY6Ka.css">
 </head>
   <body class="game-shell" data-game="merge-2048">
-    <div id="stage" class="game-shell-stage">
-      <div class="play-column">
-        <header id="hud" class="hidden">
-          <div class="scores">
-            <div class="score-box">
-              <span data-i18n="m2.score">Score</span>
-              <strong id="scoreVal">0</strong>
-            </div>
-            <div class="score-box">
-              <span data-i18n="m2.best">Best</span>
-              <strong id="bestVal">0</strong>
-            </div>
-          </div>
-          <button id="muteBtn" aria-label="Sound">🔊</button>
-        </header>
-        <canvas id="game" width="480" height="480"></canvas>
-      </div>
-
-      <button id="closeBtn" class="gp-close gp-close-corner hidden" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+    <div id="stage" class="m2-stage game-shell-stage">
+      <div id="m2Backdrop" class="m2-backdrop" aria-hidden="true"></div>
 
       <div id="menuOverlay" class="game-overlay">
         <div class="game-panel panel-clean">
@@ -128,6 +111,27 @@ body.game-shell.quiz-shell {
           <div class="shell-free-menu" id="freeMenu"></div>
           <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
         </div>
+      </div>
+
+      <div id="m2-play-wrapper" class="m2-play-wrapper hidden">
+        <button id="closeBtn" type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+        <header id="hud" class="m2-hud">
+          <div class="m2-stats">
+            <div class="m2-stat">
+              <span class="m2-stat-label" data-i18n="m2.score">Score</span>
+              <strong class="m2-stat-value" id="scoreVal">0</strong>
+            </div>
+            <div class="m2-stat m2-stat-best">
+              <span class="m2-stat-label" data-i18n="m2.best">Best</span>
+              <strong class="m2-stat-value" id="bestVal">0</strong>
+            </div>
+          </div>
+          <div class="m2-controls">
+            <button id="muteBtn" type="button" aria-label="Sound">🔊</button>
+            <button id="pauseBtn" type="button" aria-label="Pause">⏸</button>
+          </div>
+        </header>
+        <canvas id="game" width="480" height="480"></canvas>
       </div>
 
       <div id="pauseOverlay" class="game-overlay hidden">

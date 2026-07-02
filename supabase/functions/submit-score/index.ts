@@ -42,7 +42,7 @@ const MAX_SCORE: Record<string, number> = {
 interface ScoreCfg { par: number; timeWeight?: number; parTime?: number; difficulty?: number }
 const GAME_SCORING: Record<string, ScoreCfg> = {
   'orbit-blast': { par: 3000 }, 'merge-2048': { par: 5000 }, 'temple-dash': { par: 1500 },
-  'metro-rush': { par: 1500 }, 'candy-crunch': { par: 300 }, 'dot-link': { par: 200 },
+  'metro-rush': { par: 1500 }, 'candy-crunch': { par: 300 },
   'brick-blitz': { par: 300 }, 'fruit-slice': { par: 1200 }, 'sky-hopper': { par: 100 },
   'bubble-pop': { par: 300 }, 'memory-match': { par: 3600 }, 'tap-game': { par: 50 },
   'lucky-box': { par: 300 },
@@ -62,7 +62,7 @@ const XP_DIFFICULTY: Record<string, number> = {
   'sudoku': 2, 'crosssum': 2, 'logic': 2, 'target24': 2, 'sequence': 2,
   'merge-2048': 2, 'orbit-blast': 2, 'ethiopian-quiz': 2,
   // Medium — reflex/word games
-  'temple-dash': 1.5, 'metro-rush': 1.5, 'dot-link': 1.5, 'brick-blitz': 1.5,
+  'temple-dash': 1.5, 'metro-rush': 1.5, 'brick-blitz': 1.5,
   'sky-hopper': 1.5, 'fruit-slice': 1.5, 'spell': 1.5, 'vocab': 1.5, 'rhyme': 1.5,
   'candy-crunch': 1.5, 'bubble-pop': 1.5, 'memory-match': 1.5,
   // Easy/chance — everything else defaults to 1.0

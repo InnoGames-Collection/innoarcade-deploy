@@ -1,5 +1,7 @@
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
+import '../_casual/style.css';
+import '../_arcade/hubCanvas.css';
 import { GameHost } from '../../platform/gameHost';
 import {
   standardStateOverlay, wireFreeEngineMain, wireMutePause, wirePlayButtons,
@@ -10,12 +12,16 @@ import { GameLoop } from '../../engine/loop';
 import { Input } from '../../engine/input';
 import { sfx } from '../../engine/audio';
 import { BrickBlitz, W, H } from './game';
+import {
+  bindHubCanvasChrome, scaleArcadeScore, submitArcadeScore, trackArcadeRunStart,
+} from '../_arcade/hubCanvas';
 
 const GAME_ID = 'brick-blitz';
 const host = new GameHost(GAME_ID);
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
+const playWrapper = $('#arc-play-wrapper');
 const canvas = $('#game') as unknown as HTMLCanvasElement;
 const ctx = canvas.getContext('2d')!;
 const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -24,6 +30,11 @@ canvas.height = H * dpr;
 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
 const game = new BrickBlitz();
+const run = trackArcadeRunStart();
+
+const scoreVal = $('#scoreVal');
+const levelVal = $('#levelVal');
+const livesVal = $('#livesVal');
 
 const shell = wireFreeEngineMain({
   host,
@@ -46,15 +57,27 @@ const shell = wireFreeEngineMain({
   newBest: $('#newBest'),
   runReward: $('#runReward'),
   game,
+  getDurationMs: () => Date.now() - run.getRunStart(),
 });
 
-game.onStateChange = shell.showForState;
+const syncChrome = bindHubCanvasChrome({
+  playWrapper,
+  backdrop: $('#fcBackdrop'),
+  shell,
+});
 
-game.onGameOver = (score, level, record) => {
-  if (level > 5) {
-    void shell.handleGameOver(score, record);
-  } else {
-    $('#levelScore').textContent = `Level Score: ${score}`;
+game.onStateChange = (state) => {
+  run.onStateChange(state);
+  syncChrome(state);
+};
+
+game.onGameOver = (score, level) => {
+  if (game.state === 'levelClear') {
+    $('#levelScore').textContent = `${scaleArcadeScore(score).toLocaleString()} pts`;
+    return;
+  }
+  if (level > 5 || game.state === 'gameOver') {
+    submitArcadeScore(score, run.getRunStart(), shell, { budgetSec: 300 });
   }
 };
 
@@ -71,7 +94,12 @@ document.addEventListener('visibilitychange', () => {
 
 const loop = new GameLoop(
   (dt) => game.update(dt),
-  () => game.render(ctx),
+  () => {
+    game.render(ctx);
+    scoreVal.textContent = String(scaleArcadeScore(game.score));
+    levelVal.textContent = String(game.displayLevel);
+    livesVal.textContent = String(game.displayLives);
+  },
 );
 
 document.documentElement.lang = getLang();

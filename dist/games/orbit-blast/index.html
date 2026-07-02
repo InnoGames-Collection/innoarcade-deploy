@@ -88,48 +88,53 @@ body.game-shell.quiz-shell {
   background: linear-gradient(135deg, #6cc52f 0%, #4f9e16 100%);
   cursor: pointer;
 }
-</style>  <script type="module" crossorigin src="../../assets/orbitBlast-DwaAcTTd.js"></script>
-  <link rel="modulepreload" crossorigin href="../../assets/index-DEte5GR6.js">
-  <link rel="modulepreload" crossorigin href="../../assets/tournaments-xKD9JS-1.js">
-  <link rel="modulepreload" crossorigin href="../../assets/audio-DXwr50ap.js">
-  <link rel="modulepreload" crossorigin href="../../assets/sessionAuth-wE7sFvGR.js">
-  <link rel="modulepreload" crossorigin href="../../assets/freeGameShell-CJIV4jZp.js">
+</style>  <script type="module" crossorigin src="../../assets/orbitBlast-DIHChpxO.js"></script>
+  <link rel="modulepreload" crossorigin href="../../assets/index-CAZMuO-f.js">
+  <link rel="modulepreload" crossorigin href="../../assets/tournaments-BE7mscjI.js">
+  <link rel="modulepreload" crossorigin href="../../assets/audio-BwNYUYq8.js">
+  <link rel="modulepreload" crossorigin href="../../assets/sessionAuth-DMCU-eWn.js">
+  <link rel="modulepreload" crossorigin href="../../assets/arcadeScore-BBUSCjn-.js">
+  <link rel="modulepreload" crossorigin href="../../assets/hubCanvas-06ujC2Ny.js">
+  <link rel="modulepreload" crossorigin href="../../assets/freeGameShell-i2d1HQiQ.js">
   <link rel="modulepreload" crossorigin href="../../assets/loop-BDek7L7e.js">
   <link rel="modulepreload" crossorigin href="../../assets/fx-ccUjo7Ds.js">
   <link rel="stylesheet" crossorigin href="../../assets/audio-mZgmpMt7.css">
-  <link rel="stylesheet" crossorigin href="../../assets/sessionAuth-CZHFFNZH.css">
+  <link rel="stylesheet" crossorigin href="../../assets/sessionAuth-0Wj-Zw4z.css">
+  <link rel="stylesheet" crossorigin href="../../assets/hubCanvas-D4DtGcuX.css">
   <link rel="stylesheet" crossorigin href="../../assets/orbitBlast-tw4k4-KY.css">
+  <link rel="stylesheet" crossorigin href="../../assets/style-DBNSxyca.css">
 </head>
-  <body class="game-shell" data-game="orbit-blast">
-    <div id="stage" class="game-shell-stage">
-      <div class="play-column">
-        <header id="hud" class="hidden">
-          <div class="scores">
-            <div class="score-box">
-              <span data-i18n="ob.score">Score</span>
-              <strong id="scoreVal">0</strong>
-            </div>
-            <div class="score-box">
-              <span data-i18n="ob.balls">Balls</span>
-              <strong id="ballsVal">×1</strong>
-            </div>
-            <div class="score-box">
-              <span data-i18n="ob.best">Best</span>
-              <strong id="bestVal">0</strong>
-            </div>
-          </div>
-          <button id="muteBtn" aria-label="Sound">🔊</button>
-        </header>
-        <canvas id="game" width="480" height="640"></canvas>
-      </div>
-
-      <button id="closeBtn" class="gp-close gp-close-corner hidden" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+  <body class="game-shell arcade-shell" data-game="orbit-blast">
+    <div id="stage" class="fc-stage arcade-stage game-shell-stage">
+      <div id="fcBackdrop" class="fc-backdrop" aria-hidden="true"></div>
 
       <div id="menuOverlay" class="game-overlay">
         <div class="game-panel panel-clean">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
           <div class="shell-free-menu" id="freeMenu"></div>
           <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
+        </div>
+      </div>
+
+      <div id="arc-play-wrapper" class="arc-play-wrapper hidden">
+        <button id="closeBtn" type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+        <header id="hud" class="arc-hud">
+          <div class="fp-stats">
+            <div class="fp-stat fp-stat-score">
+              <span class="fp-stat-label" data-i18n="ob.score">Score</span>
+              <strong class="fp-stat-value" id="scoreVal">0</strong>
+            </div>
+            <div class="fp-stat">
+              <span class="fp-stat-label" data-i18n="ob.balls">Balls</span>
+              <strong class="fp-stat-value" id="ballsVal">×1</strong>
+            </div>
+          </div>
+          <div class="arc-hud-actions">
+            <button id="muteBtn" type="button" aria-label="Sound">🔊</button>
+          </div>
+        </header>
+        <div class="arc-canvas-wrap">
+          <canvas id="game" width="480" height="640"></canvas>
         </div>
       </div>
 
@@ -149,7 +154,7 @@ body.game-shell.quiz-shell {
           <p id="newBest" class="new-best hidden" data-i18n="ob.newBest"></p>
           <div class="shell-over-final">
             <div class="shell-over-stat"><span data-i18n="ob.score">Score</span><strong id="finalScore">0</strong></div>
-            <div class="shell-over-stat"><span data-i18n="ob.best">Best</span><strong id="finalBest">0</strong></div>
+            <div class="shell-over-stat"><span data-i18n="td.best">Best</span><strong id="finalBest">0</strong></div>
           </div>
           <div class="shell-run-reward" id="runReward"></div>
           <button id="againBtn" class="btn primary" data-i18n="ob.restart">Play again</button>

@@ -212,7 +212,6 @@ const HOWTO: Record<string, { en: string; am: string }> = {
   'orbit-blast': { en: 'Tap to fire at the orbiting targets. Time your shots to clear waves and rack up a high score.', am: 'በምህዋር ያሉ ኢላማዎችን ለመምታት ይንኩ። ሞገዶችን አጽድተው ከፍተኛ ነጥብ ያስመዝግቡ።' },
   'metro-rush': { en: 'Swipe to switch lanes, jump and slide past trains. Run as far as you can without crashing.', am: 'መንገድ ለመቀየር ያንሸራትቱ፣ ይዝለሉ። ሳይጋጩ በተቻለ መጠን ይሩጡ።' },
   'candy-crunch': { en: 'Swap adjacent candies to line up 3+ of a colour. Clear the board’s goals before moves run out.', am: 'ተጎራባች ከረሜላዎችን ቀይረው 3+ ተመሳሳይ ቀለም ያሰልፉ።' },
-  'dot-link': { en: 'Drag to connect dots of the same colour without crossing lines. Fill the board to clear it.', am: 'ተመሳሳይ ቀለም ያላቸውን ነጥቦች ሳያቋርጡ ያገናኙ።' },
   'brick-blitz': { en: 'Move the paddle to bounce the ball and break every brick. Don’t let the ball fall.', am: 'ኳሷን ለመመለስና ሁሉንም ጡቦች ለመስበር ፓዱን ያንቀሳቅሱ።' },
   'fruit-slice': {
     en: 'Monthly tournament: enter with coins for attempts, then survive as long as you can. The timer counts up — +2 points per second alive. Slice fruit for +10 (+2 combo bonus per streak step). Bombs −10 and reset combo. Miss 5 fruits and you are out. Difficulty ramps over time. Your total score ranks on the monthly board.',

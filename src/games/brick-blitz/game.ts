@@ -65,6 +65,9 @@ export class BrickBlitz {
   score = 0;
   best = getHighScore('brick-blitz');
 
+  get displayLevel(): number { return this.levelNumber; }
+  get displayLives(): number { return this.lives; }
+
   onStateChange: (s: GameState) => void = () => {};
   onGameOver: (score: number, levelReached: number, record: boolean) => void = () => {};
 

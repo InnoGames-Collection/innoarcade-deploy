@@ -105,14 +105,6 @@ const ALL_GAMES: GameMeta[] = [
     scoreEn: 'Score', scoreAm: 'ነጥብ',
   },
   {
-    id: 'dot-link',
-    route: 'games/dot-link/',
-    nameEn: 'Dot Link', nameAm: 'ዶት ሊንክ',
-    genreEn: 'Puzzle', genreAm: 'እንቆቅልሽ',
-    mode: 'free', icon: '🔵', accent: '#5b8cff', thumb: ['#27408b', '#0b1430'],
-    scoreEn: 'Score', scoreAm: 'ነጥብ',
-  },
-  {
     id: 'brick-blitz',
     route: 'games/brick-blitz/',
     nameEn: 'Brick Blitz', nameAm: 'ብሪክ ብሊትዝ',
@@ -260,7 +252,6 @@ const COVERS: Record<string, string> = {
   'ethiopian-quiz': 'ethiopian_quiz.webp',
   'sudoku': 'sudoku.webp',
   'candy-crunch': 'candy_saga.webp',
-  'dot-link': 'dot_link.webp',
   'brick-blitz': 'brick_blitz.webp',
   'fruit-slice': 'fruit_slice.webp',
   'sky-hopper': 'sky_hopper.webp',
@@ -279,9 +270,9 @@ for (const g of CATALOG) { if (COVERS[g.id]) g.cover = COVERS[g.id]; }
 // Win thresholds for skill/engine games (score ≥ this = client "win" flag on submit).
 // Tournament RP uses server game_par + raw score — not winScore. See catalog vs migrations.
 const WIN_SCORE: Record<string, number> = {
-  'orbit-blast': 1000, 'merge-2048': 512, 'temple-dash': 300, 'metro-rush': 300,
-  'candy-crunch': 100, 'dot-link': 50, 'brick-blitz': 100, 'fruit-slice': 300,
-  'sky-hopper': 30, 'bubble-pop': 100, 'popblast': 25,
+  'orbit-blast': 1000, 'merge-2048': 512, 'temple-dash': 300, 'metro-rush': 3000,
+  'candy-crunch': 1000, 'brick-blitz': 1000, 'fruit-slice': 300,
+  'sky-hopper': 300, 'bubble-pop': 1000, 'popblast': 500,
   // Composite quiz: correct×pts + speed bonus + session time left
   'ethiopian-quiz': 100, 'spell': 70, 'vocab': 70, 'logic': 70, 'rhyme': 60,
   // Brain: time-based formulas in _lq/scoring.ts
@@ -346,7 +337,6 @@ const FRONT = [
   'orbit-blast',
   'metro-rush',
   'candy-crunch',
-  'dot-link',
   'brick-blitz',
   'sky-hopper',
   'bubble-pop',

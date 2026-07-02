@@ -1,5 +1,7 @@
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
+import '../_casual/style.css';
+import '../_arcade/hubCanvas.css';
 import { GameHost } from '../../platform/gameHost';
 import {
   wireFreeEngineMain, wireMutePause,
@@ -9,12 +11,16 @@ import { applyTranslations, getLang } from '../../i18n';
 import { GameLoop } from '../../engine/loop';
 import { sfx } from '../../engine/audio';
 import { OrbitBlast, W, H } from './game';
+import {
+  bindHubCanvasChrome, scaleArcadeScore, submitArcadeScore, trackArcadeRunStart,
+} from '../_arcade/hubCanvas';
 
 const GAME_ID = 'orbit-blast';
 const host = new GameHost(GAME_ID);
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
+const playWrapper = $('#arc-play-wrapper');
 const canvas = $('#game') as unknown as HTMLCanvasElement;
 const ctx = canvas.getContext('2d')!;
 const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -23,10 +29,10 @@ canvas.height = H * dpr;
 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
 const game = new OrbitBlast();
+const run = trackArcadeRunStart();
 
 const scoreVal = $('#scoreVal');
 const ballsVal = $('#ballsVal');
-const bestVal = $('#bestVal');
 
 function orbitStateOverlay(state: string): string | null {
   if (state === 'menu') return 'menu';
@@ -51,14 +57,26 @@ const shell = wireFreeEngineMain({
   newBest: $('#newBest'),
   runReward: $('#runReward'),
   game,
+  getDurationMs: () => Date.now() - run.getRunStart(),
 });
 
-game.onStateChange = shell.showForState;
+const syncChrome = bindHubCanvasChrome({
+  playWrapper,
+  backdrop: $('#fcBackdrop'),
+  shell,
+});
+
+game.onStateChange = (state) => {
+  run.onStateChange(state);
+  syncChrome(state);
+};
 game.onScore = (s, balls) => {
-  scoreVal.textContent = String(s);
+  scoreVal.textContent = String(scaleArcadeScore(s));
   ballsVal.textContent = '×' + balls;
 };
-game.onGameOver = (score, record) => { void shell.handleGameOver(score, record); };
+game.onGameOver = (score) => {
+  submitArcadeScore(score, run.getRunStart(), shell, { budgetSec: 180 });
+};
 
 function toCanvas(e: PointerEvent): [number, number] {
   const rect = canvas.getBoundingClientRect();
@@ -91,10 +109,7 @@ wireMutePause($('#muteBtn'), null, game, sfx);
 
 const loop = new GameLoop(
   (dt) => game.update(dt),
-  () => {
-    game.render(ctx);
-    bestVal.textContent = String(game.best);
-  },
+  () => game.render(ctx),
 );
 
 document.documentElement.lang = getLang();

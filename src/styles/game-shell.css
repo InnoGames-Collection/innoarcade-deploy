@@ -30,7 +30,6 @@
 .game-shell[data-game="memory-match"] { --game-accent: #ff6b9d; }
 .game-shell[data-game="fruit-slice"] { --game-accent: #46c05a; }
 .game-shell[data-game="metro-rush"] { --game-accent: #36b3a8; }
-.game-shell[data-game="dot-link"] { --game-accent: #5b8cff; }
 .game-shell[data-game="brick-blitz"] { --game-accent: #f0a832; }
 .game-shell[data-game="sky-hopper"] { --game-accent: #56b8e8; }
 .game-shell[data-game="bubble-pop"] { --game-accent: #7b6cf0; }

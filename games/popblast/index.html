@@ -6,30 +6,14 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍬</text></svg>" />
     <title>Candy Blast — GoPlay</title>
   </head>
-  <body class="game-shell casual-shell" data-game="popblast">
+  <body class="game-shell casual-shell brain-shell" data-game="popblast">
     <div id="stage" class="fc-stage game-shell-stage">
       <div id="fcBackdrop" class="fc-backdrop" aria-hidden="true"></div>
 
       <div id="fcPlayFrame" class="fc-playframe hidden">
-        <button id="closeBtn" class="gp-close gp-close-corner hidden" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-
+        <button id="closeBtn" class="gp-close gp-close-corner hidden" aria-label="Close">✕</button>
         <div id="popblast-game-wrapper">
-          <div class="popblast-top">
-            <div class="popblast-card">
-              <h3>⭐ <span data-i18n="pb.score">SCORE</span></h3>
-              <span id="score">0</span>
-            </div>
-            <div class="popblast-card">
-              <h3>🎯 <span data-i18n="pb.moves">MOVES</span></h3>
-              <span id="moves">20</span>
-            </div>
-          </div>
-
           <div class="board" id="board"></div>
-
-          <div class="popblast-bottom">
-            <div class="message" data-i18n="pb.swap">Swap gems with your finger</div>
-          </div>
         </div>
       </div>
 
@@ -59,7 +43,6 @@
 
     <div class="combo" id="combo" data-i18n="pb.combo">COMBO!</div>
     <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-
     <script type="module" src="/src/games/popblast/main.ts"></script>
   </body>
 </html>

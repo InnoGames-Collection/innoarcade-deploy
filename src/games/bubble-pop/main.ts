@@ -1,5 +1,7 @@
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
+import '../_casual/style.css';
+import '../_arcade/hubCanvas.css';
 import { GameHost } from '../../platform/gameHost';
 import {
   standardStateOverlay, wireFreeEngineMain, wireMutePause,
@@ -10,12 +12,16 @@ import { GameLoop } from '../../engine/loop';
 import { Input } from '../../engine/input';
 import { sfx } from '../../engine/audio';
 import { BubblePop, W, H } from './game';
+import {
+  bindHubCanvasChrome, scaleArcadeScore, submitArcadeScore, trackArcadeRunStart,
+} from '../_arcade/hubCanvas';
 
 const GAME_ID = 'bubble-pop';
 const host = new GameHost(GAME_ID);
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
+const playWrapper = $('#arc-play-wrapper');
 const canvas = $('#game') as unknown as HTMLCanvasElement;
 const ctx = canvas.getContext('2d')!;
 const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -24,6 +30,9 @@ canvas.height = H * dpr;
 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
 const game = new BubblePop();
+const run = trackArcadeRunStart();
+
+const scoreVal = $('#scoreVal');
 
 const shell = wireFreeEngineMain({
   host,
@@ -41,10 +50,22 @@ const shell = wireFreeEngineMain({
   newBest: $('#newBest'),
   runReward: $('#runReward'),
   game,
+  getDurationMs: () => Date.now() - run.getRunStart(),
 });
 
-game.onStateChange = shell.showForState;
-game.onGameOver = (score, record) => { void shell.handleGameOver(score, record); };
+const syncChrome = bindHubCanvasChrome({
+  playWrapper,
+  backdrop: $('#fcBackdrop'),
+  shell,
+});
+
+game.onStateChange = (state) => {
+  run.onStateChange(state);
+  syncChrome(state);
+};
+game.onGameOver = (score) => {
+  submitArcadeScore(score, run.getRunStart(), shell, { budgetSec: 120 });
+};
 
 const input = new Input(document.body);
 input.onAction((a) => game.handleAction(a));
@@ -57,7 +78,10 @@ document.addEventListener('visibilitychange', () => {
 
 const loop = new GameLoop(
   (dt) => game.update(dt),
-  () => game.render(ctx),
+  () => {
+    game.render(ctx);
+    scoreVal.textContent = String(scaleArcadeScore(game.score));
+  },
 );
 
 document.documentElement.lang = getLang();

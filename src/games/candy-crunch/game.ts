@@ -54,6 +54,10 @@ export class CandyCrunch {
   score = 0;
   best = getHighScore('candy-crunch');
 
+  get displayLevel(): number { return this.levelNumber; }
+  get movesLeft(): number { return Math.max(0, this.level.movesAllowed - this.movesUsed); }
+  get movesTotal(): number { return this.level.movesAllowed; }
+
   onStateChange: (s: GameState) => void = () => {};
   onLevelChange: (level: Level, collected: Record<string, number>) => void = () => {};
   onGameOver: (score: number, levelReached: number, record: boolean) => void = () => {};
@@ -385,7 +389,7 @@ export class CandyCrunch {
   }
 
   render(ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = '#0f1419';
+    ctx.fillStyle = '#eef6e3';
     ctx.fillRect(0, 0, W, H);
 
     this.drawHeader(ctx);
@@ -400,37 +404,30 @@ export class CandyCrunch {
   }
 
   private drawHeader(ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = 'rgba(15, 20, 25, 0.8)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
     ctx.fillRect(0, 0, W, 130);
 
-    ctx.fillStyle = '#ff9500';
-    ctx.font = 'bold 28px system-ui';
+    ctx.fillStyle = '#3d8010';
+    ctx.font = 'bold 22px system-ui';
     ctx.textAlign = 'center';
-    ctx.fillText(`Level ${this.levelNumber}: ${this.level.title}`, W / 2, 35);
+    ctx.fillText(`Level ${this.levelNumber}: ${this.level.title}`, W / 2, 32);
 
-    ctx.fillStyle = '#6b8fb8';
-    ctx.font = '14px system-ui';
+    ctx.fillStyle = '#5a7248';
+    ctx.font = '13px system-ui';
     ctx.textAlign = 'left';
-    ctx.fillText(`Score: ${this.score}`, 14, 70);
-    ctx.fillText(`Moves: ${this.movesUsed}/${this.level.movesAllowed}`, 14, 95);
-
-    // Goal candies
-    ctx.fillStyle = '#00e5ff';
-    ctx.font = '12px system-ui';
-    ctx.fillText('Goal:', W - 150, 70);
-    let gx = W - 150;
+    ctx.fillText('Goal:', 14, 68);
+    let gx = 14;
     for (const candy of this.level.targetCandies) {
       const needed = this.level.targetCandies.filter((c) => c === candy).length;
       const have = this.candiesCollected[candy] ?? 0;
-      ctx.fillStyle = have >= needed ? '#00ff88' : '#ff6b6b';
-      ctx.font = have >= needed ? 'bold 16px system-ui' : '16px system-ui';
-      ctx.fillText(`${candy}${have}/${needed}`, gx, 95);
-      gx += 45;
+      ctx.fillStyle = have >= needed ? '#3d8010' : '#c44';
+      ctx.font = have >= needed ? 'bold 15px system-ui' : '15px system-ui';
+      ctx.fillText(`${candy}${have}/${needed}`, gx, 92);
+      gx += 48;
     }
 
-    // Combo
     if (this.comboCount > 0) {
-      ctx.fillStyle = '#ffb347';
+      ctx.fillStyle = '#4f9e16';
       ctx.font = 'bold 20px system-ui';
       ctx.textAlign = 'center';
       ctx.shadowColor = 'rgba(255, 179, 71, 0.6)';

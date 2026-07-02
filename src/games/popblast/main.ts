@@ -1,4 +1,4 @@
-// Pop Blast — match-3 with hub casual shell.
+// Candy Blast (Pop Blast) — match-3 with hub casual shell.
 
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
@@ -8,230 +8,221 @@ import { applyTranslations, getLang } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { createHost } from '../../platform/gameHost';
 import { wireFreeCasualShell } from '../../platform/freeGameShell';
+import { finalizeArcadeScore, match3Score, scaleArcadeScore } from '../../platform/arcadeScore';
 
 const host = createHost('popblast');
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
-const board = $('#board');
-const scoreDisplay = $('#score');
-const movesDisplay = $('#moves');
-const combo = $('#combo');
+const SIZE = 8;
+const COLORS = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'] as const;
+type Color = typeof COLORS[number];
+const START_MOVES = 25;
 
-const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
-const START_MOVES = 20;
-
-let squares: HTMLElement[] = [];
+let grid: (Color | null)[] = [];
 let score = 0;
 let moves = START_MOVES;
-let startX = 0;
-let startY = 0;
-let draggedId = 0;
+let combo = 0;
+let selected = -1;
+let busy = false;
 let gameEnded = false;
 let runStart = 0;
 
-function play(type: 'flip' | 'match' | 'pop' | 'nomatch' | 'click'): void {
-  switch (type) {
-    case 'flip': case 'click': sfx.click(); break;
-    case 'match': sfx.coin(); break;
-    case 'pop': sfx.click(); break;
-    case 'nomatch': sfx.slide(); break;
-  }
+const board = $('#board');
+const comboEl = $('#combo');
+
+function idx(r: number, c: number): number {
+  return r * SIZE + c;
 }
 
-function resetBoard(): void {
-  board.innerHTML = '';
-  squares = [];
-  score = 0;
-  moves = START_MOVES;
-  gameEnded = false;
-  scoreDisplay.textContent = String(score);
-  movesDisplay.textContent = String(moves);
+function randColor(): Color {
+  return COLORS[Math.floor(Math.random() * COLORS.length)];
 }
 
-function initBoard(): void {
-  resetBoard();
-  for (let i = 0; i < 64; i++) {
-    const tile = document.createElement('div');
-    tile.setAttribute('id', String(i));
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    tile.classList.add('tile', color);
-    board.appendChild(tile);
-    squares.push(tile);
-    tile.addEventListener('touchstart', touchStart);
-    tile.addEventListener('touchend', touchEnd);
-    tile.addEventListener('pointerdown', pointerStart);
-    tile.addEventListener('pointerup', pointerEnd);
-  }
-
-  setTimeout(() => {
-    checkRow();
-    checkColumn();
-    moveDown();
-    scoreDisplay.textContent = String(score);
-  }, 100);
-}
-
-const shell = wireFreeCasualShell(host, beginPlay);
-
-async function beginPlay(): Promise<void> {
-  runStart = Date.now();
-  initBoard();
-}
-
-function touchStart(this: HTMLElement, e: TouchEvent): void {
-  if (gameEnded) return;
-  play('click');
-  draggedId = parseInt(this.id);
-  startX = e.changedTouches[0].clientX;
-  startY = e.changedTouches[0].clientY;
-}
-function touchEnd(e: TouchEvent): void {
-  if (gameEnded) return;
-  resolveSwipe(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-}
-function pointerStart(this: HTMLElement, e: PointerEvent): void {
-  if (gameEnded) return;
-  draggedId = parseInt(this.id);
-  startX = e.clientX;
-  startY = e.clientY;
-}
-function pointerEnd(e: PointerEvent): void {
-  if (gameEnded) return;
-  resolveSwipe(e.clientX, e.clientY);
-}
-
-function resolveSwipe(endX: number, endY: number): void {
-  const diffX = endX - startX;
-  const diffY = endY - startY;
-  let targetId = draggedId;
-  if (Math.abs(diffX) > Math.abs(diffY)) {
-    if (diffX > 20) targetId = draggedId + 1;
-    else if (diffX < -20) targetId = draggedId - 1;
-  } else {
-    if (diffY > 20) targetId = draggedId + 8;
-    else if (diffY < -20) targetId = draggedId - 8;
-  }
-  swapTiles(draggedId, targetId);
-}
-
-function swapTiles(from: number, to: number): void {
-  if (gameEnded) return;
-  if (to < 0 || to >= 64) return;
-  const validMoves = [from - 1, from + 1, from - 8, from + 8];
-  if (!validMoves.includes(to)) return;
-
-  const color1 = squares[from].classList[1];
-  const color2 = squares[to].classList[1];
-  squares[from].classList.replace(color1, color2);
-  squares[to].classList.replace(color2, color1);
-  play('flip');
-
-  moves--;
-  movesDisplay.textContent = String(moves);
-
-  setTimeout(() => {
-    const hadMatch = checkRow() || checkColumn();
-    if (hadMatch) {
-      play('match');
-      moveDown();
-    } else {
-      squares[from].classList.replace(color2, color1);
-      squares[to].classList.replace(color1, color2);
-      play('nomatch');
-      moves++;
-      movesDisplay.textContent = String(moves);
+function findMatches(g: (Color | null)[]): Set<number> {
+  const matched = new Set<number>();
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const i = idx(r, c);
+      const color = g[i];
+      if (!color) continue;
+      if (c <= SIZE - 3 && g[idx(r, c + 1)] === color && g[idx(r, c + 2)] === color) {
+        matched.add(i); matched.add(idx(r, c + 1)); matched.add(idx(r, c + 2));
+      }
+      if (r <= SIZE - 3 && g[idx(r + 1, c)] === color && g[idx(r + 2, c)] === color) {
+        matched.add(i); matched.add(idx(r + 1, c)); matched.add(idx(r + 2, c));
+      }
     }
-    if (moves <= 0 && !gameEnded) endGame();
-  }, 150);
+  }
+  return matched;
+}
+
+function fillNoMatches(): void {
+  do {
+    grid = Array.from({ length: SIZE * SIZE }, () => randColor());
+  } while (findMatches(grid).size > 0);
+}
+
+function paintBoard(): void {
+  board.innerHTML = '';
+  grid.forEach((color, i) => {
+    const tile = document.createElement('button');
+    tile.type = 'button';
+    tile.className = 'tile' + (color ? ` ${color}` : ' empty') + (selected === i ? ' sel' : '');
+    tile.dataset.i = String(i);
+    tile.disabled = busy || gameEnded || !color;
+    tile.addEventListener('click', () => void onTileClick(i));
+    board.appendChild(tile);
+  });
+}
+
+function updateHud(): void {
+  shell.setHeader({
+    score: String(scaleArcadeScore(score)),
+    moves: String(moves),
+  });
 }
 
 function showCombo(): void {
-  combo.classList.add('show');
-  setTimeout(() => combo.classList.remove('show'), 800);
+  comboEl.classList.add('show');
+  window.setTimeout(() => comboEl.classList.remove('show'), 700);
 }
 
-function createParticles(element: HTMLElement, color: string): void {
-  play('pop');
-  for (let i = 0; i < 10; i++) {
-    const particle = document.createElement('div');
-    particle.classList.add('particle');
-    particle.style.background = color;
-    const rect = element.getBoundingClientRect();
-    particle.style.left = rect.left + rect.width / 2 + 'px';
-    particle.style.top = rect.top + rect.height / 2 + 'px';
-    particle.style.setProperty('--x', Math.random() * 200 - 100 + 'px');
-    particle.style.setProperty('--y', Math.random() * 200 - 100 + 'px');
-    document.body.appendChild(particle);
-    setTimeout(() => particle.remove(), 800);
+async function clearMatches(): Promise<boolean> {
+  const matched = findMatches(grid);
+  if (!matched.size) return false;
+  combo++;
+  score += match3Score(matched.size, combo);
+  updateHud();
+  showCombo();
+  sfx.coin();
+  matched.forEach((i) => { grid[i] = null; });
+  paintBoard();
+  await wait(180);
+  applyGravity();
+  refill();
+  paintBoard();
+  await wait(120);
+  if (findMatches(grid).size) {
+    await clearMatches();
+  } else {
+    combo = 0;
   }
+  return true;
 }
 
-function clearTile(tile: HTMLElement): void {
-  const bg = window.getComputedStyle(tile).background;
-  tile.classList.add('break');
-  createParticles(tile, bg);
-  setTimeout(() => (tile.className = 'tile empty'), 300);
-}
-
-function checkRow(): boolean {
-  let matched = false;
-  const notValid = [6, 7, 14, 15, 22, 23, 30, 31, 38, 39, 46, 47, 54, 55];
-  for (let i = 0; i < 61; i++) {
-    if (notValid.includes(i)) continue;
-    const color = squares[i].classList[1];
-    const row = [i, i + 1, i + 2];
-    if (row.every((index) => squares[index].classList[1] === color && !squares[index].classList.contains('empty'))) {
-      matched = true;
-      score += 3;
-      scoreDisplay.textContent = String(score);
-      showCombo();
-      row.forEach((index) => clearTile(squares[index]));
+function applyGravity(): void {
+  for (let c = 0; c < SIZE; c++) {
+    const col: (Color | null)[] = [];
+    for (let r = SIZE - 1; r >= 0; r--) {
+      const v = grid[idx(r, c)];
+      if (v) col.push(v);
+    }
+    for (let r = SIZE - 1; r >= 0; r--) {
+      grid[idx(r, c)] = col[SIZE - 1 - r] ?? null;
     }
   }
-  return matched;
 }
 
-function checkColumn(): boolean {
-  let matched = false;
-  for (let i = 0; i < 47; i++) {
-    const color = squares[i].classList[1];
-    const column = [i, i + 8, i + 16];
-    if (column.every((index) => squares[index].classList[1] === color && !squares[index].classList.contains('empty'))) {
-      matched = true;
-      score += 3;
-      scoreDisplay.textContent = String(score);
-      showCombo();
-      column.forEach((index) => clearTile(squares[index]));
-    }
+function refill(): void {
+  for (let i = 0; i < SIZE * SIZE; i++) {
+    if (!grid[i]) grid[i] = randColor();
   }
-  return matched;
 }
 
-function moveDown(): void {
-  for (let i = 55; i >= 0; i--) {
-    if (squares[i + 8].classList.contains('empty')) {
-      const color = squares[i].classList[1];
-      squares[i + 8].className = 'tile ' + color;
-      squares[i].className = 'tile empty';
-    }
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function neighbors(a: number, b: number): boolean {
+  const ar = Math.floor(a / SIZE);
+  const ac = a % SIZE;
+  const br = Math.floor(b / SIZE);
+  const bc = b % SIZE;
+  return (ar === br && Math.abs(ac - bc) === 1) || (ac === bc && Math.abs(ar - br) === 1);
+}
+
+async function trySwap(a: number, b: number): Promise<void> {
+  if (busy || gameEnded) return;
+  busy = true;
+  const tmp = grid[a];
+  grid[a] = grid[b];
+  grid[b] = tmp;
+  paintBoard();
+  sfx.click();
+
+  const matched = findMatches(grid);
+  if (matched.size) {
+    moves--;
+    updateHud();
+    await clearMatches();
+    if (moves <= 0) endGame();
+  } else {
+    grid[b] = grid[a];
+    grid[a] = tmp;
+    sfx.slide();
+    paintBoard();
   }
-  for (let i = 0; i < 8; i++) {
-    if (squares[i].classList.contains('empty')) {
-      const random = colors[Math.floor(Math.random() * colors.length)];
-      squares[i].className = 'tile ' + random;
-    }
+  selected = -1;
+  busy = false;
+  paintBoard();
+}
+
+async function onTileClick(i: number): Promise<void> {
+  if (busy || gameEnded || !grid[i]) return;
+  if (selected < 0) {
+    selected = i;
+    paintBoard();
+    return;
   }
-  setTimeout(() => {
-    if (checkRow() || checkColumn()) moveDown();
-  }, 120);
+  if (selected === i) {
+    selected = -1;
+    paintBoard();
+    return;
+  }
+  if (!neighbors(selected, i)) {
+    selected = i;
+    paintBoard();
+    return;
+  }
+  const a = selected;
+  selected = -1;
+  await trySwap(a, i);
+}
+
+function resetGame(): void {
+  score = 0;
+  moves = START_MOVES;
+  combo = 0;
+  selected = -1;
+  busy = false;
+  gameEnded = false;
+  fillNoMatches();
+  paintBoard();
+  updateHud();
 }
 
 function endGame(): void {
   if (gameEnded) return;
   gameEnded = true;
-  const isWin = score >= host.winScore;
-  shell.finishPlay(score, isWin, '', Date.now() - runStart);
+  busy = true;
+  const finalScore = finalizeArcadeScore(score, Date.now() - runStart, { budgetSec: 90 });
+  const isWin = finalScore >= host.winScore;
+  shell.finishPlay(finalScore, isWin, '', Date.now() - runStart);
+}
+
+const shell = wireFreeCasualShell(host, beginPlay, {
+  headerSlots: [
+    { id: 'score', labelKey: 'td.score', icon: 'score', score: true },
+    { id: 'moves', labelKey: 'shell.moves', icon: 'moves' },
+  ],
+  onAbandon: resetGame,
+});
+
+async function beginPlay(): Promise<void> {
+  runStart = Date.now();
+  resetGame();
 }
 
 document.documentElement.lang = getLang();
 applyTranslations();
+shell.refreshMenu();
