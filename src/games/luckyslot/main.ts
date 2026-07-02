@@ -35,11 +35,14 @@ let isSpinning = false;
 let runStart = 0;
 let slotTickInterval: ReturnType<typeof setInterval> | undefined;
 
-function clearReels(): void {
+function initIdleReels(): void {
   reelStrips.forEach((strip) => {
-    strip.innerHTML = '';
+    const row = Array.from({ length: 10 }, () => SYMBOLS[randInt(SYMBOLS.length)]);
+    const doubled = row.concat(row);
+    strip.innerHTML = doubled.map((s) => `<div class="slot-symbol">${s}</div>`).join('');
     strip.style.top = '0px';
     strip.style.transition = '';
+    strip.style.transform = '';
     strip.classList.remove('slot-blur');
   });
   machineElement.classList.add('slot-idle');
@@ -51,7 +54,7 @@ function resetSlot(): void {
   spinBtn.disabled = false;
   machineElement.classList.remove('slot-win-glow');
   messageDisplay.textContent = '';
-  clearReels();
+  initIdleReels();
 }
 
 const shell = wireFreeCasualShell(host, beginSpin, { headerSlots: [] });
@@ -105,6 +108,7 @@ async function runSpinLogic(): Promise<void> {
     strip.innerHTML = stripSymbols.map((s) => `<div class="slot-symbol">${s}</div>`).join('');
     const totalH = (stripSymbols.length - 1) * rh;
     strip.style.transition = 'none';
+    strip.style.transform = '';
     strip.style.top = `-${totalH}px`;
     strip.classList.add('slot-blur');
     setTimeout(() => {
@@ -149,4 +153,4 @@ spinBtn.addEventListener('click', () => void runSpinLogic());
 
 document.documentElement.lang = getLang();
 applyTranslations();
-clearReels();
+initIdleReels();

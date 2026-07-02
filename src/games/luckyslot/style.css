@@ -83,17 +83,15 @@ body.game-shell[data-game="luckyslot"]:has(#fcPlayFrame:not(.hidden)) {
   pointer-events: none;
 }
 
-.slot-machine.slot-idle .slot-reels-container::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: #eef6e3;
-  pointer-events: none;
+.slot-machine.slot-idle .slot-symbol-strip {
+  filter: blur(11px);
+  opacity: 0.72;
+  animation: slot-idle-drift 2.8s linear infinite;
 }
 
-.slot-machine.slot-idle .slot-symbol-strip {
-  visibility: hidden;
+@keyframes slot-idle-drift {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
 }
 
 .slot-reel {

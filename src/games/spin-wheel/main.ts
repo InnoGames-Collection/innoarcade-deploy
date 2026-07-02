@@ -1,4 +1,4 @@
-// Spin Wheel — hold-to-charge wheel with hub casual shell.
+// Spin Wheel — tap Play for a timed spin with hub casual shell.
 
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
@@ -29,35 +29,33 @@ const spinBtn = $('#sw-spin-btn') as HTMLButtonElement;
 const message = $('#sw-message');
 
 const SEGS = [
-  { label: 'WIN', color: '#2F0999', tc: '#ffffff' },
-  { label: 'LOSE', color: '#A11FAB', tc: '#ffffff' },
-  { label: 'WIN', color: '#D18A04', tc: '#2F0999' },
-  { label: 'LOSE', color: '#0B6655', tc: '#ffffff' },
-  { label: 'WIN', color: '#A11FAB', tc: '#ffffff' },
-  { label: 'LOSE', color: '#2F0999', tc: '#ffffff' },
-  { label: 'WIN', color: '#0B6655', tc: '#ffffff' },
-  { label: 'LOSE', color: '#D18A04', tc: '#2F0999' },
+  { label: 'WIN', color: '#4f9e16', tc: '#ffffff' },
+  { label: 'LOSE', color: '#eef6e3', tc: '#5f7262' },
+  { label: 'WIN', color: '#3d8010', tc: '#ffffff' },
+  { label: 'LOSE', color: '#ffffff', tc: '#5f7262' },
+  { label: 'WIN', color: '#6bb824', tc: '#ffffff' },
+  { label: 'LOSE', color: '#eef6e3', tc: '#5f7262' },
+  { label: 'WIN', color: '#4f9e16', tc: '#ffffff' },
+  { label: 'LOSE', color: '#ffffff', tc: '#5f7262' },
 ];
 const N = SEGS.length;
 const segAng = (2 * Math.PI) / N;
 
 let isSpinning = false;
 let currentRotation = 0;
-let isHolding = false;
-let spinSpeed = 0;
-let spinInterval: ReturnType<typeof setInterval> | null = null;
 let runStart = 0;
+let spinFrame = 0;
 
-const shell = wireFreeCasualShell(host, resetRound);
+const shell = wireFreeCasualShell(host, resetRound, { headerSlots: [] });
 
 function resetRound(): void {
+  cancelAnimationFrame(spinFrame);
   isSpinning = false;
-  isHolding = false;
-  spinSpeed = 0;
-  if (spinInterval) clearInterval(spinInterval);
   spinBtn.disabled = false;
-  message.textContent = t('sw.holdStart');
-  message.style.color = '#ffffff';
+  message.textContent = '';
+  canvas.style.transition = '';
+  currentRotation = 0;
+  canvas.style.transform = '';
   drawWheel();
 }
 
@@ -76,133 +74,93 @@ function drawWheel(): void {
     ctx.closePath();
     ctx.fillStyle = seg.color;
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.strokeStyle = 'rgba(20, 45, 14, 0.12)';
     ctx.lineWidth = 3;
     ctx.stroke();
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, s, e);
-    ctx.closePath();
-    ctx.clip();
-    const shine = ctx.createLinearGradient(0, 0, sz, sz);
-    shine.addColorStop(0, 'rgba(255,255,255,0.4)');
-    shine.addColorStop(0.4, 'rgba(255,255,255,0.1)');
-    shine.addColorStop(0.7, 'rgba(0,0,0,0.05)');
-    shine.addColorStop(1, 'rgba(255,255,255,0.15)');
-    ctx.fillStyle = shine;
-    ctx.fillRect(0, 0, sz, sz);
-    ctx.restore();
 
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(s + segAng / 2);
     ctx.textAlign = 'right';
     ctx.fillStyle = seg.tc;
-    ctx.font = `bold ${sz * 0.05}px sans-serif`;
-    ctx.fillText(seg.label, r * 0.82, sz * 0.018);
+    ctx.font = `bold ${sz * 0.048}px sans-serif`;
+    ctx.fillText(seg.label, r * 0.82, sz * 0.016);
     ctx.restore();
   });
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, 2 * Math.PI);
-  ctx.strokeStyle = '#D18A04';
-  ctx.lineWidth = 8;
+  ctx.strokeStyle = '#4f9e16';
+  ctx.lineWidth = 6;
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(cx, cy, r * 0.9, 0, 2 * Math.PI);
-  ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(cx, cy, sz * 0.12, 0, 2 * Math.PI);
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.arc(cx, cy, sz * 0.1, 0, 2 * Math.PI);
+  ctx.fillStyle = '#ffffff';
   ctx.fill();
+  ctx.strokeStyle = '#e6efdc';
+  ctx.lineWidth = 3;
+  ctx.stroke();
 }
 
-function startHolding(e: Event): void {
-  if (isSpinning || isHolding) return;
-  e.preventDefault();
-  runStart = Date.now();
-  isHolding = true;
-  spinSpeed = 0;
-  sfx.click();
-  message.textContent = t('sw.spinning');
-  message.style.color = '#D18A04';
-  spinInterval = setInterval(() => {
-    if (!isHolding) return;
-    spinSpeed += 0.6;
-    if (spinSpeed > 20) spinSpeed = 20;
-    currentRotation += spinSpeed;
-    canvas.style.transform = `rotate(${currentRotation}deg)`;
-  }, 30);
+function segmentOffsetDeg(index: number): number {
+  return 360 - (index * (360 / N) + 360 / N / 2);
 }
 
-function releaseSpin(): void {
-  if (!isHolding) return;
-  isHolding = false;
-  if (spinInterval) clearInterval(spinInterval);
-  if (spinSpeed > 0) spin(spinSpeed);
-  else {
-    message.textContent = t('sw.holdStart');
-    message.style.color = '#ffffff';
-  }
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-function spin(speed: number): void {
+function spinOnPlay(): void {
   if (isSpinning) return;
   isSpinning = true;
   spinBtn.disabled = true;
-  message.textContent = t('sw.slowing');
-  message.style.color = '#ffffff';
+  message.textContent = '';
+  runStart = Date.now();
+  sfx.click();
+  canvas.style.transition = '';
 
   const isWin = chance(host.winRate);
-  const wi = isWin ? randInt(4) * 2 : randInt(4) * 2 + 1;
-  const finalDeg = 360 - (wi * (360 / N) + 360 / N / 2);
+  const segIndex = isWin ? randInt(4) * 2 : randInt(4) * 2 + 1;
+  const duration = 5000 + randInt(3000);
+  const startRot = currentRotation;
+  const extraSpins = 4 + randInt(2);
+  const targetMod = segmentOffsetDeg(segIndex);
+  const endRot = Math.ceil(startRot / 360) * 360 + extraSpins * 360 + targetMod;
 
-  let currentSpeed = speed;
-  const slowInterval = setInterval(() => {
-    const deceleration = currentSpeed > 10 ? 0.4 : currentSpeed > 5 ? 0.3 : 0.15;
-    currentSpeed -= deceleration;
-    if (currentSpeed <= 0.5) {
-      clearInterval(slowInterval);
-      const fullSpins = Math.floor(currentRotation / 360) + 4;
-      const finalRotation = fullSpins * 360 + finalDeg;
-      currentRotation = finalRotation;
-      canvas.style.transition = 'transform 1.8s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
-      canvas.style.transform = `rotate(${finalRotation}deg)`;
-      setTimeout(() => {
-        canvas.style.transition = '';
-        let summary: string;
-        if (isWin) {
-          summary = t('sw.won').replace('{p}', String(host.winPoints));
-          message.textContent = summary;
-          message.style.color = '#D18A04';
-          sfx.coin();
-        } else {
-          summary = t('sw.tryAgain');
-          message.textContent = summary;
-          message.style.color = '#ffffff';
-          sfx.crash();
-        }
-        shell.finishPlay(isWin ? 1 : 0, isWin, '', Date.now() - runStart);
-        isSpinning = false;
-        spinBtn.disabled = true;
-        spinSpeed = 0;
-      }, 1900);
+  const t0 = performance.now();
+  const tickSound = setInterval(() => sfx.click(), 180);
+
+  const frame = (now: number): void => {
+    const progress = Math.min(1, (now - t0) / duration);
+    const eased = easeInOutCubic(progress);
+    currentRotation = startRot + (endRot - startRot) * eased;
+    canvas.style.transform = `rotate(${currentRotation}deg)`;
+    if (progress < 1) {
+      spinFrame = requestAnimationFrame(frame);
     } else {
-      currentRotation += currentSpeed;
+      clearInterval(tickSound);
+      currentRotation = endRot;
       canvas.style.transform = `rotate(${currentRotation}deg)`;
+      let summary: string;
+      if (isWin) {
+        summary = t('sw.won').replace('{p}', String(host.winPoints));
+        sfx.coin();
+      } else {
+        summary = t('sw.tryAgain');
+        sfx.crash();
+      }
+      message.textContent = summary;
+      shell.finishPlay(isWin ? host.winPoints : 0, isWin, '', Date.now() - runStart);
+      isSpinning = false;
+      spinBtn.disabled = true;
     }
-  }, 30);
+  };
+  spinFrame = requestAnimationFrame(frame);
 }
 
-spinBtn.addEventListener('mousedown', (e) => startHolding(e));
-spinBtn.addEventListener('touchstart', (e) => startHolding(e), { passive: false });
-window.addEventListener('mouseup', releaseSpin);
-window.addEventListener('touchend', releaseSpin);
+spinBtn.addEventListener('click', () => spinOnPlay());
 
 document.documentElement.lang = getLang();
 applyTranslations();
 shell.refreshMenu();
 window.addEventListener('resize', drawWheel);
+resetRound();
