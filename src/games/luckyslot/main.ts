@@ -35,15 +35,14 @@ let isSpinning = false;
 let runStart = 0;
 let slotTickInterval: ReturnType<typeof setInterval> | undefined;
 
-function initReels(): void {
-  reelStrips.forEach((strip, i) => {
+function clearReels(): void {
+  reelStrips.forEach((strip) => {
     strip.innerHTML = '';
-    const el = document.createElement('div');
-    el.className = 'slot-symbol';
-    el.textContent = SYMBOLS[i % SYMBOLS.length];
-    strip.appendChild(el);
     strip.style.top = '0px';
+    strip.style.transition = '';
+    strip.classList.remove('slot-blur');
   });
+  machineElement.classList.add('slot-idle');
 }
 
 function resetSlot(): void {
@@ -52,6 +51,7 @@ function resetSlot(): void {
   spinBtn.disabled = false;
   machineElement.classList.remove('slot-win-glow');
   messageDisplay.textContent = '';
+  clearReels();
 }
 
 const shell = wireFreeCasualShell(host, beginSpin, { headerSlots: [] });
@@ -59,14 +59,13 @@ const shell = wireFreeCasualShell(host, beginSpin, { headerSlots: [] });
 async function beginSpin(): Promise<void> {
   resetSlot();
   runStart = Date.now();
-  initReels();
 }
 
 async function runSpinLogic(): Promise<void> {
   if (isSpinning) return;
   isSpinning = true;
   spinBtn.disabled = true;
-  machineElement.classList.remove('slot-win-glow');
+  machineElement.classList.remove('slot-win-glow', 'slot-idle');
   messageDisplay.textContent = '';
   sfx.click();
 
@@ -99,7 +98,7 @@ async function runSpinLogic(): Promise<void> {
   const rh = (firstSym ? parseInt(getComputedStyle(firstSym).height) : 150) || 150;
   reelStrips.forEach((strip, index) => {
     const targetSymbol = results[index];
-    const stripSymbols = [strip.children[0] ? strip.children[0].textContent! : SYMBOLS[0]];
+    const stripSymbols = [SYMBOLS[randInt(SYMBOLS.length)]];
     const fakeCount = 18 + index * 9;
     for (let i = 0; i < fakeCount; i++) stripSymbols.push(SYMBOLS[randInt(SYMBOLS.length)]);
     stripSymbols.push(targetSymbol);
@@ -150,4 +149,4 @@ spinBtn.addEventListener('click', () => void runSpinLogic());
 
 document.documentElement.lang = getLang();
 applyTranslations();
-initReels();
+clearReels();

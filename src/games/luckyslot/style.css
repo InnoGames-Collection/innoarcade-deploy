@@ -83,6 +83,19 @@ body.game-shell[data-game="luckyslot"]:has(#fcPlayFrame:not(.hidden)) {
   pointer-events: none;
 }
 
+.slot-machine.slot-idle .slot-reels-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: #eef6e3;
+  pointer-events: none;
+}
+
+.slot-machine.slot-idle .slot-symbol-strip {
+  visibility: hidden;
+}
+
 .slot-reel {
   flex: 1;
   min-width: 0;
