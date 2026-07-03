@@ -95,12 +95,41 @@ export const SEASON_TOP_PRIZES: { rank: number; packId: string; label: string; c
 export const SEASON_POT_COINS =
   SEASON_TOP_PRIZES.reduce((s, p) => s + p.coins, 0) + 100 + 100 + 50 * 5; // ranks 4–10
 
-/** ETB cash prizes for Winners tab (ranks 1–3 per cadence). */
+/** ETB cash prizes per tournament game (ranks 1–5). Real ETB — not coins. */
+export const TOURNAMENT_ETB_PRIZES: Record<string, readonly number[]> = {
+  'fruit-slice': [50_000, 20_000, 10_000, 5_000, 3_000],
+};
+
+/** ETB cash prizes for Winners tab by cadence (legacy daily kept for layout). */
 export type WinnerCadence = 'daily' | 'weekly' | 'monthly';
-export const WINNER_ETB_PRIZES: Record<WinnerCadence, [number, number, number]> = {
-  daily: [2000, 1500, 1000],
-  weekly: [5000, 2000, 1000],
-  monthly: [25000, 10000, 5000],
+
+export function formatEtbPrize(amount: number, lang: 'en' | 'am' = 'en'): string {
+  if (amount <= 0) return '—';
+  if (lang === 'am' && amount >= 1000) {
+    const k = amount / 1000;
+    const label = Number.isInteger(k) ? String(k) : k.toFixed(1);
+    return `${label}ሺ ብር/ETB`;
+  }
+  return `${amount.toLocaleString()} ETB`;
+}
+
+export function etbPrizeForGame(gameId: string, rank: number): number {
+  const prizes = TOURNAMENT_ETB_PRIZES[gameId];
+  if (!prizes || rank < 1 || rank > prizes.length) return 0;
+  return prizes[rank - 1];
+}
+
+export function etbPrizesForCadence(cadence: WinnerCadence): readonly number[] {
+  if (cadence === 'weekly') return TOURNAMENT_ETB_PRIZES['fruit-slice'] ?? [];
+  if (cadence === 'monthly') return TOURNAMENT_ETB_PRIZES['memory-match'] ?? [];
+  return [];
+}
+
+/** @deprecated use etbPrizesForCadence — kept for any legacy imports */
+export const WINNER_ETB_PRIZES: Record<WinnerCadence, readonly number[]> = {
+  daily: [],
+  weekly: TOURNAMENT_ETB_PRIZES['fruit-slice'],
+  monthly: [],
 };
 
 // In-memory cache (NO localStorage) so synchronous UI (store grid, fee labels)

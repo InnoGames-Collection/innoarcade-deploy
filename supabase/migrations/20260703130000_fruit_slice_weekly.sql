@@ -1,4 +1,4 @@
--- Ethiorunner (temple-dash) is now a free game — stop seeding daily tournament windows.
+-- Fruit Slice → weekly tournament (ETB top-5 prizes configured in client config).
 
 create or replace function public.seed_tournaments()
 returns void language plpgsql security definer set search_path = public as $$
@@ -37,10 +37,11 @@ begin
 end;
 $$;
 
--- Close any live temple-dash tournament windows.
+-- Retire fruit-slice monthly windows (game moved to weekly cadence).
 update public.tournaments
    set state = 'ended'
- where game_id = 'temple-dash'
+ where game_id = 'fruit-slice'
+   and id ~ '-monthly-'
    and state in ('live', 'upcoming');
 
 select public.seed_tournaments();

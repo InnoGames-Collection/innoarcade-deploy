@@ -441,6 +441,13 @@ body {
 .gc-tag.free { background: rgba(31, 116, 224, 0.9); }
 .gc-tag.tournament { background: rgba(31, 78, 12, 0.85); }
 .gc-cat { color: var(--muted); font-size: 0.74rem; font-weight: 600; }
+.gc-prize {
+  margin: 0.2rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #157a47;
+  line-height: 1.35;
+}
 .gc-play { display: inline-block; margin-top: 0.5rem; background: var(--accent); color: #fff;
   font-size: 0.8rem; font-weight: 800; padding: 0.32rem 1.05rem; border-radius: 999px;
   box-shadow: 0 4px 12px rgba(47, 124, 14, 0.28); transition: filter 0.12s, transform 0.1s; }

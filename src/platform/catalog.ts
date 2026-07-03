@@ -109,7 +109,7 @@ const ALL_GAMES: GameMeta[] = [
     route: 'games/fruit-slice/',
     nameEn: 'Fruit Slice', nameAm: 'ፍሩት ስላይስ',
     genreEn: 'Arcade · Tournament', genreAm: 'አርኬድ · ውድድር',
-    mode: 'tournament', tournament: 'monthly', icon: '🍉', accent: '#46c05a', thumb: ['#236f2c', '#0a2410'],
+    mode: 'tournament', tournament: 'weekly', icon: '🍉', accent: '#46c05a', thumb: ['#236f2c', '#0a2410'],
     scoreEn: 'Score', scoreAm: 'ነጥብ',
   },
   {

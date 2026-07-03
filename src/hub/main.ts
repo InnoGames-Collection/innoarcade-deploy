@@ -19,7 +19,7 @@ import { balanceSync, balance, onWalletChange } from '../platform/wallet';
 import { openTournamentEntry } from './tournamentEntry';
 import { activeDraws, myTickets, enterDraw, NotEnoughPointsError, hydrateTickets, loadDraws, myOdds } from '../platform/draws';
 import { xp as xpBal, onCurrencyChange, setBalance, setLifetime, xpLifetime } from '../platform/currency';
-import { levelFor, economyNeedsAuth, WINNER_ETB_PRIZES, loadConfig, type WinnerCadence } from '../platform/config';
+import { levelFor, economyNeedsAuth, etbPrizesForCadence, formatEtbPrize, TOURNAMENT_ETB_PRIZES, loadConfig, type WinnerCadence } from '../platform/config';
 import { getSupabase, isConfigured } from '../platform/supabase';
 import { bootstrapHubData, type HubBootstrapResult } from '../platform/hubBootstrap';
 
@@ -85,8 +85,8 @@ function setupPromo(): void {
   }
 }
 
-// --- Live tournament leaderboards (daily / weekly / monthly) ----------------
-let liveCadence: TournamentCadence = 'daily';
+// --- Live tournament leaderboards (weekly / monthly) -------------------------
+let liveCadence: TournamentCadence = 'weekly';
 /** Set when #topPlayers enters the viewport — gates the initial leaderboard fetch. */
 let liveBoardSeen = false;
 
@@ -213,8 +213,8 @@ const HOWTO: Record<string, { en: string; am: string }> = {
   'candy-crunch': { en: 'Swap adjacent candies to line up 3+ of a colour. Clear the board’s goals before moves run out.', am: 'ተጎራባች ከረሜላዎችን ቀይረው 3+ ተመሳሳይ ቀለም ያሰልፉ።' },
   'brick-blitz': { en: 'Move the paddle to bounce the ball and break every brick. Don’t let the ball fall.', am: 'ኳሷን ለመመለስና ሁሉንም ጡቦች ለመስበር ፓዱን ያንቀሳቅሱ።' },
   'fruit-slice': {
-    en: 'Monthly tournament: enter with coins for attempts, then survive as long as you can. The timer counts up — +2 points per second alive. Slice fruit for +10 (+2 combo bonus per streak step). Bombs −10 and reset combo. Miss 5 fruits and you are out. Difficulty ramps over time. Your total score ranks on the monthly board.',
-    am: 'ወርሃዊ ውድድር፦ በሳንቲም ለሙከራዎች ግቡ፣ ከዚያ ምን ያህል ረጅም እንደሚቆዩ ይጫወቱ። ሰዓቱ ይጨምራል — በሰከንድ +2 ነጥብ። ፍራፍሬ +10 (+2 ኮምቦ ቦነስ)። ቦምብ −10። 5 ፍራፍሬ ካመለጡ ይወጣሉ። አዝነት በጊዜ ይጨምራል።',
+    en: 'Weekly tournament: compete for real ETB prizes (top 5). Survive as long as you can — +2 points per second alive. Slice fruit for +10 (+2 combo bonus per streak step). Bombs −10 and reset combo. Miss 5 fruits and you are out. Difficulty ramps over time. Your total score ranks on the weekly board.',
+    am: 'ሳምንታዊ ውድድር፦ ለእውነተኛ ETB ሽልማት ይወዳደሩ (ከፍተኛ 5)። ምን ያህል ረጅም እንደሚቆዩ ይጫወቱ። በሰከንድ +2 ነጥብ። ፍራፍሬ +10 (+2 ኮምቦ ቦነስ)። ቦምብ −10። 5 ፍራፍሬ ካመለጡ ይወጣሉ። አዝነት በጊዜ ይጨምራል።',
   },
   'sky-hopper': { en: 'Tap to hop upward from platform to platform. Climb as high as you can without falling.', am: 'ከመድረክ ወደ መድረክ ለመዝለል ይንኩ። ሳይወድቁ ከፍ ብለው ይውጡ።' },
   'bubble-pop': { en: 'Aim and shoot bubbles to group 3+ of a colour and pop them. Clear the board to win.', am: '3+ ተመሳሳይ ቀለም ለማሰባሰብ አረፋዎችን ይተኩሱ።' },
@@ -230,6 +230,14 @@ const unlockedSet = new Set<string>();
 // A game is locked when it's gated above the player's level and not yet unlocked.
 function isLocked(g: GameMeta): boolean {
   return !!g.minLevel && levelFor(xpLifetime()) < g.minLevel && !unlockedSet.has(g.id);
+}
+
+function tournamentPrizeSummary(g: GameMeta): string {
+  const prizes = TOURNAMENT_ETB_PRIZES[g.id];
+  if (!prizes?.length) return '';
+  const top = formatEtbPrize(prizes[0], lang());
+  const fifth = formatEtbPrize(prizes[prizes.length - 1], lang());
+  return `<p class="gc-prize">🎁 ${top} – ${fifth}</p>`;
 }
 
 function gameCard(g: GameMeta): string {
@@ -270,6 +278,7 @@ function gameCard(g: GameMeta): string {
       <div class="gc-body">
         <h4>${escapeHtml(name(g))}</h4>
         <p class="gc-cat">${escapeHtml(category(g))}</p>
+        ${g.mode === 'tournament' ? tournamentPrizeSummary(g) : ''}
         <span class="gc-play">▶ ${t('hub.play')}</span>
       </div>
     </a>`;
@@ -355,24 +364,19 @@ function renderDraws(): void {
   });
 }
 
-// Winners tab: Daily / Weekly / Monthly ETB prizes for the latest tournament window.
-let winnerCadence: WinnerCadence = 'daily';
+// Winners tab: weekly / monthly ETB prizes for the latest tournament window.
+let winnerCadence: WinnerCadence = 'weekly';
 /** Set when #winners enters the viewport — gates the initial winners fetch. */
 let winnersSeen = false;
 
-function formatEtbPrize(amount: number): string {
-  if (lang() === 'am' && amount >= 1000) {
-    const k = amount / 1000;
-    const label = Number.isInteger(k) ? String(k) : k.toFixed(1);
-    return `${label}ሺ ብር/ETB`;
-  }
-  return `${amount.toLocaleString()} ETB`;
+function formatEtbPrizeHub(amount: number): string {
+  return formatEtbPrize(amount, lang());
 }
 
 function winnerPrizeForRank(cadence: WinnerCadence, rank: number): string {
-  const prizes = WINNER_ETB_PRIZES[cadence];
-  const etb = rank >= 1 && rank <= 3 ? prizes[rank - 1] : 0;
-  return etb > 0 ? formatEtbPrize(etb) : '—';
+  const prizes = etbPrizesForCadence(cadence);
+  const etb = rank >= 1 && rank <= prizes.length ? prizes[rank - 1] : 0;
+  return etb > 0 ? formatEtbPrizeHub(etb) : '—';
 }
 
 function renderWinners(opts?: { fetch?: boolean }): void {
