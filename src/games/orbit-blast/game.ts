@@ -16,6 +16,12 @@ import { settings } from '../../engine/settings';
 export const W = 480;
 export const H = 640;
 
+const BALL_FILL = '#1f74e0';
+const BALL_GLOW = 'rgba(79, 158, 22, 0.45)';
+const AIM_LINE = '#4f9e16';
+const LAUNCHER_FILL = '#3d8010';
+const PLAYFIELD_BG = '#eef6e3';
+
 const COLS = 7;
 const GAP = 8;
 const BLOCK = (W - GAP * (COLS + 1)) / COLS;
@@ -329,9 +335,11 @@ export class OrbitBlast {
   render(ctx: CanvasRenderingContext2D): void {
     this.fx.preRender(ctx);
     ctx.clearRect(-20, -20, W + 40, H + 40);
+    ctx.fillStyle = PLAYFIELD_BG;
+    ctx.fillRect(0, 0, W, H);
 
     // Danger line near the floor.
-    ctx.strokeStyle = 'rgba(226,86,58,0.5)';
+    ctx.strokeStyle = 'rgba(226, 86, 58, 0.65)';
     ctx.setLineDash([6, 8]);
     ctx.beginPath();
     ctx.moveTo(0, FLOOR_Y);
@@ -345,8 +353,8 @@ export class OrbitBlast {
     // Aim guide.
     if (this.state === 'ready' && this.aimActive) {
       const path = this.aimPath();
-      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-      ctx.setLineDash([2, 10]);
+      ctx.strokeStyle = AIM_LINE;
+      ctx.setLineDash([6, 8]);
       ctx.lineWidth = 3;
       ctx.lineCap = 'round';
       ctx.beginPath();
@@ -358,28 +366,35 @@ export class OrbitBlast {
       ctx.setLineDash([]);
     }
 
-    // Orbs.
-    ctx.globalCompositeOperation = 'lighter';
+    // Orbs in flight.
     for (const ball of this.balls) {
       if (!ball.active && ball.returned) continue;
-      ctx.fillStyle = '#9ec2ff';
+      ctx.fillStyle = BALL_GLOW;
       ctx.beginPath();
-      ctx.arc(ball.x, ball.y, BALL_R * 1.8, 0, Math.PI * 2);
-      ctx.globalAlpha = 0.25;
+      ctx.arc(ball.x, ball.y, BALL_R * 1.9, 0, Math.PI * 2);
       ctx.fill();
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = '#fff';
+      ctx.fillStyle = BALL_FILL;
       ctx.beginPath();
       ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI * 2);
       ctx.fill();
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+      ctx.beginPath();
+      ctx.arc(ball.x - 2, ball.y - 2, BALL_R * 0.35, 0, Math.PI * 2);
+      ctx.fill();
     }
-    ctx.globalCompositeOperation = 'source-over';
 
-    // Launcher base.
-    ctx.fillStyle = '#5b8cff';
+    // Launcher + ready orb.
+    ctx.fillStyle = BALL_GLOW;
     ctx.beginPath();
-    ctx.arc(this.launchX, FLOOR_Y, BALL_R + 3, 0, Math.PI * 2);
+    ctx.arc(this.launchX, FLOOR_Y, BALL_R + 5, 0, Math.PI * 2);
     ctx.fill();
+    ctx.fillStyle = this.state === 'ready' ? LAUNCHER_FILL : BALL_FILL;
+    ctx.beginPath();
+    ctx.arc(this.launchX, FLOOR_Y, BALL_R + 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
 
     this.particles.render(ctx);
     this.fx.postRender(ctx, W, H);

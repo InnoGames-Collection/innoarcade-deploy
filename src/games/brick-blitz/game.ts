@@ -71,6 +71,24 @@ export class BrickBlitz {
   onStateChange: (s: GameState) => void = () => {};
   onGameOver: (score: number, levelReached: number, record: boolean) => void = () => {};
 
+  /** Move paddle to canvas x (centered). */
+  setPaddleX(canvasX: number): void {
+    this.paddleX = Math.max(4, Math.min(W - 4 - this.paddleW, canvasX - this.paddleW / 2));
+  }
+
+  launchBall(): void {
+    const ball = this.balls.find((b) => b.attached);
+    if (!ball || this.state !== 'playing') return;
+    ball.attached = false;
+    ball.vx = -120 + Math.random() * 240;
+    ball.vy = -BALL_SPEED;
+    sfx.jump();
+  }
+
+  releasePaddle(): void {
+    this.paddleDir = 0;
+  }
+
   private time = 0;
   private levelNumber = 1;
   private paddleX = W / 2 - PADDLE_W / 2;
@@ -338,75 +356,53 @@ export class BrickBlitz {
   }
 
   render(ctx: CanvasRenderingContext2D): void {
-    // Neon arena backdrop
-    const bg = ctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0, '#3d1635');
-    bg.addColorStop(0.5, '#26133f');
-    bg.addColorStop(1, '#141b3d');
-    ctx.fillStyle = bg;
+    ctx.fillStyle = '#eef6e3';
     ctx.fillRect(0, 0, W, H);
 
-    // Soft glow behind the brick field
-    const glow = ctx.createRadialGradient(W / 2, 140, 30, W / 2, 140, 320);
-    glow.addColorStop(0, 'rgba(255, 107, 107, 0.16)');
-    glow.addColorStop(1, 'rgba(255, 107, 107, 0)');
+    const glow = ctx.createRadialGradient(W / 2, 120, 20, W / 2, 120, 280);
+    glow.addColorStop(0, 'rgba(79, 158, 22, 0.12)');
+    glow.addColorStop(1, 'rgba(79, 158, 22, 0)');
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, W, H);
 
-    // Faint grid lines for arcade depth
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
-    ctx.lineWidth = 1;
-    for (let gx = 0; gx <= W; gx += 48) {
-      ctx.beginPath();
-      ctx.moveTo(gx, 0);
-      ctx.lineTo(gx, H);
-      ctx.stroke();
-    }
-    for (let gy = 0; gy <= H; gy += 48) {
-      ctx.beginPath();
-      ctx.moveTo(0, gy);
-      ctx.lineTo(W, gy);
-      ctx.stroke();
-    }
-
-    this.drawHeader(ctx);
     this.drawBricks(ctx);
     this.drawPowerUps(ctx);
     this.drawPaddle(ctx);
     this.drawBalls(ctx);
     this.drawParticles(ctx);
 
+    if (this.balls.some((b) => b.attached) && this.state === 'playing') {
+      ctx.fillStyle = 'rgba(61, 128, 16, 0.85)';
+      ctx.font = '600 14px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText('Tap to launch', W / 2, PADDLE_Y - 36);
+    }
+
     if (this.screenShake > 0) {
-      ctx.fillStyle = `rgba(255, 100, 100, ${this.screenShake * 0.12})`;
+      ctx.fillStyle = `rgba(255, 100, 100, ${this.screenShake * 0.1})`;
       ctx.fillRect(0, 0, W, H);
     }
   }
 
-  private drawHeader(ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = 'rgba(10, 15, 26, 0.9)';
-    ctx.fillRect(0, 0, W, 30);
-
-    ctx.fillStyle = '#ff6b6b';
-    ctx.font = 'bold 14px system-ui';
-    ctx.textAlign = 'left';
-    ctx.fillText(`Lvl ${this.levelNumber}`, 12, 22);
-
-    ctx.textAlign = 'center';
-    ctx.fillText(`Score: ${this.score}`, W / 2, 22);
-
-    ctx.textAlign = 'right';
-    ctx.fillText(`Lives: ${'❤'.repeat(this.lives)}`, W - 12, 22);
-  }
-
   private drawBricks(ctx: CanvasRenderingContext2D): void {
-    const colors = ['#ff6b6b', '#ffa502', '#00d4ff', '#00ff88'];
+    const palette = [
+      { top: '#ff6b6b', mid: '#e03535', bot: '#b82020' },
+      { top: '#ffb347', mid: '#f59e0b', bot: '#d97706' },
+      { top: '#38bdf8', mid: '#0ea5e9', bot: '#0284c7' },
+      { top: '#4ade80', mid: '#22c55e', bot: '#16a34a' },
+    ];
     for (const brick of this.bricks) {
-      const color = colors[brick.color % colors.length];
-      ctx.fillStyle = color;
-      ctx.shadowColor = color;
-      ctx.shadowBlur = 8;
-      ctx.fillRect(brick.x, brick.y, BRICK_W, BRICK_H);
-
+      const p = palette[brick.color % palette.length];
+      const g = ctx.createLinearGradient(brick.x, brick.y, brick.x, brick.y + BRICK_H);
+      g.addColorStop(0, p.top);
+      g.addColorStop(0.5, p.mid);
+      g.addColorStop(1, p.bot);
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.roundRect(brick.x, brick.y, BRICK_W, BRICK_H, 4);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.fillRect(brick.x + 3, brick.y + 2, BRICK_W - 6, 3);
       if (brick.hp > 1) {
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 10px system-ui';
@@ -414,7 +410,6 @@ export class BrickBlitz {
         ctx.textBaseline = 'middle';
         ctx.fillText(String(brick.hp), brick.x + BRICK_W / 2, brick.y + BRICK_H / 2);
       }
-      ctx.shadowBlur = 0;
     }
   }
 
@@ -430,29 +425,26 @@ export class BrickBlitz {
 
   private drawPaddle(ctx: CanvasRenderingContext2D): void {
     const g = ctx.createLinearGradient(this.paddleX, PADDLE_Y, this.paddleX, PADDLE_Y + PADDLE_H);
-    g.addColorStop(0, '#6b9dff');
-    g.addColorStop(1, '#3d5a99');
+    g.addColorStop(0, '#6ec8ff');
+    g.addColorStop(1, '#1f74e0');
     ctx.fillStyle = g;
-    ctx.shadowColor = '#6b9dff';
-    ctx.shadowBlur = 10;
     ctx.beginPath();
-    ctx.roundRect(this.paddleX, PADDLE_Y, this.paddleW, PADDLE_H, 4);
+    ctx.roundRect(this.paddleX, PADDLE_Y, this.paddleW, PADDLE_H, 6);
     ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.fillRect(this.paddleX + 4, PADDLE_Y + 2, this.paddleW - 8, 3);
   }
 
   private drawBalls(ctx: CanvasRenderingContext2D): void {
     for (const ball of this.balls) {
-      const g = ctx.createRadialGradient(ball.x - 2, ball.y - 2, 0, ball.x, ball.y, BALL_RADIUS);
-      g.addColorStop(0, '#ffff99');
-      g.addColorStop(1, '#ff9933');
+      const g = ctx.createRadialGradient(ball.x - 2, ball.y - 2, 0, ball.x, ball.y, BALL_RADIUS + 2);
+      g.addColorStop(0, '#fff');
+      g.addColorStop(0.4, '#4f9e16');
+      g.addColorStop(1, '#3d8010');
       ctx.fillStyle = g;
-      ctx.shadowColor = '#ffff99';
-      ctx.shadowBlur = 8;
       ctx.beginPath();
-      ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, Math.PI * 2);
+      ctx.arc(ball.x, ball.y, BALL_RADIUS + 1, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
     }
   }
 

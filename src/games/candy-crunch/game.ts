@@ -1,50 +1,42 @@
-// Candy Crunch — enterprise-grade match-3 with cascading, level progression,
-// particles, and combo scoring. 8x8 grid with 5 candy types, match detection,
-// gravity, and streak multipliers.
+// Candy Saga — match-3 with tap-to-swap, hub-themed canvas, level goals.
 
 import { sfx } from '../../engine/audio';
 import { getHighScore, setHighScore } from '../../engine/storage';
-import type { Action } from '../../engine/input';
 
 export const W = 480;
 export const H = 720;
 
 const COLS = 8;
 const ROWS = 8;
-const CELL_SIZE = 52;
-const GRID_X = (W - COLS * CELL_SIZE) / 2;
-const GRID_Y = 140;
-
+const CELL = 52;
+const GRID_X = (W - COLS * CELL) / 2;
+const GRID_Y = 108;
+const GOAL_H = 96;
 const CANDY_TYPES = 5;
-const MATCH_MIN = 3;
-const SWAP_DURATION = 0.18;
-const FALL_SPEED = 800; // px/sec
-const MATCH_DURATION = 0.35;
+const FALL_SPEED = 900;
+
+const CANDY_COLORS = ['#ff4d8a', '#ff9f1a', '#8b5cf6', '#fbbf24', '#22c55e'];
+const CANDY_EMOJI = ['🍬', '🍭', '🍫', '🍯', '🌟'];
 
 interface Level {
   number: number;
-  targetCandies: string[]; // e.g. ["red", "red", "blue", "blue", "blue"]
+  targetCandies: string[];
   movesAllowed: number;
   title: string;
 }
 
 interface Candy {
   type: number;
-  x: number;
+  row: number;
+  col: number;
   y: number;
   targetY: number;
   matched: boolean;
 }
 
 interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  life: number;
-  maxLife: number;
-  size: number;
-  color: string;
+  x: number; y: number; vx: number; vy: number;
+  life: number; maxLife: number; size: number; color: string;
 }
 
 export type GameState = 'menu' | 'playing' | 'paused' | 'levelClear' | 'gameOver';
@@ -59,22 +51,19 @@ export class CandyCrunch {
   get movesTotal(): number { return this.level.movesAllowed; }
 
   onStateChange: (s: GameState) => void = () => {};
-  onLevelChange: (level: Level, collected: Record<string, number>) => void = () => {};
   onGameOver: (score: number, levelReached: number, record: boolean) => void = () => {};
 
-  private time = 0;
-  private level: Level = this.levelAt(1);
+  private level = this.levelAt(1);
   private levelNumber = 1;
   private grid: Candy[][] = [];
-  private swapping: { r1: number; c1: number; r2: number; c2: number; progress: number } | null = null;
-  private falling = true;
   private particles: Particle[] = [];
   private screenShake = 0;
   private comboCount = 0;
   private comboTime = 0;
-  private candyNames = ['🍬', '🍭', '🍫', '🍯', '🍤'];
   private movesUsed = 0;
   private candiesCollected: Record<string, number> = {};
+  private selected: { r: number; c: number } | null = null;
+  private busy = false;
 
   start(): void {
     if (this.state === 'levelClear') {
@@ -82,26 +71,14 @@ export class CandyCrunch {
       return;
     }
     this.levelNumber = 1;
-    this.level = this.levelAt(this.levelNumber);
+    this.level = this.levelAt(1);
     this.score = 0;
     this.movesUsed = 0;
-    this.time = 0;
-    this.grid = [];
-    for (let r = 0; r < ROWS; r++) {
-      this.grid[r] = [];
-      for (let c = 0; c < COLS; c++) {
-        let type: number;
-        do {
-          type = Math.floor(Math.random() * CANDY_TYPES);
-        } while (this.wouldMatch(this.grid, r, c, type));
-        const y = GRID_Y + r * CELL_SIZE;
-        this.grid[r][c] = { type, x: c, y, targetY: y, matched: false };
-      }
-    }
-    this.particles = [];
-    this.screenShake = 0;
     this.comboCount = 0;
-    this.candiesCollected = {};
+    this.selected = null;
+    this.busy = false;
+    this.grid = this.newGrid();
+    this.particles = [];
     this.resetCollectionGoals();
     this.setState('playing');
   }
@@ -114,14 +91,43 @@ export class CandyCrunch {
     if (this.state === 'paused') this.setState('playing');
   }
 
-  handleAction(a: Action): void {
-    if (this.state === 'playing' && (a === 'tap' || ['left', 'right', 'up', 'down'].includes(a))) {
-      this.handleTap(a as 'left' | 'right' | 'up' | 'down' | 'tap');
+  /** Map canvas coords to grid cell. */
+  cellAt(x: number, y: number): { r: number; c: number } | null {
+    const c = Math.floor((x - GRID_X) / CELL);
+    const r = Math.floor((y - GRID_Y) / CELL);
+    if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return null;
+    return { r, c };
+  }
+
+  /** Tap a cell — select or swap with neighbour. */
+  tapCell(r: number, c: number): void {
+    if (this.state !== 'playing' || this.busy) return;
+    if (!this.grid[r]?.[c]) return;
+
+    if (!this.selected) {
+      this.selected = { r, c };
+      sfx.click();
+      return;
     }
+
+    if (this.selected.r === r && this.selected.c === c) {
+      this.selected = null;
+      return;
+    }
+
+    const dr = Math.abs(this.selected.r - r);
+    const dc = Math.abs(this.selected.c - c);
+    if (dr + dc !== 1) {
+      this.selected = { r, c };
+      sfx.click();
+      return;
+    }
+
+    void this.trySwap(this.selected.r, this.selected.c, r, c);
+    this.selected = null;
   }
 
   update(dt: number): void {
-    this.time += dt;
     if (this.state !== 'playing') return;
 
     this.screenShake = Math.max(0, this.screenShake - dt * 8);
@@ -137,53 +143,131 @@ export class CandyCrunch {
       if (p.life <= 0) this.particles.splice(i, 1);
     }
 
-    if (this.swapping) {
-      this.swapping.progress += dt / SWAP_DURATION;
-      if (this.swapping.progress >= 1) this.swapping = null;
-      return;
-    }
+    if (this.busy) return;
 
-    this.falling = false;
-    for (let c = 0; c < COLS; c++) {
-      for (let r = ROWS - 1; r >= 0; r--) {
+    let falling = false;
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
         const candy = this.grid[r][c];
         if (candy.y < candy.targetY) {
           candy.y = Math.min(candy.targetY, candy.y + FALL_SPEED * dt);
-          this.falling = true;
+          falling = true;
         }
       }
     }
-
-    if (this.falling) return;
+    if (falling) return;
 
     const matched = this.findMatches();
     if (matched.length > 0) {
-      for (const { r, c } of matched) {
-        this.grid[r][c].matched = true;
-        this.spawnMatchParticles(r, c);
-      }
-      sfx.coin();
-      this.screenShake = 0.3;
-      this.comboCount++;
-      this.comboTime = 0.6;
-
-      const baseScore = matched.length * 10;
-      const comboMult = Math.min(1 + this.comboCount * 0.15, 3);
-      this.score += Math.round(baseScore * comboMult);
-
-      for (const { r, c } of matched) {
-        const type = this.grid[r][c].type;
-        const name = this.candyNames[type];
-        if (this.candiesCollected[name] !== undefined) {
-          this.candiesCollected[name]++;
-        }
-      }
-
-      setTimeout(() => this.removeMatched(), MATCH_DURATION * 1000);
+      void this.clearMatches(matched);
       return;
     }
 
-    this.checkLevelClear();
+    this.checkLevelEnd();
+  }
+
+  render(ctx: CanvasRenderingContext2D): void {
+    ctx.fillStyle = '#eef6e3';
+    ctx.fillRect(0, 0, W, H);
+    this.drawGoalBar(ctx);
+    this.drawGrid(ctx);
+    this.drawCandies(ctx);
+    this.drawParticles(ctx);
+
+    if (this.screenShake > 0) {
+      ctx.fillStyle = `rgba(255, 100, 100, ${this.screenShake * 0.08})`;
+      ctx.fillRect(0, 0, W, H);
+    }
+  }
+
+  private async trySwap(r1: number, c1: number, r2: number, c2: number): Promise<void> {
+    this.busy = true;
+    this.swapCells(r1, c1, r2, c2);
+    sfx.click();
+
+    const matched = this.findMatches();
+    if (matched.length === 0) {
+      this.swapCells(r1, c1, r2, c2);
+      sfx.slide();
+      this.busy = false;
+      return;
+    }
+
+    this.movesUsed++;
+    await this.clearMatches(matched);
+    this.busy = false;
+    this.checkLevelEnd();
+  }
+
+  private async clearMatches(matched: Array<{ r: number; c: number }>): Promise<void> {
+    for (const { r, c } of matched) {
+      this.grid[r][c].matched = true;
+      this.spawnParticles(r, c);
+    }
+    sfx.coin();
+    this.screenShake = 0.25;
+    this.comboCount++;
+    this.comboTime = 0.6;
+
+    const tier = 1 + Math.max(0, this.comboCount - 1) * 0.2;
+    this.score += Math.round(matched.length * 12 * tier);
+
+    for (const { r, c } of matched) {
+      const name = CANDY_EMOJI[this.grid[r][c].type];
+      if (this.candiesCollected[name] !== undefined) {
+        this.candiesCollected[name]++;
+      }
+    }
+
+    await this.wait(160);
+    this.applyGravity();
+    await this.wait(120);
+
+    const chain = this.findMatches();
+    if (chain.length > 0) await this.clearMatches(chain);
+  }
+
+  private applyGravity(): void {
+    for (let c = 0; c < COLS; c++) {
+      const stack: Candy[] = [];
+      for (let r = ROWS - 1; r >= 0; r--) {
+        if (!this.grid[r][c].matched) stack.push(this.grid[r][c]);
+      }
+      const missing = ROWS - stack.length;
+      for (let i = 0; i < missing; i++) {
+        let type: number;
+        do { type = Math.floor(Math.random() * CANDY_TYPES); } while (false);
+        stack.push({
+          type, row: 0, col: c,
+          y: GRID_Y - (missing - i) * CELL,
+          targetY: GRID_Y,
+          matched: false,
+        });
+      }
+      for (let r = 0; r < ROWS; r++) {
+        const candy = stack[ROWS - 1 - r];
+        candy.row = r;
+        candy.col = c;
+        candy.matched = false;
+        candy.targetY = GRID_Y + r * CELL;
+        this.grid[r][c] = candy;
+      }
+    }
+  }
+
+  private wait(ms: number): Promise<void> {
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
+  }
+
+  private swapCells(r1: number, c1: number, r2: number, c2: number): void {
+    const a = this.grid[r1][c1];
+    const b = this.grid[r2][c2];
+    this.grid[r1][c1] = b;
+    this.grid[r2][c2] = a;
+    a.row = r2; a.col = c2;
+    b.row = r1; b.col = c1;
+    [a.targetY, b.targetY] = [b.targetY, a.targetY];
+    [a.y, b.y] = [b.y, a.y];
   }
 
   private levelAt(n: number): Level {
@@ -192,7 +276,7 @@ export class CandyCrunch {
       { number: 2, targetCandies: ['🍬', '🍬', '🍭', '🍭'], movesAllowed: 22, title: 'Rising Rush' },
       { number: 3, targetCandies: ['🍫', '🍫', '🍫', '🍯', '🍯'], movesAllowed: 20, title: 'Chocolate Challenge' },
       { number: 4, targetCandies: ['🍬', '🍬', '🍭', '🍭', '🍫', '🍫'], movesAllowed: 18, title: 'Master Mix' },
-      { number: 5, targetCandies: ['🍬', '🍭', '🍫', '🍯', '🍤', '🍤', '🍤'], movesAllowed: 15, title: 'Ultimate Challenge' },
+      { number: 5, targetCandies: ['🍬', '🍭', '🍫', '🍯', '🌟', '🌟', '🌟'], movesAllowed: 15, title: 'Ultimate Challenge' },
     ];
     return levels[Math.min(n - 1, levels.length - 1)];
   }
@@ -200,25 +284,66 @@ export class CandyCrunch {
   private resetCollectionGoals(): void {
     this.candiesCollected = {};
     for (const candy of this.level.targetCandies) {
-      this.candiesCollected[candy] = (this.candiesCollected[candy] ?? 0);
+      this.candiesCollected[candy] = 0;
     }
   }
 
-  private checkLevelClear(): void {
+  private newGrid(): Candy[][] {
+    const grid: Candy[][] = [];
+    for (let r = 0; r < ROWS; r++) {
+      grid[r] = [];
+      for (let c = 0; c < COLS; c++) {
+        let type: number;
+        do {
+          type = Math.floor(Math.random() * CANDY_TYPES);
+        } while (this.wouldMatch(grid, r, c, type));
+        grid[r][c] = {
+          type, row: r, col: c,
+          y: GRID_Y + r * CELL,
+          targetY: GRID_Y + r * CELL,
+          matched: false,
+        };
+      }
+    }
+    return grid;
+  }
+
+  private wouldMatch(grid: Candy[][], r: number, c: number, type: number): boolean {
+    if (c >= 2 && grid[r][c - 1]?.type === type && grid[r][c - 2]?.type === type) return true;
+    if (r >= 2 && grid[r - 1]?.[c]?.type === type && grid[r - 2]?.[c]?.type === type) return true;
+    return false;
+  }
+
+  private findMatches(): Array<{ r: number; c: number }> {
+    const matched = new Set<string>();
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const t = this.grid[r][c].type;
+        if (c <= COLS - 3 && this.grid[r][c + 1].type === t && this.grid[r][c + 2].type === t) {
+          matched.add(`${r},${c}`); matched.add(`${r},${c + 1}`); matched.add(`${r},${c + 2}`);
+        }
+        if (r <= ROWS - 3 && this.grid[r + 1][c].type === t && this.grid[r + 2][c].type === t) {
+          matched.add(`${r},${c}`); matched.add(`${r + 1},${c}`); matched.add(`${r + 2},${c}`);
+        }
+      }
+    }
+    return Array.from(matched).map((s) => {
+      const [rr, cc] = s.split(',').map(Number);
+      return { r: rr, c: cc };
+    });
+  }
+
+  private checkLevelEnd(): void {
     let done = true;
     for (const candy of this.level.targetCandies) {
       const needed = this.level.targetCandies.filter((c) => c === candy).length;
-      if ((this.candiesCollected[candy] ?? 0) < needed) {
-        done = false;
-        break;
-      }
+      if ((this.candiesCollected[candy] ?? 0) < needed) { done = false; break; }
     }
 
     if (done && this.movesUsed < this.level.movesAllowed) {
       sfx.coin();
+      this.score += (this.level.movesAllowed - this.movesUsed) * 50;
       this.setState('levelClear');
-      const bonus = (this.level.movesAllowed - this.movesUsed) * 50;
-      this.score += bonus;
       this.onGameOver(this.score, this.levelNumber, setHighScore('candy-crunch', this.score));
       return;
     }
@@ -238,147 +363,23 @@ export class CandyCrunch {
     this.grid = this.newGrid();
     this.particles = [];
     this.comboCount = 0;
+    this.selected = null;
     this.resetCollectionGoals();
-    this.onLevelChange(this.level, this.candiesCollected);
     this.setState('playing');
   }
 
-  private newGrid(): Candy[][] {
-    const grid: Candy[][] = [];
-    for (let r = 0; r < ROWS; r++) {
-      grid[r] = [];
-      for (let c = 0; c < COLS; c++) {
-        let type: number;
-        do {
-          type = Math.floor(Math.random() * CANDY_TYPES);
-        } while (this.wouldMatch(grid, r, c, type));
-        grid[r][c] = { type, x: c, y: GRID_Y + r * CELL_SIZE, targetY: GRID_Y + r * CELL_SIZE, matched: false };
-      }
-    }
-    return grid;
-  }
-
-  private wouldMatch(grid: Candy[][], r: number, c: number, type: number): boolean {
-    let hCount = 1;
-    for (let i = c - 1; i >= 0 && grid[r][i]?.type === type; i--) hCount++;
-    for (let i = c + 1; i < COLS && grid[r][i]?.type === type; i++) hCount++;
-    if (hCount >= MATCH_MIN) return true;
-
-    let vCount = 1;
-    for (let i = r - 1; i >= 0 && grid[i]?.[c]?.type === type; i--) vCount++;
-    for (let i = r + 1; i < ROWS && grid[i]?.[c]?.type === type; i++) vCount++;
-    return vCount >= MATCH_MIN;
-  }
-
-  private handleTap(action: 'left' | 'right' | 'up' | 'down' | 'tap'): void {
-    if (this.swapping || this.falling) return;
-
-    if (action === 'tap') return; // Center tap does nothing in Candy Crunch (directional swaps only)
-
-    const dirs: Record<string, [number, number]> = {
-      up: [-1, 0],
-      down: [1, 0],
-      left: [0, -1],
-      right: [0, 1],
-    };
-    const [dr, dc] = dirs[action];
-
-    // Swap from center in the direction pressed.
-    const centerR = Math.floor(ROWS / 2);
-    const centerC = Math.floor(COLS / 2);
-    const r2 = centerR + dr;
-    const c2 = centerC + dc;
-
-    if (r2 < 0 || r2 >= ROWS || c2 < 0 || c2 >= COLS) return;
-
-    this.movesUsed++;
-    this.swapping = { r1: centerR, c1: centerC, r2, c2, progress: 0 };
-    this.swap(centerR, centerC, r2, c2);
-    sfx.click();
-  }
-
-  private swap(r1: number, c1: number, r2: number, c2: number): void {
-    [this.grid[r1][c1], this.grid[r2][c2]] = [this.grid[r2][c2], this.grid[r1][c1]];
-    [this.grid[r1][c1].x, this.grid[r2][c2].x] = [this.grid[r2][c2].x, this.grid[r1][c1].x];
-  }
-
-  private findMatches(): Array<{ r: number; c: number }> {
-    const matched = new Set<string>();
-
-    // Horizontal
-    for (let r = 0; r < ROWS; r++) {
-      for (let c = 0; c < COLS; c++) {
-        if (this.grid[r][c].matched) continue;
-        let count = 1;
-        let endC = c;
-        while (endC + 1 < COLS && this.grid[r][endC + 1].type === this.grid[r][c].type && !this.grid[r][endC + 1].matched) {
-          count++;
-          endC++;
-        }
-        if (count >= MATCH_MIN) {
-          for (let i = c; i <= endC; i++) matched.add(`${r},${i}`);
-        }
-      }
-    }
-
-    // Vertical
-    for (let c = 0; c < COLS; c++) {
-      for (let r = 0; r < ROWS; r++) {
-        if (this.grid[r][c].matched) continue;
-        let count = 1;
-        let endR = r;
-        while (endR + 1 < ROWS && this.grid[endR + 1][c].type === this.grid[r][c].type && !this.grid[endR + 1][c].matched) {
-          count++;
-          endR++;
-        }
-        if (count >= MATCH_MIN) {
-          for (let i = r; i <= endR; i++) matched.add(`${i},${c}`);
-        }
-      }
-    }
-
-    return Array.from(matched).map((s) => {
-      const [r, c] = s.split(',').map(Number);
-      return { r, c };
-    });
-  }
-
-  private removeMatched(): void {
-    for (let r = 0; r < ROWS; r++) {
-      for (let c = 0; c < COLS; c++) {
-        if (this.grid[r][c].matched) {
-          // Remove by falling from top
-          for (let rr = r; rr > 0; rr--) {
-            this.grid[rr][c] = this.grid[rr - 1][c];
-            this.grid[rr][c].targetY = GRID_Y + rr * CELL_SIZE;
-          }
-          // New candy at top
-          let type: number;
-          do {
-            type = Math.floor(Math.random() * CANDY_TYPES);
-          } while (this.wouldMatch(this.grid, 0, c, type));
-          this.grid[0][c] = { type, x: c, y: GRID_Y - CELL_SIZE, targetY: GRID_Y, matched: false };
-        }
-      }
-    }
-  }
-
-  private spawnMatchParticles(r: number, c: number): void {
-    const cx = GRID_X + c * CELL_SIZE + CELL_SIZE / 2;
-    const cy = GRID_Y + r * CELL_SIZE + CELL_SIZE / 2;
-    const colors = ['#ff6b9d', '#ffa502', '#8b4789', '#ffb347', '#ff6b5a'];
+  private spawnParticles(r: number, c: number): void {
+    const cx = GRID_X + c * CELL + CELL / 2;
+    const cy = GRID_Y + r * CELL + CELL / 2;
+    const color = CANDY_COLORS[this.grid[r][c].type];
     for (let i = 0; i < 8; i++) {
       const angle = (Math.PI * 2 * i) / 8;
-      const speed = 140 + Math.random() * 100;
       this.particles.push({
-        x: cx,
-        y: cy,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 50,
-        life: 0.5 + Math.random() * 0.2,
-        maxLife: 0.5 + Math.random() * 0.2,
-        size: 4 + Math.random() * 3,
-        color: colors[this.grid[r][c].type],
+        x: cx, y: cy,
+        vx: Math.cos(angle) * 140,
+        vy: Math.sin(angle) * 140 - 40,
+        life: 0.5, maxLife: 0.5,
+        size: 4, color,
       });
     }
   }
@@ -388,65 +389,47 @@ export class CandyCrunch {
     this.onStateChange(s);
   }
 
-  render(ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = '#eef6e3';
-    ctx.fillRect(0, 0, W, H);
-
-    this.drawHeader(ctx);
-    this.drawGrid(ctx);
-    this.drawCandies(ctx);
-    this.drawParticles(ctx);
-
-    if (this.screenShake > 0) {
-      ctx.fillStyle = `rgba(255, 100, 100, ${this.screenShake * 0.1})`;
-      ctx.fillRect(0, 0, W, H);
-    }
-  }
-
-  private drawHeader(ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
-    ctx.fillRect(0, 0, W, 130);
-
+  private drawGoalBar(ctx: CanvasRenderingContext2D): void {
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, W, GOAL_H);
     ctx.fillStyle = '#3d8010';
-    ctx.font = 'bold 22px system-ui';
+    ctx.font = 'bold 20px system-ui';
     ctx.textAlign = 'center';
-    ctx.fillText(`Level ${this.levelNumber}: ${this.level.title}`, W / 2, 32);
+    ctx.fillText(`Level ${this.levelNumber}: ${this.level.title}`, W / 2, 28);
 
-    ctx.fillStyle = '#5a7248';
     ctx.font = '13px system-ui';
     ctx.textAlign = 'left';
-    ctx.fillText('Goal:', 14, 68);
-    let gx = 14;
-    for (const candy of this.level.targetCandies) {
+    ctx.fillStyle = '#5a7248';
+    ctx.fillText('Goal:', 14, 56);
+
+    const unique = [...new Set(this.level.targetCandies)];
+    let gx = 60;
+    for (const candy of unique) {
       const needed = this.level.targetCandies.filter((c) => c === candy).length;
       const have = this.candiesCollected[candy] ?? 0;
       ctx.fillStyle = have >= needed ? '#3d8010' : '#c44';
-      ctx.font = have >= needed ? 'bold 15px system-ui' : '15px system-ui';
-      ctx.fillText(`${candy}${have}/${needed}`, gx, 92);
-      gx += 48;
+      ctx.font = have >= needed ? 'bold 16px system-ui' : '16px system-ui';
+      ctx.fillText(`${candy} ${have}/${needed}`, gx, 56);
+      gx += 72;
     }
 
-    if (this.comboCount > 0) {
+    if (this.comboCount > 1) {
       ctx.fillStyle = '#4f9e16';
-      ctx.font = 'bold 20px system-ui';
+      ctx.font = 'bold 18px system-ui';
       ctx.textAlign = 'center';
-      ctx.shadowColor = 'rgba(255, 179, 71, 0.6)';
-      ctx.shadowBlur = 12;
-      ctx.fillText(`${this.comboCount}x COMBO!`, W / 2, 120);
-      ctx.shadowBlur = 0;
+      ctx.fillText(`${this.comboCount}x COMBO!`, W / 2, 84);
     }
   }
 
   private drawGrid(ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = 'rgba(30, 40, 60, 0.5)';
-    ctx.strokeStyle = 'rgba(100, 140, 180, 0.2)';
-    ctx.lineWidth = 1;
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
-        const x = GRID_X + c * CELL_SIZE;
-        const y = GRID_Y + r * CELL_SIZE;
-        ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
-        ctx.strokeRect(x, y, CELL_SIZE, CELL_SIZE);
+        const x = GRID_X + c * CELL;
+        const y = GRID_Y + r * CELL;
+        ctx.fillStyle = (r + c) % 2 === 0 ? '#e8f5dc' : '#dff0d0';
+        ctx.fillRect(x + 1, y + 1, CELL - 2, CELL - 2);
+        ctx.strokeStyle = 'rgba(79, 158, 22, 0.15)';
+        ctx.strokeRect(x + 1, y + 1, CELL - 2, CELL - 2);
       }
     }
   }
@@ -457,40 +440,30 @@ export class CandyCrunch {
         const candy = this.grid[r][c];
         if (!candy || candy.matched) continue;
 
-        let x = GRID_X + candy.x * CELL_SIZE + CELL_SIZE / 2;
-        let y = candy.y;
+        const cx = GRID_X + c * CELL + CELL / 2;
+        const cy = candy.y + CELL / 2;
+        const color = CANDY_COLORS[candy.type];
+        const rad = CELL * 0.38;
 
-        if (this.swapping) {
-          const { r1, c1, r2, c2, progress: p } = this.swapping;
-          if ((candy.x === c1 && candy === this.grid[r1][c1]) || (candy.x === c2 && candy === this.grid[r2][c2])) {
-            const isSwapped = candy.x === c2;
-            const fromR = isSwapped ? r2 : r1;
-            const fromC = isSwapped ? c2 : c1;
-            const toR = isSwapped ? r1 : r2;
-            const toC = isSwapped ? c1 : c2;
-            x = GRID_X + (fromC + (toC - fromC) * p) * CELL_SIZE + CELL_SIZE / 2;
-            y = GRID_Y + fromR * CELL_SIZE + (toR - fromR) * p * CELL_SIZE;
-          }
+        if (this.selected?.r === r && this.selected?.c === c) {
+          ctx.strokeStyle = '#4f9e16';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(GRID_X + c * CELL + 2, candy.y + 2, CELL - 4, CELL - 4);
         }
 
-        const cellX = GRID_X + c * CELL_SIZE;
-        const cellY = GRID_Y + r * CELL_SIZE;
-        ctx.fillStyle = 'rgba(100, 140, 200, 0.15)';
-        ctx.fillRect(cellX, cellY, CELL_SIZE, CELL_SIZE);
-
-        ctx.fillStyle = ['#ff6b9d', '#ffa502', '#8b4789', '#ffb347', '#ff6b5a'][candy.type];
-        ctx.shadowColor = ctx.fillStyle;
-        ctx.shadowBlur = 8;
+        const grad = ctx.createRadialGradient(cx - 4, cy - 4, 2, cx, cy, rad);
+        grad.addColorStop(0, '#fff');
+        grad.addColorStop(0.35, color);
+        grad.addColorStop(1, color);
+        ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(x, y + CELL_SIZE / 2, CELL_SIZE / 2.3, 0, Math.PI * 2);
+        ctx.arc(cx, cy, rad, 0, Math.PI * 2);
         ctx.fill();
-        ctx.shadowBlur = 0;
 
-        ctx.font = `${Math.floor(CELL_SIZE * 0.6)}px system-ui`;
+        ctx.font = `${Math.floor(CELL * 0.42)}px system-ui`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#fff';
-        ctx.fillText(this.candyNames[candy.type], x, y + CELL_SIZE / 2);
+        ctx.fillText(CANDY_EMOJI[candy.type], cx, cy + 1);
       }
     }
   }
@@ -499,9 +472,9 @@ export class CandyCrunch {
     for (const p of this.particles) {
       const progress = 1 - p.life / p.maxLife;
       ctx.fillStyle = p.color;
-      ctx.globalAlpha = 1 - progress * progress;
+      ctx.globalAlpha = 1 - progress;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * (1 - progress * 0.5), 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;

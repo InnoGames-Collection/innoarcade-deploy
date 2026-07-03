@@ -83,8 +83,45 @@ game.onGameOver = (score, level) => {
 
 wirePlayButtons(['nextBtn'], () => game.start());
 
+function toCanvas(e: PointerEvent): [number, number] {
+  const rect = canvas.getBoundingClientRect();
+  return [
+    ((e.clientX - rect.left) / rect.width) * W,
+    ((e.clientY - rect.top) / rect.height) * H,
+  ];
+}
+
+canvas.addEventListener('pointerdown', (e) => {
+  if (game.state !== 'playing') return;
+  canvas.setPointerCapture(e.pointerId);
+  const [x] = toCanvas(e);
+  game.setPaddleX(x);
+  game.launchBall();
+});
+
+canvas.addEventListener('pointermove', (e) => {
+  if (game.state !== 'playing') return;
+  const [x] = toCanvas(e);
+  game.setPaddleX(x);
+  game.releasePaddle();
+});
+
+window.addEventListener('keyup', (e) => {
+  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'ArrowRight' || e.key === 'd') {
+    game.releasePaddle();
+  }
+});
+
 const input = new Input(document.body);
-input.onAction((a) => game.handleAction(a));
+input.onAction((a) => {
+  if (a === 'left') game.handleAction('left');
+  else if (a === 'right') game.handleAction('right');
+  else if (a === 'tap') game.launchBall();
+  else if (a === 'pause') {
+    if (game.state === 'playing') game.pause();
+    else if (game.state === 'paused') game.resume();
+  }
+});
 
 wireMutePause($('#muteBtn'), $('#pauseBtn'), game, sfx);
 

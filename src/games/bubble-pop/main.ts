@@ -9,7 +9,6 @@ import {
 import './style.css';
 import { applyTranslations, getLang } from '../../i18n';
 import { GameLoop } from '../../engine/loop';
-import { Input } from '../../engine/input';
 import { sfx } from '../../engine/audio';
 import { BubblePop, W, H } from './game';
 import {
@@ -67,8 +66,37 @@ game.onGameOver = (score) => {
   submitArcadeScore(score, run.getRunStart(), shell, { budgetSec: 120 });
 };
 
-const input = new Input(document.body);
-input.onAction((a) => game.handleAction(a));
+function toCanvas(e: PointerEvent): [number, number] {
+  const rect = canvas.getBoundingClientRect();
+  return [
+    ((e.clientX - rect.left) / rect.width) * W,
+    ((e.clientY - rect.top) / rect.height) * H,
+  ];
+}
+
+let aiming = false;
+canvas.addEventListener('pointerdown', (e) => {
+  if (game.state !== 'playing') return;
+  aiming = true;
+  canvas.setPointerCapture(e.pointerId);
+  const [x, y] = toCanvas(e);
+  game.setAim(x, y);
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (!aiming || game.state !== 'playing') return;
+  const [x, y] = toCanvas(e);
+  game.setAim(x, y);
+});
+canvas.addEventListener('pointerup', () => {
+  if (!aiming) return;
+  aiming = false;
+  game.fire();
+  game.clearAim();
+});
+canvas.addEventListener('pointercancel', () => {
+  aiming = false;
+  game.clearAim();
+});
 
 wireMutePause($('#muteBtn'), $('#pauseBtn'), game, sfx);
 

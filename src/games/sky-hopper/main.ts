@@ -67,8 +67,17 @@ game.onGameOver = (score) => {
   submitArcadeScore(score, run.getRunStart(), shell, { budgetSec: 90 });
 };
 
-const input = new Input(document.body);
+const input = new Input(canvas);
 input.onAction((a) => game.handleAction(a));
+
+window.addEventListener('keyup', (e) => {
+  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'ArrowRight' || e.key === 'd') {
+    game.releaseDir();
+  }
+});
+
+canvas.addEventListener('pointerup', () => game.releaseDir());
+canvas.addEventListener('pointercancel', () => game.releaseDir());
 
 wireMutePause($('#muteBtn'), $('#pauseBtn'), game, sfx);
 

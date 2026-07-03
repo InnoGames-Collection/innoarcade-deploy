@@ -89,14 +89,6 @@ const ALL_GAMES: GameMeta[] = [
     scoreEn: 'Score', scoreAm: 'ነጥብ',
   },
   {
-    id: 'metro-rush',
-    route: 'games/metro-rush/',
-    nameEn: 'Metro Rush', nameAm: 'ሜትሮ ሩሽ',
-    genreEn: 'Runner', genreAm: 'ሩጫ',
-    mode: 'free', icon: '🚇', accent: '#36b3a8', thumb: ['#155f59', '#06211f'],
-    scoreEn: 'Score', scoreAm: 'ነጥብ',
-  },
-  {
     id: 'candy-crunch',
     route: 'games/candy-crunch/',
     nameEn: 'Candy Saga', nameAm: 'ካንዲ ሳጋ',
@@ -193,7 +185,7 @@ const ALL_GAMES: GameMeta[] = [
     play: { winPoints: 150, winRate: 50 },
   },
   {
-    id: 'popblast',
+    id: 'ethiopian-quiz',
     route: 'games/ethiopian-quiz/',
     nameEn: 'Ethiopian Quiz', nameAm: 'የኢትዮጵያ ጥያቄ',
     genreEn: 'Trivia · Casual', genreAm: 'ጥያቄ · ቀላል',
@@ -248,7 +240,6 @@ const COVERS: Record<string, string> = {
   'lucky-box': 'lucky_boxes.webp',
   'spin-wheel': 'spin_wheel.webp',
   'memory-match': 'memory_match.webp',
-  'metro-rush': 'metro_rush.webp',
   'ethiopian-quiz': 'ethiopian_quiz.webp',
   'sudoku': 'sudoku.webp',
   'candy-crunch': 'candy_saga.webp',
@@ -270,7 +261,7 @@ for (const g of CATALOG) { if (COVERS[g.id]) g.cover = COVERS[g.id]; }
 // Win thresholds for skill/engine games (score ≥ this = client "win" flag on submit).
 // Tournament RP uses server game_par + raw score — not winScore. See catalog vs migrations.
 const WIN_SCORE: Record<string, number> = {
-  'orbit-blast': 1000, 'merge-2048': 512, 'temple-dash': 300, 'metro-rush': 3000,
+  'orbit-blast': 1000, 'merge-2048': 512, 'temple-dash': 300,
   'candy-crunch': 1000, 'brick-blitz': 1000, 'fruit-slice': 300,
   'sky-hopper': 300, 'bubble-pop': 1000, 'popblast': 500,
   // Composite quiz: correct×pts + speed bonus + session time left
@@ -335,7 +326,6 @@ const FRONT = [
   'crosssum',
   'popblast',
   'orbit-blast',
-  'metro-rush',
   'candy-crunch',
   'brick-blitz',
   'sky-hopper',

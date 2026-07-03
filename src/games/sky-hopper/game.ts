@@ -70,16 +70,18 @@ export class SkyHopper {
   start(): void {
     this.score = 0;
     this.time = 0;
-    this.playerX = W / 2 - PLAYER_W / 2;
-    this.playerY = H - 100;
-    this.playerVy = 0;
     this.playerDir = 0;
-    this.cameraY = H - 100;
     this.platforms = [];
     this.enemies = [];
     this.particles = [];
     this.screenShake = 0;
     this.generateInitialPlatforms();
+
+    const startPlat = this.platforms.reduce((a, b) => (a.y > b.y ? a : b));
+    this.playerX = startPlat.x + startPlat.w / 2 - PLAYER_W / 2;
+    this.playerY = startPlat.y - PLAYER_H - 2;
+    this.playerVy = 0;
+    this.cameraY = this.playerY - H * 0.72;
     this.setState('playing');
   }
 
@@ -99,11 +101,21 @@ export class SkyHopper {
       case 'right':
         this.playerDir = 1;
         break;
+      case 'tap':
+        if (this.state === 'playing' && this.playerVy >= -80) {
+          this.playerVy = -PLAYER_JUMP_POWER;
+          sfx.click();
+        }
+        break;
       case 'pause':
         if (this.state === 'playing') this.pause();
         else if (this.state === 'paused') this.resume();
         break;
     }
+  }
+
+  releaseDir(): void {
+    this.playerDir = 0;
   }
 
   private generateInitialPlatforms(): void {
@@ -151,20 +163,20 @@ export class SkyHopper {
     this.playerX = Math.max(0, Math.min(W - PLAYER_W, this.playerX));
 
     this.playerY += this.playerVy * dt;
-    this.playerVy += 800 * dt;
+    this.playerVy += 980 * dt;
 
-    if (this.playerY >= H) {
-      this.setState('gameOver');
-      this.onGameOver(this.score, this.score > this.best);
-      if (this.score > this.best) {
-        setHighScore('sky-hopper', this.score);
-        this.best = this.score;
-      }
+    const screenY = this.playerY - this.cameraY;
+    if (screenY > H + 40) {
+      this.endRun();
       return;
     }
 
-    const onGround = this.checkPlatformCollision();
-    if (onGround && this.playerVy > 0) {
+    // Camera follows player upward and when falling
+    const targetCam = this.playerY - H * 0.72;
+    this.cameraY += (targetCam - this.cameraY) * Math.min(1, dt * 4);
+
+    const landed = this.checkPlatformCollision(dt);
+    if (landed && this.playerVy > 0) {
       this.playerVy = -PLAYER_JUMP_POWER;
       sfx.click();
       this.burst(this.playerX + PLAYER_W / 2, this.playerY + PLAYER_H);
@@ -183,12 +195,7 @@ export class SkyHopper {
         this.playerY + PLAYER_H > enemy.y;
 
       if (overlap) {
-        this.setState('gameOver');
-        this.onGameOver(this.score, this.score > this.best);
-        if (this.score > this.best) {
-          setHighScore('sky-hopper', this.score);
-          this.best = this.score;
-        }
+        this.endRun();
         return;
       }
     }
@@ -206,40 +213,45 @@ export class SkyHopper {
       p.life += dt;
     }
 
-    const highestPlatform = Math.min(...this.platforms.map((p) => p.y));
-    const targetCameraY = highestPlatform - 150;
-    this.cameraY += (targetCameraY - this.cameraY) * dt * 2;
+    const newGap = PLATFORM_SPACING * Math.max(0.65, 1 - Math.floor(this.score / 500) * 0.02);
 
-    const difficulty = Math.floor(this.score / 500) + 1;
-    const newGap = PLATFORM_SPACING * Math.max(0.6, 1 - difficulty * 0.02);
-
-    this.platforms = this.platforms.filter((p) => p.y < this.cameraY + H + 100);
-    this.enemies = this.enemies.filter((e) => e.y < this.cameraY + H + 100);
+    this.platforms = this.platforms.filter((p) => p.y < this.cameraY + H + 120);
+    this.enemies = this.enemies.filter((e) => e.y < this.cameraY + H + 120);
     this.particles = this.particles.filter((p) => p.life < p.maxLife);
 
-    while (this.platforms.length < 8) {
-      const lowestPlatform = Math.max(...this.platforms.map((p) => p.y));
-      this.addPlatform(lowestPlatform - newGap);
+    while (this.platforms.length < 10) {
+      const topY = Math.min(...this.platforms.map((p) => p.y));
+      this.addPlatform(topY - newGap);
     }
   }
 
-  private checkPlatformCollision(): boolean {
-    const nextY = this.playerY + PLAYER_H + 2;
+  private endRun(): void {
+    const record = this.score > this.best;
+    if (record) {
+      setHighScore('sky-hopper', this.score);
+      this.best = this.score;
+    }
+    this.setState('gameOver');
+    this.onGameOver(this.score, record);
+  }
+
+  private checkPlatformCollision(dt: number): boolean {
+    if (this.playerVy <= 0) return false;
+    const feet = this.playerY + PLAYER_H;
+    const prevFeet = feet - this.playerVy * dt;
 
     for (const p of this.platforms) {
-      const overlap =
-        this.playerX < p.x + p.w &&
-        this.playerX + PLAYER_W > p.x &&
-        this.playerY + PLAYER_H >= p.y &&
-        nextY <= p.y + PLATFORM_H + 10;
-
-      if (overlap && this.playerVy > 0) {
-        this.playerY = p.y - PLAYER_H - 1;
+      if (
+        this.playerX + PLAYER_W > p.x + 6 &&
+        this.playerX < p.x + p.w - 6 &&
+        feet >= p.y &&
+        prevFeet <= p.y + PLATFORM_H
+      ) {
+        this.playerY = p.y - PLAYER_H;
         this.score += 10;
         return true;
       }
     }
-
     return false;
   }
 

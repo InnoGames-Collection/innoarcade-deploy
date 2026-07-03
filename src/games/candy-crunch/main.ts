@@ -9,7 +9,6 @@ import {
 import './style.css';
 import { applyTranslations, getLang } from '../../i18n';
 import { GameLoop } from '../../engine/loop';
-import { Input } from '../../engine/input';
 import { sfx } from '../../engine/audio';
 import { CandyCrunch, W, H } from './game';
 import {
@@ -71,7 +70,6 @@ game.onStateChange = (state) => {
   syncChrome(state);
 };
 
-
 game.onGameOver = (score, level) => {
   if (game.state === 'levelClear') {
     $('#levelScore').textContent = `${scaleArcadeScore(score).toLocaleString()} pts`;
@@ -84,14 +82,19 @@ game.onGameOver = (score, level) => {
 
 wirePlayButtons(['nextBtn'], () => game.start());
 
-const input = new Input(document.body);
-input.onAction((a) => {
-  if (a === 'pause') {
-    if (game.state === 'playing') game.pause();
-    else if (game.state === 'paused') game.resume();
-    return;
-  }
-  game.handleAction(a);
+function toCanvas(e: PointerEvent): [number, number] {
+  const rect = canvas.getBoundingClientRect();
+  return [
+    ((e.clientX - rect.left) / rect.width) * W,
+    ((e.clientY - rect.top) / rect.height) * H,
+  ];
+}
+
+canvas.addEventListener('pointerdown', (e) => {
+  if (game.state !== 'playing') return;
+  const [x, y] = toCanvas(e);
+  const cell = game.cellAt(x, y);
+  if (cell) game.tapCell(cell.r, cell.c);
 });
 
 wireMutePause($('#muteBtn'), $('#pauseBtn'), game, sfx);

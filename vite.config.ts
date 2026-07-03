@@ -33,7 +33,6 @@ export default defineConfig({
         orbitBlast: p('games/orbit-blast/index.html'),
         merge2048: p('games/merge-2048/index.html'),
         templeDash: p('games/temple-dash/index.html'),
-        metroRush: p('games/metro-rush/index.html'),
         candyCrunch: p('games/candy-crunch/index.html'),
         brickBlitz: p('games/brick-blitz/index.html'),
         fruitSlice: p('games/fruit-slice/index.html'),

@@ -1,40 +1,37 @@
-// Bubble Pop — bubble shooter with physics, matching, cascade clearing,
-// and progressive difficulty. Enterprise-grade puzzle-action hybrid.
+// Bubble Pop — pointer-aim bubble shooter with match-3 clears and hub theme.
 
 import { sfx } from '../../engine/audio';
 import { getHighScore, setHighScore } from '../../engine/storage';
-import type { Action } from '../../engine/input';
 
 export const W = 480;
 export const H = 720;
 
-const BUBBLE_RADIUS = 16;
-const LAUNCH_SPEED = 600;
-const CANNON_Y = H - 60;
+const BUBBLE_R = 16;
+const LAUNCH_SPEED = 520;
+const CANNON_X = W / 2;
+const CANNON_Y = H - 72;
+const DANGER_Y = CANNON_Y - 36;
 
-const COLORS = ['#ff6b6b', '#4ecdc4', '#ffd93d', '#95e1d3', '#f38181'] as const;
+const COLORS = ['#ff6b6b', '#4ecdc4', '#ffd93d', '#95e1d3', '#c084fc'] as const;
 type BubbleColor = typeof COLORS[number];
 
 interface Bubble {
   x: number;
   y: number;
-  vx: number;
-  vy: number;
   color: BubbleColor;
-  falling: boolean;
   popping: boolean;
   popTime: number;
+  falling: boolean;
+  vy: number;
 }
 
 interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  life: number;
-  maxLife: number;
-  size: number;
-  color: string;
+  x: number; y: number; vx: number; vy: number;
+  life: number; maxLife: number; size: number; color: string;
+}
+
+interface Flight {
+  x: number; y: number; vx: number; vy: number; color: BubbleColor;
 }
 
 export type GameState = 'menu' | 'playing' | 'paused' | 'gameOver';
@@ -51,10 +48,10 @@ export class BubblePop {
   private bubbles: Bubble[] = [];
   private particles: Particle[] = [];
   private screenShake = 0;
-  private cannonAngle = 0;
-  private nextBubbleColor: BubbleColor = this.randomColor();
-  private firedBubble: Bubble | null = null;
-  private cannonDir = 0;
+  private aimAngle = -Math.PI / 2;
+  private aimActive = false;
+  private nextColor: BubbleColor = this.randomColor();
+  private flight: Flight | null = null;
 
   start(): void {
     this.score = 0;
@@ -62,11 +59,11 @@ export class BubblePop {
     this.bubbles = [];
     this.particles = [];
     this.screenShake = 0;
-    this.cannonAngle = 0;
-    this.nextBubbleColor = this.randomColor();
-    this.firedBubble = null;
-    this.cannonDir = 0;
-    this.generateInitialBubbles();
+    this.aimAngle = -Math.PI / 2;
+    this.aimActive = false;
+    this.nextColor = this.randomColor();
+    this.flight = null;
+    this.buildGrid();
     this.setState('playing');
   }
 
@@ -78,71 +75,33 @@ export class BubblePop {
     if (this.state === 'paused') this.setState('playing');
   }
 
-  handleAction(a: Action): void {
-    switch (a) {
-      case 'left':
-        this.cannonDir = -1;
-        break;
-      case 'right':
-        this.cannonDir = 1;
-        break;
-      case 'tap':
-        this.fire();
-        break;
-      case 'pause':
-        if (this.state === 'playing') this.pause();
-        else if (this.state === 'paused') this.resume();
-        break;
-    }
+  /** Aim cannon toward canvas point. */
+  setAim(x: number, y: number): void {
+    if (this.state !== 'playing' || this.flight) return;
+    const dx = x - CANNON_X;
+    const dy = y - CANNON_Y;
+    if (dy > -12) return;
+    let angle = Math.atan2(dy, dx);
+    angle = Math.max(-Math.PI + 0.15, Math.min(-0.15, angle));
+    this.aimAngle = angle;
+    this.aimActive = true;
   }
 
-  private generateInitialBubbles(): void {
-    const rows = 4;
-    const cols = 6;
-    const spacing = 34;
-    const startX = (W - (cols - 1) * spacing) / 2;
-    const startY = 80;
-
-    for (let row = 0; row < rows; row++) {
-      const yOffset = row % 2 === 1 ? spacing / 2 : 0;
-      for (let col = 0; col < cols; col++) {
-        const x = startX + col * spacing + yOffset;
-        const y = startY + row * spacing;
-        if (x > 0 && x < W) {
-          this.bubbles.push({
-            x,
-            y,
-            vx: 0,
-            vy: 0,
-            color: this.randomColor(),
-            falling: false,
-            popping: false,
-            popTime: 0,
-          });
-        }
-      }
-    }
+  clearAim(): void {
+    this.aimActive = false;
   }
 
   fire(): void {
-    if (this.state !== 'playing' || this.firedBubble) return;
-
-    const cannonX = W / 2;
-    const vx = Math.cos(this.cannonAngle) * LAUNCH_SPEED;
-    const vy = Math.sin(this.cannonAngle) * LAUNCH_SPEED;
-
-    this.firedBubble = {
-      x: cannonX,
+    if (this.state !== 'playing' || this.flight) return;
+    this.flight = {
+      x: CANNON_X,
       y: CANNON_Y,
-      vx,
-      vy,
-      color: this.nextBubbleColor,
-      falling: false,
-      popping: false,
-      popTime: 0,
+      vx: Math.cos(this.aimAngle) * LAUNCH_SPEED,
+      vy: Math.sin(this.aimAngle) * LAUNCH_SPEED,
+      color: this.nextColor,
     };
-
-    this.nextBubbleColor = this.randomColor();
+    this.nextColor = this.randomColor();
+    this.aimActive = false;
     sfx.click();
   }
 
@@ -152,25 +111,24 @@ export class BubblePop {
 
     this.screenShake = Math.max(0, this.screenShake - dt * 8);
 
-    this.cannonAngle += this.cannonDir * dt * 3;
-    this.cannonAngle = Math.max(-Math.PI / 2.5, Math.min(-Math.PI + Math.PI / 2.5, this.cannonAngle));
-
-    if (this.firedBubble) {
-      const b = this.firedBubble;
-      b.x += b.vx * dt;
-      b.y += b.vy * dt;
-      b.vy += 300 * dt;
-
-      if (b.y < 0 || b.x < 0 || b.x > W) {
-        this.firedBubble = null;
-      }
-
-      for (const bubble of this.bubbles) {
-        if (bubble.popping || bubble.falling) continue;
-        const dist = Math.hypot(b.x - bubble.x, b.y - bubble.y);
-        if (dist < BUBBLE_RADIUS * 2) {
-          this.firedBubble = null;
-          this.checkMatch(bubble);
+    if (this.flight) {
+      const f = this.flight;
+      const steps = 3;
+      const sdt = dt / steps;
+      for (let i = 0; i < steps; i++) {
+        f.x += f.vx * sdt;
+        f.y += f.vy * sdt;
+        if (f.x < BUBBLE_R) { f.x = BUBBLE_R; f.vx = Math.abs(f.vx); }
+        if (f.x > W - BUBBLE_R) { f.x = W - BUBBLE_R; f.vx = -Math.abs(f.vx); }
+        if (f.y < BUBBLE_R) {
+          this.stickBubble(f.x, BUBBLE_R, f.color);
+          this.flight = null;
+          break;
+        }
+        const hit = this.findCollision(f.x, f.y);
+        if (hit) {
+          this.stickTo(hit, f);
+          this.flight = null;
           break;
         }
       }
@@ -178,124 +136,168 @@ export class BubblePop {
 
     for (const b of this.bubbles) {
       if (b.falling) {
-        b.y += 200 * dt;
-        b.vy += 600 * dt;
+        b.y += b.vy * dt;
+        b.vy += 640 * dt;
       }
-
-      if (b.popping) {
-        b.popTime += dt;
-      }
+      if (b.popping) b.popTime += dt;
     }
 
     for (const p of this.particles) {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
-      p.vy += 600 * dt;
+      p.vy += 400 * dt;
       p.life += dt;
     }
 
-    this.bubbles = this.bubbles.filter(
-      (b) => !b.popping || b.popTime < 0.2,
-    );
-    this.bubbles = this.bubbles.filter((b) => b.y < H + 100);
+    this.bubbles = this.bubbles.filter((b) => !b.popping || b.popTime < 0.22);
+    this.bubbles = this.bubbles.filter((b) => !b.falling || b.y < H + 60);
     this.particles = this.particles.filter((p) => p.life < p.maxLife);
 
-    const hasStatic = this.bubbles.some((b) => !b.falling && !b.popping);
-    if (!hasStatic && this.bubbles.length > 0) {
-      this.setState('gameOver');
-      this.onGameOver(this.score, this.score > this.best);
-      if (this.score > this.best) {
-        setHighScore('bubble-pop', this.score);
-        this.best = this.score;
+    const lowest = this.bubbles.reduce((m, b) => (!b.falling && !b.popping ? Math.max(m, b.y) : m), 0);
+    if (lowest >= DANGER_Y) this.endRun();
+  }
+
+  render(ctx: CanvasRenderingContext2D): void {
+    const shake = this.screenShake * 3;
+    ctx.save();
+    ctx.translate(shake * (Math.random() - 0.5), shake * (Math.random() - 0.5));
+
+    this.drawBackdrop(ctx);
+    this.drawGridBubbles(ctx);
+
+    if (this.flight) this.drawBubble(ctx, this.flight.x, this.flight.y, this.flight.color, 1);
+
+    this.drawCannon(ctx);
+    if (this.aimActive && !this.flight) this.drawAimGuide(ctx);
+    this.drawParticles(ctx);
+
+    ctx.restore();
+  }
+
+  private buildGrid(): void {
+    const rows = 5;
+    const cols = 8;
+    const spacing = BUBBLE_R * 2 + 2;
+    const startX = (W - (cols - 1) * spacing) / 2;
+    const startY = 88;
+
+    for (let row = 0; row < rows; row++) {
+      const offset = row % 2 === 1 ? spacing / 2 : 0;
+      for (let col = 0; col < cols; col++) {
+        const x = startX + col * spacing + offset;
+        const y = startY + row * (spacing * 0.86);
+        if (x > BUBBLE_R && x < W - BUBBLE_R) {
+          this.bubbles.push({
+            x, y, color: this.randomColor(),
+            popping: false, popTime: 0, falling: false, vy: 0,
+          });
+        }
       }
     }
   }
 
-  private checkMatch(hitBubble: Bubble): void {
-    const matches: Bubble[] = [];
-    const visited = new Set<Bubble>();
-    const queue = [hitBubble];
-
-    while (queue.length > 0) {
-      const current = queue.shift()!;
-      if (visited.has(current) || current.popping) continue;
-      visited.add(current);
-
-      if (current.color === hitBubble.color) {
-        matches.push(current);
-
-        for (const other of this.bubbles) {
-          if (
-            !visited.has(other) &&
-            !other.popping &&
-            !other.falling &&
-            Math.hypot(current.x - other.x, current.y - other.y) < BUBBLE_RADIUS * 2.2
-          ) {
-            queue.push(other);
-          }
-        }
-      }
-    }
-
-    if (matches.length >= 3) {
-      const baseScore = 10 * matches.length;
-      const comboBonus = Math.floor(Math.sqrt(matches.length)) * 5;
-      this.score += baseScore + comboBonus;
-
-      for (const b of matches) {
-        b.popping = true;
-        this.burst(b.x, b.y, b.color);
-      }
-
-      sfx.jump();
-      this.screenShake = 0.15;
-
-      setTimeout(() => {
-        for (const b of matches) {
-          const idx = this.bubbles.indexOf(b);
-          if (idx >= 0) this.bubbles.splice(idx, 1);
-        }
-        this.updateGravity();
-      }, 100);
-    }
+  private stickBubble(x: number, y: number, color: BubbleColor): void {
+    const b: Bubble = { x, y, color, popping: false, popTime: 0, falling: false, vy: 0 };
+    this.bubbles.push(b);
+    this.resolveMatches(b);
   }
 
-  private updateGravity(): void {
+  private stickTo(hit: Bubble, f: Flight): void {
+    const dx = f.x - hit.x;
+    const dy = f.y - hit.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const x = hit.x + (dx / len) * (BUBBLE_R * 2);
+    const y = hit.y + (dy / len) * (BUBBLE_R * 2);
+    this.stickBubble(x, y, f.color);
+  }
+
+  private findCollision(x: number, y: number): Bubble | null {
     for (const b of this.bubbles) {
       if (b.popping || b.falling) continue;
+      if (Math.hypot(x - b.x, y - b.y) < BUBBLE_R * 1.85) return b;
+    }
+    return null;
+  }
 
-      const hasSupport =
-        b.y >= CANNON_Y - 10 ||
-        this.bubbles.some(
-          (other) =>
-            !other.popping &&
-            !other.falling &&
-            other !== b &&
-            Math.hypot(b.x - other.x, b.y - other.y) < BUBBLE_RADIUS * 2.2 &&
-            other.y > b.y,
-        );
+  private resolveMatches(origin: Bubble): void {
+    const group = this.floodSameColor(origin);
+    if (group.length < 3) return;
 
-      if (!hasSupport) {
-        b.falling = true;
-        b.vy = 0;
+    const mult = 1 + Math.max(0, group.length - 3) * 0.15;
+    this.score += Math.round(group.length * 12 * mult);
+    sfx.coin();
+    this.screenShake = 0.2;
+
+    for (const b of group) {
+      b.popping = true;
+      b.popTime = 0;
+      this.burst(b.x, b.y, b.color);
+    }
+
+    window.setTimeout(() => {
+      for (const b of group) {
+        const i = this.bubbles.indexOf(b);
+        if (i >= 0) this.bubbles.splice(i, 1);
+      }
+      this.dropFloaters();
+    }, 140);
+  }
+
+  private floodSameColor(start: Bubble): Bubble[] {
+    const out: Bubble[] = [];
+    const seen = new Set<Bubble>();
+    const q = [start];
+    while (q.length) {
+      const cur = q.pop()!;
+      if (seen.has(cur) || cur.popping || cur.falling) continue;
+      seen.add(cur);
+      if (cur.color !== start.color) continue;
+      out.push(cur);
+      for (const other of this.bubbles) {
+        if (!seen.has(other) && !other.popping && !other.falling &&
+          Math.hypot(cur.x - other.x, cur.y - other.y) < BUBBLE_R * 2.15) {
+          q.push(other);
+        }
       }
     }
+    return out;
+  }
+
+  private dropFloaters(): void {
+    for (const b of this.bubbles) {
+      if (b.popping || b.falling) continue;
+      const supported = this.bubbles.some((other) =>
+        !other.popping && !other.falling && other !== b &&
+        Math.hypot(b.x - other.x, b.y - other.y) < BUBBLE_R * 2.15 &&
+        other.y > b.y + 4,
+      );
+      if (!supported) {
+        b.falling = true;
+        b.vy = 40;
+        this.score += 5;
+      }
+    }
+  }
+
+  private endRun(): void {
+    const record = this.score > this.best;
+    if (record) {
+      setHighScore('bubble-pop', this.score);
+      this.best = this.score;
+    }
+    this.setState('gameOver');
+    this.onGameOver(this.score, record);
   }
 
   private burst(x: number, y: number, color: BubbleColor): void {
-    const count = 8;
-    for (let i = 0; i < count; i++) {
-      const angle = (i / count) * Math.PI * 2;
-      const speed = 120 + Math.random() * 80;
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
       this.particles.push({
-        x,
-        y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        life: 0,
-        maxLife: 0.5,
-        size: 5 + Math.random() * 3,
-        color,
+        x, y,
+        vx: Math.cos(angle) * 110,
+        vy: Math.sin(angle) * 110,
+        life: 0, maxLife: 0.45,
+        size: 4, color,
       });
     }
   }
@@ -310,128 +312,116 @@ export class BubblePop {
     this.onStateChange(next);
   }
 
-  render(ctx: CanvasRenderingContext2D): void {
-    const shake = this.screenShake * 4;
-    ctx.save();
-    ctx.translate(
-      shake * (Math.random() - 0.5),
-      shake * (Math.random() - 0.5),
-    );
-
-    // Underwater lagoon backdrop
+  private drawBackdrop(ctx: CanvasRenderingContext2D): void {
     const sea = ctx.createLinearGradient(0, 0, 0, H);
     sea.addColorStop(0, '#1b6b8f');
-    sea.addColorStop(0.5, '#14506e');
+    sea.addColorStop(0.55, '#14506e');
     sea.addColorStop(1, '#0d3550');
     ctx.fillStyle = sea;
     ctx.fillRect(0, 0, W, H);
 
-    // Shafts of light from the surface
     for (let i = 0; i < 4; i++) {
       const rx = 70 + i * 120;
-      const sway = Math.sin(this.time * 0.4 + i * 1.7) * 25;
+      const sway = Math.sin(this.time * 0.4 + i * 1.7) * 22;
       const ray = ctx.createLinearGradient(rx, 0, rx + sway, H);
       ray.addColorStop(0, 'rgba(180, 240, 255, 0.14)');
       ray.addColorStop(1, 'rgba(180, 240, 255, 0)');
       ctx.fillStyle = ray;
       ctx.beginPath();
-      ctx.moveTo(rx - 18, 0);
-      ctx.lineTo(rx + 18, 0);
-      ctx.lineTo(rx + sway + 45, H);
-      ctx.lineTo(rx + sway - 45, H);
+      ctx.moveTo(rx - 16, 0);
+      ctx.lineTo(rx + 16, 0);
+      ctx.lineTo(rx + sway + 42, H);
+      ctx.lineTo(rx + sway - 42, H);
       ctx.closePath();
       ctx.fill();
     }
 
-    // Tiny ambient bubbles drifting up
-    ctx.fillStyle = 'rgba(220, 250, 255, 0.25)';
-    for (let i = 0; i < 14; i++) {
-      const bx = (i * 167 + 35) % W + Math.sin(this.time * 0.8 + i) * 8;
-      const by = H - (((this.time * (18 + (i % 5) * 7) + i * 250) % (H + 40)) - 20);
-      ctx.beginPath();
-      ctx.arc(bx, by, 2 + (i % 3), 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 18px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.shadowColor = 'rgba(0, 20, 40, 0.6)';
-    ctx.shadowBlur = 6;
-    ctx.fillText(`Score: ${this.score}`, W / 2, 40);
-    ctx.shadowBlur = 0;
-
-    for (const b of this.bubbles) {
-      if (b.popping) {
-        const scale = Math.max(0, 1 - b.popTime / 0.2);
-        ctx.globalAlpha = scale;
-      } else {
-        ctx.globalAlpha = 1;
-      }
-
-      ctx.fillStyle = b.color;
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, BUBBLE_RADIUS, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-      ctx.beginPath();
-      ctx.arc(b.x - 4, b.y - 4, 5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    ctx.globalAlpha = 1;
-
-    if (this.firedBubble) {
-      const b = this.firedBubble;
-      ctx.fillStyle = b.color;
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, BUBBLE_RADIUS, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    }
-
-    ctx.fillStyle = '#e8f4f8';
+    ctx.strokeStyle = 'rgba(226, 86, 58, 0.45)';
+    ctx.setLineDash([6, 8]);
     ctx.beginPath();
-    ctx.arc(W / 2, CANNON_Y, 12, 0, Math.PI * 2);
+    ctx.moveTo(0, DANGER_Y);
+    ctx.lineTo(W, DANGER_Y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  private drawGridBubbles(ctx: CanvasRenderingContext2D): void {
+    for (const b of this.bubbles) {
+      const scale = b.popping ? Math.max(0, 1 - b.popTime / 0.22) : 1;
+      this.drawBubble(ctx, b.x, b.y, b.color, scale);
+    }
+  }
+
+  private drawBubble(ctx: CanvasRenderingContext2D, x: number, y: number, color: string, scale: number): void {
+    const r = BUBBLE_R * scale;
+    if (r <= 0) return;
+    const g = ctx.createRadialGradient(x - 4, y - 4, 1, x, y, r);
+    g.addColorStop(0, '#fff');
+    g.addColorStop(0.35, color);
+    g.addColorStop(1, color);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  private drawCannon(ctx: CanvasRenderingContext2D): void {
+    ctx.fillStyle = '#4f9e16';
+    ctx.beginPath();
+    ctx.arc(CANNON_X, CANNON_Y, 14, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = '#b8d8e8';
+    ctx.strokeStyle = '#fff';
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(W / 2, CANNON_Y);
+    ctx.moveTo(CANNON_X, CANNON_Y);
     ctx.lineTo(
-      W / 2 + Math.cos(this.cannonAngle) * 35,
-      CANNON_Y + Math.sin(this.cannonAngle) * 35,
+      CANNON_X + Math.cos(this.aimAngle) * 42,
+      CANNON_Y + Math.sin(this.aimAngle) * 42,
     );
     ctx.stroke();
 
-    ctx.fillStyle = this.nextBubbleColor;
-    ctx.beginPath();
-    ctx.arc(W / 2, CANNON_Y + 50, BUBBLE_RADIUS * 0.8, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#fff';
-    ctx.font = '10px sans-serif';
+    this.drawBubble(ctx, CANNON_X - 28, CANNON_Y + 4, this.nextColor, 0.85);
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.font = '600 10px system-ui';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('next', W / 2, CANNON_Y + 50);
+    ctx.fillText('NEXT', CANNON_X - 28, CANNON_Y + 30);
+  }
 
+  private drawAimGuide(ctx: CanvasRenderingContext2D): void {
+    ctx.strokeStyle = 'rgba(79, 158, 22, 0.75)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 8]);
+    ctx.beginPath();
+    ctx.moveTo(CANNON_X, CANNON_Y);
+    let x = CANNON_X;
+    let y = CANNON_Y;
+    let vx = Math.cos(this.aimAngle);
+    let vy = Math.sin(this.aimAngle);
+    for (let i = 0; i < 28; i++) {
+      x += vx * 18;
+      y += vy * 18;
+      if (x < BUBBLE_R) { x = BUBBLE_R; vx = Math.abs(vx); }
+      if (x > W - BUBBLE_R) { x = W - BUBBLE_R; vx = -Math.abs(vx); }
+      ctx.lineTo(x, y);
+      if (y < 40) break;
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  private drawParticles(ctx: CanvasRenderingContext2D): void {
     for (const p of this.particles) {
-      const alpha = 1 - p.life / p.maxLife;
-      ctx.fillStyle = p.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+      const a = 1 - p.life / p.maxLife;
+      ctx.globalAlpha = a;
+      ctx.fillStyle = p.color;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * Math.max(0, alpha), 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.size * a, 0, Math.PI * 2);
       ctx.fill();
     }
-
-    ctx.restore();
+    ctx.globalAlpha = 1;
   }
 }
