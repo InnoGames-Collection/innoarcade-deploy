@@ -84,8 +84,8 @@ const ALL_GAMES: GameMeta[] = [
     route: 'games/temple-dash/',
     nameEn: 'Ethiorunner',
     nameAm: 'ኢትዮሯጭ',
-    genreEn: 'Runner · Tournament', genreAm: 'ሩጫ · ውድድር',
-    mode: 'tournament', tournament: 'daily', stable: 'v3', icon: '🏃', accent: '#e2563a', thumb: ['#7a2d1a', '#2a0f08'],
+    genreEn: 'Runner · Arcade', genreAm: 'ሩጫ · አርኬድ',
+    mode: 'free', stable: 'v3', icon: '🏃', accent: '#e2563a', thumb: ['#7a2d1a', '#2a0f08'],
     scoreEn: 'Score', scoreAm: 'ነጥብ',
   },
   {
@@ -224,9 +224,11 @@ const ALL_GAMES: GameMeta[] = [
 // Storefront gating: free games ship by default; tournament games are opt-in via
 // ENABLED. Every game above is fully built — re-enable a tournament title by adding
 // its id here (a one-line change).
-const ENABLED_TOURNAMENT = new Set<string>(['temple-dash', 'memory-match', 'fruit-slice']);
+const ENABLED_TOURNAMENT = new Set<string>(['memory-match', 'fruit-slice']);
+/** Hidden from the hub until re-enabled (game code may remain in the repo). */
+const HIDDEN_GAMES = new Set<string>(['candy-crunch']);
 export const CATALOG: GameMeta[] = ALL_GAMES.filter(
-  (g) => g.mode === 'free' || ENABLED_TOURNAMENT.has(g.id),
+  (g) => !HIDDEN_GAMES.has(g.id) && (g.mode === 'free' || ENABLED_TOURNAMENT.has(g.id)),
 );
 
 // WebP cover art for the catalog cards (files live in /public). Attached to the
@@ -307,6 +309,7 @@ for (const g of CATALOG) {
 //   3. except BOTTOM games, pinned to the very end.
 const FRONT = [
   // Free games (hub order)
+  'temple-dash',
   'popblast',
   'ethiopian-quiz',
   'orbit-blast',
@@ -325,10 +328,8 @@ const FRONT = [
   'rhyme',
   'target24',
   'sequence',
-  'candy-crunch',
   'bubble-pop',
   // Tournament (enabled titles)
-  'temple-dash',
   'memory-match',
   'fruit-slice',
 ];

@@ -1,7 +1,7 @@
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
 import './style.css';
-import { applyTranslations, t } from '../../i18n';
+import { applyTranslations, getLang, t } from '../../i18n';
 import { GameLoop } from '../../engine/loop';
 import { Input } from '../../engine/input';
 import { Viewport } from '../../engine/viewport';
@@ -9,17 +9,16 @@ import { AssetStore } from '../../engine/assets';
 import { SettingsPanel } from '../../ui/settingsPanel';
 import { registerPwa } from '../../engine/pwa';
 import { fetchSkins, setSkinRemote } from '../../platform/backend';
-import { createHost } from '../../platform/gameHost';
+import { GameHost } from '../../platform/gameHost';
 import {
-  applyTournamentPlayLabels, promptTournamentEntry, refreshTournamentMenuPanel,
-  startTournamentRound, submitTournamentRound, tournamentAttemptsLeft,
-} from '../../platform/tournamentGameFlow';
+  standardStateOverlay, wireFreeEngineMain, wireMutePause,
+} from '../../platform/freeGameShell';
 import { sfx } from '../../engine/audio';
 import { TempleDash, W, H, GAME_ID, type GameState } from './game';
 import { kenneySheetDefs, skinSheetDefs, DEFAULT_SKIN_ID } from './art';
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
-const host = createHost(GAME_ID);
+const host = new GameHost(GAME_ID);
 
 registerPwa();
 void boot();
@@ -40,9 +39,7 @@ function run(assets: AssetStore, assetsReady: Promise<void>): void {
   const game = new TempleDash(assets);
   const settingsPanel = new SettingsPanel();
 
-  let serverBest = 0;
-  let rankedThisRun = false;
-  let starting = false;
+  let runStart = 0;
 
   const scoreVal = $('#scoreVal');
   const coinsVal = $('#coinsVal');
@@ -50,67 +47,46 @@ function run(assets: AssetStore, assetsReady: Promise<void>): void {
   const powerChips = $('#powerChips');
   let chipSig = '';
 
-  const overlays: Record<string, HTMLElement> = {
-    menu: $('#menuOverlay'),
-    paused: $('#pauseOverlay'),
-    over: $('#overOverlay'),
-  };
-
-  let toastT = 0;
-  function showToast(msg: string): void {
-    const el = $('#toast');
-    el.textContent = msg;
-    el.classList.remove('hidden');
-    clearTimeout(toastT);
-    toastT = window.setTimeout(() => el.classList.add('hidden'), 2800);
-  }
-
-  const playButtons = () => ({
-    start: document.querySelector<HTMLButtonElement>('#startBtn'),
-    again: document.querySelector<HTMLButtonElement>('#againBtn'),
-    restart: document.querySelector<HTMLButtonElement>('#restartBtn'),
+  const shell = wireFreeEngineMain({
+    host,
+    overlays: {
+      menu: $('#menuOverlay'),
+      paused: $('#pauseOverlay'),
+      over: $('#overOverlay'),
+    },
+    stateOverlay: standardStateOverlay,
+    hud: $('#hud'),
+    closeBtn: $('#closeBtn'),
+    freeMenu: $('#freeMenu'),
+    startBtn: $('#startBtn'),
+    againBtn: $('#againBtn'),
+    restartBtn: $('#restartBtn'),
+    resumeBtn: $('#resumeBtn'),
+    finalScore: $('#finalScore'),
+    finalBest: $('#finalBest'),
+    newBest: $('#newBest'),
+    runReward: $('#runReward'),
+    game,
+    getDurationMs: () => Date.now() - runStart,
   });
 
-  function syncUi(): void {
-    applyTournamentPlayLabels(GAME_ID, playButtons());
-  }
-
-  function showOverlay(state: GameState): void {
-    for (const [k, el] of Object.entries(overlays)) el.classList.toggle('hidden', k !== state);
-    document.querySelector('#closeBtn')?.classList.toggle('hidden', state !== 'playing');
-  }
-
-  async function refreshPanel(): Promise<void> {
-    const snap = await refreshTournamentMenuPanel(GAME_ID, $('#shellTourney'));
-    if (snap) {
-      serverBest = snap.serverBest;
-      if (serverBest > game.best) game.best = serverBest;
-    }
-    syncUi();
-  }
-
-  game.onStateChange = (s) => {
-    showOverlay(s);
-    if (s === 'over' || s === 'menu') void refreshPanel();
-    else syncUi();
+  const origStart = game.start.bind(game);
+  game.start = () => {
+    void assetsReady.then(() => {
+      runStart = Date.now();
+      origStart();
+    });
   };
 
-  game.onGameOver = (score, _coins, record, durationMs) => {
-    $('#finalScore').textContent = String(score);
-    $('#finalBest').textContent = String(game.best);
-    $('#newBest').classList.toggle('hidden', !record);
-    void submitTournamentRound(host, GAME_ID, score, score >= host.winScore, durationMs, rankedThisRun, {
-      rewardEl: $('#runReward'),
-      boardEl: $('#shellBoardOver'),
-      showToast,
-      onBest: (best, isRecord) => {
-        serverBest = best;
-        game.best = best;
-        $('#finalBest').textContent = best.toLocaleString();
-        $('#newBest').classList.toggle('hidden', !isRecord);
-      },
-      onSync: () => { syncUi(); void refreshPanel(); },
-    });
+  game.onStateChange = (s: GameState) => {
+    if (s === 'over') return;
+    shell.showForState(s);
+    document.querySelector('#closeBtn')?.classList.toggle('hidden', s !== 'playing');
+    if (s === 'menu') shell.refreshMenu();
+  };
+
+  game.onGameOver = (score, _coins, record) => {
+    shell.handleGameOver(score, record);
   };
 
   const input = new Input(document.body);
@@ -123,51 +99,13 @@ function run(assets: AssetStore, assetsReady: Promise<void>): void {
     game.handleAction(a);
   });
 
-  async function onPlayOrEnter(): Promise<void> {
-    if (starting || game.state === 'playing' || game.state === 'paused') return;
-    if (tournamentAttemptsLeft(GAME_ID) <= 0) {
-      promptTournamentEntry(GAME_ID, () => { void refreshPanel(); }, () => { void onPlayOrEnter(); });
-      return;
-    }
-    await beginRun();
-  }
-
-  async function beginRun(): Promise<void> {
-    if (starting) return;
-    starting = true;
-    for (const b of Object.values(playButtons())) {
-      if (b) { b.disabled = true; b.textContent = '…'; }
-    }
-    try {
-      await assetsReady;
-      if (!(await startTournamentRound(host, showToast))) return;
-      rankedThisRun = true;
-      game.best = serverBest;
-      game.start();
-    } finally {
-      starting = false;
-      syncUi();
-    }
-  }
-
-  async function restartFromPause(): Promise<void> {
-    if (game.state !== 'paused') return;
-    await beginRun();
-  }
-
-  $('#startBtn').addEventListener('click', () => void onPlayOrEnter());
-  $('#againBtn').addEventListener('click', () => void onPlayOrEnter());
-  $('#restartBtn').addEventListener('click', () => void restartFromPause());
-  $('#resumeBtn').addEventListener('click', () => game.resume());
   $('#pauseBtn').addEventListener('click', () => {
     if (game.state === 'playing') game.pause();
     else if (game.state === 'paused') game.resume();
   });
   $('#settingsBtn').addEventListener('click', () => settingsPanel.toggle());
 
-  const muteBtn = $('#muteBtn');
-  muteBtn.textContent = sfx.muted ? '🔇' : '🔊';
-  muteBtn.addEventListener('click', () => { muteBtn.textContent = sfx.toggleMute() ? '🔇' : '🔊'; });
+  wireMutePause($('#muteBtn'), null, game, sfx);
   document.addEventListener('visibilitychange', () => { if (document.hidden) game.pause(); });
 
   game.setSkin(DEFAULT_SKIN_ID);
@@ -192,9 +130,11 @@ function run(assets: AssetStore, assetsReady: Promise<void>): void {
     if (sig !== chipSig) { powerChips.innerHTML = sig; chipSig = sig; }
   }
 
+  document.documentElement.lang = getLang();
   applyTranslations();
-  void refreshPanel();
-  showOverlay('menu');
+  shell.refreshMenu();
+  shell.showForState('menu');
+  document.querySelector('#closeBtn')?.classList.add('hidden');
 
   const loop = new GameLoop(
     (dt) => game.update(dt),

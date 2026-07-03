@@ -86,8 +86,7 @@ export interface LeaderEntry {
 }
 
 /** Shipped tournament game per cadence (one live window each). */
-export const CADENCE_GAME: Record<TournamentCadence, string> = {
-  daily: 'temple-dash',
+export const CADENCE_GAME: Partial<Record<TournamentCadence, string>> = {
   weekly: 'memory-match',
   monthly: 'fruit-slice',
 };
@@ -327,7 +326,9 @@ export function getTournamentForGame(gameId: string, now = Date.now()): Tourname
 }
 
 export function getLiveTournamentByCadence(cadence: TournamentCadence, now = Date.now()): Tournament | undefined {
-  return getTournamentForGame(CADENCE_GAME[cadence], now);
+  const gameId = CADENCE_GAME[cadence];
+  if (!gameId) return undefined;
+  return getTournamentForGame(gameId, now);
 }
 
 export interface PrizeSlot { rank: number; pct: number; coins: number; }

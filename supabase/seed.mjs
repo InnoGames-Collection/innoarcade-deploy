@@ -62,7 +62,7 @@ async function main() {
   await db.rpc('ensure_active_season');
   const { data: tours } = await db.from('tournaments')
     .select('id, game_id').eq('state', 'live')
-    .in('game_id', ['temple-dash', 'memory-match', 'fruit-slice']);
+    .in('game_id', ['memory-match', 'fruit-slice']);
   console.log(`• tournaments ✓ (${tours?.length ?? 0} live windows)`);
   console.log('• active season ✓');
 

@@ -33,7 +33,7 @@
       <div id="menuOverlay" class="game-overlay">
         <div class="game-panel panel-clean">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-          <div class="shell-tourney" id="shellTourney" aria-live="polite"></div>
+          <div class="shell-free-menu" id="freeMenu"></div>
           <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
         </div>
       </div>
@@ -47,7 +47,7 @@
         </div>
       </div>
 
-      <div id="overOverlay" class="game-overlay is-scroll hidden">
+      <div id="overOverlay" class="game-overlay hidden">
         <div class="game-panel">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
           <h2 data-i18n="td.gameOver">Game over</h2>
@@ -57,10 +57,6 @@
             <div class="shell-over-stat"><span data-i18n="td.best">Best</span><strong id="finalBest">0</strong></div>
           </div>
           <div class="shell-run-reward" id="runReward"></div>
-          <div class="shell-over-board-wrap">
-            <h3 data-i18n="td.leaderboard">Leaderboard</h3>
-            <div id="shellBoardOver"></div>
-          </div>
           <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
         </div>
       </div>
