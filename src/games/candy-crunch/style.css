@@ -1,4 +1,4 @@
-/* Candy Saga — hub arcade layout (arc-hud sits above canvas, not over it) */
+/* Candy Saga — hub arcade layout */
 
 body.game-shell[data-game="candy-crunch"] .arc-canvas-wrap {
   background: #eef6e3;
@@ -14,8 +14,49 @@ body.game-shell[data-game="candy-crunch"] #game {
   display: block;
   width: 100%;
   height: auto;
-  max-height: min(62dvh, 560px);
+  max-height: min(58dvh, 520px);
   touch-action: none;
+}
+
+.cc-goals {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 0 10px 8px;
+  flex-shrink: 0;
+}
+
+.cc-goal {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--shell-line, #e6efdc);
+  box-shadow: 0 1px 4px rgba(20, 45, 14, 0.06);
+}
+
+.cc-goal-done {
+  border-color: #4f9e16;
+  background: #f4faee;
+}
+
+.cc-goal-emoji {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.cc-goal-count {
+  font-size: 0.82rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--game-accent, #e85b9c);
+}
+
+.cc-goal-done .cc-goal-count {
+  color: #3d8010;
 }
 
 .level-score {

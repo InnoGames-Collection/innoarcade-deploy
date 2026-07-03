@@ -26,7 +26,6 @@ const ctx = canvas.getContext('2d')!;
 const dpr = Math.min(window.devicePixelRatio || 1, 2);
 canvas.width = W * dpr;
 canvas.height = H * dpr;
-ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
 const game = new CandyCrunch();
 const run = trackArcadeRunStart();
@@ -34,6 +33,7 @@ const run = trackArcadeRunStart();
 const scoreVal = $('#scoreVal');
 const levelVal = $('#levelVal');
 const movesVal = $('#movesVal');
+const goalStrip = $('#goalStrip');
 
 const shell = wireFreeEngineMain({
   host,
@@ -82,6 +82,15 @@ game.onGameOver = (score, level) => {
 
 wirePlayButtons(['nextBtn'], () => game.start());
 
+function renderGoals(): void {
+  goalStrip.innerHTML = game.goalProgress().map((g) => `
+    <div class="cc-goal${g.done ? ' cc-goal-done' : ''}">
+      <span class="cc-goal-emoji">${g.emoji}</span>
+      <span class="cc-goal-count">${g.have}/${g.need}</span>
+    </div>
+  `).join('');
+}
+
 function toCanvas(e: PointerEvent): [number, number] {
   const rect = canvas.getBoundingClientRect();
   return [
@@ -106,10 +115,12 @@ document.addEventListener('visibilitychange', () => {
 const loop = new GameLoop(
   (dt) => game.update(dt),
   () => {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     game.render(ctx);
     scoreVal.textContent = String(scaleArcadeScore(game.score));
     levelVal.textContent = String(game.displayLevel);
     movesVal.textContent = `${game.movesLeft}/${game.movesTotal}`;
+    renderGoals();
   },
 );
 
