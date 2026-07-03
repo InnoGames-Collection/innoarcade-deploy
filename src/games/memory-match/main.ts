@@ -10,6 +10,12 @@ import {
   applyTournamentPlayLabels, promptTournamentEntry, refreshTournamentMenuPanel,
   startTournamentRound, submitTournamentRound, tournamentAttemptsLeft,
 } from '../../platform/tournamentGameFlow';
+import cashIcon from './icons/cash.png';
+import coffeeIcon from './icons/coffee.png';
+import injeraIcon from './icons/injera.png';
+import logoBlueIcon from './icons/logo-blue.png';
+import logoGreenIcon from './icons/logo-green.png';
+import phoneIcon from './icons/phone.png';
 
 const GAME_ID = 'memory-match';
 const host = createHost(GAME_ID);
@@ -25,7 +31,23 @@ const WASTED_MOVE_LOSS = 52;
 
 const ROUND_SECONDS = 120;
 const PAIR_COUNT = 6;
-const emojis = ['🍎', '🍊', '🍋', '🍇', '🍓', '🍑'];
+
+interface CardIcon {
+  id: string;
+  src: string;
+  alt: string;
+}
+
+const CARD_ICONS: CardIcon[] = [
+  { id: 'logo-blue', src: logoBlueIcon, alt: 'Logo' },
+  { id: 'injera', src: injeraIcon, alt: 'Injera platter' },
+  { id: 'coffee', src: coffeeIcon, alt: 'Coffee ceremony' },
+  { id: 'cash', src: cashIcon, alt: 'Cash' },
+  { id: 'logo-green', src: logoGreenIcon, alt: 'Green logo' },
+  { id: 'phone', src: phoneIcon, alt: 'Phone' },
+];
+
+const ICON_BY_ID = new Map(CARD_ICONS.map((icon) => [icon.id, icon]));
 
 type Phase = 'menu' | 'playing' | 'paused' | 'over';
 
@@ -202,18 +224,38 @@ function shuffle<T>(a: T[]): T[] {
   return a;
 }
 
+function setCardBack(card: HTMLElement): void {
+  card.innerHTML = '<span class="mm-card-back" aria-hidden="true">?</span>';
+}
+
+function setCardFace(card: HTMLElement, iconId: string): void {
+  const icon = ICON_BY_ID.get(iconId);
+  if (!icon) return;
+  card.innerHTML = `<img class="mm-card-img" src="${icon.src}" alt="${icon.alt}" draggable="false" />`;
+}
+
+function revealCard(card: HTMLElement): void {
+  setCardFace(card, card.dataset.e!);
+  card.classList.add('flipped');
+}
+
+function hideCard(card: HTMLElement): void {
+  setCardBack(card);
+  card.classList.remove('flipped');
+}
+
 function buildBoard(): void {
-  cards = shuffle([...emojis, ...emojis]);
+  cards = shuffle([...CARD_ICONS.map((icon) => icon.id), ...CARD_ICONS.map((icon) => icon.id)]);
   flipped = [];
   moves = 0;
   pairs = 0;
   grid.innerHTML = '';
-  cards.forEach((emoji, i) => {
+  cards.forEach((iconId, i) => {
     const card = document.createElement('div');
     card.className = 'mm-card';
     card.dataset.i = String(i);
-    card.dataset.e = emoji;
-    card.textContent = '?';
+    card.dataset.e = iconId;
+    setCardBack(card);
     card.addEventListener('click', () => flipCard(card));
     grid.appendChild(card);
   });
@@ -223,8 +265,8 @@ function buildBoard(): void {
 function revealAll(show: boolean): void {
   document.querySelectorAll<HTMLElement>('.mm-card').forEach((card) => {
     if (card.classList.contains('matched')) return;
-    if (show) { card.textContent = card.dataset.e!; card.classList.add('flipped'); }
-    else if (!flipped.includes(card)) { card.textContent = '?'; card.classList.remove('flipped'); }
+    if (show) revealCard(card);
+    else if (!flipped.includes(card)) hideCard(card);
   });
 }
 
@@ -329,8 +371,7 @@ function endRound(): void {
 function flipCard(card: HTMLElement): void {
   if (phase !== 'playing' || !canFlip || card.classList.contains('flipped') || card.classList.contains('matched')) return;
   playSfx('flip');
-  card.classList.add('flipped');
-  card.textContent = card.dataset.e!;
+  revealCard(card);
   flipped.push(card);
   if (flipped.length === 2) {
     moves++;
@@ -355,10 +396,8 @@ function checkMatch(): void {
     playSfx('nomatch');
     setTimeout(() => {
       if (phase !== 'playing') return;
-      c1.classList.remove('flipped');
-      c2.classList.remove('flipped');
-      c1.textContent = '?';
-      c2.textContent = '?';
+      hideCard(c1);
+      hideCard(c2);
       flipped = [];
       canFlip = true;
       refreshStats();

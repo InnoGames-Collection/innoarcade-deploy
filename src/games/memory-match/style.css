@@ -161,11 +161,23 @@ body.game-shell[data-game="memory-match"]:has(#memory-match-wrapper:not(.hidden)
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(1.8rem, 6vw, 2.4rem);
   transition: all 0.2s;
   border: 2px solid var(--mm-green-dark);
+  overflow: hidden;
+  padding: 4px;
+}
+.mm-card-back {
+  font-size: clamp(1.8rem, 6vw, 2.4rem);
   font-weight: 900;
   line-height: 1;
+}
+.mm-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 .mm-card:not(.flipped):not(.matched) {
   color: #fff;
@@ -174,6 +186,7 @@ body.game-shell[data-game="memory-match"]:has(#memory-match-wrapper:not(.hidden)
   background: #fff;
   color: #14271a;
   border-color: var(--mm-green);
+  padding: 5px;
 }
 .mm-card.matched { opacity: 0.75; cursor: default; animation: mm-match-pop 0.4s ease; }
 @keyframes mm-match-pop {
