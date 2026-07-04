@@ -172,14 +172,31 @@ Deno.serve(async (req: Request) => {
     } catch { /* best-effort; never blocks the response */ }
   };
 
-  // Free games: XP only (capped), no leaderboard, no token required.
+  // Free games: XP + coins-from-score (capped), no leaderboard, no token required.
   if (!wantsLeaderboard) {
     let award = 0;
+    let coinAward = 0;
     try {
       const { data: rewardable } = await admin.rpc('claim_xp_session', { p_user: user.id, p_game: gameId, p_cap: 3 });
-      if (rewardable) award = Math.round(XP_BASE * difficulty);
+      if (rewardable) {
+        award = Math.round(XP_BASE * difficulty);
+        // Coins from score: floor(raw / par), clamped [1,5] per rewarded session.
+        const par = (GAME_SCORING[gameId] ?? GAME_SCORING._default).par;
+        coinAward = Math.min(5, Math.max(1, Math.floor(score / par)));
+      }
     } catch { /* if the cap check fails, default to no award */ }
     await applyXpAndRead(award);
+    // Credit earned coins (server wallet is authoritative).
+    let coins = 0;
+    if (coinAward > 0) {
+      try {
+        await admin.rpc('apply_coins', { p_user: user.id, p_delta: coinAward, p_reason: 'score_reward', p_ref: gameId });
+      } catch { coinAward = 0; }
+    }
+    try {
+      const { data: prof } = await admin.from('profiles').select('coins').eq('id', user.id).maybeSingle();
+      coins = Number(prof?.coins ?? 0);
+    } catch { /* best-effort */ }
     let best = 0;
     let isRecord = false;
     try {
@@ -190,7 +207,7 @@ Deno.serve(async (req: Request) => {
       best = Number(r?.best ?? score);
       isRecord = Boolean(r?.is_record);
     } catch { /* best-effort */ }
-    return json({ points, lifetime, xp: points, award, best, isRecord });
+    return json({ points, lifetime, xp: points, award, coinAward, coins, best, isRecord });
   }
 
   // --- anti-cheat: leaderboard scores require a valid single-use round token ---

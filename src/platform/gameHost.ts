@@ -22,6 +22,7 @@ import {
 import { SignInRequiredError } from './payments';
 import { submitPlayRemote, startRoundRemote, leaderboardRemote, playerStandingRemote } from './backend';
 import { setBalance, setLifetime } from './currency';
+import { setBalanceFromServer } from './wallet';
 import { winRateOverride, BASE_POINTS } from './config';
 import { currentUser } from './auth';
 import './signInGate';
@@ -42,6 +43,10 @@ export interface FinishResult {
   total?: number;
   /** XP awarded this round (0 for ranked tournament play; >0 for free/practice). */
   award?: number;
+  /** Coins earned from score this round (free games only). */
+  coinAward?: number;
+  /** Server coin balance after the round. */
+  coins?: number;
   /** Server XP balance + lifetime (for level display). */
   points?: number;
   lifetime?: number;
@@ -180,9 +185,11 @@ export class GameHost {
       if (ranked && typeof res.rank === 'number') {
         this.cachedStanding = { rank: res.rank, name: 'You', score: res.best ?? 0, isPlayer: true };
       }
+      if (typeof res.coins === 'number') setBalanceFromServer(res.coins);
       return {
         best: res.best ?? 0, isRecord: res.isRecord ?? false, rank: res.rank, total: res.total,
-        award: res.award, points: res.points, lifetime: res.lifetime,
+        award: res.award, coinAward: res.coinAward, coins: res.coins,
+        points: res.points, lifetime: res.lifetime,
         attemptsLeft: res.attemptsLeft, ranked: res.ranked,
       };
     } catch (e) {

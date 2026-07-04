@@ -29,6 +29,10 @@ export interface PlayResult {
   ranked?: boolean;
   /** XP awarded this round (0 for ranked tournament play). */
   award?: number;
+  /** Coins earned from score this round (free games only). */
+  coinAward?: number;
+  /** Server coin balance after the round. */
+  coins?: number;
 }
 
 // Submit a finished round to the server (the ONLY economy authority). The server

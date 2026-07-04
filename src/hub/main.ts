@@ -4,7 +4,7 @@ import { applyTranslations, getLang, setLang, t, type Lang } from '../i18n';
 import { openSignIn } from './signin';
 import { mountSignInGate } from '../platform/signInGate';
 import { openAccount } from './account';
-import { mountWallet, openStore } from './wallet';
+import { mountWallet } from './wallet';
 import { onAuthChange, currentUser, signOut } from '../platform/auth';
 import { sfx } from '../engine/audio';
 import { leaderboardRemote, fetchWallets, fetchUnlocks, unlockGameRemote, fetchTournamentPeriodWinners, claimDailyLogin, playerStandingRemote } from '../platform/backend';
@@ -162,8 +162,7 @@ function renderMyStats(): void {
   }
   const host = document.querySelector('#topBalances');
   if (host) {
-    host.innerHTML = `<button class="bal-buy" id="buyCoinsBtn">${t('hub.buyCoins')}</button>`;
-    host.querySelector('#buyCoinsBtn')?.addEventListener('click', () => openStore());
+    host.innerHTML = '';
   }
 }
 
@@ -626,13 +625,12 @@ function openUnlock(g: GameMeta): void {
         <button id="uCancel" class="btn ghost">${t('hub.cancel')}</button>
         <button id="uBuy" class="btn primary" ${canPay ? '' : 'disabled'}>🔓 ${cost} 🪙</button>
       </div>
-      ${canPay ? '' : `<button id="uGet" class="unlock-getcoins">${t('hub.buyCoins')}</button>`}
+      
     </div>`;
   document.body.appendChild(m);
   const close = (): void => m.remove();
   m.querySelector('.unlock-scrim')!.addEventListener('click', close);
   m.querySelector('#uCancel')!.addEventListener('click', close);
-  m.querySelector('#uGet')?.addEventListener('click', () => { close(); openStore(); });
   m.querySelector('#uBuy')!.addEventListener('click', async () => {
     const btn = m.querySelector('#uBuy') as HTMLButtonElement;
     btn.disabled = true; btn.textContent = '…';

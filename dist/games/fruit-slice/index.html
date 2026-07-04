@@ -88,17 +88,17 @@ body.game-shell.quiz-shell {
   background: linear-gradient(135deg, #6cc52f 0%, #4f9e16 100%);
   cursor: pointer;
 }
-</style>  <script type="module" crossorigin src="../../assets/fruitSlice-Dw-llCsz.js"></script>
-  <link rel="modulepreload" crossorigin href="../../assets/index-CAZMuO-f.js">
-  <link rel="modulepreload" crossorigin href="../../assets/tournaments-ZtzcwHK8.js">
-  <link rel="modulepreload" crossorigin href="../../assets/audio-BcyQILyD.js">
-  <link rel="modulepreload" crossorigin href="../../assets/sessionAuth-K_9LtVDo.js">
-  <link rel="modulepreload" crossorigin href="../../assets/tournamentEntry-BclFshh0.js">
-  <link rel="modulepreload" crossorigin href="../../assets/tournamentGameFlow-CtdQOYRy.js">
+</style>  <script type="module" crossorigin src="../../assets/fruitSlice-Jk_Caid1.js"></script>
+  <link rel="modulepreload" crossorigin href="../../assets/index-Cp8ry8XB.js">
+  <link rel="modulepreload" crossorigin href="../../assets/tournaments-D4nwy-1U.js">
+  <link rel="modulepreload" crossorigin href="../../assets/audio-BZkN3Otd.js">
+  <link rel="modulepreload" crossorigin href="../../assets/freeShellNav-DGEABPfW.js">
+  <link rel="modulepreload" crossorigin href="../../assets/tournamentEntry-Bs24mfR0.js">
+  <link rel="modulepreload" crossorigin href="../../assets/tournamentGameFlow-DtHNZznT.js">
   <link rel="modulepreload" crossorigin href="../../assets/loop-BDek7L7e.js">
   <link rel="modulepreload" crossorigin href="../../assets/input-DF-0NnhL.js">
   <link rel="stylesheet" crossorigin href="../../assets/audio-mZgmpMt7.css">
-  <link rel="stylesheet" crossorigin href="../../assets/sessionAuth-MyclheF5.css">
+  <link rel="stylesheet" crossorigin href="../../assets/freeShellNav-BcMOtWcT.css">
   <link rel="stylesheet" crossorigin href="../../assets/fruitSlice-CNdp4vCO.css">
 </head>
   <body class="game-shell" data-game="fruit-slice">
@@ -106,7 +106,7 @@ body.game-shell.quiz-shell {
       <div id="fsBackdrop" class="fs-backdrop" aria-hidden="true"></div>
 
       <div id="fsPlayFrame" class="fs-playframe hidden">
-        <button id="closeBtn" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+        <button id="closeBtn" class="gp-close gp-close-corner" aria-label="Close">✕</button>
         <div class="fs-stats">
           <div class="fs-stat fs-stat-time">
             <span class="fs-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M12 5V3M5 3l2 2M19 3l-2 2"/></svg></span>
@@ -140,7 +140,7 @@ body.game-shell.quiz-shell {
 
       <div id="menuOverlay" class="game-overlay">
         <div class="game-panel panel-clean">
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close">✕</button>
           <div class="shell-tourney" id="fsTourney" aria-live="polite"></div>
           <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
         </div>
@@ -148,7 +148,7 @@ body.game-shell.quiz-shell {
 
       <div id="pauseOverlay" class="game-overlay hidden">
         <div class="game-panel">
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close">✕</button>
           <h2 data-i18n="td.paused">Paused</h2>
           <button id="resumeBtn" class="btn primary" data-i18n="td.resume">Resume</button>
           <button id="restartBtn" class="btn" data-i18n="td.restart">Play again</button>
@@ -157,7 +157,7 @@ body.game-shell.quiz-shell {
 
       <div id="overOverlay" class="game-overlay is-scroll hidden" aria-hidden="true">
         <div class="game-panel">
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close">✕</button>
           <h2 data-i18n="td.gameOver">Game over</h2>
           <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
           <div class="shell-over-final">

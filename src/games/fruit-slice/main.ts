@@ -5,6 +5,10 @@ import {
   applyTournamentPlayLabels, promptTournamentEntry, refreshTournamentMenuPanel,
   startTournamentRound, submitTournamentRound, tournamentAttemptsLeft,
 } from '../../platform/tournamentGameFlow';
+import {
+  pushShellHistory, wireFreeShellCloseButtons, wireFreeShellBackNavigation,
+  type FreeShellNavHandlers,
+} from '../../platform/freeShellNav';
 import './style.css';
 import { applyTranslations, getLang } from '../../i18n';
 import { GameLoop } from '../../engine/loop';
@@ -111,12 +115,21 @@ function showGame(): void {
 }
 
 function setPhase(next: Phase): void {
+  const prev = phase;
   phase = next;
   if (next === 'menu') showMenu();
   else showGame();
   $('#closeBtn').classList.toggle('hidden', next === 'menu' || next === 'over');
   $('#pauseOverlay').classList.toggle('hidden', next !== 'paused');
   updateActionButtons();
+  if (next !== 'menu' && prev === 'menu') pushShellHistory();
+  if (next === 'paused' && prev !== 'paused') pushShellHistory();
+  if (next === 'over' && prev !== 'over') pushShellHistory();
+}
+
+function goMenu(): void {
+  game.pause();
+  setPhase('menu');
 }
 
 function showOverOverlay(final: number): void {
@@ -137,6 +150,21 @@ function hideOverOverlay(): void {
   overlay.classList.add('hidden');
   overlay.setAttribute('aria-hidden', 'true');
 }
+
+function getOverlay(): string | null {
+  const pause = document.getElementById('pauseOverlay');
+  if (pause && !pause.classList.contains('hidden')) return 'paused';
+  const over = document.getElementById('overOverlay');
+  if (over && !over.classList.contains('hidden')) return 'over';
+  return null;
+}
+
+const navHandlers: FreeShellNavHandlers = {
+  getPhase: () => phase,
+  getOverlay,
+  goMenu,
+  resumePlaying: () => game.resume(),
+};
 
 function syncShellFromGameState(state: GameState): void {
   if (state === 'menu') setPhase('menu');
@@ -166,7 +194,7 @@ function updatePlayHud(): void {
 }
 
 async function refreshTournamentPanel(): Promise<void> {
-  await refreshTournamentMenuPanel(GAME_ID, $('#fsTourney'), { hideBestIfOnBoard: true });
+  await refreshTournamentMenuPanel(GAME_ID, $('#fsTourney'));
   updateActionButtons();
 }
 
@@ -284,6 +312,12 @@ muteBtn.addEventListener('click', () => {
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) game.pause();
 });
+
+const stage = document.getElementById('stage');
+if (stage) {
+  wireFreeShellCloseButtons(stage, navHandlers);
+  wireFreeShellBackNavigation(navHandlers);
+}
 
 const loop = new GameLoop(
   (dt) => game.update(dt),

@@ -1,4 +1,4 @@
-// Memory Match — weekly tournament game (GoPlay / InnoArcade).
+// Memory Match — tournament game (GoPlay / InnoArcade).
 
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
@@ -10,6 +10,10 @@ import {
   applyTournamentPlayLabels, promptTournamentEntry, refreshTournamentMenuPanel,
   startTournamentRound, submitTournamentRound, tournamentAttemptsLeft,
 } from '../../platform/tournamentGameFlow';
+import {
+  pushShellHistory, wireFreeShellCloseButtons, wireFreeShellBackNavigation,
+  type FreeShellNavHandlers,
+} from '../../platform/freeShellNav';
 import cashIcon from './icons/cash.png';
 import coffeeIcon from './icons/coffee.png';
 import injeraIcon from './icons/injera.png';
@@ -22,21 +26,15 @@ const host = createHost(GAME_ID);
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
-/** End-of-attempt score only (not shown live during play). */
 const TIME_BASE = 3000;
 const TIME_DRAIN_PER_SEC = 27;
 const PAIR_GAIN = 100;
-/** Penalty per wasted two-card try (moves − pairs). */
 const WASTED_MOVE_LOSS = 52;
 
 const ROUND_SECONDS = 120;
 const PAIR_COUNT = 6;
 
-interface CardIcon {
-  id: string;
-  src: string;
-  alt: string;
-}
+interface CardIcon { id: string; src: string; alt: string; }
 
 const CARD_ICONS: CardIcon[] = [
   { id: 'logo-blue', src: logoBlueIcon, alt: 'Logo' },
@@ -62,7 +60,6 @@ let secondsLeft = ROUND_SECONDS;
 let timerId = 0;
 let roundSeq = 0;
 let starting = false;
-/** Frozen final score for this attempt (shown after round ends). */
 let lastFinalScore = 0;
 let toastT = 0;
 
@@ -118,36 +115,25 @@ function playSfx(type: 'flip' | 'match' | 'nomatch' | 'win' | 'lose' | 'click'):
   }
 }
 
-function spentSeconds(): number {
-  return ROUND_SECONDS - Math.max(0, secondsLeft);
-}
-
-/** timeGain = 3000 − spent×27 */
-function timeGain(): number {
-  return Math.max(0, TIME_BASE - spentSeconds() * TIME_DRAIN_PER_SEC);
-}
-
-function pairGain(): number {
-  return pairs * PAIR_GAIN;
-}
-
-function moveLoss(): number {
-  return Math.max(0, moves - pairs) * WASTED_MOVE_LOSS;
-}
-
-/** score = timeGain + pairGain − moveLoss */
-function computeScore(): number {
-  return Math.max(0, timeGain() + pairGain() - moveLoss());
-}
+function spentSeconds(): number { return ROUND_SECONDS - Math.max(0, secondsLeft); }
+function timeGain(): number { return Math.max(0, TIME_BASE - spentSeconds() * TIME_DRAIN_PER_SEC); }
+function pairGain(): number { return pairs * PAIR_GAIN; }
+function moveLoss(): number { return Math.max(0, moves - pairs) * WASTED_MOVE_LOSS; }
+function computeScore(): number { return Math.max(0, timeGain() + pairGain() - moveLoss()); }
 
 const SCORE_PLACEHOLDER = '—';
-
 function scoreDisplayText(): string {
   if (phase === 'over') return String(lastFinalScore);
   return SCORE_PLACEHOLDER;
 }
 
+function goMenuMM(): void {
+  abortRound();
+  setPhase('menu');
+}
+
 function setPhase(next: Phase): void {
+  const prev = phase;
   phase = next;
   if (next === 'menu') showMenu();
   else showGame();
@@ -157,6 +143,9 @@ function setPhase(next: Phase): void {
   restartBtn.classList.toggle('hidden', next !== 'paused');
   grid.classList.toggle('mm-paused', next === 'paused' || next === 'over');
   syncAttemptsUi();
+  if (next !== 'menu' && prev === 'menu') pushShellHistory();
+  if (next === 'paused' && prev !== 'paused') pushShellHistory();
+  if (next === 'over' && prev !== 'over') pushShellHistory();
 }
 
 function showOverOverlay(final: number): void {
@@ -177,6 +166,23 @@ function hideOverOverlay(): void {
   overlay.classList.add('hidden');
   overlay.setAttribute('aria-hidden', 'true');
 }
+
+function getOverlay(): string | null {
+  const pause = document.getElementById('pauseOverlay') ??
+    (resumeBtn.closest('.mm-actions')?.querySelector('#mm-resume-btn:not(.hidden)') ? 'paused' : null);
+  if (typeof pause === 'string') return pause;
+  const over = document.getElementById('mmOverOverlay');
+  if (over && !over.classList.contains('hidden')) return 'over';
+  if (phase === 'paused') return 'paused';
+  return null;
+}
+
+const navHandlers: FreeShellNavHandlers = {
+  getPhase: () => phase,
+  getOverlay,
+  goMenu: goMenuMM,
+  resumePlaying: () => resumeRound(),
+};
 
 async function refreshTournamentPanel(): Promise<void> {
   await refreshTournamentMenuPanel(GAME_ID, $('#mmTourney'));
@@ -306,7 +312,6 @@ async function beginRankedRound(): Promise<void> {
   }
 }
 
-/** Briefly reveal all cards, then start the timer — used on Play and Play again. */
 function startRoundWithBlink(): void {
   const seq = roundSeq;
   buildBoard();
@@ -340,7 +345,7 @@ function resumeRound(): void {
   timerId = window.setInterval(() => tick(seq), 1000);
 }
 
-async function restartRound(): Promise<void> {
+async function restartRoundMM(): Promise<void> {
   if (phase !== 'paused') return;
   abortRound();
   hideOverOverlay();
@@ -409,7 +414,13 @@ startBtn.addEventListener('click', () => { playSfx('click'); void onPlayOrEnter(
 $('#mmAgainBtn').addEventListener('click', () => { playSfx('click'); void onPlayOrEnter(); });
 pauseBtn.addEventListener('click', () => { playSfx('click'); pauseRound(); });
 resumeBtn.addEventListener('click', () => { playSfx('click'); resumeRound(); });
-restartBtn.addEventListener('click', () => { playSfx('click'); void restartRound(); });
+restartBtn.addEventListener('click', () => { playSfx('click'); void restartRoundMM(); });
+
+const stage = document.getElementById('stage');
+if (stage) {
+  wireFreeShellCloseButtons(stage, navHandlers);
+  wireFreeShellBackNavigation(navHandlers);
+}
 
 document.documentElement.lang = getLang();
 applyTranslations();

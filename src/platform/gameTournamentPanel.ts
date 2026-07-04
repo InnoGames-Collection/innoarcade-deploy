@@ -1,8 +1,7 @@
 // Shared in-game tournament panel markup for tournament games.
 
-import { getLang, t } from '../i18n';
+import { t } from '../i18n';
 import { type TournamentCadence } from './catalog';
-import { formatEtbPrize, TOURNAMENT_ETB_PRIZES } from './config';
 import { type LeaderEntry } from './tournaments';
 
 export interface ShellMenuTournamentOpts {
@@ -29,16 +28,6 @@ function medal(rank: number): string {
   return ['🥇', '🥈', '🥉'][rank - 1] ?? `${rank}`;
 }
 
-function prizeSplitHtml(gameId?: string): string {
-  const prizes = gameId ? TOURNAMENT_ETB_PRIZES[gameId] : undefined;
-  if (!prizes?.length) return '';
-  const lang = getLang();
-  const rows = prizes.map((etb, i) =>
-    `<span class="gt-prize-row">${medal(i + 1)} ${formatEtbPrize(etb, lang)}</span>`,
-  ).join('');
-  return `<div class="gt-prizes"><span class="gt-prizes-label">${t('hub.prizeSplit')}</span><div class="gt-prize-rows">${rows}</div></div>`;
-}
-
 function boardRowHtml(r: LeaderEntry): string {
   return `
     <div class="gt-row${r.isPlayer ? ' me' : ''}">
@@ -59,7 +48,7 @@ export function tournamentBoardHtml(rows: LeaderEntry[], standing?: LeaderEntry 
   return html || `<p class="gt-empty">${t('td.noBoard')}</p>`;
 }
 
-/** Menu tournament panel — game title, wallet, best, attempts, leaderboard. */
+/** Menu tournament panel — game title, best, attempts, leaderboard. */
 export function renderShellMenuTournamentHtml(
   gameTitle: string,
   gameIcon: string,
@@ -70,7 +59,6 @@ export function renderShellMenuTournamentHtml(
   opts?: ShellMenuTournamentOpts,
 ): string {
   const cadenceRow = opts?.cadence ? cadenceBadgeHtml(opts.cadence) : '';
-  const prizeRow = prizeSplitHtml(opts?.gameId);
   const hintRow = opts?.hint
     ? `<div class="gt-hint">${escHtml(opts.hint)}</div>`
     : '';
@@ -84,7 +72,6 @@ export function renderShellMenuTournamentHtml(
       <span class="gt-coins">${walletCoins.toLocaleString()} 🪙</span>
     </div>
     ${cadenceRow}
-    ${prizeRow}
     ${bestRow}
     ${hintRow}
     ${attemptsLeft > 0 ? `<div class="gt-status"><span class="gt-attempts">🎟️ ${t('td.attemptsLeft')}: <strong>${attemptsLeft}</strong></span></div>` : ''}

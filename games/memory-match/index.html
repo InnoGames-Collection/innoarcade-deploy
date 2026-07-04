@@ -12,14 +12,14 @@
 
       <div id="menuOverlay" class="game-overlay">
         <div class="game-panel panel-clean">
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close">✕</button>
           <div class="shell-tourney" id="mmTourney" aria-live="polite"></div>
           <button type="button" id="mmStartBtn" class="btn primary" data-i18n="hub.play">Play</button>
         </div>
       </div>
 
       <div id="memory-match-wrapper" class="hidden">
-        <button type="button" id="mmCloseBtn" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+        <button type="button" id="mmCloseBtn" class="gp-close gp-close-corner" aria-label="Close">✕</button>
         <div class="mm-stats">
           <div class="mm-stat"><span class="mm-stat-label" data-i18n="mm.time">Time</span><span class="mm-stat-value" id="mm-time">2:00</span></div>
           <div class="mm-stat"><span class="mm-stat-label" data-i18n="mm.moves">Moves</span><span class="mm-stat-value" id="mm-moves">0</span></div>
@@ -36,7 +36,7 @@
 
       <div id="mmOverOverlay" class="game-overlay is-scroll hidden" aria-hidden="true">
         <div class="game-panel mm-over-panel">
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close">✕</button>
           <h2 data-i18n="td.gameOver">Game over</h2>
           <p id="mmNewBest" class="new-best hidden" data-i18n="td.newBest"></p>
           <div class="mm-over-final">

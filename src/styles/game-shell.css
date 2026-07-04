@@ -530,37 +530,6 @@ body.game-shell {
   padding: 0 0.2rem;
 }
 
-.game-shell .shell-tourney .gt-prizes {
-  width: 100%;
-  padding: 0.35rem 0.5rem;
-  border-radius: 10px;
-  background: #f4faee;
-  border: 1px solid var(--shell-line, #e6efdc);
-}
-
-.game-shell .shell-tourney .gt-prizes-label {
-  display: block;
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--shell-muted);
-  margin-bottom: 0.35rem;
-}
-
-.game-shell .shell-tourney .gt-prize-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.game-shell .shell-tourney .gt-prize-row {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #157a47;
-  text-align: left;
-}
-
 .game-shell .shell-tourney .gt-status {
   font-size: 0.82rem;
   color: var(--shell-text);
