@@ -18,11 +18,17 @@ export function mountSignInGate(): void {
     g.id = 'signinGate';
     g.className = 'signin-gate';
     g.innerHTML = `
+      <div class="sg-topbar">
+        <img class="sg-logo-et" src="/brand/ethio-telecom.png" alt="Ethio Telecom" />
+        <img class="sg-logo-tb" src="/brand/telebirr.png" alt="TeleBirr" />
+      </div>
+      <div class="sg-hero">
+        <img class="sg-hero-img" src="/brand/goplay-banner.png" alt="GoPlay" />
+      </div>
       <div class="sg-card">
-        <div class="sg-brand"><span class="sg-icon">🎮</span> GoPlay</div>
         <h2>${t('gate.title')}</h2>
         <p>${t('gate.sub')}</p>
-        <button class="btn primary" id="sgBtn">📱 ${t('gate.cta')}</button>
+        <button class="btn primary sg-cta" id="sgBtn">📱 ${t('gate.cta')}</button>
       </div>`;
     document.body.appendChild(g);
     g.querySelector('#sgBtn')!.addEventListener('click', () => openSignIn());

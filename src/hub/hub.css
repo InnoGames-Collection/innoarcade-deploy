@@ -73,11 +73,8 @@ body {
   border-bottom: 1px solid var(--line);
   box-shadow: 0 1px 0 rgba(255,255,255,0.6), 0 6px 20px rgba(31, 41, 80, 0.05);
 }
-.brand { display: flex; align-items: center; gap: 0.6rem; font-weight: 800; font-size: 1.18rem; letter-spacing: -0.01em; }
-.brand-icon {
-  font-size: 1.15rem; width: 2rem; height: 2rem; display: grid; place-items: center;
-  background: var(--grad-brand); border-radius: 10px; box-shadow: 0 6px 14px rgba(91, 108, 255, 0.35);
-}
+.brand { display: flex; align-items: center; gap: 0.5rem; font-weight: 800; font-size: 1.18rem; letter-spacing: -0.01em; }
+.brand-logo-et { height: 1.8rem; width: auto; object-fit: contain; flex-shrink: 0; }
 .brand-name { background: var(--grad-brand); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .topnav { display: flex; gap: 0.3rem; margin-inline: auto; }
 .nav-link {
@@ -313,6 +310,8 @@ body {
 /* --- footer --- */
 .hub-footer { background: var(--bg-2); }
 .hub-footer p { font-weight: 600; }
+.footer-brand { display: flex; align-items: center; justify-content: center; gap: 0.55rem; font-size: 0.82rem; color: var(--muted); }
+.footer-logo { height: 1.3rem; object-fit: contain; }
 
 /* ====================================================================== */
 /* Portal shell: bottom nav, browse toolbar, poster cards                 */
@@ -323,6 +322,8 @@ body {
 /* promo banner carousel (top of the portal) */
 .promo-section { margin-bottom: 0.25rem; }
 .promo-slide { color: #fff; font-weight: 800; text-align: center; padding: 1.05rem 1.2rem; border-radius: 18px; font-size: 1.04rem; box-shadow: var(--shadow-md); }
+.promo-slide-img { padding: 0; overflow: hidden; }
+.promo-slide-img .promo-banner-img { width: 100%; display: block; border-radius: 18px; object-fit: cover; max-height: 180px; }
 .promo-dots { display: flex; justify-content: center; gap: 6px; margin-top: 9px; }
 .promo-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); transition: width 0.2s, background 0.2s; cursor: pointer; }
 .promo-track { cursor: grab; touch-action: pan-y; user-select: none; }
@@ -527,7 +528,7 @@ body {
   .topbar { gap: 0.4rem; padding-inline: 0.7rem; flex-wrap: nowrap; }
   .topnav { display: none; }
   .brand { font-size: 1rem; }
-  .brand-icon { width: 1.7rem; height: 1.7rem; font-size: 1rem; }
+  .brand-logo-et { height: 1.5rem; }
   .top-balances { margin-inline: auto 0; gap: 0.25rem; min-width: 0; }
   .player-bar-section { gap: 0.35rem; padding-inline: 0.2rem; }
   .player-bar-section .bal-chip { font-size: 0.72rem; padding: 0.28rem 0.48rem; gap: 0.15rem; }

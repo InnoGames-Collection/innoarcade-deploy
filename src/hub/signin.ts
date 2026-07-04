@@ -12,28 +12,28 @@ import { getLang } from '../i18n';
 
 const STR = {
   en: {
-    signIn: 'Sign in', title: 'Sign in to compete', phone: 'Phone number',
-    send: 'Send code', sending: 'Sending…', code: 'Enter the 6-digit code',
-    verify: 'Verify', verifying: 'Verifying…', resend: 'Resend code',
+    signIn: 'Sign in', title: 'Enter your phone number', phone: 'Phone number',
+    send: 'Get code', sending: 'Sending…', code: 'Enter the 6-digit code',
+    verify: 'Sign in', verifying: 'Verifying…', resend: 'Resend code',
     name: 'Display name', save: 'Save', signOut: 'Sign out',
     sent: 'Code sent. Check your SMS.',
     errSend: "Couldn't send the code. Check the number and try again.",
     errTimeout: 'Network is slow or unreachable. Check your connection and try again.',
     errVerify: 'Wrong or expired code.', close: 'Close',
     demoCode: 'Demo mode — your code is',
-    promo: 'Win weekly & monthly prizes',
+    otp: 'Code', terms: 'Terms & Conditions',
   },
   am: {
-    signIn: 'ግባ', title: 'ለመወዳደር ይግቡ', phone: 'ስልክ ቁጥር',
-    send: 'ኮድ ላክ', sending: 'በመላክ ላይ…', code: '6-አሃዝ ኮድ ያስገቡ',
-    verify: 'አረጋግጥ', verifying: 'በማረጋገጥ ላይ…', resend: 'ኮድ እንደገና ላክ',
+    signIn: 'ግባ', title: 'የስልክ ቁጥርዎን ያስገቡ', phone: 'ስልክ ቁጥር',
+    send: 'ኮድ ያግኙ', sending: 'በመላክ ላይ…', code: '6-አሃዝ ኮድ ያስገቡ',
+    verify: 'ይግቡ', verifying: 'በማረጋገጥ ላይ…', resend: 'ኮድ እንደገና ላክ',
     name: 'የሚታይ ስም', save: 'አስቀምጥ', signOut: 'ውጣ',
-    sent: 'ኮድ ተልኳል። SMS ይመልከቱ (ወይም በፈተና ሁነታ የ function logs)።',
+    sent: 'ኮድ ተልኳል። SMS ይመልከቱ።',
     errSend: 'ኮዱን መላክ አልተቻለም። ቁጥሩን አረጋግጠው እንደገና ይሞክሩ።',
     errTimeout: 'አውታረ መረቡ ቀርፋፋ ወይም አይገኝም። ግንኙነትዎን አረጋግጠው እንደገና ይሞክሩ።',
     errVerify: 'የተሳሳተ ወይም ጊዜው ያለፈበት ኮድ።', close: 'ዝጋ',
     demoCode: 'የማሳያ ሁነታ — ኮድዎ',
-    promo: 'ሳምንታዊ እና ወርሃዊ ሽልማቶችን ያሸንፉ',
+    otp: 'ኮድ', terms: 'ደንብ እና ሁኔታዎች',
   },
 };
 const t = (k: keyof typeof STR.en): string => (STR[getLang()] ?? STR.en)[k];
@@ -65,18 +65,20 @@ function render(): void {
 
 // --- modal -----------------------------------------------------------------
 
-// A full-page sign-in surface (telecom-portal style): brand header, a back
-// control and a centred card. The same shell hosts every step of the phone→OTP
-// flow and the profile editor.
-function shell(inner: string): HTMLElement {
+function shell(inner: string, showBanner = true): HTMLElement {
   document.querySelector('.auth-modal')?.remove();
   const m = document.createElement('div');
   m.className = 'auth-modal';
   m.innerHTML = `
-    <div class="auth-brand"><span class="auth-brand-icon">🎮</span><span>GoPlay</span></div>
-    <button class="auth-back" aria-label="${t('close')}">✕</button>
+    <div class="auth-topbar">
+      <div class="auth-logos">
+        <img class="auth-logo-et" src="/brand/ethio-telecom.png" alt="Ethio Telecom" />
+        <img class="auth-logo-tb" src="/brand/telebirr.png" alt="TeleBirr" />
+      </div>
+      <button class="auth-back" aria-label="${t('close')}">✕</button>
+    </div>
+    ${showBanner ? `<div class="auth-hero"><img class="auth-hero-img" src="/brand/goplay-banner.png" alt="GoPlay" /></div>` : ''}
     <div class="auth-stack">
-      <div class="auth-promo">🎁 ${t('promo')}</div>
       <div class="auth-card">${inner}</div>
     </div>`;
   document.body.appendChild(m);
@@ -84,7 +86,6 @@ function shell(inner: string): HTMLElement {
   return m;
 }
 
-// Open the sign-in flow from elsewhere (e.g. the coin store / paid-entry gate).
 export function openSignIn(): void {
   if (!authAvailable()) return;
   injectStyles();
@@ -95,9 +96,13 @@ function openModal(): void {
   const m = shell(`
     <h3>${t('title')}</h3>
     <label>${t('phone')}</label>
-    <input class="auth-input" id="phone" type="tel" inputmode="tel" placeholder="09… / +2519…" value="${esc(phone)}" />
+    <div class="auth-phone-row">
+      <span class="auth-prefix">+251</span>
+      <input class="auth-input auth-phone-input" id="phone" type="tel" inputmode="tel" placeholder="09xxxxxxxx" value="${esc(phone)}" />
+    </div>
     <p class="auth-err" id="err"></p>
-    <button class="auth-primary" id="go">${t('send')}</button>`);
+    <button class="auth-primary" id="go">${t('send')}</button>
+    <a class="auth-terms" href="#">${t('terms')}</a>`);
   const input = m.querySelector<HTMLInputElement>('#phone')!;
   const go = m.querySelector<HTMLButtonElement>('#go')!;
   input.focus();
@@ -120,10 +125,14 @@ function openCode(): void {
     <h3>${t('code')}</h3>
     <p class="auth-hint">${t('sent')}</p>
     <p class="auth-demo" id="demo" hidden></p>
-    <input class="auth-input" id="code" type="text" inputmode="numeric" maxlength="6" placeholder="123456" />
+    <label>${t('otp')}</label>
+    <div class="auth-otp-row">
+      <input class="auth-input auth-otp-input" id="code" type="text" inputmode="numeric" maxlength="6" placeholder="xxxx" />
+      <button class="auth-otp-get" id="resend" disabled>${t('send')} <span id="timer"></span></button>
+    </div>
     <p class="auth-err" id="err"></p>
     <button class="auth-primary" id="go">${t('verify')}</button>
-    <button class="auth-link" id="resend" disabled>${t('resend')} <span id="timer"></span></button>`);
+    <a class="auth-terms" href="#">${t('terms')}</a>`);
   const input = m.querySelector<HTMLInputElement>('#code')!;
   const go = m.querySelector<HTMLButtonElement>('#go')!;
   const resend = m.querySelector<HTMLButtonElement>('#resend')!;
@@ -131,7 +140,6 @@ function openCode(): void {
   input.focus();
   void showDemoCode(m, input);
 
-  // Resend rate-limit: a 90s countdown gates the resend button (telefun-style).
   let left = 0;
   let iv: ReturnType<typeof setInterval> | undefined;
   function startCountdown(): void {
@@ -173,8 +181,6 @@ function openCode(): void {
   });
 }
 
-// DEMO ONLY: surface the OTP the send-sms mock stashed, so a no-SMS-gateway demo
-// still signs in with any phone. Shows the code and prefills it. Inert in prod.
 async function showDemoCode(m: HTMLElement, input: HTMLInputElement): Promise<void> {
   if (!devOtpEcho()) return;
   const code = await fetchDevOtp(phone);
@@ -190,7 +196,7 @@ function openProfile(): void {
     <label>${t('name')}</label>
     <input class="auth-input" id="name" type="text" maxlength="24" value="${esc(user?.name ?? '')}" placeholder="${t('name')}" />
     <button class="auth-primary" id="save">${t('save')}</button>
-    <button class="auth-link danger" id="out">${t('signOut')}</button>`);
+    <button class="auth-link danger" id="out">${t('signOut')}</button>`, false);
   const input = m.querySelector<HTMLInputElement>('#name')!;
   input.focus();
   m.querySelector('#save')!.addEventListener('click', async () => {
@@ -212,32 +218,58 @@ function injectStyles(): void {
     .auth-btn { border: 1px solid var(--accent); background: var(--accent); color: #fff;
       font: inherit; font-weight: 700; font-size: 0.9rem; padding: 0.4rem 1rem; border-radius: 999px; cursor: pointer; }
     .auth-btn:hover { filter: brightness(1.05); }
+
     .auth-modal { position: fixed; inset: 0; z-index: 9990; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; padding: 1.5rem;
-      background: var(--grad-hero, linear-gradient(160deg, #1d2769 0%, #11163b 100%)); }
-    .auth-brand { position: absolute; top: 1.25rem; left: 1.4rem; display: flex; align-items: center; gap: .5rem;
-      color: #fff; font-weight: 800; font-size: 1.1rem; letter-spacing: -0.01em; }
-    .auth-brand-icon { width: 1.95rem; height: 1.95rem; display: grid; place-items: center;
-      background: var(--accent); border-radius: 9px; font-size: 1rem; }
-    .auth-back { position: absolute; top: 1.1rem; right: 1.3rem; width: 2.3rem; height: 2.3rem; border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.12); color: #fff; font-size: 1rem; cursor: pointer; }
-    .auth-back:hover { background: rgba(255,255,255,.22); }
-    .auth-stack { display: flex; flex-direction: column; gap: 14px; width: min(400px, 94vw); }
-    .auth-promo { background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.32); color: #fff;
-      border-radius: 14px; padding: .7rem 1rem; text-align: center; font-weight: 800; font-size: .95rem; }
-    #timer { color: var(--muted); font-weight: 700; }
-    .auth-card { position: relative; width: 100%; background: #fff; color: #14271a;
-      border-radius: 18px; padding: 28px 26px; box-shadow: 0 24px 60px rgba(8,12,34,.45); display: flex; flex-direction: column; gap: 11px; }
-    .auth-card h3 { font-size: 1.3rem; margin-bottom: 2px; color: #14271a; font-weight: 800; }
-    .auth-card label { font-size: 0.8rem; color: #5f7262; }
+      align-items: center; background: #4f9e16; overflow-y: auto; }
+
+    .auth-topbar { width: 100%; display: flex; align-items: center; justify-content: space-between;
+      padding: 0.8rem 1rem; background: #4f9e16; flex-shrink: 0; }
+    .auth-logos { display: flex; align-items: center; gap: 0.7rem; }
+    .auth-logo-et { height: 1.8rem; object-fit: contain; }
+    .auth-logo-tb { height: 2rem; object-fit: contain; }
+    .auth-back { width: 2.2rem; height: 2.2rem; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.4); background: rgba(255,255,255,.15); color: #fff;
+      font-size: 1rem; cursor: pointer; display: grid; place-items: center; flex-shrink: 0; }
+    .auth-back:hover { background: rgba(255,255,255,.28); }
+
+    .auth-hero { width: 100%; flex-shrink: 0; }
+    .auth-hero-img { width: 100%; display: block; object-fit: cover; max-height: 200px; }
+
+    .auth-stack { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+      padding: 1.2rem 1rem 2rem; width: 100%; }
+    .auth-card { position: relative; width: min(420px, 100%); background: #fff; color: #14271a;
+      border-radius: 18px; padding: 28px 24px; box-shadow: 0 12px 40px rgba(8,30,8,.25);
+      display: flex; flex-direction: column; gap: 10px; }
+    .auth-card h3 { font-size: 1.15rem; margin-bottom: 2px; color: #14271a; font-weight: 800; }
+    .auth-card label { font-size: 0.8rem; color: #5f7262; font-weight: 600; }
+
+    .auth-phone-row { display: flex; align-items: center; gap: 0; border: 1px solid #e6efdc; border-radius: 10px; overflow: hidden; }
+    .auth-prefix { padding: 0.7rem 0.6rem 0.7rem 0.8rem; color: #5f7262; font-size: 0.95rem; font-weight: 600;
+      background: #f8faf5; border-right: 1px solid #e6efdc; white-space: nowrap; }
+    .auth-phone-input { border: none !important; border-radius: 0 !important; flex: 1; min-width: 0; }
+
+    .auth-otp-row { display: flex; align-items: center; gap: 0; border: 1px solid #e6efdc; border-radius: 10px; overflow: hidden; }
+    .auth-otp-input { border: none !important; border-radius: 0 !important; flex: 1; min-width: 0; }
+    .auth-otp-get { padding: 0.7rem 0.8rem; background: #4f9e16; color: #fff; border: none;
+      font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; white-space: nowrap; border-radius: 0 8px 8px 0; }
+    .auth-otp-get:disabled { opacity: .55; cursor: default; }
+    .auth-otp-get #timer { color: rgba(255,255,255,.8); font-size: 0.75rem; }
+
     .auth-input { width: 100%; padding: 0.7rem 0.8rem; border: 1px solid #e6efdc; border-radius: 10px;
       font: inherit; font-size: 1rem; color: #14271a; background: #fff; }
-    .auth-input:focus { outline: 2px solid var(--accent, #e2563a); border-color: var(--accent, #e2563a); }
-    .auth-primary { margin-top: 4px; background: var(--accent); color: #fff; border: none; border-radius: 10px;
-      padding: 0.7rem; font: inherit; font-weight: 700; cursor: pointer; }
+    .auth-input:focus { outline: 2px solid #4f9e16; border-color: #4f9e16; }
+
+    .auth-primary { margin-top: 4px; background: linear-gradient(135deg, #2f8fe6, #1f5fc4); color: #fff;
+      border: none; border-radius: 999px; padding: 0.8rem; font: inherit; font-weight: 700; font-size: 1rem;
+      cursor: pointer; box-shadow: 0 6px 18px rgba(31,95,196,.3); }
     .auth-primary:disabled { opacity: .6; cursor: default; }
+    .auth-primary:hover:not(:disabled) { filter: brightness(1.05); }
+
     .auth-link { background: none; border: none; color: var(--muted); font: inherit; cursor: pointer; padding: 4px; }
-    .auth-link.danger { color: var(--accent-2); }
+    .auth-link.danger { color: #d64545; }
+    .auth-terms { display: block; text-align: center; color: #4f9e16; font-size: 0.82rem; font-weight: 600;
+      text-decoration: underline; margin-top: 4px; }
+
     .auth-hint { font-size: 0.82rem; color: #5f7262; }
     .auth-demo { font-size: 0.86rem; color: #1f6f43; background: #e9f8ef; border: 1px solid #bce8cf;
       border-radius: 8px; padding: 6px 10px; margin: 0; }

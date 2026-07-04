@@ -33,9 +33,9 @@ function escapeHtml(s: string): string {
 
 // --- Promo banner carousel --------------------------------------------------
 const PROMOS = [
-  { en: 'Win weekly & monthly prizes', am: 'ሳምንታዊ እና ወርሃዊ ሽልማቶችን ያሸንፉ', icon: '🎁', grad: ['#2f8fe6', '#1f5fc4'] },
-  { en: 'Enter tournaments — climb the leaderboard', am: 'ውድድሮችን ይቀላቀሉ — ደረጃ ይውጡ', icon: '🏆', grad: ['#62c12e', '#3f9e16'] },
-  { en: 'Play Lucky games for instant rewards', am: 'ለፈጣን ሽልማት ዕድል ጨዋታዎችን ይጫወቱ', icon: '🍀', grad: ['#2fae5a', '#1f8f3f'] },
+  { img: '/brand/goplay-banner.png', alt: 'GoPlay — Weekly & Monthly Prizes' },
+  { en: 'Enter tournaments — climb the leaderboard', am: 'ውድድሮችን ይቀላቀሉ — ደረጃ ይውጡ', grad: ['#62c12e', '#3f9e16'] },
+  { en: 'Play Lucky games for instant rewards', am: 'ለፈጣን ሽልማት ዕድል ጨዋታዎችን ይጫወቱ', grad: ['#2fae5a', '#1f8f3f'] },
 ];
 let promoIdx = 0;
 function renderPromo(): void {
@@ -43,7 +43,13 @@ function renderPromo(): void {
   const dots = document.querySelector('#promoDots');
   if (!track || !dots) return;
   const p = PROMOS[promoIdx];
-  track.innerHTML = `<div class="promo-slide" style="background:linear-gradient(135deg, ${p.grad[0]}, ${p.grad[1]})">${p.icon} ${escapeHtml(lang() === 'am' ? p.am : p.en)}</div>`;
+  if ('img' in p && p.img) {
+    track.innerHTML = `<div class="promo-slide promo-slide-img"><img src="${p.img}" alt="${p.alt ?? ''}" class="promo-banner-img" /></div>`;
+  } else {
+    const txt = escapeHtml(lang() === 'am' ? (p as { am: string }).am : (p as { en: string }).en);
+    const g = (p as { grad: string[] }).grad;
+    track.innerHTML = `<div class="promo-slide" style="background:linear-gradient(135deg, ${g[0]}, ${g[1]})">${txt}</div>`;
+  }
   dots.innerHTML = PROMOS.map((_, i) => `<span class="promo-dot${i === promoIdx ? ' on' : ''}"></span>`).join('');
 }
 function advancePromo(): void { promoIdx = (promoIdx + 1) % PROMOS.length; renderPromo(); }
