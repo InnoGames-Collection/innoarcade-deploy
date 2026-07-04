@@ -71,10 +71,7 @@ function shell(inner: string, showBanner = true): HTMLElement {
   m.className = 'auth-modal';
   m.innerHTML = `
     <div class="auth-topbar">
-      <div class="auth-logos">
-        <img class="auth-logo-et" src="/brand/ethio-telecom.png" alt="Ethio Telecom" />
-        <img class="auth-logo-tb" src="/brand/telebirr.png" alt="TeleBirr" />
-      </div>
+      <img class="auth-logo-et" src="/brand/ethio-telecom-full.png" alt="Ethio Telecom" />
       <button class="auth-back" aria-label="${t('close')}">✕</button>
     </div>
     ${showBanner ? `<div class="auth-hero"><img class="auth-hero-img" src="/brand/goplay-banner.png" alt="GoPlay" /></div>` : ''}
@@ -97,11 +94,10 @@ function openModal(): void {
     <h3>${t('title')}</h3>
     <label>${t('phone')}</label>
     <div class="auth-phone-row">
-      <span class="auth-prefix">+251</span>
-      <input class="auth-input auth-phone-input" id="phone" type="tel" inputmode="tel" placeholder="09xxxxxxxx" value="${esc(phone)}" />
+      <input class="auth-input auth-phone-input" id="phone" type="tel" inputmode="tel" placeholder="2519XXXXXXXX / 2518XXXXXXXX" value="${esc(phone)}" />
+      <button class="auth-phone-go" id="go">${t('send')}</button>
     </div>
     <p class="auth-err" id="err"></p>
-    <button class="auth-primary" id="go">${t('send')}</button>
     <a class="auth-terms" href="#">${t('terms')}</a>`);
   const input = m.querySelector<HTMLInputElement>('#phone')!;
   const go = m.querySelector<HTMLButtonElement>('#go')!;
@@ -223,10 +219,8 @@ function injectStyles(): void {
       align-items: center; background: #4f9e16; overflow-y: auto; }
 
     .auth-topbar { width: 100%; display: flex; align-items: center; justify-content: space-between;
-      padding: 0.8rem 1rem; background: #4f9e16; flex-shrink: 0; }
-    .auth-logos { display: flex; align-items: center; gap: 0.7rem; }
-    .auth-logo-et { height: 1.8rem; object-fit: contain; }
-    .auth-logo-tb { height: 2rem; object-fit: contain; }
+      padding: 0.8rem 1rem; background: transparent; flex-shrink: 0; }
+    .auth-logo-et { height: 2.2rem; object-fit: contain; filter: brightness(1.1); }
     .auth-back { width: 2.2rem; height: 2.2rem; border-radius: 999px;
       border: 1px solid rgba(255,255,255,.4); background: rgba(255,255,255,.15); color: #fff;
       font-size: 1rem; cursor: pointer; display: grid; place-items: center; flex-shrink: 0; }
@@ -244,9 +238,12 @@ function injectStyles(): void {
     .auth-card label { font-size: 0.8rem; color: #5f7262; font-weight: 600; }
 
     .auth-phone-row { display: flex; align-items: center; gap: 0; border: 1px solid #e6efdc; border-radius: 10px; overflow: hidden; }
-    .auth-prefix { padding: 0.7rem 0.6rem 0.7rem 0.8rem; color: #5f7262; font-size: 0.95rem; font-weight: 600;
-      background: #f8faf5; border-right: 1px solid #e6efdc; white-space: nowrap; }
     .auth-phone-input { border: none !important; border-radius: 0 !important; flex: 1; min-width: 0; }
+    .auth-phone-go { padding: 0.7rem 1rem; background: #d9534f; color: #fff; border: none;
+      font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+      border-radius: 0 10px 10px 0; flex-shrink: 0; }
+    .auth-phone-go:disabled { opacity: .55; cursor: default; }
+    .auth-phone-go:hover:not(:disabled) { filter: brightness(1.05); }
 
     .auth-otp-row { display: flex; align-items: center; gap: 0; border: 1px solid #e6efdc; border-radius: 10px; overflow: hidden; }
     .auth-otp-input { border: none !important; border-radius: 0 !important; flex: 1; min-width: 0; }
@@ -274,6 +271,10 @@ function injectStyles(): void {
     .auth-demo { font-size: 0.86rem; color: #1f6f43; background: #e9f8ef; border: 1px solid #bce8cf;
       border-radius: 8px; padding: 6px 10px; margin: 0; }
     .auth-demo strong { font-size: 1.05rem; letter-spacing: 2px; }
-    .auth-err { font-size: 0.82rem; color: #d64545; min-height: 1em; margin: 0; }`;
+    .auth-err { font-size: 0.82rem; color: #d64545; min-height: 1em; margin: 0; }
+
+    @media (min-width: 600px) {
+      .auth-stack { justify-content: center; }
+    }`;
   document.head.appendChild(s);
 }
