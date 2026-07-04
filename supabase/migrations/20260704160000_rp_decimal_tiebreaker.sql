@@ -12,15 +12,23 @@
 --   3. The primary RP component (score/baseline × 100) still dominates;
 --      the tiebreaker only differentiates otherwise-equal scores.
 
--- 1. Widen the rp column on both score tables.
+-- 1. Drop all views that depend on the rp column before altering its type.
+drop view if exists public.tournament_period_board;
+drop view if exists public.leaderboard;
+drop view if exists public.runner_leaderboard;
+drop view if exists public.previous_season_rp_leaderboard;
+drop view if exists public.season_rp_leaderboard;
+
+-- 2. Widen the rp column on both score tables.
 alter table public.scores        alter column rp type numeric(6,2);
 alter table public.runner_scores alter column rp type numeric(6,2);
 
--- 2. Updated rp_for with time tiebreaker.
+-- 3. Updated rp_for with time tiebreaker.
 --    p_time_ms: round duration in milliseconds (0 = no tiebreaker).
 --    p_max_time_ms: maximum expected duration for the game (default 120000).
 --    For timed games: tiebreaker = (max - elapsed) / max * 0.99
 --    For survival games: tiebreaker = min(elapsed, max) / max * 0.99
+drop function if exists public.rp_for(text, bigint);
 create or replace function public.rp_for(
   p_game text,
   p_raw bigint,
@@ -48,9 +56,7 @@ returns numeric(6,2) language sql stable set search_path = public as $$
   end;
 $$;
 
--- 3. Recreate dependent views (they reference rp which changed type).
-drop view if exists public.tournament_period_board;
-drop view if exists public.leaderboard;
+-- 4. Recreate dependent views (they reference rp which changed type).
 create view public.leaderboard
 with (security_invoker = on) as
 select
@@ -103,7 +109,6 @@ left join public.profiles pr on pr.id = lb.user_id
 where lb.rank <= 10;
 grant select on public.tournament_period_board to anon, authenticated;
 
-drop view if exists public.runner_leaderboard;
 create view public.runner_leaderboard
 with (security_invoker = on) as
 select
@@ -118,10 +123,6 @@ select
 from public.runner_scores s
 left join public.profiles p on p.id = s.user_id;
 grant select on public.runner_leaderboard to anon, authenticated;
-
--- Season RP views also reference rp.
-drop view if exists public.previous_season_rp_leaderboard;
-drop view if exists public.season_rp_leaderboard;
 
 create view public.season_rp_leaderboard
 with (security_invoker = on) as
@@ -180,7 +181,7 @@ from (
 left join public.profiles p on p.id = a.user_id;
 grant select on public.previous_season_rp_leaderboard to anon, authenticated;
 
--- 4. Backfill existing RP with new precision (no time data yet → 0 tiebreaker).
+-- 5. Backfill existing RP with new precision (no time data yet → 0 tiebreaker).
 select public.refresh_game_stats();
 
 update public.scores s

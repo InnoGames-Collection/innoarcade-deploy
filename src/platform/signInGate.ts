@@ -2,8 +2,11 @@
 // OTP-only when Supabase is configured — guests cannot reach games or economy.
 
 import '../styles/sign-in-gate.css';
-import { authAvailable, currentUser, onAuthChange } from './auth';
-import { openSignIn } from '../hub/signin';
+import {
+  authAvailable, currentUser, onAuthChange,
+  requestOtp, AuthTimeoutError,
+} from './auth';
+import { openSignIn, openCodeScreen } from '../hub/signin';
 import { t, getLang, setLang } from '../i18n';
 import { sfx } from '../engine/audio';
 
@@ -29,10 +32,32 @@ export function mountSignInGate(): void {
       <div class="sg-card">
         <h2>${t('gate.title')}</h2>
         <p>${t('gate.sub')}</p>
-        <button class="btn primary sg-cta" id="sgBtn">📱 ${t('gate.cta')}</button>
+        <label class="sg-label">${t('gate.phone')}</label>
+        <div class="sg-phone-row">
+          <input class="sg-phone-input" id="sgPhone" type="tel" inputmode="tel"
+                 placeholder="2519XXXXXXXX / 2518XXXXXXXX" />
+          <button class="sg-phone-go" id="sgGo">${t('gate.getCode')}</button>
+        </div>
+        <p class="sg-err" id="sgErr"></p>
+        <a class="sg-terms" href="#">${t('gate.terms')}</a>
       </div>`;
     document.body.appendChild(g);
-    g.querySelector('#sgBtn')!.addEventListener('click', () => openSignIn());
+
+    const input = g.querySelector<HTMLInputElement>('#sgPhone')!;
+    const go = g.querySelector<HTMLButtonElement>('#sgGo')!;
+    go.addEventListener('click', async () => {
+      const phone = input.value.trim();
+      if (!phone) return;
+      go.disabled = true; go.textContent = t('gate.sending');
+      try {
+        await requestOtp(phone);
+        openCodeScreen(phone);
+      } catch (e) {
+        g.querySelector('#sgErr')!.textContent =
+          t(e instanceof AuthTimeoutError ? 'gate.errTimeout' : 'gate.errSend');
+        go.disabled = false; go.textContent = t('gate.getCode');
+      }
+    });
     g.querySelector('#sgSettingsBtn')!.addEventListener('click', () => openGateSettings(g));
   };
 

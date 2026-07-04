@@ -320,7 +320,8 @@ body {
 .coming-soon { color: var(--muted); background: var(--card); border: 1px dashed var(--line); border-radius: 16px; padding: 1.4rem 1rem; text-align: center; font-size: 0.92rem; }
 
 /* promo banner carousel (top of the portal) */
-.promo-section { margin-bottom: 0.25rem; }
+.promo-section { margin-bottom: -1.8rem; }
+.player-bar-section { margin-top: -0.5rem; }
 .promo-slide { color: #fff; font-weight: 800; text-align: center; padding: 1.05rem 1.2rem; border-radius: 18px; font-size: 1.04rem; box-shadow: var(--shadow-md); }
 .promo-slide-img { padding: 0; overflow: hidden; }
 .promo-slide-img .promo-banner-img { width: 100%; display: block; border-radius: 18px; object-fit: cover; max-height: 180px; }

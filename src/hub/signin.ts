@@ -89,6 +89,13 @@ export function openSignIn(): void {
   openModal();
 }
 
+export function openCodeScreen(phoneNumber: string): void {
+  if (!authAvailable()) return;
+  injectStyles();
+  phone = phoneNumber;
+  openCode();
+}
+
 function openModal(): void {
   const m = shell(`
     <h3>${t('title')}</h3>
@@ -274,7 +281,11 @@ function injectStyles(): void {
     .auth-err { font-size: 0.82rem; color: #d64545; min-height: 1em; margin: 0; }
 
     @media (min-width: 600px) {
-      .auth-stack { justify-content: center; }
+      .auth-modal { justify-content: center; }
+      .auth-topbar { max-width: 480px; margin: 0 auto; }
+      .auth-hero { max-width: 480px; margin: 0 auto; }
+      .auth-hero-img { border-radius: 18px; }
+      .auth-stack { justify-content: center; flex: 0; }
     }`;
   document.head.appendChild(s);
 }
