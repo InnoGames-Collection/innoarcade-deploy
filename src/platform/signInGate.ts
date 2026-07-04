@@ -34,7 +34,6 @@ export function mountSignInGate(): void {
       </div>
       <div class="sg-card">
         <h2>${t('gate.title')}</h2>
-        <p>${t('gate.sub')}</p>
         <label class="sg-label">${t('gate.phone')}</label>
         <input class="sg-input" id="sgPhone" type="tel" inputmode="tel"
                placeholder="2519XXXXXXXX / 2518XXXXXXXX" />
