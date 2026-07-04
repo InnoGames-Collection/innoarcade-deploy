@@ -98,6 +98,7 @@ export const SEASON_POT_COINS =
 /** ETB cash prizes per tournament game (ranks 1–5). Real ETB — not coins. */
 export const TOURNAMENT_ETB_PRIZES: Record<string, readonly number[]> = {
   'fruit-slice': [50_000, 20_000, 10_000, 5_000, 3_000],
+  'memory-match': [150_000, 60_000, 30_000, 15_000, 9_000],
 };
 
 /** ETB cash prizes for Winners tab by cadence (legacy daily kept for layout). */
@@ -129,7 +130,7 @@ export function etbPrizesForCadence(cadence: WinnerCadence): readonly number[] {
 export const WINNER_ETB_PRIZES: Record<WinnerCadence, readonly number[]> = {
   daily: [],
   weekly: TOURNAMENT_ETB_PRIZES['fruit-slice'],
-  monthly: [],
+  monthly: TOURNAMENT_ETB_PRIZES['memory-match'],
 };
 
 // In-memory cache (NO localStorage) so synchronous UI (store grid, fee labels)

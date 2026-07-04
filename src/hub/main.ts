@@ -195,7 +195,7 @@ const category = (g: GameMeta): string => genre(g).split('·')[0].trim();
 const HOWTO: Record<string, { en: string; am: string }> = {
   'popblast': { en: 'Swap two neighbouring candies to line up 3+ of the same colour. Each match clears them and scores. Match as many as you can before moves run out.', am: 'ተመሳሳይ ቀለም ያላቸውን 3+ ለማሰለፍ ሁለት ጎረቤት ከረሜላዎችን ይቀያይሩ። እያንዳንዱ ግጥሚያ ነጥብ ይሰጣል።' },
   'luckyslot': { en: 'Tap Spin and line up matching symbols across the reels to win. Each spin uses your entry; matches pay out points.', am: 'ስፒን ይንኩ፤ ተመሳሳይ ምልክቶችን ሲያሰልፉ ያሸንፋሉ።' },
-  'memory-match': { en: 'Flip two cards at a time to find matching pairs. Match every pair using as few moves as possible.', am: 'ሁለት ካርዶችን ገልብጠው ተመሳሳይ ጥንዶችን ያግኙ። ሁሉንም በትንሹ እንቅስቃሴ ያዛምዱ።' },
+  'memory-match': { en: 'Monthly tournament: compete for real ETB prizes (top 5). Flip two cards at a time to find matching pairs. Clear all pairs fast with the fewest moves for the highest score. Your best ranks on the monthly board.', am: 'ወርሃዊ ውድድር፦ ለእውነተኛ ETB ሽልማት ይወዳደሩ (ከፍተኛ 5)። ሁለት ካርዶችን ገልብጠው ተመሳሳይ ጥንዶችን ያግኙ። በትንሹ እንቅስቃሴና በፍጥነት ያጥፉ።' },
   'merge-2048': { en: 'Swipe to slide tiles; equal numbers merge and double. Keep merging to reach the 2048 tile.', am: 'ሰቆችን ያንሸራትቱ፤ እኩል ቁጥሮች ሲገናኙ ይዋሃዳሉ። 2048 ለመድረስ ይቀጥሉ።' },
   'spin-wheel': { en: 'Tap to spin the wheel. Where it stops decides your reward — land on a winning wedge to score.', am: 'መንኮራኩሩን ለማሽከርከር ይንኩ። የሚያርፍበት ቦታ ሽልማትዎን ይወስናል።' },
   'ethiopian-quiz': { en: 'Answer 5 multiple-choice questions about Ethiopia. Pick the correct option; 3+ correct wins points.', am: 'ስለ ኢትዮጵያ 5 ጥያቄዎችን ይመልሱ። ትክክለኛውን ይምረጡ፤ 3+ ሲያገኙ ነጥብ ያሸንፋሉ።' },

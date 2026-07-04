@@ -135,7 +135,7 @@ const ALL_GAMES: GameMeta[] = [
     route: 'games/memory-match/',
     nameEn: 'Memory Match', nameAm: 'ማች ማስታወሻ',
     genreEn: 'Puzzle · Tournament', genreAm: 'እንቆቅልሽ · ውድድር',
-    mode: 'tournament', tournament: 'weekly', stable: 'v1', icon: '🧩', accent: '#ff6b9d', thumb: ['#8c2b5c', '#0b1521'],
+    mode: 'tournament', tournament: 'monthly', stable: 'v1', icon: '🧩', accent: '#ff6b9d', thumb: ['#8c2b5c', '#0b1521'],
     scoreEn: 'Score', scoreAm: 'ነጥብ',
     play: { winPoints: 180, winRate: 50 },
   },

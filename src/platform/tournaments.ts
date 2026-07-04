@@ -88,6 +88,7 @@ export interface LeaderEntry {
 /** Shipped tournament game per cadence (one live window each). */
 export const CADENCE_GAME: Partial<Record<TournamentCadence, string>> = {
   weekly: 'fruit-slice',
+  monthly: 'memory-match',
 };
 
 // --- Active tournament windows ---------------------------------------------
