@@ -69,7 +69,6 @@ function wireGateAuth(g: HTMLElement): void {
   const errEl = g.querySelector<HTMLElement>('#sgErr')!;
 
   let phone = '';
-  let codeSent = false;
   let countdownIv: ReturnType<typeof setInterval> | undefined;
 
   goBtn.addEventListener('click', async () => {
@@ -79,7 +78,6 @@ function wireGateAuth(g: HTMLElement): void {
     goBtn.disabled = true; goBtn.textContent = t('gate.sending');
     try {
       await requestOtp(phone);
-      codeSent = true;
       codeInput.disabled = false;
       codeInput.focus();
       hintEl.textContent = t('gate.codeSent');
