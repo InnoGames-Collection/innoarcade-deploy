@@ -291,5 +291,5 @@ Deno.serve(async (req: Request) => {
   const total = board?.length ?? 1;
   const rank = board?.find((r: { user_id: string; rank: number }) => r.user_id === user.id)?.rank ?? total;
 
-  return json({ best, isRecord, rank, total, points, lifetime, xp: points, attemptsLeft, ranked: true, award, coinAward, coins });
+  return json({ best, isRecord, rank, total, points, lifetime, xp: points, attemptsLeft, ranked: true, award, coinAward, coins, rp: Number(rpVal ?? 0) });
 });

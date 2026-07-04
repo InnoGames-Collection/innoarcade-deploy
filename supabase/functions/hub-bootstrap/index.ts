@@ -40,13 +40,29 @@ Deno.serve(async (req: Request) => {
 
   let userPayload = null;
   if (user) {
-    const [profRes, entriesRes, rpRes] = await Promise.all([
+    const liveTournaments = tourRes.data ?? [];
+    const weeklyTourId = liveTournaments.find((t: any) => (t.id as string).includes('-weekly-'))?.id;
+    const monthlyTourId = liveTournaments.find((t: any) => (t.id as string).includes('-monthly-'))?.id;
+
+    const rpQueries: Promise<any>[] = [];
+    if (weeklyTourId) {
+      rpQueries.push(
+        admin.from('leaderboard').select('rp').eq('tournament_id', weeklyTourId).eq('user_id', user.id).maybeSingle()
+      );
+    } else { rpQueries.push(Promise.resolve({ data: null })); }
+    if (monthlyTourId) {
+      rpQueries.push(
+        admin.from('leaderboard').select('rp').eq('tournament_id', monthlyTourId).eq('user_id', user.id).maybeSingle()
+      );
+    } else { rpQueries.push(Promise.resolve({ data: null })); }
+
+    const [profRes, entriesRes, weeklyRpRes, monthlyRpRes] = await Promise.all([
       admin.from('profiles').select('coins, xp, xp_lifetime, unlocks').eq('id', user.id).maybeSingle(),
       admin
         .from('tournament_entries')
         .select('tournament_id, fee_paid, prize_won, entered_at, attempts_purchased, attempts_used')
         .eq('user_id', user.id),
-      admin.from('season_rp_leaderboard').select('avg_rp').eq('user_id', user.id).maybeSingle(),
+      ...rpQueries,
     ]);
     userPayload = {
       coins: Number(profRes.data?.coins ?? 0),
@@ -54,7 +70,8 @@ Deno.serve(async (req: Request) => {
       lifetime: Number(profRes.data?.xp_lifetime ?? 0),
       unlocks: Array.isArray(profRes.data?.unlocks) ? profRes.data.unlocks : [],
       entries: entriesRes.data ?? [],
-      rp: Number(rpRes.data?.avg_rp ?? 0),
+      rpWeekly: Number(weeklyRpRes?.data?.rp ?? 0),
+      rpMonthly: Number(monthlyRpRes?.data?.rp ?? 0),
     };
   }
 

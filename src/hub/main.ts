@@ -16,7 +16,7 @@ import {
 } from '../platform/tournaments';
 import { balance, onWalletChange } from '../platform/wallet';
 import { activeDraws, myTickets, enterDraw, NotEnoughPointsError, hydrateTickets, loadDraws, myOdds } from '../platform/draws';
-import { xp as xpBal, onCurrencyChange, setBalance, setLifetime, xpLifetime, rpTotal } from '../platform/currency';
+import { xp as xpBal, onCurrencyChange, setBalance, setLifetime, xpLifetime, rpWeekly, rpMonthly } from '../platform/currency';
 import { levelFor, etbPrizesForCadence, formatEtbPrize, TOURNAMENT_ETB_PRIZES, loadConfig, type WinnerCadence } from '../platform/config';
 import { getSupabase, isConfigured } from '../platform/supabase';
 import { bootstrapHubData, type HubBootstrapResult } from '../platform/hubBootstrap';
@@ -145,7 +145,7 @@ function setupLiveBoardTabs(): void {
 }
 
 // --- Player balance bar -----------------------------------------------------
-// Level / XP / RP chips under the promo banner.
+// Level / XP / Weekly RP / Monthly RP chips under the promo banner.
 function renderMyStats(): void {
   function chip(icon: string, label: string, val: string, cls: string): string {
     return `<span class="bal-chip ${cls}">${icon} <span class="bal-lbl">${label}:</span> <strong>${val}</strong></span>`;
@@ -155,7 +155,8 @@ function renderMyStats(): void {
     bar.innerHTML =
       chip('🎖️', t('hub.statLevel'), String(levelFor(xpLifetime())), 'bal-level') +
       chip('⭐', t('hub.progress'), xpLifetime().toLocaleString(), 'bal-points') +
-      chip('🏆', t('hub.rpLabel'), rpTotal().toLocaleString(), 'bal-rp');
+      chip('🏅', t('hub.rpWeekly'), rpWeekly().toLocaleString(), 'bal-rp bal-rp-weekly') +
+      chip('🏆', t('hub.rpMonthly'), rpMonthly().toLocaleString(), 'bal-rp bal-rp-monthly');
   }
   const host = document.querySelector('#topBalances');
   if (host) {

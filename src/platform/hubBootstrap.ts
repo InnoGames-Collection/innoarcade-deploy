@@ -5,7 +5,7 @@
 
 import { getSupabase, isConfigured } from './supabase';
 import { applyConfigRemote, type AppConfig } from './config';
-import { setBalance, setLifetime, setRp } from './currency';
+import { setBalance, setLifetime, setRpWeekly, setRpMonthly } from './currency';
 import { setBalanceFromServer } from './wallet';
 import {
   applyTournamentsBootstrap, applyMyEntriesBootstrap,
@@ -16,7 +16,8 @@ export interface HubBootstrapUser {
   coins: number;
   xp: number;
   lifetime: number;
-  rp: number;
+  rpWeekly: number;
+  rpMonthly: number;
   unlocks: string[];
   entries: EntryRow[];
 }
@@ -48,7 +49,8 @@ function applyHubBootstrap(payload: HubBootstrapPayload): HubBootstrapResult {
   setBalanceFromServer(user.coins);
   setBalance('xp', user.xp);
   setLifetime(user.lifetime);
-  setRp(user.rp ?? 0);
+  setRpWeekly(user.rpWeekly ?? 0);
+  setRpMonthly(user.rpMonthly ?? 0);
   applyMyEntriesBootstrap(user.entries ?? []);
   const unlocks = Array.isArray(user.unlocks) ? user.unlocks : [];
   return { ok: true, hadUser: true, unlocks };

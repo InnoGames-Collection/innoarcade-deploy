@@ -368,7 +368,8 @@ const en = {
   'hub.yourTickets': 'Your tickets', 'hub.enterDraw': 'Enter', 'hub.needPoints': 'Not enough XP',
   'hub.yourOdds': 'Your odds', 'hub.ticketCap': 'Ticket cap reached',
   'hub.won': 'won',
-  'hub.available': 'Available games', 'hub.coinsLabel': 'Coins', 'hub.rpLabel': 'RP',
+  'hub.available': 'Available games', 'hub.coinsLabel': 'Coins',
+  'hub.rpLabel': 'RP', 'hub.rpWeekly': 'W-RP', 'hub.rpMonthly': 'M-RP',
 } as const;
 
 export type I18nKey = keyof typeof en;
@@ -739,7 +740,8 @@ const am: Dict = {
   'hub.yourTickets': 'የእርስዎ ቲኬቶች', 'hub.enterDraw': 'ይግቡ', 'hub.needPoints': 'በቂ XP የለም',
   'hub.yourOdds': 'የማሸነፍ እድል', 'hub.ticketCap': 'የቲኬት ገደብ ደርሷል',
   'hub.won': 'አሸንፏል',
-  'hub.available': 'ያሉ ጨዋታዎች', 'hub.coinsLabel': 'ሳንቲም', 'hub.rpLabel': 'RP',
+  'hub.available': 'ያሉ ጨዋታዎች', 'hub.coinsLabel': 'ሳንቲም',
+  'hub.rpLabel': 'RP', 'hub.rpWeekly': 'W-RP', 'hub.rpMonthly': 'M-RP',
 };
 
 const dicts: Record<Lang, Dict> = { en, am };

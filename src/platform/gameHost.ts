@@ -21,7 +21,7 @@ import {
 } from './tournaments';
 import { SignInRequiredError } from './payments';
 import { submitPlayRemote, startRoundRemote, leaderboardRemote, playerStandingRemote } from './backend';
-import { setBalance, setLifetime } from './currency';
+import { setBalance, setLifetime, setRpWeekly, setRpMonthly } from './currency';
 import { setBalanceFromServer } from './wallet';
 import { winRateOverride, BASE_POINTS } from './config';
 import { currentUser } from './auth';
@@ -53,6 +53,8 @@ export interface FinishResult {
   /** Tournament attempts left after a ranked run; whether it counted. */
   attemptsLeft?: number;
   ranked?: boolean;
+  /** RP for this tournament (returned after ranked play). */
+  rp?: number;
 }
 
 const DEFAULT_WIN_RATE = 50;
@@ -186,11 +188,16 @@ export class GameHost {
         this.cachedStanding = { rank: res.rank, name: 'You', score: res.best ?? 0, isPlayer: true };
       }
       if (typeof res.coins === 'number') setBalanceFromServer(res.coins);
+      if (ranked && typeof res.rp === 'number' && this.tournament) {
+        const tid = this.tournament.id;
+        if (tid.includes('-weekly-')) setRpWeekly(res.rp);
+        else if (tid.includes('-monthly-')) setRpMonthly(res.rp);
+      }
       return {
         best: res.best ?? 0, isRecord: res.isRecord ?? false, rank: res.rank, total: res.total,
         award: res.award, coinAward: res.coinAward, coins: res.coins,
         points: res.points, lifetime: res.lifetime,
-        attemptsLeft: res.attemptsLeft, ranked: res.ranked,
+        attemptsLeft: res.attemptsLeft, ranked: res.ranked, rp: res.rp,
       };
     } catch (e) {
       console.warn('play submit failed', e);

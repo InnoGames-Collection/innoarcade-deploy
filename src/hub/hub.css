@@ -486,7 +486,8 @@ body {
   padding: 0.22rem 0.55rem; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,0.85); white-space: nowrap; }
 .bal-chip .bal-lbl { font-weight: 600; opacity: 0.88; margin-right: 0.15rem; }
 .bal-chip strong { font-weight: 800; }
-.bal-rp strong { color: #1f74e0; }
+.bal-rp-weekly strong { color: #1a5fa8; }
+.bal-rp-monthly strong { color: #6b3fa0; }
 .bal-points strong { color: var(--accent); }
 .bal-level strong { color: #7a4bd0; }
 .bal-gold strong { color: #9a6b12; }

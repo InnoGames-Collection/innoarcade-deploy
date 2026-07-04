@@ -33,6 +33,8 @@ export interface PlayResult {
   coinAward?: number;
   /** Server coin balance after the round. */
   coins?: number;
+  /** RP for this tournament (returned after ranked play). */
+  rp?: number;
 }
 
 // Submit a finished round to the server (the ONLY economy authority). The server
