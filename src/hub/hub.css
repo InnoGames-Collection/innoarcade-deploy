@@ -324,8 +324,8 @@ body {
 .promo-section { margin-bottom: 0.75rem; }
 .player-bar-section { margin-top: 0.35rem; }
 .promo-slide { color: #fff; font-weight: 800; text-align: center; padding: 1.05rem 1.2rem; border-radius: 18px; font-size: 1.04rem; box-shadow: var(--shadow-md); }
-.promo-slide-img { padding: 0; overflow: hidden; background: transparent; box-shadow: none; }
-.promo-slide-img .promo-banner-img { width: 100%; display: block; border-radius: 18px; object-fit: cover; aspect-ratio: 16 / 6; max-height: min(42vw, 220px); box-shadow: var(--shadow-md); }
+.promo-slide-img { padding: 0; overflow: visible; background: transparent; box-shadow: none; border-radius: 18px; line-height: 0; }
+.promo-slide-img .promo-banner-img { width: 100%; height: auto; display: block; border-radius: 18px; object-fit: contain; box-shadow: var(--shadow-md); vertical-align: top; }
 .promo-dots { display: flex; justify-content: center; gap: 6px; margin-top: 9px; }
 .promo-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); transition: width 0.2s, background 0.2s; cursor: pointer; }
 .promo-track { cursor: grab; touch-action: pan-y; user-select: none; }

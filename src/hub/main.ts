@@ -16,7 +16,7 @@ import {
 } from '../platform/tournaments';
 import { balance, onWalletChange } from '../platform/wallet';
 import { activeDraws, myTickets, enterDraw, NotEnoughPointsError, hydrateTickets, loadDraws, myOdds } from '../platform/draws';
-import { xp as xpBal, onCurrencyChange, setBalance, setLifetime, xpLifetime, rpWeekly, rpMonthly } from '../platform/currency';
+import { xp as xpBal, onCurrencyChange, setBalance, setLifetime, setRpWeekly, setRpMonthly, xpLifetime, rpWeekly, rpMonthly } from '../platform/currency';
 import { levelFor, LEVEL_THRESHOLDS, etbPrizesForCadence, formatEtbPrize, TOURNAMENT_ETB_PRIZES, loadConfig, type WinnerCadence } from '../platform/config';
 import { getSupabase, isConfigured } from '../platform/supabase';
 import { bootstrapHubData, type HubBootstrapResult } from '../platform/hubBootstrap';
@@ -150,6 +150,18 @@ function setupLiveBoardTabs(): void {
 // Level / XP / Weekly RP / Monthly RP chips under the promo banner.
 function fmtRp(v: number): string {
   return v % 1 === 0 ? String(v) : v.toFixed(2);
+}
+
+/** Pull W-RP / M-RP from the live fruit-slice weekly + memory-match monthly boards. */
+async function refreshPlayerRp(): Promise<void> {
+  const weeklyTour = getLiveTournamentByCadence('weekly');
+  const monthlyTour = getLiveTournamentByCadence('monthly');
+  const [weeklyMe, monthlyMe] = await Promise.all([
+    weeklyTour ? playerStandingRemote(weeklyTour.id) : Promise.resolve(undefined),
+    monthlyTour ? playerStandingRemote(monthlyTour.id) : Promise.resolve(undefined),
+  ]);
+  setRpWeekly(weeklyMe?.rp ?? 0);
+  setRpMonthly(monthlyMe?.rp ?? 0);
 }
 
 function xpLevelBounds(lifetimeXp: number): { level: number; floor: number; ceiling: number } {
@@ -693,6 +705,7 @@ async function runBackendHydration(): Promise<void> {
     await balance();
     await Promise.all([loadTournaments(), loadMyEntries()]);
   }
+  await refreshPlayerRp();
   wireEntryCtas();
   renderGames();
   renderLiveBoard({ fetch: liveBoardSeen });
@@ -723,8 +736,14 @@ onAuthChange(() => {
       renderGames();
       renderLiveBoard({ fetch: liveBoardSeen });
     }
+    await refreshPlayerRp();
     hydratePointsAfterBootstrap(boot);
   })();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && isConfigured()) {
+    void refreshPlayerRp();
+  }
 });
 setInterval(tickCountdowns, 1000);
 setupPromo();

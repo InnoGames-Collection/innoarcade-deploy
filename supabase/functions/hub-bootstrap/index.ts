@@ -41,8 +41,8 @@ Deno.serve(async (req: Request) => {
   let userPayload = null;
   if (user) {
     const liveTournaments = tourRes.data ?? [];
-    const weeklyTourId = liveTournaments.find((t: any) => /-weekly(-|$)/.test(String(t.id)))?.id;
-    const monthlyTourId = liveTournaments.find((t: any) => /-monthly(-|$)/.test(String(t.id)))?.id;
+    const weeklyTourId = liveTournaments.find((t: any) => t.game_id === 'fruit-slice' && /-weekly(-|$)/.test(String(t.id)))?.id;
+    const monthlyTourId = liveTournaments.find((t: any) => t.game_id === 'memory-match' && /-monthly(-|$)/.test(String(t.id)))?.id;
 
     const rpQueries: Promise<any>[] = [];
     if (weeklyTourId) {
