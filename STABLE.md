@@ -4,13 +4,33 @@ Games tagged `stable` in `src/platform/catalog.ts` are **frozen**. Treat them as
 
 ## Locked games (current)
 
+All titles below are locked at their listed tag. **Do not edit game-specific folders** unless explicitly requested. New games are added as separate entries — existing stable games are never modified.
+
 | Game | ID | Tag | Mode |
 |------|-----|-----|------|
-| Ethiorunner | `temple-dash` | v3 | Tournament (daily) |
-| Memory Match | `memory-match` | v1 | Tournament (weekly) |
-| Ethiopian Quiz | `ethiopian-quiz` | v1 | Free |
-| Spell Trivia | `spell` | v1 | Free |
+| Ethiorunner | `temple-dash` | v3 | Free |
+| Ball Shooter | `orbit-blast` | v1 | Free |
 | 2048 | `merge-2048` | v1 | Free |
+| Candy Saga | `candy-crunch` | v1 | Free (hidden) |
+| Brick Blitz | `brick-blitz` | v1 | Free |
+| Fruit Slice | `fruit-slice` | v1 | Tournament (weekly) |
+| Sky Hopper | `sky-hopper` | v1 | Free |
+| Bubble Pop | `bubble-pop` | v1 | Free |
+| Memory Match | `memory-match` | v1 | Tournament (monthly) |
+| Tap Game | `tap-game` | v1 | Free |
+| Lucky Boxes | `lucky-box` | v1 | Free |
+| Spin Wheel | `spin-wheel` | v1 | Free |
+| Lucky Slot | `luckyslot` | v1 | Free |
+| Candy Blast | `popblast` | v1 | Free |
+| Ethiopian Quiz | `ethiopian-quiz` | v1 | Free |
+| Sudoku | `sudoku` | v1 | Free |
+| Spell Trivia | `spell` | v1 | Free |
+| Vocabulary | `vocab` | v1 | Free |
+| Rhyme Time | `rhyme` | v1 | Free |
+| Target 24 | `target24` | v1 | Free |
+| Cross Sum | `crosssum` | v1 | Free |
+| Logic Grid | `logic` | v1 | Free |
+| Sequence | `sequence` | v1 | Free |
 
 **Policy:** Do not edit game-specific folders unless explicitly requested. Shared platform changes may affect stable games — document those in commits/PRs.
 
@@ -94,8 +114,14 @@ Games tagged `stable` in `src/platform/catalog.ts` are **frozen**. Treat them as
 
 ---
 
+## All other stable v1 games
+
+The remaining titles in the table above (`orbit-blast`, `candy-crunch`, `brick-blitz`, `fruit-slice`, `sky-hopper`, `bubble-pop`, `tap-game`, `lucky-box`, `spin-wheel`, `luckyslot`, `popblast`, `sudoku`, `vocab`, `rhyme`, `target24`, `crosssum`, `logic`, `sequence`) are locked at **v1** as of the Phase 1 expansion. Each game's scope is its `src/games/<id>/**` and `games/<id>/**` folders.
+
+---
+
 ## Shared code changes
 
 Stable games **do** pick up fixes from shared platform code (`freeQuizShell.ts`, `freeGameShell.ts`, `freeShellNav.ts`, `_quiz/style.css`, `_casual/style.css`, `game-shell.css`, i18n). When editing those files, note which stable games are affected.
 
-**Other games** (e.g. Fruit Slice monthly) should **copy patterns** from these stable builds via shared modules — not by editing locked game code.
+**New games** (e.g. Water Sort and subsequent Phase 1 titles) should **copy patterns** from these stable builds via shared modules — not by editing locked game code.

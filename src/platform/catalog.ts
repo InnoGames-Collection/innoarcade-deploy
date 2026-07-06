@@ -221,6 +221,9 @@ const ALL_GAMES: GameMeta[] = [
   { id: 'sequence', route: 'games/sequence/index.html', nameEn: 'Sequence', nameAm: 'ቅደም ተከተል',
     genreEn: 'Brain · Logic', genreAm: 'አእምሮ · ሎጂክ', mode: 'free', icon: '🔗',
     accent: '#7a6cff', thumb: ['#7a6cff', '#3d2f9e'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
+  { id: 'water-sort', route: 'games/water-sort/index.html', nameEn: 'Water Sort', nameAm: 'ውሃ መደርደር',
+    genreEn: 'Brain · Logic', genreAm: 'አእምሮ · ሎጂክ', mode: 'free', icon: '🧪',
+    accent: '#2aa9d6', thumb: ['#2aa9d6', '#13627e'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
 ];
 
 // Storefront gating: free games ship by default; tournament games are opt-in via
@@ -272,6 +275,7 @@ const WIN_SCORE: Record<string, number> = {
   'ethiopian-quiz': 100, 'spell': 70, 'vocab': 70, 'logic': 70, 'rhyme': 60,
   // Brain: time-based formulas in _lq/scoring.ts
   'sudoku': 120, 'crosssum': 110, 'target24': 70, 'sequence': 150,
+  'water-sort': 200,
   'tap-game': 50,
 };
 for (const g of CATALOG) {
@@ -293,12 +297,31 @@ for (const g of CATALOG) {
 }
 
 // Locked production games — explicit stable tags only (see STABLE.md).
+// All pre-existing titles are frozen; new games are added without touching these.
 const STABLE_VERSIONS: Record<string, string> = {
   'temple-dash': 'v3',
-  'memory-match': 'v1',
-  'ethiopian-quiz': 'v1',
-  'spell': 'v1',
+  'orbit-blast': 'v1',
   'merge-2048': 'v1',
+  'candy-crunch': 'v1',
+  'brick-blitz': 'v1',
+  'fruit-slice': 'v1',
+  'sky-hopper': 'v1',
+  'bubble-pop': 'v1',
+  'memory-match': 'v1',
+  'tap-game': 'v1',
+  'lucky-box': 'v1',
+  'spin-wheel': 'v1',
+  'luckyslot': 'v1',
+  'popblast': 'v1',
+  'ethiopian-quiz': 'v1',
+  'sudoku': 'v1',
+  'spell': 'v1',
+  'vocab': 'v1',
+  'rhyme': 'v1',
+  'target24': 'v1',
+  'crosssum': 'v1',
+  'logic': 'v1',
+  'sequence': 'v1',
 };
 for (const g of CATALOG) {
   const tag = STABLE_VERSIONS[g.id];

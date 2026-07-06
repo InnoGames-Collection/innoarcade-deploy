@@ -54,6 +54,7 @@ export default defineConfig({
         sudoku: p('games/sudoku/index.html'),
         target24: p('games/target24/index.html'),
         crosssum: p('games/crosssum/index.html'),
+        waterSort: p('games/water-sort/index.html'),
       },
     },
   },
