@@ -324,8 +324,23 @@ body {
 .promo-section { margin-bottom: 0.75rem; }
 .player-bar-section { margin-top: 0.35rem; }
 .promo-slide { color: #fff; font-weight: 800; text-align: center; padding: 1.05rem 1.2rem; border-radius: 18px; font-size: 1.04rem; box-shadow: var(--shadow-md); }
-.promo-slide-img { padding: 0; overflow: visible; background: transparent; box-shadow: none; border-radius: 18px; line-height: 0; }
-.promo-slide-img .promo-banner-img { width: 100%; height: auto; display: block; border-radius: 18px; object-fit: contain; box-shadow: var(--shadow-md); vertical-align: top; }
+.promo-slide-img {
+  padding: 0;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: var(--shadow-md);
+  border-radius: 18px;
+  line-height: 0;
+}
+.promo-slide-img .promo-banner-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 18px;
+  object-fit: contain;
+  vertical-align: top;
+  background: #fff;
+}
 .promo-dots { display: flex; justify-content: center; gap: 6px; margin-top: 9px; }
 .promo-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); transition: width 0.2s, background 0.2s; cursor: pointer; }
 .promo-track { cursor: grab; touch-action: pan-y; user-select: none; }
@@ -427,9 +442,165 @@ body {
 }
 .game-search:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
 
-/* Light-green game cards: a soft green cover with a white "app icon" tile, so
-   every game reads as one cohesive bright set. The cover is the dominant image
-   area; the title block below stays tight. */
+/* Poster-style game cards (tournament showcase layout) */
+.cat-shelf .game-card--poster {
+  width: auto;
+  background: #fff;
+  border: 1px solid #e8efe0;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(20, 45, 14, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+.cat-shelf .game-card--poster:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 34px rgba(20, 45, 14, 0.16);
+}
+.game-card--poster .gc-thumb {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(160deg, #eaf8d8 0%, #cdeda4 55%, #b6e487 100%);
+  overflow: hidden;
+}
+.game-card--poster .gc-thumb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,0.22), transparent 62%);
+  pointer-events: none;
+}
+.game-card--poster .gc-thumb-cover .gc-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+.game-card--poster .gc-glyph {
+  position: relative;
+  z-index: 1;
+  font-size: 3.4rem;
+  width: 4.8rem;
+  height: 4.8rem;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border-radius: 26%;
+  box-shadow: 0 8px 18px rgba(47, 124, 14, 0.22), inset 0 0 0 1px rgba(47, 124, 14, 0.06);
+}
+.gc-ribbon {
+  position: absolute;
+  top: 0.55rem;
+  left: 0;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.28rem 0.75rem 0.28rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #fff;
+  border-radius: 0 8px 8px 0;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+}
+.gc-ribbon--monthly { background: linear-gradient(135deg, #f2c94c, #d4a017); color: #1a2230; }
+.gc-ribbon--weekly { background: linear-gradient(135deg, #2f8fe6, #1f5fc4); }
+.gc-ribbon--daily { background: linear-gradient(135deg, #6b4cff, #4a2fd4); }
+.gc-ribbon--free { background: linear-gradient(135deg, #5a6472, #3a4452); }
+.gc-prize-badge {
+  position: absolute;
+  right: 0.45rem;
+  bottom: 0.45rem;
+  z-index: 3;
+  max-width: calc(100% - 0.9rem);
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.gc-prize-badge--monthly { background: linear-gradient(135deg, #f2c94c, #c98a00); color: #1a2230; }
+.gc-prize-badge--weekly { background: linear-gradient(135deg, #2f8fe6, #1a5fa8); }
+.gc-prize-badge--daily { background: linear-gradient(135deg, #6b4cff, #4a2fd4); }
+.game-card--poster .gc-live {
+  top: 0.55rem;
+  right: 2.4rem;
+  z-index: 3;
+}
+.game-card--poster .gc-info {
+  top: 0.5rem;
+  right: 0.5rem;
+}
+.game-card--poster .gc-body {
+  padding: 0.75rem 0.8rem 0.85rem;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+.game-card--poster .gc-title {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 900;
+  color: #14213a;
+  letter-spacing: -0.01em;
+}
+.game-card--poster .gc-sub {
+  margin: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+.gc-sub--monthly { color: #3f8f12; }
+.gc-sub--weekly { color: #1a5fa8; }
+.gc-sub--daily { color: #6b4cff; }
+.gc-sub--free { color: var(--muted); }
+.gc-play-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.55rem;
+  padding: 0.55rem 0.55rem 0.55rem 0.85rem;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.86rem;
+  font-weight: 800;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.14);
+  transition: filter 0.12s, transform 0.1s;
+}
+.gc-play-btn--monthly { background: linear-gradient(135deg, #6cc52f, #4f9e16); }
+.gc-play-btn--weekly { background: linear-gradient(135deg, #2f8fe6, #1f5fc4); }
+.gc-play-btn--daily { background: linear-gradient(135deg, #6b4cff, #4a2fd4); }
+.gc-play-btn--free { background: linear-gradient(135deg, #2f8fe6, #1f5fc4); }
+.gc-play-arrow {
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 50%;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 0.62rem;
+  flex-shrink: 0;
+}
+.gc-play-btn--monthly .gc-play-arrow { color: #4f9e16; }
+.gc-play-btn--weekly .gc-play-arrow { color: #1f5fc4; }
+.gc-play-btn--daily .gc-play-arrow { color: #6b4cff; }
+.gc-play-btn--free .gc-play-arrow { color: #1f5fc4; }
+.game-card--poster:hover .gc-play-btn { filter: brightness(1.05); transform: translateY(-1px); }
+
+/* Legacy card chrome kept for modals / locked states */
 .cat-shelf .game-card { width: auto; background: #f6fcef; }
 .cat-shelf .game-card:hover { box-shadow: 0 14px 30px rgba(47, 124, 14, 0.2); }
 .gc-thumb { aspect-ratio: 1 / 1;

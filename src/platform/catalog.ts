@@ -110,6 +110,7 @@ const ALL_GAMES: GameMeta[] = [
     nameEn: 'Fruit Slice', nameAm: 'ፍሩት ስላይስ',
     genreEn: 'Arcade · Tournament', genreAm: 'አርኬድ · ውድድር',
     mode: 'tournament', tournament: 'weekly', icon: '🍉', accent: '#46c05a', thumb: ['#236f2c', '#0a2410'],
+    cover: '/fruit_slice.webp',
     scoreEn: 'Score', scoreAm: 'ነጥብ',
   },
   {
@@ -136,6 +137,7 @@ const ALL_GAMES: GameMeta[] = [
     nameEn: 'Memory Match', nameAm: 'ማች ማስታወሻ',
     genreEn: 'Puzzle · Tournament', genreAm: 'እንቆቅልሽ · ውድድር',
     mode: 'tournament', tournament: 'monthly', stable: 'v1', icon: '🧩', accent: '#ff6b9d', thumb: ['#8c2b5c', '#0b1521'],
+    cover: '/memory_match.webp',
     scoreEn: 'Score', scoreAm: 'ነጥብ',
     play: { winPoints: 180, winRate: 50 },
   },

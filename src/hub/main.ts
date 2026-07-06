@@ -287,41 +287,96 @@ const howToText = (g: GameMeta): { en: string; am: string } =>
 function howTo(g: GameMeta): string { const h = howToText(g); return lang() === 'am' ? h.am : h.en; }
 
 
-function tournamentPrizeSummary(g: GameMeta): string {
+/** Default catalog art when a game has no explicit `cover`. */
+const GAME_COVER: Record<string, string> = {
+  'orbit-blast': '/orbit_blast.webp',
+  'merge-2048': '/merge_2048.webp',
+  'temple-dash': '/temple_dash.webp',
+  'candy-crunch': '/candy_saga.webp',
+  'brick-blitz': '/brick_blitz.webp',
+  'fruit-slice': '/fruit_slice.webp',
+  'sky-hopper': '/sky_hopper.webp',
+  'bubble-pop': '/bubble_pop.webp',
+  'memory-match': '/memory_match.webp',
+  'tap-game': '/tap_game.webp',
+  'lucky-box': '/lucky_boxes.webp',
+  'spin-wheel': '/spin_wheel.webp',
+  'luckyslot': '/lucky_slot.webp',
+  'popblast': '/candy_blast.webp',
+  'ethiopian-quiz': '/ethiopian_quiz.webp',
+  'sudoku': '/sudoku.webp',
+  'spell': '/spell_quiz.webp',
+  'vocab': '/vocabulary_trivia.webp',
+  'rhyme': '/rhyme_time.webp',
+  'target24': '/target_24.webp',
+  'crosssum': '/cross_sum.webp',
+  'logic': '/logic_grid.webp',
+  'sequence': '/sequence.webp',
+};
+
+function gameCover(g: GameMeta): string | undefined {
+  return g.cover ?? GAME_COVER[g.id];
+}
+
+function cadenceKey(g: GameMeta): TournamentCadence | 'free' {
+  if (g.mode !== 'tournament') return 'free';
+  return g.tournament ?? 'monthly';
+}
+
+function cadenceRibbon(g: GameMeta): string {
+  const cadence = cadenceKey(g);
+  if (cadence === 'free') {
+    return `<span class="gc-ribbon gc-ribbon--free">🎮 ${t('arc.free')}</span>`;
+  }
+  const label = t(cadence === 'daily' ? 'td.daily' : cadence === 'weekly' ? 'td.weekly' : 'td.monthly');
+  return `<span class="gc-ribbon gc-ribbon--${cadence}">🏆 ${label}</span>`;
+}
+
+function cadenceSubtitle(g: GameMeta): string {
+  const cadence = cadenceKey(g);
+  if (cadence === 'free') return escapeHtml(category(g));
+  if (cadence === 'weekly') return t('hub.weeklyTournament');
+  if (cadence === 'daily') return t('hub.dailyTournament');
+  return t('hub.monthlyTournament');
+}
+
+function topPrizeBadge(g: GameMeta): string {
   const prizes = TOURNAMENT_ETB_PRIZES[g.id];
   if (!prizes?.length) return '';
   const top = formatEtbPrize(prizes[0], lang());
-  const fifth = formatEtbPrize(prizes[prizes.length - 1], lang());
-  return `<p class="gc-prize">🎁 ${top} – ${fifth}</p>`;
+  const cadence = g.tournament ?? 'monthly';
+  return `<span class="gc-prize-badge gc-prize-badge--${cadence}">${t('hub.topPrize')} ${escapeHtml(top)}</span>`;
 }
 
 function gameCard(g: GameMeta): string {
-  const modeTag = g.mode === 'tournament'
-    ? `<span class="gc-tag tournament gc-cadence-${g.tournament ?? 'monthly'}">🏆 ${t(
-      g.tournament === 'daily' ? 'td.daily' : g.tournament === 'weekly' ? 'td.weekly' : 'td.monthly',
-    )}</span>`
-    : `<span class="gc-tag free">${t('arc.free')}</span>`;
-  // A tournament game with a live window gets the pulsing "Live" badge on its art.
+  const cadence = cadenceKey(g);
+  const cover = gameCover(g);
   const tour = g.mode === 'tournament' ? getTournamentForGame(g.id) : undefined;
   const liveBadge = tour && tournamentState(tour) === 'live'
     ? `<span class="gc-live live-dot">● ${t('hub.live')}</span>` : '';
+  const thumbStyle = cover
+    ? ''
+    : ` style="background:linear-gradient(145deg,${g.thumb[0]},${g.thumb[1]})"`;
   const thumb = `
-      <div class="gc-thumb${g.cover ? ' gc-thumb-cover' : ''}">
-        ${g.cover
-          ? `<img class="gc-cover" src="${g.cover}" alt="" loading="lazy" />`
+      <div class="gc-thumb gc-thumb-cover"${thumbStyle}>
+        ${cover
+          ? `<img class="gc-cover" src="${cover}" alt="" loading="lazy" />`
           : `<span class="gc-glyph">${g.icon}</span>`}
-        ${modeTag}
+        ${cadenceRibbon(g)}
         ${liveBadge}
-        <button class="gc-info" data-howto="${g.id}" aria-label="${t('hub.howToPlay')}">?</button>
+        ${g.mode === 'tournament' ? topPrizeBadge(g) : ''}
+        <button type="button" class="gc-info" data-howto="${g.id}" aria-label="${t('hub.howToPlay')}">?</button>
       </div>`;
   return `
-    <a class="game-card" href="${g.route}">
+    <a class="game-card game-card--poster game-card--${cadence}" href="${g.route}">
       ${thumb}
       <div class="gc-body">
-        <h4>${escapeHtml(name(g))}</h4>
-        <p class="gc-cat">${escapeHtml(category(g))}</p>
-        ${g.mode === 'tournament' ? tournamentPrizeSummary(g) : ''}
-        <span class="gc-play">▶ ${t('hub.play')}</span>
+        <h4 class="gc-title">${escapeHtml(name(g))}</h4>
+        <p class="gc-sub gc-sub--${cadence}">${cadenceSubtitle(g)}</p>
+        <span class="gc-play-btn gc-play-btn--${cadence}">
+          <span class="gc-play-label">${t('hub.playNow')}</span>
+          <span class="gc-play-arrow" aria-hidden="true">▶</span>
+        </span>
       </div>
     </a>`;
 }
