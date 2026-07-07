@@ -1,0 +1,26 @@
+.sp-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  max-width: 320px;
+  margin: 0 auto;
+  padding: 8px;
+  background: #2d3436;
+  border-radius: 12px;
+}
+
+.sp-tile {
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #74b9ff, #0984e3);
+  color: #fff;
+  cursor: pointer;
+}
+
+.sp-tile.empty {
+  background: transparent;
+  cursor: default;
+}

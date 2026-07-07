@@ -1,0 +1,21 @@
+.pc-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.pc-cell {
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.4rem;
+  background: #2d3436;
+  color: #74b9ff;
+  cursor: pointer;
+}
+
+.pc-cell.c1 { background: #1e272e; cursor: default; }
+.pc-cell.c0 { background: transparent; cursor: default; }
+.pc-cell.c2, .pc-cell.c3 { cursor: default; }

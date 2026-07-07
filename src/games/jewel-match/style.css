@@ -1,0 +1,70 @@
+body.game-shell[data-game="jewel-match"] {
+  padding: 10px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 100dvh;
+}
+
+body.game-shell[data-game="jewel-match"]:has(#fcPlayFrame:not(.hidden)) {
+  align-items: center;
+}
+
+#jewel-match-game-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#jewel-match-game-wrapper .board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+  width: 100%;
+  max-width: min(100%, 400px);
+  padding: 10px;
+  border-radius: 14px;
+  background: linear-gradient(160deg, #1a1030, #2d1b4e);
+  border: 1px solid #4a3070;
+  touch-action: none;
+  user-select: none;
+}
+
+#jewel-match-game-wrapper .tile {
+  width: 100%;
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25);
+}
+
+#jewel-match-game-wrapper .tile.ruby { background: linear-gradient(135deg, #ff6b8a, #c0392b); }
+#jewel-match-game-wrapper .tile.sapphire { background: linear-gradient(135deg, #74b9ff, #0984e3); }
+#jewel-match-game-wrapper .tile.emerald { background: linear-gradient(135deg, #55efc4, #00b894); }
+#jewel-match-game-wrapper .tile.topaz { background: linear-gradient(135deg, #ffeaa7, #fdcb6e); }
+#jewel-match-game-wrapper .tile.amethyst { background: linear-gradient(135deg, #a29bfe, #6c5ce7); }
+#jewel-match-game-wrapper .tile.diamond { background: linear-gradient(135deg, #dfe6e9, #b2bec3); }
+#jewel-match-game-wrapper .tile.empty { background: transparent; box-shadow: none; }
+
+.combo {
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.6);
+  font-size: 2rem;
+  font-weight: 800;
+  color: #ffd700;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}
+
+.combo.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
