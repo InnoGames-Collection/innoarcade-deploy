@@ -257,6 +257,15 @@ const ALL_GAMES: GameMeta[] = [
   { id: 'hill-climb', route: 'games/hill-climb/index.html', nameEn: 'Hill Climb', nameAm: 'Hill Climb',
     genreEn: 'Arcade · Skill', genreAm: 'አርኬድ · ክህሎት', mode: 'free', icon: '🚙',
     accent: '#e74c3c', thumb: ['#8c2b2b', '#2a0c0c'], scoreEn: 'Distance', scoreAm: 'ርቀት' },
+  { id: 'tower-defense', route: 'games/tower-defense/index.html', nameEn: 'Tower Defense', nameAm: 'Tower Defense',
+    genreEn: 'Strategy · Arcade', genreAm: 'ስትራቴጂ · አርኬድ', mode: 'free', icon: '🏰',
+    accent: '#6ab04c', thumb: ['#3d7a2c', '#142a0c'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
+  { id: 'draw-bridge', route: 'games/draw-bridge/index.html', nameEn: 'Draw Bridge', nameAm: 'Draw Bridge',
+    genreEn: 'Puzzle · Physics', genreAm: 'እንቆቅልሽ · ፊዚክስ', mode: 'free', icon: '🌉',
+    accent: '#8B7355', thumb: ['#5c4a32', '#1a140c'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
+  { id: 'ball-sort', route: 'games/ball-sort/index.html', nameEn: 'Ball Sort', nameAm: 'Ball Sort',
+    genreEn: 'Brain · Logic', genreAm: 'አእምሮ · ሎጂክ', mode: 'free', icon: '⚪',
+    accent: '#9b59b6', thumb: ['#5c348c', '#1a0c2a'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
 ];
 
 // Storefront gating: free games ship by default; tournament games are opt-in via
@@ -320,6 +329,9 @@ const WIN_SCORE: Record<string, number> = {
   'knife-hit': 200,
   'helix-jump': 150,
   'hill-climb': 120,
+  'tower-defense': 250,
+  'draw-bridge': 200,
+  'ball-sort': 200,
   'tap-game': 50,
 };
 for (const g of CATALOG) {

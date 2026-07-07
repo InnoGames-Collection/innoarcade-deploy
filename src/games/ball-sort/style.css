@@ -1,0 +1,64 @@
+.bs-board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 8px 12px;
+  user-select: none;
+}
+
+.bs-tubes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(8px, 2.5vw, 14px);
+  max-width: 420px;
+}
+
+.bs-tube {
+  --tube-w: clamp(52px, 14vw, 64px);
+  --tube-h: clamp(150px, 38vw, 180px);
+  width: var(--tube-w);
+  height: var(--tube-h);
+  border: 3px solid rgba(120, 120, 140, 0.5);
+  border-radius: 0 0 16px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 6px 4px;
+  gap: 4px;
+  cursor: pointer;
+  position: relative;
+}
+
+.bs-tube--sel {
+  border-color: #4f9e16;
+  box-shadow: 0 0 0 2px rgba(79, 158, 22, 0.35);
+  transform: translateY(-4px);
+}
+
+.bs-tube--target { border-color: rgba(79, 158, 22, 0.65); }
+
+.bs-ball {
+  width: calc(var(--tube-w) - 14px);
+  height: calc(var(--tube-w) - 14px);
+  border-radius: 50%;
+  box-shadow: inset -3px -3px 8px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.bs-hint {
+  text-align: center;
+  font-size: 13px;
+  color: var(--lq-text-dim, #5f7262);
+  margin: 0;
+}
+
+.bs-win-flash .bs-tube { animation: bs-pop 0.45s ease; }
+
+@keyframes bs-pop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
