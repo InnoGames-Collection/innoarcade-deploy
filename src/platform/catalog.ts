@@ -239,6 +239,24 @@ const ALL_GAMES: GameMeta[] = [
   { id: 'crossy-road', route: 'games/crossy-road/index.html', nameEn: 'Crossy Road', nameAm: 'Crossy Road',
     genreEn: 'Runner · Arcade', genreAm: 'ሩጫ · አርኬድ', mode: 'free', icon: '🐔',
     accent: '#6ab04c', thumb: ['#3d7a2c', '#142a0c'], scoreEn: 'Distance', scoreAm: 'ርቀት' },
+  { id: 'block-blast', route: 'games/block-blast/index.html', nameEn: 'Block Blast', nameAm: 'Block Blast',
+    genreEn: 'Puzzle · Casual', genreAm: 'እንቆቅልሽ · ቀላል', mode: 'free', icon: '🟦',
+    accent: '#5b8cff', thumb: ['#27468f', '#0a1130'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
+  { id: 'tile-connect', route: 'games/tile-connect/index.html', nameEn: 'Tile Connect', nameAm: 'Tile Connect',
+    genreEn: 'Brain · Logic', genreAm: 'አእምሮ · ሎጂክ', mode: 'free', icon: '🔗',
+    accent: '#7a6cff', thumb: ['#4a3d9e', '#1a1430'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
+  { id: 'hexa-block', route: 'games/hexa-block/index.html', nameEn: 'Hexa Block', nameAm: 'Hexa Block',
+    genreEn: 'Puzzle · Casual', genreAm: 'እንቆቅልሽ · ቀላል', mode: 'free', icon: '⬡',
+    accent: '#1abc9c', thumb: ['#0e7a66', '#052a24'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
+  { id: 'knife-hit', route: 'games/knife-hit/index.html', nameEn: 'Knife Hit', nameAm: 'Knife Hit',
+    genreEn: 'Arcade · Skill', genreAm: 'አርኬድ · ክህሎት', mode: 'free', icon: '🔪',
+    accent: '#8B4513', thumb: ['#5c2e0e', '#1a0d04'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
+  { id: 'helix-jump', route: 'games/helix-jump/index.html', nameEn: 'Helix Jump', nameAm: 'Helix Jump',
+    genreEn: 'Arcade · Skill', genreAm: 'አርኬድ · ክህሎት', mode: 'free', icon: '🌀',
+    accent: '#5b8cff', thumb: ['#2a4080', '#0a1020'], scoreEn: 'Depth', scoreAm: 'ጥልቀት' },
+  { id: 'hill-climb', route: 'games/hill-climb/index.html', nameEn: 'Hill Climb', nameAm: 'Hill Climb',
+    genreEn: 'Arcade · Skill', genreAm: 'አርኬድ · ክህሎት', mode: 'free', icon: '🚙',
+    accent: '#e74c3c', thumb: ['#8c2b2b', '#2a0c0c'], scoreEn: 'Distance', scoreAm: 'ርቀት' },
 ];
 
 // Storefront gating: free games ship by default; tournament games are opt-in via
@@ -296,6 +314,12 @@ const WIN_SCORE: Record<string, number> = {
   'piano-tiles': 300,
   'stack-tower': 180,
   'crossy-road': 120,
+  'block-blast': 150,
+  'tile-connect': 250,
+  'hexa-block': 140,
+  'knife-hit': 200,
+  'helix-jump': 150,
+  'hill-climb': 120,
   'tap-game': 50,
 };
 for (const g of CATALOG) {
