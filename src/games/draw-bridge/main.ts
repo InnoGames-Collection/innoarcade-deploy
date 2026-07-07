@@ -10,7 +10,8 @@ import { sfx } from '../../engine/audio';
 import { DrawBridge, W, H } from './game';
 import { bindHubCanvasChrome, scaleArcadeScore, submitArcadeScore, trackArcadeRunStart } from '../_arcade/hubCanvas';
 
-const host = new GameHost('draw-bridge');
+const GAME_ID = 'draw-bridge';
+const host = new GameHost(GAME_ID);
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 const playWrapper = $('#arc-play-wrapper');
 const canvas = $('#game') as unknown as HTMLCanvasElement;
@@ -21,7 +22,7 @@ canvas.height = H * dpr;
 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
 const game = new DrawBridge();
-const run = trackArcadeRunStart();
+const run = trackArcadeRunStart(GAME_ID);
 
 const shell = wireFreeEngineMain({
   host,
@@ -42,9 +43,9 @@ const shell = wireFreeEngineMain({
   getDurationMs: () => Date.now() - run.getRunStart(),
 });
 
-const syncChrome = bindHubCanvasChrome({ playWrapper, backdrop: $('#fcBackdrop'), shell });
+const syncChrome = bindHubCanvasChrome({ playWrapper, backdrop: $('#fcBackdrop'), shell, gameId: GAME_ID });
 game.onStateChange = (s) => { run.onStateChange(s); syncChrome(s); };
-game.onGameOver = (score) => { submitArcadeScore(score, run.getRunStart(), shell, { budgetSec: 180 }); };
+game.onGameOver = (score) => { submitArcadeScore(score, run.getRunStart(), shell, { budgetSec: 120, gameId: GAME_ID, winScore: host.winScore }); };
 
 function toCanvas(e: PointerEvent): [number, number] {
   const rect = canvas.getBoundingClientRect();

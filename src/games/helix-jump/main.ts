@@ -11,7 +11,8 @@ import { sfx } from '../../engine/audio';
 import { HelixJump, W, H } from './game';
 import { bindHubCanvasChrome, scaleArcadeScore, submitArcadeScore, trackArcadeRunStart } from '../_arcade/hubCanvas';
 
-const host = new GameHost('helix-jump');
+const GAME_ID = 'helix-jump';
+const host = new GameHost(GAME_ID);
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 const playWrapper = $('#arc-play-wrapper');
 const canvas = $('#game') as unknown as HTMLCanvasElement;
@@ -22,7 +23,7 @@ canvas.height = H * dpr;
 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
 const game = new HelixJump();
-const run = trackArcadeRunStart();
+const run = trackArcadeRunStart(GAME_ID);
 
 const shell = wireFreeEngineMain({
   host,
@@ -43,9 +44,9 @@ const shell = wireFreeEngineMain({
   getDurationMs: () => Date.now() - run.getRunStart(),
 });
 
-const syncChrome = bindHubCanvasChrome({ playWrapper, backdrop: $('#fcBackdrop'), shell });
+const syncChrome = bindHubCanvasChrome({ playWrapper, backdrop: $('#fcBackdrop'), shell, gameId: GAME_ID });
 game.onStateChange = (s) => { run.onStateChange(s); syncChrome(s); };
-game.onGameOver = (score) => { submitArcadeScore(score, run.getRunStart(), shell, { budgetSec: 90 }); };
+game.onGameOver = (score) => { submitArcadeScore(score, run.getRunStart(), shell, { budgetSec: 120, gameId: GAME_ID, winScore: host.winScore }); };
 
 const input = new Input(canvas);
 input.onAction((a) => game.handleAction(a));

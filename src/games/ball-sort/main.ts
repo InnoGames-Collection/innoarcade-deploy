@@ -6,7 +6,7 @@ import { el, finishLQRound, mulberry32, shuffled, sound, mountLQ, setLQHeader, t
 import { puzzleCompletionScore } from '../_lq/scoring';
 import { escalateTier } from '../../platform/freeDifficulty';
 import { createHost } from '../../platform/gameHost';
-import { showFirstRunToast } from '../_shared/firstRun';
+import { showFirstRunHint } from '../_shared/firstRun';
 
 const CAPACITY = 4;
 const LEVELS = 8;
@@ -122,7 +122,7 @@ function render(mount: HTMLElement): void {
     mount.appendChild(wrap);
 
     if (levelIdx === 0) {
-      showFirstRunToast('ball-sort', 'Sort each color into its own tube. Use empty tubes as buffers.', toast);
+      showFirstRunHint('ball-sort', toast);
     }
 
     setLQHeader({ round: `${levelIdx + 1}/${LEVELS}`, score: String(totalScore), moves: '0' });

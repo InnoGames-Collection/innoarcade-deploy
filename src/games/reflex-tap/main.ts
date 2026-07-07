@@ -7,6 +7,7 @@ import { sfx } from '../../engine/audio';
 import { createHost } from '../../platform/gameHost';
 import { wireFreeCasualShell } from '../../platform/freeGameShell';
 import { finalizeArcadeScore, scaleArcadeScore } from '../../platform/arcadeScore';
+import { showFirstRunHint } from '../_shared/firstRun';
 
 const host = createHost('reflex-tap');
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
@@ -124,6 +125,7 @@ async function beginPlay(): Promise<void> {
   resetGame();
   playing = true;
   runStart = Date.now();
+  showFirstRunHint('reflex-tap', shell.toast);
   endAt = runStart + ROUND_MS;
   updateHud();
   timerId = window.setInterval(updateHud, 250);

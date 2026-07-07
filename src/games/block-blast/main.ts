@@ -4,7 +4,7 @@ import '../_lq/lq.css';
 import './style.css';
 import { el, finishLQRound, mulberry32, sound, mountLQ, setLQHeader, toast } from '../_lq/lq';
 import { createHost } from '../../platform/gameHost';
-import { showFirstRunToast } from '../_shared/firstRun';
+import { showFirstRunHint } from '../_shared/firstRun';
 
 const SIZE = 8;
 const COLORS = ['#5b8cff', '#2ecc71', '#f39c12', '#e74c3c', '#9b59b6', '#1abc9c'];
@@ -98,7 +98,7 @@ function render(mount: HTMLElement): void {
   wrap.appendChild(tray);
   mount.appendChild(wrap);
 
-  showFirstRunToast('block-blast', 'Pick a piece, then tap the board where it fits. Clear rows and columns.', toast);
+  showFirstRunHint('block-blast', toast);
 
   setLQHeader({ round: '0', score: '0' });
 

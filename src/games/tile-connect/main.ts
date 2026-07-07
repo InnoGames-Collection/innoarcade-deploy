@@ -7,7 +7,7 @@ import { puzzleCompletionScore } from '../_lq/scoring';
 import { createHost } from '../../platform/gameHost';
 import { tileConnectCanConnect, tileConnectFindHint } from '../_lq/solvable';
 import { buildSolvableTileBoard } from '../_lq/levelGen';
-import { showFirstRunToast } from '../_shared/firstRun';
+import { showFirstRunHint } from '../_shared/firstRun';
 
 const ROWS = 6;
 const COLS = 8;
@@ -56,7 +56,7 @@ function render(mount: HTMLElement): void {
     mount.appendChild(wrap);
 
     if (levelIdx === 0) {
-      showFirstRunToast('tile-connect', 'Connect matching tiles with a path that bends at most twice.', toast);
+      showFirstRunHint('tile-connect', toast);
     }
 
     setLQHeader({ round: `${levelIdx + 1}/${LEVELS}`, score: String(totalScore), moves: '0' });

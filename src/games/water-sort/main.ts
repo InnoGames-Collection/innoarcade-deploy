@@ -2,11 +2,11 @@
 import '../../styles/base.css';
 import '../_lq/lq.css';
 import './style.css';
-import { el, finishLQRound, mulberry32, shuffled, sound, mountLQ, setLQHeader, toast } from '../_lq/lq';
+import { el, finishLQRound, mulberry32, shuffled, sound, mountLQ, setLQHeader, toast, emitLQLevelComplete } from '../_lq/lq';
 import { puzzleCompletionScore } from '../_lq/scoring';
 import { escalateTier } from '../../platform/freeDifficulty';
 import { createHost } from '../../platform/gameHost';
-import { showFirstRunToast } from '../_shared/firstRun';
+import { showFirstRunHint } from '../_shared/firstRun';
 
 const CAPACITY = 4;
 const LEVELS = 8;
@@ -141,7 +141,7 @@ function render(mount: HTMLElement): void {
       mount.appendChild(board);
 
       if (levelIdx === 0) {
-        showFirstRunToast('water-sort', 'Pour matching colors together. Empty tubes help you sort.', toast);
+        showFirstRunHint('water-sort', toast);
       }
 
       setLQHeader({
@@ -233,6 +233,7 @@ function render(mount: HTMLElement): void {
         const levelScore = puzzleCompletionScore(elapsedMs, 0, { budgetSec: 360, base: 80 }) + moveBonus;
         totalScore += levelScore;
         levelIdx++;
+        emitLQLevelComplete(levelIdx, totalScore);
         setLQHeader({
           round: `${Math.min(levelIdx + 1, LEVELS)}/${LEVELS}`,
           score: String(totalScore),

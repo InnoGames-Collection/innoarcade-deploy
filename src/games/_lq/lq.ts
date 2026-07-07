@@ -11,6 +11,7 @@ import { renderRunRewardHtml, wireFreeCasualShell } from '../../platform/freeGam
 import type { FreePlayHeaderSlot } from '../../platform/freePlayHeader';
 import { applyTranslations, getLang } from '../../i18n';
 import { createHost, type FinishResult, type GameHost } from '../../platform/gameHost';
+import { emitGameEvent } from '../../platform/gameEvents';
 import { promptIfSessionExpired } from '../../platform/sessionAuth';
 import { isConfigured } from '../../platform/supabase';
 type Attrs = Record<string, string | EventListenerOrEventListenerObject>;
@@ -217,7 +218,26 @@ export function finishLQRound(
   _summary = '',
   durationMs = 0,
 ): void {
+  if (activeHost) {
+    emitGameEvent({
+      type: 'gameOver',
+      gameId: activeHost.meta.id,
+      score,
+      isWin,
+    });
+  }
   lqFinish?.(score, isWin, _summary, durationMs);
+}
+
+/** Brain-game level cleared (analytics hook). */
+export function emitLQLevelComplete(level: number, score?: number): void {
+  if (!activeHost) return;
+  emitGameEvent({
+    type: 'levelComplete',
+    gameId: activeHost.meta.id,
+    level,
+    score,
+  });
 }
 
 export interface MountLQOptions {

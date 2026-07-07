@@ -3,9 +3,10 @@ import '../../styles/base.css';
 import '../_lq/lq.css';
 import './style.css';
 import { el, finishLQRound, sound, mountLQ, setLQHeader, toast } from '../_lq/lq';
+import { lqHelp } from '../_lq/help';
 import { puzzleCompletionScore } from '../_lq/scoring';
 import { createHost } from '../../platform/gameHost';
-import { showFirstRunToast } from '../_shared/firstRun';
+import { showFirstRunHint } from '../_shared/firstRun';
 
 const LEVELS = 5;
 const host = createHost('laser-puzzle');
@@ -161,7 +162,7 @@ function render(mount: HTMLElement): void {
     const targets = targetCount(grid);
 
     const wrap = el('div', { class: 'lp-wrap' });
-    const hint = el('p', { class: 'lp-hint', text: 'Tap mirrors to rotate. Light all targets.' });
+    const hint = el('p', { class: 'lp-hint', text: lqHelp('laser-puzzle') });
     const status = el('p', { class: 'lp-status', text: `0/${targets} targets` });
     const boardWrap = el('div', { style: 'position:relative' });
     const board = el('div', {
@@ -175,7 +176,7 @@ function render(mount: HTMLElement): void {
     mount.appendChild(wrap);
 
     if (levelIdx === 0) {
-      showFirstRunToast('laser-puzzle', 'Tap mirrors to rotate. Light every target to win.', toast);
+      showFirstRunHint('laser-puzzle', toast);
     }
 
     setLQHeader({ round: `${levelIdx + 1}/${LEVELS}`, score: String(totalScore), moves: '0' });
@@ -184,6 +185,9 @@ function render(mount: HTMLElement): void {
       const { lit, segments } = trace(def, grid);
       board.innerHTML = '';
       boardWrap.querySelectorAll('.lp-beam').forEach((n) => n.remove());
+
+      const cbGlyphs = ['○', '□', '△', '◇'];
+      let tgtIdx = 0;
 
       for (let r = 0; r < def.h; r++) {
         for (let c = 0; c < def.w; c++) {
@@ -194,7 +198,10 @@ function render(mount: HTMLElement): void {
           else if (cell === 3) cls += ' lp-cell--tgt' + (lit.has(`${r},${c}`) ? ' lp-lit' : '');
           else if (cell === 4 || cell === 5) cls += ' lp-cell--mirror';
 
-          const node = el('div', { class: cls, text: cellLabel(cell) });
+          const attrs: Record<string, string> = { class: cls, text: cellLabel(cell) };
+          if (cell === 3) attrs['data-cb'] = cbGlyphs[tgtIdx++ % cbGlyphs.length];
+
+          const node = el('div', attrs);
           if (cell === 4 || cell === 5) {
             node.addEventListener('click', () => {
               grid[r][c] = cell === 4 ? 5 : 4;

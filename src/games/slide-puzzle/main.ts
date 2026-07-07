@@ -6,7 +6,7 @@ import { el, finishLQRound, mulberry32, sound, mountLQ, setLQHeader, toast } fro
 import { puzzleCompletionScore } from '../_lq/scoring';
 import { createHost } from '../../platform/gameHost';
 import { slidePuzzleScramble, slidePuzzleSolved } from '../_lq/solvable';
-import { showFirstRunToast } from '../_shared/firstRun';
+import { showFirstRunHint } from '../_shared/firstRun';
 
 const SIZE = 4;
 const LEVELS = 5;
@@ -28,7 +28,7 @@ function render(mountEl: HTMLElement): void {
     locked = false;
     levelStart = Date.now();
     if (levelIdx === 0) {
-      showFirstRunToast('slide-puzzle', 'Slide tiles into order. Only tiles next to the empty space move.', toast);
+      showFirstRunHint('slide-puzzle', toast);
     }
     setLQHeader({
       round: `${levelIdx + 1}/${LEVELS}`,

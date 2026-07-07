@@ -7,7 +7,7 @@ import { applyTranslations, getLang } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { createHost } from '../../platform/gameHost';
 import { wireFreeCasualShell } from '../../platform/freeGameShell';
-import { showFirstRunToast } from '../_shared/firstRun';
+import { showFirstRunHint } from '../_shared/firstRun';
 
 const COLS = 4;
 const SESSION_SEC = 60;
@@ -187,7 +187,7 @@ async function startGame(): Promise<void> {
   playing = true;
   runStart = Date.now();
   lastTs = performance.now();
-  showFirstRunToast('piano-tiles', 'Tap only the black tiles. White tiles end your run.', (m) => {
+  showFirstRunHint('piano-tiles', (m) => {
     message.textContent = m;
     window.setTimeout(() => { if (playing) message.textContent = 'Tap the black tiles!'; }, 5000);
   });

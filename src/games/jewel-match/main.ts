@@ -7,6 +7,7 @@ import { sfx } from '../../engine/audio';
 import { createHost } from '../../platform/gameHost';
 import { wireFreeCasualShell } from '../../platform/freeGameShell';
 import { finalizeArcadeScore, match3Score, scaleArcadeScore } from '../../platform/arcadeScore';
+import { showFirstRunHint } from '../_shared/firstRun';
 
 const host = createHost('jewel-match');
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
@@ -216,6 +217,7 @@ const shell = wireFreeCasualShell(host, beginPlay, {
 async function beginPlay(): Promise<void> {
   runStart = Date.now();
   resetGame();
+  showFirstRunHint('jewel-match', shell.toast);
 }
 
 board.addEventListener('pointerdown', (e) => {

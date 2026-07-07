@@ -6,7 +6,7 @@ import { el, finishLQRound, sound, mountLQ, setLQHeader, toast } from '../_lq/lq
 import { puzzleCompletionScore } from '../_lq/scoring';
 import { createHost } from '../../platform/gameHost';
 import { pipeGridConnected, type PipeCell, type PipeRot } from '../_lq/solvable';
-import { showFirstRunToast } from '../_shared/firstRun';
+import { showFirstRunHint } from '../_shared/firstRun';
 
 const LEVELS = 5;
 const host = createHost('pipe-connect');
@@ -113,7 +113,7 @@ function render(mountEl: HTMLElement): void {
     waterFill = false;
     levelStart = Date.now();
     if (levelIdx === 0) {
-      showFirstRunToast('pipe-connect', 'Tap pipes to rotate. Link the water source to the drain.', toast);
+      showFirstRunHint('pipe-connect', toast);
     }
     setLQHeader({
       round: `${levelIdx + 1}/${LEVELS}`,

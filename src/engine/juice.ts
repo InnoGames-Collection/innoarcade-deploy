@@ -12,6 +12,8 @@ export interface Particle {
   color: string;
 }
 
+const MAX_PARTICLES = 96;
+
 export class Juice {
   particles: Particle[] = [];
   screenShake = 0;
@@ -26,8 +28,10 @@ export class Juice {
     spread = 160,
     size = 4,
   ): void {
-    for (let i = 0; i < count; i++) {
-      const a = (Math.PI * 2 * i) / count + Math.random() * 0.4;
+    const room = Math.max(0, MAX_PARTICLES - this.particles.length);
+    const n = Math.min(count, room);
+    for (let i = 0; i < n; i++) {
+      const a = (Math.PI * 2 * i) / n + Math.random() * 0.4;
       const speed = spread * (0.35 + Math.random() * 0.65);
       this.particles.push({
         x,

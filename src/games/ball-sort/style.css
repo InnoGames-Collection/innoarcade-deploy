@@ -72,3 +72,13 @@
   opacity: 0.45;
   cursor: default;
 }
+
+/* Color-blind patterns per ball id */
+.bs-ball[data-color='1'] { background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(0,0,0,.14) 3px, rgba(0,0,0,.14) 6px) !important; }
+.bs-ball[data-color='2'] { background-image: repeating-linear-gradient(-45deg, transparent, transparent 4px, rgba(255,255,255,.28) 4px, rgba(255,255,255,.28) 8px) !important; }
+.bs-ball[data-color='3'] { background-image: radial-gradient(circle, rgba(0,0,0,.18) 18%, transparent 19%) !important; background-size: 8px 8px !important; }
+.bs-ball[data-color='4'] { background-image: linear-gradient(90deg, rgba(0,0,0,.12) 50%, transparent 50%) !important; background-size: 6px 100% !important; }
+.bs-ball[data-color='5'] { background-image: linear-gradient(0deg, rgba(255,255,255,.22) 50%, transparent 50%) !important; background-size: 100% 5px !important; }
+.bs-ball[data-color='6'] { background-image: repeating-linear-gradient(135deg, transparent, transparent 2px, rgba(0,0,0,.1) 2px, rgba(0,0,0,.1) 4px) !important; }
+.bs-ball[data-color='7'] { background-image: radial-gradient(circle at 30% 30%, rgba(255,255,255,.35) 15%, transparent 16%) !important; background-size: 10px 10px !important; }
+.bs-ball[data-color='8'] { background-image: linear-gradient(45deg, rgba(0,0,0,.1) 25%, transparent 25%, transparent 75%, rgba(0,0,0,.1) 75%) !important; background-size: 8px 8px !important; }

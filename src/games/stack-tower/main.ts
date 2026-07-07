@@ -27,7 +27,7 @@ canvas.height = H * dpr;
 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
 const game = new StackTower();
-const run = trackArcadeRunStart();
+const run = trackArcadeRunStart(GAME_ID);
 const scoreVal = $('#scoreVal');
 
 const shell = wireFreeEngineMain({
@@ -49,10 +49,10 @@ const shell = wireFreeEngineMain({
   getDurationMs: () => Date.now() - run.getRunStart(),
 });
 
-const syncChrome = bindHubCanvasChrome({ playWrapper, backdrop: $('#fcBackdrop'), shell });
+const syncChrome = bindHubCanvasChrome({ playWrapper, backdrop: $('#fcBackdrop'), shell, gameId: GAME_ID });
 
 game.onStateChange = (state) => { run.onStateChange(state); syncChrome(state); };
-game.onGameOver = (score) => { submitArcadeScore(score, run.getRunStart(), shell, { budgetSec: 120 }); };
+game.onGameOver = (score) => { submitArcadeScore(score, run.getRunStart(), shell, { budgetSec: 120, gameId: GAME_ID, winScore: host.winScore }); };
 
 const input = new Input(canvas);
 input.onAction((a) => game.handleAction(a));

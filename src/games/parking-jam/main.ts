@@ -5,7 +5,7 @@ import './style.css';
 import { el, finishLQRound, sound, mountLQ, setLQHeader, toast } from '../_lq/lq';
 import { puzzleCompletionScore } from '../_lq/scoring';
 import { createHost } from '../../platform/gameHost';
-import { showFirstRunToast } from '../_shared/firstRun';
+import { showFirstRunHint } from '../_shared/firstRun';
 
 const LEVELS = 8;
 const CELL = 42;
@@ -225,7 +225,7 @@ function render(mount: HTMLElement): void {
     mount.appendChild(wrap);
 
     if (levelIdx === 0) {
-      showFirstRunToast('parking-jam', 'Select a car, then use arrows to slide it. Free the red car →', toast);
+      showFirstRunHint('parking-jam', toast);
     }
 
     setLQHeader({ round: `${levelIdx + 1}/${LEVELS}`, score: String(totalScore), moves: '0' });

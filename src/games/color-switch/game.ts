@@ -1,6 +1,7 @@
 import { sfx } from '../../engine/audio';
 import type { Action } from '../../engine/input';
 import { mulberry32 } from '../_lq/lq';
+import { drawColorBlindGlyph } from '../_shared/colorBlind';
 
 export const W = 480;
 export const H = 720;
@@ -129,12 +130,15 @@ export class ColorSwitch {
       const cy = o.y;
       const r = 78;
       for (let i = 0; i < 4; i++) {
-        ctx.fillStyle = COLORS[(o.colorIdx + i) % 4];
+        const segIdx = (o.colorIdx + i) % 4;
+        ctx.fillStyle = COLORS[segIdx];
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.arc(cx, cy, r, o.rot + i * Math.PI / 2, o.rot + (i + 1) * Math.PI / 2);
         ctx.closePath();
         ctx.fill();
+        const mid = o.rot + (i + 0.5) * Math.PI / 2;
+        drawColorBlindGlyph(ctx, cx + Math.cos(mid) * (r * 0.62), cy + Math.sin(mid) * (r * 0.62), segIdx, 11);
       }
       ctx.fillStyle = '#111';
       ctx.beginPath();
@@ -153,5 +157,6 @@ export class ColorSwitch {
     ctx.beginPath();
     ctx.arc(this.bx, this.by, 14, 0, Math.PI * 2);
     ctx.fill();
+    drawColorBlindGlyph(ctx, this.bx, this.by, this.colorIdx, 12);
   }
 }
