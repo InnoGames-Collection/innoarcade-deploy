@@ -37,6 +37,8 @@ export class RopeRescue {
   private swingPos = { x: 80, y: 180 };
   private resultT = 0;
 
+  private swingWon = false;
+
   start(): void {
     this.score = 0;
     this.level = 1;
@@ -60,8 +62,8 @@ export class RopeRescue {
     this.anchor = { x: 400, y: 100 };
     this.safe = { x: 380, y: 500, w: 70, h: 44 };
     this.spikes = [
-      { x: 120, y: 420, w: 240 },
-      { x: 60, y: 360, w: 180 },
+      { x: 100 + this.level * 10, y: 400 + this.level * 8, w: 220 - this.level * 15 },
+      { x: 50, y: 340 + this.level * 12, w: 160 + this.level * 10 },
     ];
     this.swingT = 0;
     this.swingPos = { ...this.person };
@@ -142,6 +144,7 @@ export class RopeRescue {
       if (t >= 1) {
         const inSafe = this.swingPos.x >= this.safe.x && this.swingPos.x <= this.safe.x + this.safe.w
           && this.swingPos.y >= this.safe.y && this.swingPos.y <= this.safe.y + this.safe.h;
+        this.swingWon = inSafe;
         this.phase = 'result';
         this.resultT = 0;
         if (inSafe) {
@@ -149,7 +152,7 @@ export class RopeRescue {
           sfx.coin();
         } else {
           sfx.slide();
-          this.gameOver();
+          this.endSession(false);
         }
       }
     }
@@ -157,9 +160,9 @@ export class RopeRescue {
     if (this.phase === 'result') {
       this.resultT += dt;
       if (this.resultT > 1.2) {
-        if (this.level >= LEVELS) {
-          this.gameOver();
-        } else {
+        if (this.swingWon && this.level >= LEVELS) {
+          this.endSession(true);
+        } else if (this.swingWon) {
           this.level++;
           this.resetLevel();
         }
@@ -167,10 +170,11 @@ export class RopeRescue {
     }
   }
 
-  private gameOver(): void {
+  private endSession(victory: boolean): void {
     this.setState('over');
     const record = this.score > this.best;
     if (record) this.best = this.score;
+    if (victory) sfx.coin();
     this.onGameOver(this.score, record);
   }
 

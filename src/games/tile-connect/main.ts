@@ -71,6 +71,57 @@ function remaining(board: (string | null)[][]): number {
   return n;
 }
 
+function cloneBoard(board: (string | null)[][]): (string | null)[][] {
+  return board.map((row) => row.slice());
+}
+
+/** Greedy solver — confirms every pair can be cleared in some order. */
+function isFullySolvable(board: string[][]): boolean {
+  const b = cloneBoard(board);
+  let guard = 0;
+  while (remaining(b) > 0 && guard++ < 600) {
+    let cleared = false;
+    outer:
+    for (let r1 = 0; r1 < ROWS; r1++) {
+      for (let c1 = 0; c1 < COLS; c1++) {
+        if (!b[r1][c1]) continue;
+        for (let r2 = 0; r2 < ROWS; r2++) {
+          for (let c2 = 0; c2 < COLS; c2++) {
+            if (r1 === r2 && c1 === c2) continue;
+            if (b[r2][c2] !== b[r1][c1]) continue;
+            if (!canConnect(b, r1, c1, r2, c2)) continue;
+            b[r1][c1] = null;
+            b[r2][c2] = null;
+            cleared = true;
+            break outer;
+          }
+        }
+      }
+    }
+    if (!cleared) return false;
+  }
+  return remaining(b) === 0;
+}
+
+function buildSolvableBoard(pairs: number, rnd: () => number): string[][] {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const board = buildBoard(pairs, rnd);
+    if (isFullySolvable(board)) return board;
+  }
+  // Deterministic fallback: pairs in adjacent columns (always connectable).
+  const icons = ICONS.slice(0, pairs);
+  const board: string[][] = Array.from({ length: ROWS }, () => Array(COLS).fill(''));
+  let idx = 0;
+  for (let p = 0; p < pairs; p++) {
+    const r = Math.floor(idx / (COLS / 2)) % ROWS;
+    const c = (idx % (COLS / 2)) * 2;
+    board[r][c] = icons[p];
+    board[r][c + 1] = icons[p];
+    idx++;
+  }
+  return board;
+}
+
 function render(mount: HTMLElement): void {
   let levelIdx = 0;
   let totalScore = 0;
@@ -80,7 +131,7 @@ function render(mount: HTMLElement): void {
     mount.innerHTML = '';
     const rnd = mulberry32((Math.random() * 1e9) | 0);
     const pairs = 10 + levelIdx * 2;
-    const board: (string | null)[][] = buildBoard(pairs, rnd);
+    const board: (string | null)[][] = buildSolvableBoard(pairs, rnd);
     let sel: [number, number] | null = null;
     let moves = 0;
     const levelStart = Date.now();

@@ -65,6 +65,31 @@ function anyFit(grid: (string | null)[][], pieces: Piece[]): boolean {
   return false;
 }
 
+function piecePreviewEl(p: Piece, idx: number, selected: number | null, onSelect: () => void): HTMLElement {
+  let maxR = 0;
+  let maxC = 0;
+  for (const [dr, dc] of p.cells) {
+    maxR = Math.max(maxR, dr);
+    maxC = Math.max(maxC, dc);
+  }
+  const pieceEl = el('div', {
+    class: 'hb-piece' + (selected === idx ? ' hb-piece--sel' : ''),
+    onclick: onSelect,
+  });
+  for (let r = 0; r <= maxR; r++) {
+    const mini = el('div', { class: 'hb-row hb-row--mini' });
+    for (let c = 0; c <= maxC; c++) {
+      const filled = p.cells.some(([dr, dc]) => dr === r && dc === c);
+      mini.appendChild(el('div', {
+        class: 'hb-cell' + (filled ? ' filled' : ' hb-cell--ghost'),
+        style: filled ? `background:${p.color};width:22px;height:26px` : 'width:22px;height:26px;opacity:0',
+      }));
+    }
+    pieceEl.appendChild(mini);
+  }
+  return pieceEl;
+}
+
 function randomPiece(rnd: () => number): Piece {
   const shape = SHAPES[Math.floor(rnd() * SHAPES.length)];
   return {
@@ -118,21 +143,11 @@ function render(mount: HTMLElement): void {
     tray.innerHTML = '';
     pieces.forEach((p, idx) => {
       if (p.used) return;
-      const pieceEl = el('div', {
-        class: 'hb-piece' + (selected === idx ? ' hb-piece--sel' : ''),
-        onclick: () => { selected = idx; sound('click'); paint(); },
-      });
-      for (const [, dc] of p.cells) {
-        const mini = el('div', { class: 'hb-row' });
-        for (let i = 0; i <= dc; i++) {
-          mini.appendChild(el('div', {
-            class: 'hb-cell filled',
-            style: `background:${p.color};width:22px;height:26px`,
-          }));
-        }
-        pieceEl.appendChild(mini);
-      }
-      tray.appendChild(pieceEl);
+      tray.appendChild(piecePreviewEl(p, idx, selected, () => {
+        selected = idx;
+        sound('click');
+        paint();
+      }));
     });
 
     setLQHeader({ round: String(lines), score: String(score) });

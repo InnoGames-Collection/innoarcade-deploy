@@ -54,7 +54,7 @@ function scramble(seed: number, scrambleMoves: number): number[] {
   return tiles;
 }
 
-function render(_mount: HTMLElement): void {
+function render(mountEl: HTMLElement): void {
   let levelIdx = 0;
   let totalScore = 0;
   let sessionStart = Date.now();
@@ -93,8 +93,7 @@ function render(_mount: HTMLElement): void {
   }
 
   function paint(): void {
-    const mount = document.getElementById('lq-mount')!;
-    mount.innerHTML = '';
+    mountEl.innerHTML = '';
     const wrap = el('div', { class: 'sp-grid' });
     tiles.forEach((v, i) => {
       wrap.appendChild(el('button', {
@@ -104,7 +103,7 @@ function render(_mount: HTMLElement): void {
         onclick: () => tryMove(i),
       }, v === 0 ? '' : String(v)));
     });
-    mount.appendChild(wrap);
+    mountEl.appendChild(wrap);
   }
 
   function finishLevel(): void {

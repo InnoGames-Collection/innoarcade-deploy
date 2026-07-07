@@ -9,7 +9,8 @@ interface Platform {
   x: number;
   y: number;
   w: number;
-  broken: boolean;
+  /** One bounce then the platform crumbles away. */
+  crumbling: boolean;
 }
 
 export type GameState = 'menu' | 'playing' | 'paused' | 'over';
@@ -71,7 +72,7 @@ export class DoodleJump {
       x: 40 + this.rnd() * (W - 120),
       y,
       w: 70 + this.rnd() * 40,
-      broken: this.rnd() < 0.12 && y < H - 200,
+      crumbling: this.rnd() < 0.12 && y < H - 200,
     });
   }
 
@@ -86,12 +87,11 @@ export class DoodleJump {
     const feet = this.py + 18;
     if (this.vy > 0) {
       for (const p of this.platforms) {
-        if (p.broken) continue;
         if (feet >= p.y && feet <= p.y + 14 && this.px > p.x && this.px < p.x + p.w) {
           this.vy = -520;
           this.py = p.y - 18;
-          if (p.broken) p.broken = true;
           sfx.click();
+          if (p.crumbling) p.y = H + 999;
           break;
         }
       }
@@ -139,9 +139,9 @@ export class DoodleJump {
     ctx.fillRect(0, 0, W, H);
 
     for (const p of this.platforms) {
-      ctx.fillStyle = p.broken ? '#8B4513' : '#2ecc71';
+      ctx.fillStyle = p.crumbling ? '#8B4513' : '#2ecc71';
       ctx.fillRect(p.x, p.y, p.w, 12);
-      ctx.fillStyle = '#27ae60';
+      ctx.fillStyle = p.crumbling ? '#6d3a1f' : '#27ae60';
       ctx.fillRect(p.x, p.y, p.w, 4);
     }
 

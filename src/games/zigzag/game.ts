@@ -6,6 +6,30 @@ export const H = 720;
 
 const SEG = 56;
 const SPEED = 220;
+const PATH_HALF = SEG * 0.45;
+const BALL_R = 14;
+
+function distToSegment(
+  px: number, py: number,
+  x1: number, y1: number,
+  x2: number, y2: number,
+): number {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len2 = dx * dx + dy * dy;
+  if (len2 === 0) return Math.hypot(px - x1, py - y1);
+  let t = ((px - x1) * dx + (py - y1) * dy) / len2;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+}
+
+function onPathCorridor(path: { x: number; y: number }[], bx: number, by: number): boolean {
+  for (let i = 0; i < path.length - 1; i++) {
+    const d = distToSegment(bx, by, path[i].x, path[i].y, path[i + 1].x, path[i + 1].y);
+    if (d <= PATH_HALF + BALL_R) return true;
+  }
+  return false;
+}
 
 export type GameState = 'menu' | 'playing' | 'paused' | 'over';
 
@@ -68,8 +92,7 @@ export class ZigZag {
     this.dist += SPEED * dt;
     this.score = Math.floor(this.dist / 10);
 
-    const onPath = this.path.some((p) => Math.hypot(this.bx - p.x, this.by - p.y) < SEG * 0.55);
-    if (!onPath) {
+    if (!onPathCorridor(this.path, this.bx, this.by)) {
       this.gameOver();
       return;
     }

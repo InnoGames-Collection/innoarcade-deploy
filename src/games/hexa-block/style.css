@@ -51,6 +51,8 @@
 
 .hb-piece--sel { border-color: #4f9e16; }
 
+.hb-row.hb-row--mini:nth-child(even) { margin-left: 11px; }
+
 .hb-hint {
   font-size: 13px;
   color: var(--lq-text-dim, #5f7262);

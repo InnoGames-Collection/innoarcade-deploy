@@ -67,10 +67,22 @@ export class KnifeHit {
     sfx.click();
   }
 
+  /** Angle on the log (local space) where a new knife sticks at the bottom. */
+  private stickLocalAngle(): number {
+    return this.normAngle(-Math.PI / 2 - this.logAngle);
+  }
+
+  private normAngle(a: number): number {
+    let x = a % (Math.PI * 2);
+    if (x > Math.PI) x -= Math.PI * 2;
+    if (x < -Math.PI) x += Math.PI * 2;
+    return x;
+  }
+
   private collide(): boolean {
-    const hit = -Math.PI / 2;
+    const hit = this.stickLocalAngle();
     for (const k of this.knives) {
-      let diff = Math.abs(k.angle - hit);
+      let diff = Math.abs(this.normAngle(k.angle) - hit);
       if (diff > Math.PI) diff = Math.PI * 2 - diff;
       if (diff < 0.22) return true;
     }
@@ -102,7 +114,7 @@ export class KnifeHit {
           this.onGameOver(this.score, this.score > this.best);
           return;
         }
-        this.knives.push({ angle: -Math.PI / 2 });
+        this.knives.push({ angle: this.stickLocalAngle() });
         this.knivesThisStage++;
         this.score += 10 + (this.boss ? 5 : 0);
         sfx.coin();

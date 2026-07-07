@@ -119,13 +119,6 @@ export class StackTower {
 
     const targetCam = Math.max(0, (H - 80) - this.stack[this.stack.length - 1].y - 120);
     this.camY += (targetCam - this.camY) * 0.35;
-
-    if (this.score >= 40) {
-      this.setState('over');
-      sfx.coin();
-      this.onGameOver(this.score, this.score > this.best);
-      return;
-    }
     this.spawnMover();
   }
 
