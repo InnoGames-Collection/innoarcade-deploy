@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔴</text></svg>" />
+    <title>Laser Puzzle — GoPlay</title>
+  </head>
+  <body class="game-shell casual-shell brain-shell" data-game="laser-puzzle">
+    <div id="stage" class="fc-stage game-shell-stage">
+      <div id="fcBackdrop" class="fc-backdrop" aria-hidden="true"></div>
+      <div id="fcPlayFrame" class="fc-playframe hidden">
+        <button id="closeBtn" class="gp-close gp-close-corner hidden" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+        <div id="lq-mount"></div>
+      </div>
+      <div id="menuOverlay" class="game-overlay">
+        <div class="game-panel panel-clean">
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <div class="shell-free-menu" id="freeMenu"></div>
+          <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
+        </div>
+      </div>
+      <div id="overOverlay" class="game-overlay hidden" aria-hidden="true">
+        <div class="game-panel">
+          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <h2 data-i18n="td.gameOver">Game over</h2>
+          <p id="fcOverSummary" class="fc-over-summary"></p>
+          <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
+          <div class="shell-over-final">
+            <div class="shell-over-stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
+            <div class="shell-over-stat"><span data-i18n="td.best">Best</span><strong id="finalBest">—</strong></div>
+          </div>
+          <div class="shell-run-reward" id="runReward"></div>
+          <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
+        </div>
+      </div>
+    </div>
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+    <script type="module" src="/src/games/laser-puzzle/main.ts"></script>
+  </body>
+</html>

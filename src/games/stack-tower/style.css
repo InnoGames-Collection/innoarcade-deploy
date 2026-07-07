@@ -1,0 +1,4 @@
+/* Stack Tower — canvas fills arcade wrap */
+.arc-canvas-wrap canvas {
+  touch-action: manipulation;
+}

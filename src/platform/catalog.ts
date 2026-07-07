@@ -224,6 +224,21 @@ const ALL_GAMES: GameMeta[] = [
   { id: 'water-sort', route: 'games/water-sort/index.html', nameEn: 'Water Sort', nameAm: 'ውሃ መደርደር',
     genreEn: 'Brain · Logic', genreAm: 'አእምሮ · ሎጂክ', mode: 'free', icon: '🧪',
     accent: '#2aa9d6', thumb: ['#2aa9d6', '#13627e'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
+  { id: 'parking-jam', route: 'games/parking-jam/index.html', nameEn: 'Parking Jam', nameAm: 'ፓርኪንግ',
+    genreEn: 'Brain · Logic', genreAm: 'አእምሮ · ሎጂክ', mode: 'free', icon: '🚗',
+    accent: '#5b8cff', thumb: ['#27468f', '#0a1130'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
+  { id: 'laser-puzzle', route: 'games/laser-puzzle/index.html', nameEn: 'Laser Puzzle', nameAm: 'ሌዘር',
+    genreEn: 'Brain · Logic', genreAm: 'አእምሮ · ሎጂክ', mode: 'free', icon: '🔴',
+    accent: '#e74c3c', thumb: ['#8c2b2b', '#2a0c0c'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
+  { id: 'piano-tiles', route: 'games/piano-tiles/index.html', nameEn: 'Piano Tiles', nameAm: 'ፒያኖ',
+    genreEn: 'Arcade · Reflex', genreAm: 'አርኬድ · ቅልጥፍና', mode: 'free', icon: '🎹',
+    accent: '#1a1a2e', thumb: ['#4a4a6a', '#0d0d18'], scoreEn: 'Score', scoreAm: 'ነጥብ' },
+  { id: 'stack-tower', route: 'games/stack-tower/index.html', nameEn: 'Stack Tower', nameAm: 'Stack Tower',
+    genreEn: 'Arcade · Skill', genreAm: 'አርኬድ · ክህሎት', mode: 'free', icon: '🗼',
+    accent: '#f39c12', thumb: ['#b8741b', '#3d2808'], scoreEn: 'Height', scoreAm: 'ቁመት' },
+  { id: 'crossy-road', route: 'games/crossy-road/index.html', nameEn: 'Crossy Road', nameAm: 'Crossy Road',
+    genreEn: 'Runner · Arcade', genreAm: 'ሩጫ · አርኬድ', mode: 'free', icon: '🐔',
+    accent: '#6ab04c', thumb: ['#3d7a2c', '#142a0c'], scoreEn: 'Distance', scoreAm: 'ርቀት' },
 ];
 
 // Storefront gating: free games ship by default; tournament games are opt-in via
@@ -276,6 +291,11 @@ const WIN_SCORE: Record<string, number> = {
   // Brain: time-based formulas in _lq/scoring.ts
   'sudoku': 120, 'crosssum': 110, 'target24': 70, 'sequence': 150,
   'water-sort': 200,
+  'parking-jam': 220,
+  'laser-puzzle': 240,
+  'piano-tiles': 300,
+  'stack-tower': 180,
+  'crossy-road': 120,
   'tap-game': 50,
 };
 for (const g of CATALOG) {
