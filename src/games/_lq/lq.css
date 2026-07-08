@@ -7,7 +7,7 @@
   --lq-text: #14271a;
   --lq-text-dim: #5f7262;
   --lq-border: #e0ebd4;
-  --lq-accent: #4f9e16;
+  --lq-accent: var(--game-accent, #4f9e16);
   --lq-good: #1f9d55;
   --lq-near: #d9a728;
   --lq-bad: #8b8a85;
@@ -28,6 +28,20 @@
 }
 
 #lq-mount { max-width: 980px; margin: 0 auto; padding: 6px 12px 40px; color: var(--lq-text); }
+
+/* Phase 2 — light shell frame around in-game playfields (dark boards stay inside). */
+.fc-playframe .lp-board,
+.fc-playframe .bb-grid,
+.fc-playframe .hb-grid,
+.fc-playframe .pc-grid,
+.fc-playframe .tc-board,
+.fc-playframe .sp-board,
+.fc-playframe .pt-lanes,
+.fc-playframe #jewel-match-game-wrapper .board,
+.fc-playframe #reflex-tap-wrapper .rt-area {
+  border: 1px solid var(--shell-line, #e6efdc);
+  box-shadow: 0 6px 20px rgba(47, 124, 14, 0.08);
+}
 
 .lq-tagline { text-align: center; color: var(--lq-text-dim); margin: 2px 0 6px; font-size: 14px; }
 

@@ -63,7 +63,7 @@
 }
 
 .pj-car--sel {
-  box-shadow: 0 0 0 3px #4f9e16, 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0 3px var(--game-accent, #4f9e16), 0 4px 12px rgba(0, 0, 0, 0.3);
   transform: scale(1.03);
   z-index: 2;
 }

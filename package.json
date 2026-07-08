@@ -13,7 +13,9 @@
     "setup:test-phones": "node supabase/push-test-phones.mjs",
     "verify:auth": "node supabase/verify-auth-setup.mjs",
     "sprites:compress": "node scripts/compress-runner-sprites.mjs",
-    "skins:ethio-f": "node scripts/process-ethio-f-skins.mjs && node scripts/compress-runner-sprites.mjs"
+    "skins:ethio-f": "node scripts/process-ethio-f-skins.mjs && node scripts/compress-runner-sprites.mjs",
+    "covers:generate": "node scripts/generate-covers.mjs",
+    "lint:games": "node scripts/lint-game-shell.mjs"
   },
   "devDependencies": {
     "sharp": "^0.34.5",

@@ -34,12 +34,12 @@
 }
 
 .bs-tube--sel {
-  border-color: #4f9e16;
-  box-shadow: 0 0 0 2px rgba(79, 158, 22, 0.35);
+  border-color: var(--game-accent, var(--lq-accent, #4f9e16));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--game-accent, #4f9e16) 35%, transparent);
   transform: translateY(-4px);
 }
 
-.bs-tube--target { border-color: rgba(79, 158, 22, 0.65); }
+.bs-tube--target { border-color: color-mix(in srgb, var(--game-accent, #4f9e16) 65%, transparent); }
 
 .bs-ball {
   width: calc(var(--tube-w) - 14px);

@@ -10,6 +10,7 @@ export function applyGameTheme(gameId: string): void {
   if (!meta || !body) return;
 
   body.style.setProperty('--game-accent', meta.accent);
+  body.style.setProperty('--lq-accent', meta.accent);
   if (meta.thumb?.length === 2) {
     body.style.setProperty('--game-thumb-a', meta.thumb[0]);
     body.style.setProperty('--game-thumb-b', meta.thumb[1]);

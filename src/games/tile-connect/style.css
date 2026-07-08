@@ -29,7 +29,7 @@
 }
 
 .tc-tile:hover:not(.tc-empty) { transform: scale(1.04); }
-.tc-tile--sel { box-shadow: 0 0 0 3px #4f9e16; transform: scale(1.06); }
+.tc-tile--sel { box-shadow: 0 0 0 3px var(--game-accent, #4f9e16); transform: scale(1.06); }
 .tc-tile--hint { box-shadow: 0 0 0 3px #f39c12; animation: tc-pulse 0.9s ease infinite; }
 .tc-tile.tc-empty { visibility: hidden; pointer-events: none; }
 

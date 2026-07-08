@@ -25,7 +25,7 @@
 }
 
 .bb-cell.filled { box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.2); }
-.bb-cell.preview { opacity: 0.55; outline: 2px dashed #4f9e16; }
+.bb-cell.preview { opacity: 0.55; outline: 2px dashed var(--game-accent, #4f9e16); }
 
 .bb-grid.bb-clear-flash {
   animation: bb-flash 0.35s ease;
@@ -33,7 +33,7 @@
 
 @keyframes bb-flash {
   0%, 100% { box-shadow: 0 0 0 transparent; }
-  50% { box-shadow: 0 0 18px rgba(79, 158, 22, 0.55); }
+  50% { box-shadow: 0 0 18px color-mix(in srgb, var(--game-accent, #4f9e16) 55%, transparent); }
 }
 
 .bb-tray {
@@ -54,7 +54,7 @@
   border: 2px solid transparent;
 }
 
-.bb-piece--sel { border-color: #4f9e16; box-shadow: 0 0 0 2px rgba(79, 158, 22, 0.3); }
+.bb-piece--sel { border-color: var(--game-accent, #4f9e16); box-shadow: 0 0 0 2px color-mix(in srgb, var(--game-accent, #4f9e16) 30%, transparent); }
 .bb-piece--dead { opacity: 0.35; pointer-events: none; }
 
 .bb-pcell {
