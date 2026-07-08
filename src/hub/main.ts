@@ -687,6 +687,14 @@ function renderActivityTicker(): void {
   if (!host) return;
   const items = getActivityFeed();
   host.innerHTML = activityTickerHtml(items, lang(), getOnlineCount());
+  const track = host.querySelector<HTMLElement>('.activity-ticker-track');
+  if (track) {
+    requestAnimationFrame(() => {
+      const scrollDist = track.scrollWidth / 2;
+      const durationSec = Math.min(240, Math.max(90, scrollDist / 22));
+      track.style.animationDuration = `${durationSec}s`;
+    });
+  }
 }
 
 function renderNotifBadge(): void {
