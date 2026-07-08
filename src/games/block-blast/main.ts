@@ -1,5 +1,7 @@
 // Block Blast — place polyomino pieces on an 8×8 grid; clear full rows and columns.
 import '../../styles/base.css';
+import '../../styles/game-shell.css';
+import '../_casual/style.css';
 import '../_lq/lq.css';
 import './style.css';
 import { el, finishLQRound, mulberry32, sound, mountLQ, setLQHeader, toast } from '../_lq/lq';

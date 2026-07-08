@@ -1,5 +1,7 @@
 // Hexa Block — place hex clusters on a honeycomb board; clear full rows.
 import '../../styles/base.css';
+import '../../styles/game-shell.css';
+import '../_casual/style.css';
 import '../_lq/lq.css';
 import './style.css';
 import { el, finishLQRound, mulberry32, sound, mountLQ, setLQHeader, toast } from '../_lq/lq';

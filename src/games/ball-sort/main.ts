@@ -1,5 +1,7 @@
 // Ball Sort — sort colored balls into tubes (same rules as Water Sort). Native GoPlay game.
 import '../../styles/base.css';
+import '../../styles/game-shell.css';
+import '../_casual/style.css';
 import '../_lq/lq.css';
 import './style.css';
 import { el, finishLQRound, mulberry32, shuffled, sound, mountLQ, setLQHeader, toast } from '../_lq/lq';

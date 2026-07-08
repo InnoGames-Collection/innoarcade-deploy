@@ -25,7 +25,10 @@ import { setBalance, setLifetime, setRpWeekly, setRpMonthly } from './currency';
 import { setBalanceFromServer } from './wallet';
 import { winRateOverride, BASE_POINTS } from './config';
 import { currentUser } from './auth';
+import { applyGameTheme, applyGameThemeFromPage } from './gameTheme';
 import './signInGate';
+
+applyGameThemeFromPage();
 
 export type BeginBlock = 'coins' | 'auth';
 export interface BeginResult {
@@ -74,6 +77,7 @@ export class GameHost {
     const meta = getGame(gameId);
     if (!meta) throw new Error(`unknown game: ${gameId}`);
     this.meta = meta;
+    applyGameTheme(gameId);
     this.mode = meta.mode;
     this.baseWinRate = meta.play?.winRate ?? DEFAULT_WIN_RATE;
   }

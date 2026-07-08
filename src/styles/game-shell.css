@@ -1,5 +1,14 @@
 /* Shared game menu / overlay shell — hub-aligned light panels on a blurred playfield.
-   Scope with `.game-shell` on <body> and `data-game` for per-game accent highlights. */
+   Scope with `.game-shell` on <body> and `data-game` for per-game accent highlights.
+
+   Token contract (Phase 1 — platform-owned, do not redefine in game logic):
+   - Shell chrome: --shell-bg, --shell-text, --shell-muted, --shell-line, --shell-card
+   - Brand actions: --grad-brand (green Play), --shell-blue (scores / links)
+   - Per-game highlights: --game-accent (from catalog via gameTheme.ts; CSS [data-game] is fallback)
+   - Hub card gradient (optional in-game): --game-thumb-a, --game-thumb-b
+   - Playfield frames: use --shell-card or .arc-canvas-wrap (#eef6e3) — not full-page dark backgrounds
+   - Legacy base.css dark :root is overridden once game-shell.css loads; shell-boot.css paints first
+*/
 
 .game-shell {
   --shell-bg: #ffffff;

@@ -5,12 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧱</text></svg>" />
     <title>Brick Blitz — GoPlay</title>
-  <style id="shell-boot">/* Critical shell layout — linked from game HTML <head> for instant menu paint before JS loads. */
+  <style id="shell-boot">/* Critical shell layout — inlined into game HTML <head> via Vite (see vite.config.ts). */
 
 html,
 body.game-shell {
   min-height: 100dvh;
   margin: 0;
+  background: #ffffff;
+  color: #14271a;
+}
+
+body.game-shell {
+  --shell-accent: #4f9e16;
+  --game-accent: var(--shell-accent);
 }
 
 body.game-shell.casual-shell,
@@ -88,16 +95,17 @@ body.game-shell.quiz-shell {
   background: linear-gradient(135deg, #6cc52f 0%, #4f9e16 100%);
   cursor: pointer;
 }
-</style>  <script type="module" crossorigin src="../../assets/brickBlitz-0p_hB3wI.js"></script>
+
+body.game-shell[data-game="brick-blitz"]{--game-accent:#f0a832;--shell-accent:#f0a832;}</style>  <script type="module" crossorigin src="../../assets/brickBlitz-CRhC9ujY.js"></script>
   <link rel="modulepreload" crossorigin href="../../assets/index-C1SLHC2u.js">
   <link rel="modulepreload" crossorigin href="../../assets/tournaments-D_McnvFt.js">
   <link rel="modulepreload" crossorigin href="../../assets/signInGate-DT_1Y6yT.js">
-  <link rel="modulepreload" crossorigin href="../../assets/freeShellNav-8Vd0_zIZ.js">
+  <link rel="modulepreload" crossorigin href="../../assets/freeShellNav-KreE-VPX.js">
   <link rel="modulepreload" crossorigin href="../../assets/arcadeScore-BBUSCjn-.js">
   <link rel="modulepreload" crossorigin href="../../assets/gameEvents-DjYW9AWC.js">
   <link rel="modulepreload" crossorigin href="../../assets/firstRun-Bk0d4SzX.js">
   <link rel="modulepreload" crossorigin href="../../assets/hubCanvas-BPK6FtvS.js">
-  <link rel="modulepreload" crossorigin href="../../assets/freeGameShell-CwjLSFx-.js">
+  <link rel="modulepreload" crossorigin href="../../assets/freeGameShell-BJFnmALC.js">
   <link rel="modulepreload" crossorigin href="../../assets/loop-BDek7L7e.js">
   <link rel="modulepreload" crossorigin href="../../assets/input-DF-0NnhL.js">
   <link rel="modulepreload" crossorigin href="../../assets/storage-CInvdOsc.js">

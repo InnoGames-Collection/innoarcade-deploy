@@ -6,6 +6,7 @@
 
 import '../../styles/game-shell.css';
 import '../_casual/style.css';
+import { applyGameThemeFromPage } from '../../platform/gameTheme';
 import { sfx } from '../../engine/audio';
 import { renderRunRewardHtml, wireFreeCasualShell } from '../../platform/freeGameShell';
 import type { FreePlayHeaderSlot } from '../../platform/freePlayHeader';
@@ -16,6 +17,8 @@ import { promptIfSessionExpired } from '../../platform/sessionAuth';
 import { isConfigured } from '../../platform/supabase';
 type Attrs = Record<string, string | EventListenerOrEventListenerObject>;
 type Child = Node | string | null | undefined | Child[];
+
+applyGameThemeFromPage();
 
 export function el(tag: string, attrs?: Attrs | null, ...children: Child[]): HTMLElement {
   const node = document.createElement(tag);

@@ -7,6 +7,17 @@ const p = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 /** Inline critical shell CSS into game pages so the Play menu paints before JS modules load. */
 function injectShellBoot(): Plugin {
   const bootCss = fs.readFileSync(p('src/styles/shell-boot.css'), 'utf8');
+  const catalogSrc = fs.readFileSync(p('src/platform/catalog.ts'), 'utf8');
+
+  function accentInlineForGame(gameId: string): string {
+    const accentRe = new RegExp(
+      `id:\\s*'${gameId.replace(/-/g, '\\-')}'[\\s\\S]{0,500}?accent:\\s*'([^']+)'`,
+    );
+    const m = catalogSrc.match(accentRe);
+    if (!m) return '';
+    return `body.game-shell[data-game="${gameId}"]{--game-accent:${m[1]};--shell-accent:${m[1]};}`;
+  }
+
   return {
     name: 'inject-shell-boot',
     transformIndexHtml: {
@@ -15,7 +26,10 @@ function injectShellBoot(): Plugin {
         const file = ctx.filename.replace(/\\/g, '/');
         if (!file.includes('/games/')) return html;
         if (html.includes('id="shell-boot"')) return html;
-        return html.replace('</head>', `<style id="shell-boot">${bootCss}</style></head>`);
+        const gameId = html.match(/data-game="([^"]+)"/)?.[1] ?? '';
+        const themeInline = gameId ? accentInlineForGame(gameId) : '';
+        const css = themeInline ? `${bootCss}\n${themeInline}` : bootCss;
+        return html.replace('</head>', `<style id="shell-boot">${css}</style></head>`);
       },
     },
   };

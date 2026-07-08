@@ -1,9 +1,16 @@
-/* Critical shell layout — linked from game HTML <head> for instant menu paint before JS loads. */
+/* Critical shell layout — inlined into game HTML <head> via Vite (see vite.config.ts). */
 
 html,
 body.game-shell {
   min-height: 100dvh;
   margin: 0;
+  background: #ffffff;
+  color: #14271a;
+}
+
+body.game-shell {
+  --shell-accent: #4f9e16;
+  --game-accent: var(--shell-accent);
 }
 
 body.game-shell.casual-shell,

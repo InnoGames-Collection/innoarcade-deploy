@@ -1,5 +1,7 @@
 // Laser Puzzle — rotate mirrors to hit all targets. Native GoPlay brain game.
 import '../../styles/base.css';
+import '../../styles/game-shell.css';
+import '../_casual/style.css';
 import '../_lq/lq.css';
 import './style.css';
 import { el, finishLQRound, sound, mountLQ, setLQHeader, toast } from '../_lq/lq';
