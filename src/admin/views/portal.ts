@@ -37,6 +37,9 @@ export async function render(host: HTMLElement): Promise<void> {
   const reward = portal.dailyChallenge?.rewardCoins ?? 200;
   const trendingMode = portal.trendingMode ?? 'analytics';
   const mr = portal.missionRewards ?? {};
+  const ticker = (portal.tickerMessages ?? [])
+    .map((m) => `${m.en} | ${m.am}`)
+    .join('\n');
 
   host.innerHTML = `
     <div class="a-card">
@@ -58,10 +61,17 @@ export async function render(host: HTMLElement): Promise<void> {
     </div>
 
     <div class="a-card">
+      <div class="a-card-head">Live ticker messages</div>
+      <label>One per line — format: English | Amharic. Use {"{online}"} for player count.
+        <textarea id="ticker" rows="4" style="width:100%;font:inherit">${ticker.replace(/</g, '&lt;')}</textarea>
+      </label>
+    </div>
+
+    <div class="a-card">
       <div class="a-form a-form-grid">
         <label>Trending mode
           <select id="trendingMode">
-            <option value="analytics"${trendingMode === 'analytics' ? ' selected' : ''}>Analytics (play volume)</option>
+            <option value="analytics"${trendingMode === 'analytics' ? ' selected' : ''}>Analytics (7-day plays)</option>
             <option value="curated"${trendingMode === 'curated' ? ' selected' : ''}>Curated IDs</option>
           </select>
         </label>
@@ -138,6 +148,12 @@ export async function render(host: HTMLElement): Promise<void> {
     const splitIds = (raw: string): string[] =>
       raw.split(',').map((s) => s.trim()).filter(Boolean);
 
+    const parseTicker = (raw: string) =>
+      raw.split('\n').map((line) => line.trim()).filter(Boolean).map((line) => {
+        const [en, am] = line.split('|').map((s) => s.trim());
+        return { en: en || line, am: am || en || line };
+      });
+
     const portalNext = {
       promos: readPromos(),
       news: readNews(),
@@ -152,6 +168,7 @@ export async function render(host: HTMLElement): Promise<void> {
         win2: Number((host.querySelector<HTMLInputElement>('#mWin2')!).value) || 80,
         tournament: Number((host.querySelector<HTMLInputElement>('#mTour')!).value) || 100,
       },
+      tickerMessages: parseTicker((host.querySelector<HTMLTextAreaElement>('#ticker')!).value),
     };
 
     await saveConfig({ portal: portalNext });

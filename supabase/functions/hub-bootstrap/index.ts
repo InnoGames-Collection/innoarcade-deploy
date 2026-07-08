@@ -32,15 +32,20 @@ Deno.serve(async (req: Request) => {
   const { data: u } = await userClient.auth.getUser();
   const user = u.user;
 
-  const [configRes, tourRes, poolRes, activityRes] = await Promise.all([
+  const [configRes, tourRes, poolRes, activityRes, onlineRes, trendingRes] = await Promise.all([
     admin.from('app_config').select('value').eq('key', 'app').maybeSingle(),
     admin.from('tournaments').select(TOURNAMENT_SELECT).eq('state', 'live').order('starts_at', { ascending: false }),
     admin.from('tournament_pools').select('tournament_id, entrants, fees_total, pool'),
     admin.rpc('get_public_activity_feed', { p_limit: 20 }),
+    admin.rpc('get_online_player_count', { p_within_seconds: 300 }),
+    admin.rpc('get_trending_game_ids_with_fallback', { p_limit: 8 }),
   ]);
 
   let userPayload = null;
   if (user) {
+    // Heartbeat — non-fatal if presence table not yet migrated.
+    try { await admin.rpc('heartbeat_hub_presence', { p_user: user.id }); } catch { /* ignore */ }
+
     const liveTournaments = tourRes.data ?? [];
     const weeklyTourId = liveTournaments.find((t: any) => t.game_id === 'fruit-slice' && /-weekly(-|$)/.test(String(t.id)))?.id;
     const monthlyTourId = liveTournaments.find((t: any) => t.game_id === 'memory-match' && /-monthly(-|$)/.test(String(t.id)))?.id;
@@ -92,11 +97,22 @@ Deno.serve(async (req: Request) => {
     };
   }
 
+  // Re-read online after heartbeat so the caller is counted.
+  let online = Number(onlineRes.data ?? 0);
+  if (user) {
+    try {
+      const { data: online2 } = await admin.rpc('get_online_player_count', { p_within_seconds: 300 });
+      if (online2 != null) online = Number(online2);
+    } catch { /* keep first */ }
+  }
+
   return json({
     config: configRes.data?.value ?? {},
     tournaments: tourRes.data ?? [],
     pools: poolRes.data ?? [],
     activity: activityRes.data ?? [],
+    onlineCount: online,
+    trendingIds: trendingRes.data ?? [],
     user: userPayload,
   });
 });

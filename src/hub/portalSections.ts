@@ -257,10 +257,24 @@ function formatActivityLine(item: ActivityItem, langCode: Lang): string {
   return `<span class="ticker-item">🎮 ${player} ${t('hub.activityPlaying')} ${gname}</span>`;
 }
 
-/** Marquee strip of recent anonymized plays. */
-export function activityTickerHtml(items: ActivityItem[], langCode: Lang): string {
-  if (!items.length) return '';
-  const chunks = items.map((item) => formatActivityLine(item, langCode));
+/** Marquee strip — admin ticker templates + recent anonymized plays. */
+export function activityTickerHtml(
+  items: ActivityItem[],
+  langCode: Lang,
+  onlineCount = 0,
+): string {
+  const templates = config().portal?.tickerMessages ?? [];
+  const promoChunks = templates.map((m) => {
+    const raw = langCode === 'am' ? m.am : m.en;
+    const text = raw.replace(/\{online\}/g, onlineCount.toLocaleString());
+    return `<span class="ticker-item ticker-item--promo">${escapeHtml(text)}</span>`;
+  });
+  const playChunks = items.map((item) => formatActivityLine(item, langCode));
+  const chunks = [...promoChunks, ...playChunks];
+  if (!chunks.length) {
+    const fallback = t('hub.onlinePlayers').replace('{n}', onlineCount.toLocaleString());
+    chunks.push(`<span class="ticker-item ticker-item--promo">${escapeHtml(fallback)}</span>`);
+  }
   const track = [...chunks, ...chunks].join('<span class="ticker-sep">•</span>');
   return `
     <div class="activity-ticker" aria-live="polite">
@@ -269,6 +283,17 @@ export function activityTickerHtml(items: ActivityItem[], langCode: Lang): strin
         <div class="activity-ticker-track">${track}</div>
       </div>
     </div>`;
+}
+
+/** Placeholder cards while shelves hydrate. */
+export function shelfSkeletonHtml(count = 4): string {
+  return `<div class="hscroll-track">${Array.from({ length: count }, () =>
+    `<div class="hscroll-item"><div class="skel-card" aria-hidden="true"></div></div>`,
+  ).join('')}</div>`;
+}
+
+export function lbSkeletonHtml(count = 3): string {
+  return Array.from({ length: count }, () => `<div class="skel-row" aria-hidden="true"></div>`).join('');
 }
 
 export function notificationsPanelHtml(items: HubNotification[]): string {

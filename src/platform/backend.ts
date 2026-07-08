@@ -492,6 +492,8 @@ export async function refreshPortalRemote(): Promise<boolean> {
     if (error || !data) return false;
     const payload = data as {
       activity?: unknown;
+      onlineCount?: number;
+      trendingIds?: unknown;
       user?: { coins?: number; challenge?: unknown; notifications?: unknown; recentGames?: unknown };
     };
     if (payload.user?.coins != null) setBalanceFromServer(Number(payload.user.coins));
@@ -502,6 +504,8 @@ export async function refreshPortalRemote(): Promise<boolean> {
       challenge: payload.user?.challenge,
       activity: payload.activity,
       notifications: payload.user?.notifications,
+      onlineCount: payload.onlineCount,
+      trendingIds: payload.trendingIds,
     });
     return true;
   } catch {

@@ -50,6 +50,8 @@ let gamesPlayedToday = 0;
 let activityFeed: ActivityItem[] = [];
 let notifications: HubNotification[] = [];
 let weeklyRank: number | undefined;
+let onlineCount = 0;
+let analyticsTrendingIds: string[] = [];
 
 function parseChallenge(raw: unknown): ChallengeProgress | null {
   if (!raw || typeof raw !== 'object') return null;
@@ -102,13 +104,23 @@ export function applyPortalBootstrap(data: {
   challenge?: unknown;
   activity?: unknown;
   notifications?: unknown;
+  onlineCount?: number;
+  trendingIds?: unknown;
 }): void {
-  recentGames = Array.isArray(data.recentGames) ? data.recentGames : [];
-  challengeProgress = parseChallenge(data.challenge);
-  const playTask = challengeProgress?.tasks.find((t) => t.id === 'play3');
-  gamesPlayedToday = playTask?.current ?? 0;
+  recentGames = Array.isArray(data.recentGames) ? data.recentGames : recentGames;
+  if (data.challenge !== undefined) {
+    challengeProgress = parseChallenge(data.challenge);
+    const playTask = challengeProgress?.tasks.find((t) => t.id === 'play3');
+    gamesPlayedToday = playTask?.current ?? 0;
+  }
   if (data.activity != null) activityFeed = parseActivity(data.activity);
   if (data.notifications != null) notifications = parseNotifications(data.notifications);
+  if (typeof data.onlineCount === 'number') onlineCount = Math.max(0, data.onlineCount);
+  if (data.trendingIds != null) {
+    analyticsTrendingIds = Array.isArray(data.trendingIds)
+      ? data.trendingIds.map(String).filter(Boolean)
+      : [];
+  }
 }
 
 export function getRecentGames(): RecentGameRow[] {
@@ -159,4 +171,20 @@ export function setWeeklyRank(rank: number | undefined): void {
 
 export function getWeeklyRank(): number | undefined {
   return weeklyRank;
+}
+
+export function getOnlineCount(): number {
+  return onlineCount;
+}
+
+export function setOnlineCount(n: number): void {
+  onlineCount = Math.max(0, Math.floor(n));
+}
+
+export function getAnalyticsTrendingIds(): string[] {
+  return analyticsTrendingIds;
+}
+
+export function setAnalyticsTrendingIds(ids: string[]): void {
+  analyticsTrendingIds = ids;
 }

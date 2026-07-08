@@ -482,6 +482,7 @@ const en = {
   'hub.notifTitle': 'Notifications',
   'hub.notifMarkRead': 'Mark all read',
   'hub.trendingAnalytics': 'Sorted by play volume',
+  'hub.onlinePlayers': '{n} players online',
 } as const;
 
 export type I18nKey = keyof typeof en;
@@ -966,6 +967,7 @@ const am: Dict = {
   'hub.notifTitle': 'ማሳወቂያዎች',
   'hub.notifMarkRead': 'ሁሉንም አንብብ',
   'hub.trendingAnalytics': 'በተጫዋች ብዛት ተደርድሯል',
+  'hub.onlinePlayers': '{n} ተጫዋቾች በመስመር ላይ',
 };
 
 const dicts: Record<Lang, Dict> = { en, am };

@@ -1209,3 +1209,20 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .mission-prog { font-size: 0.68rem; color: var(--muted); }
 .reward-level-hint { font-size: 0.68rem; color: var(--muted); margin: 0.35rem 0 0; text-align: center; }
 .dash-level { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem; font-size: 0.82rem; }
+
+/* Phase 4 — skeletons */
+.skel-card, .skel-row {
+  background: linear-gradient(90deg, #eef2e8 25%, #f7faf3 50%, #eef2e8 75%);
+  background-size: 200% 100%;
+  animation: skel-shine 1.2s ease-in-out infinite;
+  border-radius: 14px;
+}
+.skel-card { aspect-ratio: 3/4; width: 100%; }
+.skel-row { height: 2.4rem; margin-bottom: 0.4rem; border-radius: 12px; }
+@keyframes skel-shine {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skel-card, .skel-row { animation: none; }
+}

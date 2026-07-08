@@ -31,6 +31,8 @@ export interface HubBootstrapPayload {
   tournaments?: TournamentRow[];
   pools?: PoolRow[];
   activity?: unknown;
+  onlineCount?: number;
+  trendingIds?: unknown;
   user?: HubBootstrapUser | null;
 }
 
@@ -48,7 +50,13 @@ function applyHubBootstrap(payload: HubBootstrapPayload): HubBootstrapResult {
   if (!user) {
     setBalanceFromServer(0);
     applyMyEntriesBootstrap([]);
-    applyPortalBootstrap({ recentGames: [], challenge: null, activity: payload.activity });
+    applyPortalBootstrap({
+      recentGames: [],
+      challenge: null,
+      activity: payload.activity,
+      onlineCount: payload.onlineCount,
+      trendingIds: payload.trendingIds,
+    });
     return { ok: true, hadUser: false, unlocks: [] };
   }
 
@@ -63,6 +71,8 @@ function applyHubBootstrap(payload: HubBootstrapPayload): HubBootstrapResult {
     challenge: user.challenge ?? null,
     activity: payload.activity,
     notifications: user.notifications ?? [],
+    onlineCount: payload.onlineCount,
+    trendingIds: payload.trendingIds,
   });
   const unlocks = Array.isArray(user.unlocks) ? user.unlocks : [];
   return { ok: true, hadUser: true, unlocks };

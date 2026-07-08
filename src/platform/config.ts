@@ -69,15 +69,22 @@ export interface PortalNewsItem {
   ago: string;
 }
 
+export interface PortalTickerMessage {
+  en: string;
+  am: string;
+}
+
 export interface PortalConfig {
   promos?: PortalPromo[];
   news?: PortalNewsItem[];
   trendingGameIds?: string[];
   recentlyAddedGameIds?: string[];
   dailyChallenge?: { rewardCoins: number };
-  /** Curated shelf order vs sort by game_stats play volume. */
+  /** Curated shelf order vs sort by game_stats / 7-day play volume. */
   trendingMode?: 'curated' | 'analytics';
   missionRewards?: { play5?: number; win2?: number; tournament?: number };
+  /** Live ticker templates — `{online}` substituted with presence count. */
+  tickerMessages?: PortalTickerMessage[];
 }
 
 export interface AppConfig {
@@ -129,6 +136,11 @@ export const DEFAULT_CONFIG: AppConfig = {
     dailyChallenge: { rewardCoins: 200 },
     trendingMode: 'analytics',
     missionRewards: { play5: 50, win2: 80, tournament: 100 },
+    tickerMessages: [
+      { en: '🟢 {online} players online', am: '🟢 {online} ተጫዋቾች በመስመር ላይ' },
+      { en: "🔥 Complete today's challenge for bonus coins", am: '🔥 ለተጨማሪ ሳንቲም የዛሬን ግብ ያጠናቅቁ' },
+      { en: '🏆 Join the weekly championship', am: '🏆 ሳምንታዊ ሻምፒዮና ይቀላቀሉ' },
+    ],
   },
 };
 

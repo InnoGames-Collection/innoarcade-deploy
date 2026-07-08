@@ -7,7 +7,7 @@ import { mountWallet } from './wallet';
 import { onAuthChange, currentUser, signOut } from '../platform/auth';
 import { sfx } from '../engine/audio';
 import { levelFor, LEVEL_THRESHOLDS, etbPrizesForCadence, formatEtbPrize, TOURNAMENT_ETB_PRIZES, loadConfig, config, type WinnerCadence } from '../platform/config';
-import { getRecentGames, getChallengeProgress, getGamesPlayedToday, setChallengeProgress, getActivityFeed, applyActivityRaw, getNotifications, setNotifications, unreadNotifCount, getWeeklyRank, setWeeklyRank, type ChallengeProgress } from '../platform/portalState';
+import { getRecentGames, getChallengeProgress, getGamesPlayedToday, setChallengeProgress, getActivityFeed, applyActivityRaw, getNotifications, setNotifications, unreadNotifCount, getWeeklyRank, setWeeklyRank, getOnlineCount, getAnalyticsTrendingIds, type ChallengeProgress } from '../platform/portalState';
 import { leaderboardRemote, fetchWallets, fetchTournamentPeriodWinners, claimDailyLogin, playerStandingRemote, fetchGameStats, claimChallengeRemote, fetchActivityFeed, markNotificationsRead, refreshPortalRemote } from '../platform/backend';
 import {
   activeTournaments, tournamentGame, getTournamentForGame, getLiveTournamentByCadence,
@@ -26,7 +26,7 @@ import {
   weeklyTournamentBannerHtml, dailyChallengeHtml, sidebarDashboardHtml,
   dailyMissionsHtml, nextRewardHtml, newsFeedHtml, sidebarNewsHtml,
   rewardsTiersHtml, lbPreviewRow, hScrollShelf, comingSoonShelfHtml, continuePlayingHtml,
-  activityTickerHtml, notificationsPanelHtml,
+  activityTickerHtml, notificationsPanelHtml, shelfSkeletonHtml, lbSkeletonHtml,
 } from './portalSections';
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
@@ -535,9 +535,17 @@ function renderTrending(): void {
   if (!host) return;
   const portal = config().portal;
   const mode = portal?.trendingMode ?? 'analytics';
-  const ids = portal?.trendingGameIds;
+  const analyticsIds = getAnalyticsTrendingIds();
+  if (mode === 'analytics' && analyticsIds.length) {
+    // Server 7-day (or all-time fallback) order — treat as curated list.
+    host.innerHTML = hScrollShelf(
+      trendingGames(analyticsIds, undefined, 'curated'),
+      (g) => gameCard(g, { compact: true }),
+    );
+    return;
+  }
   host.innerHTML = hScrollShelf(
-    trendingGames(ids, gamePlayCounts, mode),
+    trendingGames(portal?.trendingGameIds, gamePlayCounts, mode),
     (g) => gameCard(g, { compact: true }),
   );
 }
@@ -664,7 +672,7 @@ function renderActivityTicker(): void {
   const host = document.querySelector('#activityTickerHost');
   if (!host) return;
   const items = getActivityFeed();
-  host.innerHTML = activityTickerHtml(items, lang());
+  host.innerHTML = activityTickerHtml(items, lang(), getOnlineCount());
 }
 
 function renderNotifBadge(): void {
@@ -709,12 +717,16 @@ function renderLbPreview(opts?: { fetch?: boolean }): void {
   const host = document.querySelector('#lbPreviewBoard');
   if (!host) return;
   const mayFetch = opts?.fetch ?? lbPreviewSeen;
-  if (!mayFetch) return;
+  if (!mayFetch) {
+    if (!host.innerHTML.trim()) host.innerHTML = lbSkeletonHtml(3);
+    return;
+  }
   const tour = getLiveTournamentByCadence('weekly');
   if (!tour) {
     host.innerHTML = `<p class="pd-empty">${t('hub.noBoardYet')}</p>`;
     return;
   }
+  if (!host.querySelector('.lb-preview-row')) host.innerHTML = lbSkeletonHtml(3);
   void Promise.all([leaderboardRemote(tour.id, 3), playerStandingRemote(tour.id)]).then(([rows, me]) => {
     const playerInBoard = rows.some((r) => r.isPlayer);
     let html = rows.length
@@ -740,6 +752,16 @@ function renderPortalSections(): void {
   renderNews();
   renderComingSoon();
   renderLbPreview({ fetch: lbPreviewSeen });
+}
+
+/** First paint placeholders before bootstrap returns. */
+function paintSkeletons(): void {
+  const trending = document.querySelector('#trendingShelf');
+  if (trending && !trending.innerHTML.trim()) trending.innerHTML = shelfSkeletonHtml(4);
+  const recent = document.querySelector('#recentShelf');
+  if (recent && !recent.innerHTML.trim()) recent.innerHTML = shelfSkeletonHtml(4);
+  const lb = document.querySelector('#lbPreviewBoard');
+  if (lb && !lb.innerHTML.trim()) lb.innerHTML = lbSkeletonHtml(3);
 }
 
 // --- Draws / lottery --------------------------------------------------------
@@ -1124,6 +1146,7 @@ if (localStorage.getItem('innoarcade.reset.v4') !== '1') {
 
 document.documentElement.lang = getLang();
 syncLangButtons();
+paintSkeletons();
 renderAll();
 // Keep the top balances strip live as coins/points/gold change.
 onWalletChange(() => { renderMyStats(); renderSidebar(); });
