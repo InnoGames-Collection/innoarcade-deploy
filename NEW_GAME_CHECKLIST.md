@@ -36,11 +36,23 @@ Use this before merging any **new** catalog game. Stable games (`STABLE.md`) are
 
 ## Generate cover art
 
+**Placeholder gradients** (fast, no illustration):
+
 ```bash
-node scripts/generate-covers.mjs
+npm run covers:generate
 ```
 
-Regenerates gradient WebP covers from catalog `thumb` colors for non-stable games.
+**Custom illustration** (recommended for production):
+
+1. Generate a **4:3** PNG in polished mobile-game style (see `assets/covers/README.md` for prompts).
+2. Save source to `assets/covers/<slug>.png`.
+3. Import optimized WebP:
+
+```bash
+npm run covers:import -- assets/covers/water_sort.png water-sort
+```
+
+Regenerating placeholders overwrites WebP files — re-import custom art after running `covers:generate`.
 
 ## Verify
 
