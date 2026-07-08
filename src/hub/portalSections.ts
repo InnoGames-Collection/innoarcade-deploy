@@ -9,7 +9,8 @@ import {
 import {
   countdown, type Tournament,
 } from '../platform/tournaments';
-import { etbPrizesForCadence, formatEtbPrize } from '../platform/config';
+import { etbPrizesForCadence, formatEtbPrize, config } from '../platform/config';
+import { getChallengeProgress, type ChallengeProgress, type ProgressItem } from '../platform/portalState';
 import { type LeaderEntry } from '../platform/tournaments';
 
 export function escapeHtml(s: string): string {
@@ -110,25 +111,55 @@ export function weeklyTournamentBannerHtml(opts: WeeklyBannerOpts): string {
     </article>`;
 }
 
-export function dailyChallengeHtml(): string {
-  const tasks: { key: I18nKey; done: boolean }[] = [
-    { key: 'hub.challengeScore', done: false },
-    { key: 'hub.challengePlay3', done: false },
-    { key: 'hub.challengeMemory', done: false },
+const TASK_LABELS: Record<string, I18nKey> = {
+  score: 'hub.challengeScore',
+  play3: 'hub.challengePlay3',
+  memory: 'hub.challengeMemory',
+};
+const MISSION_LABELS: Record<string, I18nKey> = {
+  play5: 'hub.missionPlay5',
+  win2: 'hub.missionWin2',
+  tournament: 'hub.missionTournament',
+};
+
+function taskLabel(id: string): string {
+  const key = TASK_LABELS[id];
+  return key ? t(key) : id;
+}
+
+function missionLabel(id: string): string {
+  const key = MISSION_LABELS[id];
+  return key ? t(key) : id;
+}
+
+export function dailyChallengeHtml(progress?: ChallengeProgress | null): string {
+  const p = progress ?? getChallengeProgress();
+  const reward = p?.rewardCoins ?? config().portal?.dailyChallenge?.rewardCoins ?? 200;
+  const tasks = p?.tasks?.length ? p.tasks : [
+    { id: 'score', current: 0, target: 5000, done: false },
+    { id: 'play3', current: 0, target: 3, done: false },
+    { id: 'memory', current: 0, target: 1, done: false },
   ];
   const rows = tasks.map((task) =>
-    `<li class="dc-task${task.done ? ' done' : ''}"><span class="dc-check">${task.done ? '✔' : '○'}</span><span data-i18n="${task.key}">${t(task.key)}</span></li>`,
+    `<li class="dc-task${task.done ? ' done' : ''}"><span class="dc-check">${task.done ? '✔' : '○'}</span><span>${escapeHtml(taskLabel(task.id))}</span></li>`,
   ).join('');
+  const allDone = p?.allDone ?? false;
+  const claimed = p?.claimed ?? false;
+  let cta = `<a class="btn primary dc-cta" href="#games" data-i18n="hub.playNow">${t('hub.playNow')}</a>`;
+  if (allDone && !claimed) {
+    cta = `<button type="button" class="btn primary dc-cta" id="claimChallengeBtn" data-i18n="hub.claimReward">${t('hub.claimReward')}</button>`;
+  } else if (claimed) {
+    cta = `<p class="dc-claimed" data-i18n="hub.challengeClaimed">${t('hub.challengeClaimed')}</p>`;
+  }
   return `
     <article class="widget-card challenge-card" id="dailyChallenge">
       <h3 class="widget-title">🎯 <span data-i18n="hub.dailyChallenge">${t('hub.dailyChallenge')}</span></h3>
       <ul class="dc-tasks">${rows}</ul>
       <div class="dc-reward">
         <span data-i18n="hub.reward">${t('hub.reward')}</span>
-        <strong>+200 <span data-i18n="hub.coinsLabel">${t('hub.coinsLabel')}</span></strong>
+        <strong>+${reward} <span data-i18n="hub.coinsLabel">${t('hub.coinsLabel')}</span></strong>
       </div>
-      <a class="btn primary dc-cta" href="#games" data-i18n="hub.playNow">${t('hub.playNow')}</a>
-      <p class="widget-note" data-i18n="hub.challengeNote">${t('hub.challengeNote')}</p>
+      ${cta}
     </article>`;
 }
 
@@ -163,29 +194,30 @@ export function sidebarDashboardHtml(opts: SidebarDashOpts): string {
     </article>`;
 }
 
-export function dailyMissionsHtml(): string {
-  const missions: { key: I18nKey; cur: number; max: number; reward: number }[] = [
-    { key: 'hub.missionPlay5', cur: 0, max: 5, reward: 50 },
-    { key: 'hub.missionWin2', cur: 0, max: 2, reward: 80 },
-    { key: 'hub.missionTournament', cur: 0, max: 1, reward: 100 },
+export function dailyMissionsHtml(progress?: ChallengeProgress | null): string {
+  const p = progress ?? getChallengeProgress();
+  const missions: ProgressItem[] = p?.missions?.length ? p.missions : [
+    { id: 'play5', current: 0, target: 5, done: false, reward: 50 },
+    { id: 'win2', current: 0, target: 2, done: false, reward: 80 },
+    { id: 'tournament', current: 0, target: 1, done: false, reward: 100 },
   ];
   const rows = missions.map((m) => {
-    const pct = Math.round((m.cur / m.max) * 100);
+    const pct = m.target > 0 ? Math.min(100, Math.round((m.current / m.target) * 100)) : 0;
+    const reward = m.reward ?? 0;
     return `
       <div class="mission-row">
         <div class="mission-top">
-          <span data-i18n="${m.key}">${t(m.key)}</span>
-          <span class="mission-reward">+${m.reward} 🪙</span>
+          <span>${escapeHtml(missionLabel(m.id))}</span>
+          <span class="mission-reward">+${reward} 🪙</span>
         </div>
         <div class="mission-bar"><div class="mission-bar-fill" style="width:${pct}%"></div></div>
-        <span class="mission-prog">${m.cur}/${m.max}</span>
+        <span class="mission-prog">${m.current}/${m.target}</span>
       </div>`;
   }).join('');
   return `
     <article class="widget-card missions-card">
       <h3 class="widget-title">📋 <span data-i18n="hub.dailyMissions">${t('hub.dailyMissions')}</span></h3>
       ${rows}
-      <p class="widget-note" data-i18n="hub.missionsNote">${t('hub.missionsNote')}</p>
     </article>`;
 }
 
@@ -200,19 +232,29 @@ export function nextRewardHtml(level: number, xpToNext: number): string {
     </article>`;
 }
 
-const NEWS_ITEMS: { icon: string; key: I18nKey; ago: string }[] = [
-  { icon: '🏆', key: 'hub.newsTournament', ago: '2h' },
-  { icon: '🎮', key: 'hub.newsGames', ago: '1d' },
-  { icon: '⭐', key: 'hub.newsDouble', ago: '2d' },
-  { icon: '🔧', key: 'hub.newsMaintenance', ago: '3d' },
-];
+function newsItems(lang: Lang) {
+  const fromConfig = config().portal?.news;
+  if (fromConfig?.length) {
+    return fromConfig.map((n) => ({
+      icon: n.icon,
+      text: lang === 'am' ? n.textAm : n.textEn,
+      ago: n.ago,
+    }));
+  }
+  return [
+    { icon: '🏆', text: t('hub.newsTournament'), ago: '2h' },
+    { icon: '🎮', text: t('hub.newsGames'), ago: '1d' },
+    { icon: '⭐', text: t('hub.newsDouble'), ago: '2d' },
+    { icon: '🔧', text: t('hub.newsMaintenance'), ago: '3d' },
+  ];
+}
 
-export function newsFeedHtml(): string {
-  const rows = NEWS_ITEMS.map((n) => `
+export function newsFeedHtml(langCode: Lang): string {
+  const rows = newsItems(langCode).map((n) => `
     <li class="news-item">
       <span class="news-ico">${n.icon}</span>
       <div class="news-body">
-        <span data-i18n="${n.key}">${t(n.key)}</span>
+        <span>${escapeHtml(n.text)}</span>
         <time class="news-ago">${n.ago}</time>
       </div>
     </li>`).join('');
@@ -223,11 +265,11 @@ export function newsFeedHtml(): string {
     </section>`;
 }
 
-export function sidebarNewsHtml(): string {
-  const rows = NEWS_ITEMS.slice(0, 3).map((n) => `
+export function sidebarNewsHtml(langCode: Lang): string {
+  const rows = newsItems(langCode).slice(0, 3).map((n) => `
     <li class="news-item news-item--compact">
       <span class="news-ico">${n.icon}</span>
-      <span data-i18n="${n.key}">${t(n.key)}</span>
+      <span>${escapeHtml(n.text)}</span>
     </li>`).join('');
   return `
     <article class="widget-card news-widget">
@@ -276,8 +318,29 @@ export function hScrollShelf(games: GameMeta[], cardHtml: (g: GameMeta) => strin
   return `<div class="hscroll-track">${games.map((g) => `<div class="hscroll-item">${cardHtml(g)}</div>`).join('')}</div>`;
 }
 
-export function comingSoonShelfHtml(lang: Lang): string {
-  return `<div class="hscroll-track cs-track">${COMING_SOON.map((teaser) => `<div class="hscroll-item hscroll-item--cs">${comingSoonCard(teaser, lang)}</div>`).join('')}</div>`;
+export function continuePlayingHtml(
+  langCode: Lang,
+  rows: { game: GameMeta; lastScore: number; progressPct: number }[],
+): string {
+  if (!rows.length) return '';
+  const cards = rows.map(({ game, progressPct }) => {
+    const gname = langCode === 'am' ? game.nameAm : game.nameEn;
+    return `
+      <article class="cp-card">
+        <div class="cp-thumb">${game.icon}</div>
+        <div class="cp-body">
+          <h4 class="cp-title">${escapeHtml(gname)}</h4>
+          <div class="mission-bar"><div class="mission-bar-fill" style="width:${progressPct}%"></div></div>
+          <span class="cp-pct">${progressPct}%</span>
+          <a class="btn primary cp-btn" href="${game.route}" data-i18n="hub.continue">${t('hub.continue')}</a>
+        </div>
+      </article>`;
+  }).join('');
+  return `<div class="cp-list">${cards}</div>`;
+}
+
+export function comingSoonShelfHtml(langCode: Lang): string {
+  return `<div class="hscroll-track cs-track">${COMING_SOON.map((teaser) => `<div class="hscroll-item hscroll-item--cs">${comingSoonCard(teaser, langCode)}</div>`).join('')}</div>`;
 }
 
 /** IDs for trending/recent helpers (re-export for tests). */

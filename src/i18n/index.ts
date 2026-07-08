@@ -468,6 +468,10 @@ const en = {
   'hub.footerSupport': 'Support',
   'hub.footerFollow': 'Follow us',
   'hub.footerContact': 'Contact',
+  'hub.claimReward': 'Claim reward',
+  'hub.challengeClaimed': 'Reward claimed today!',
+  'hub.continuePlaying': 'Continue playing',
+  'hub.continue': 'Continue',
 } as const;
 
 export type I18nKey = keyof typeof en;
@@ -938,6 +942,10 @@ const am: Dict = {
   'hub.footerSupport': 'ድጋፍ',
   'hub.footerFollow': 'ይከተሉን',
   'hub.footerContact': 'ያግኙን',
+  'hub.claimReward': 'ሽልማት ይውሰዱ',
+  'hub.challengeClaimed': 'ሽልማት ዛሬ ተወስዷል!',
+  'hub.continuePlaying': 'መጫወት ይቀጥሉ',
+  'hub.continue': 'Continue',
 };
 
 const dicts: Record<Lang, Dict> = { en, am };

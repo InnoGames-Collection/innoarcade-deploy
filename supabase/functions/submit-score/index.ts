@@ -109,6 +109,27 @@ function computeCoinAward(score: number, gameId: string): number {
   return Math.min(COIN_CAP_PER_ROUND, Math.max(1, Math.floor(score / par)));
 }
 
+async function trackHubEventSafe(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  gameId: string,
+  event: string,
+  score: number,
+  win: boolean,
+  meta: Record<string, unknown> = {},
+): Promise<void> {
+  try {
+    await admin.rpc('track_hub_event', {
+      p_user: userId,
+      p_game: gameId,
+      p_event: event,
+      p_score: score,
+      p_win: win,
+      p_meta: meta,
+    });
+  } catch { /* never fail scoring */ }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405);
@@ -185,6 +206,7 @@ Deno.serve(async (req: Request) => {
       best = Number(r?.best ?? score);
       isRecord = Boolean(r?.is_record);
     } catch { /* best-effort */ }
+    await trackHubEventSafe(admin, user.id, gameId, 'play', score, win);
     return json({ points, lifetime, xp: points, award, coinAward, coins, best, isRecord });
   }
 
@@ -220,6 +242,7 @@ Deno.serve(async (req: Request) => {
       best = Number(r?.best ?? score);
       isRecord = Boolean(r?.is_record);
     } catch {}
+    await trackHubEventSafe(admin, user.id, gameId, 'play', score, win);
     return json({ points, lifetime, xp: points, award, coinAward, coins, best, isRecord, ranked: false, attemptsLeft: 0 });
   }
 
@@ -277,6 +300,9 @@ Deno.serve(async (req: Request) => {
     updated_at: new Date().toISOString(),
   });
   if (upErr) return json({ error: 'write failed' }, 500);
+
+  await trackHubEventSafe(admin, user.id, gameId, 'play', score, win, { tournament: true });
+  await trackHubEventSafe(admin, user.id, gameId, 'tournament_play', score, win, { tournamentId });
 
   // Tournament rounds also earn XP + coins from score (same formula as free).
   const award = computeXp(score, gameId);

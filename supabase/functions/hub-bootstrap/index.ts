@@ -2,7 +2,7 @@
 //
 // hub-bootstrap — single round-trip to hydrate the hub on load: app config,
 // live tournaments + prize pools, and (when signed in) profile balances,
-// unlocks, and tournament entries.
+// unlocks, tournament entries, recent games, and daily challenge progress.
 //
 // Deploy: supabase functions deploy hub-bootstrap
 
@@ -56,13 +56,20 @@ Deno.serve(async (req: Request) => {
       );
     } else { rpQueries.push(Promise.resolve({ data: null })); }
 
-    const [profRes, entriesRes, weeklyRpRes, monthlyRpRes] = await Promise.all([
+    const [profRes, entriesRes, weeklyRpRes, monthlyRpRes, recentRes, challengeRes] = await Promise.all([
       admin.from('profiles').select('coins, xp, xp_lifetime, unlocks').eq('id', user.id).maybeSingle(),
       admin
         .from('tournament_entries')
         .select('tournament_id, fee_paid, prize_won, entered_at, attempts_purchased, attempts_used')
         .eq('user_id', user.id),
       ...rpQueries,
+      admin
+        .from('user_recent_games')
+        .select('game_id, last_score, last_played_at, play_count')
+        .eq('user_id', user.id)
+        .order('last_played_at', { ascending: false })
+        .limit(5),
+      admin.rpc('get_daily_challenge_progress', { p_user: user.id }),
     ]);
     userPayload = {
       coins: Number(profRes.data?.coins ?? 0),
@@ -72,6 +79,13 @@ Deno.serve(async (req: Request) => {
       entries: entriesRes.data ?? [],
       rpWeekly: Number(weeklyRpRes?.data?.rp ?? 0),
       rpMonthly: Number(monthlyRpRes?.data?.rp ?? 0),
+      recentGames: (recentRes.data ?? []).map((r: any) => ({
+        gameId: r.game_id,
+        lastScore: Number(r.last_score ?? 0),
+        lastPlayedAt: r.last_played_at,
+        playCount: Number(r.play_count ?? 1),
+      })),
+      challenge: challengeRes.data ?? null,
     };
   }
 

@@ -9,7 +9,7 @@ const STR = {
   en: {
     title: 'GoPlay Admin', console: 'Operator console',
     nav_dashboard: 'Dashboard', nav_tournaments: 'Tournaments', nav_players: 'Players',
-    nav_payments: 'Payments', nav_config: 'Config', nav_draws: 'Draws',
+    nav_payments: 'Payments', nav_config: 'Config', nav_portal: 'Portal', nav_draws: 'Draws',
     // draws
     drawsHint: 'Windows + seeds are created automatically; tune the prize, ticket cost and caps here. Winners are picked from the committed seed at settlement.',
     prizeEtb: 'Prize (ETB)', ticketCost: 'Ticket cost (pts)', ticketCap: 'Ticket cap / user',
@@ -46,7 +46,7 @@ const STR = {
   am: {
     title: 'ኢኖአርኬድ አስተዳዳሪ', console: 'የአስተዳዳሪ ኮንሶል',
     nav_dashboard: 'ዳሽቦርድ', nav_tournaments: 'ውድድሮች', nav_players: 'ተጫዋቾች',
-    nav_payments: 'ክፍያዎች', nav_config: 'ቅንብር', nav_draws: 'ዕጣዎች',
+    nav_payments: 'ክፍያዎች', nav_config: 'ቅንብር', nav_portal: 'ፖርታል', nav_draws: 'ዕጣዎች',
     drawsHint: 'መስኮቶችና ዘሮች በራስ-ሰር ይፈጠራሉ፤ ሽልማቱን፣ የቲኬት ዋጋንና ገደቦችን እዚህ ያስተካክሉ። አሸናፊዎች ከተወሰነው ዘር ይመረጣሉ።',
     prizeEtb: 'ሽልማት (ETB)', ticketCost: 'የቲኬት ዋጋ (ነጥብ)', ticketCap: 'የቲኬት ገደብ / ተጠቃሚ',
     minTickets: 'ዝቅተኛ ቲኬት', winnerCount: 'አሸናፊዎች', entrants: 'ተሳታፊዎች', ticketsSold: 'ቲኬቶች',

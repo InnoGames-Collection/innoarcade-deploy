@@ -6,25 +6,26 @@ import { openAccount } from './account';
 import { mountWallet } from './wallet';
 import { onAuthChange, currentUser, signOut } from '../platform/auth';
 import { sfx } from '../engine/audio';
-import { leaderboardRemote, fetchWallets, fetchTournamentPeriodWinners, claimDailyLogin, playerStandingRemote, fetchGameStats } from '../platform/backend';
-import { orderedCatalog, getGame, gamesInCategory, trendingGames, recentlyAddedGames, ratingFor, estMinutesFor, type GameMeta, type TournamentCadence, type GameCategory } from '../platform/catalog';
+import { levelFor, LEVEL_THRESHOLDS, etbPrizesForCadence, formatEtbPrize, TOURNAMENT_ETB_PRIZES, loadConfig, config, type WinnerCadence } from '../platform/config';
+import { getRecentGames, getChallengeProgress, getGamesPlayedToday, setChallengeProgress, type ChallengeProgress } from '../platform/portalState';
+import { leaderboardRemote, fetchWallets, fetchTournamentPeriodWinners, claimDailyLogin, playerStandingRemote, fetchGameStats, claimChallengeRemote } from '../platform/backend';
 import {
   activeTournaments, tournamentGame, getTournamentForGame, getLiveTournamentByCadence,
   countdown, loadTournaments, loadMyEntries,
   tournamentState, enterTournament,
   type Tournament, type LeaderEntry,
 } from '../platform/tournaments';
-import { balance, balanceSync, onWalletChange } from '../platform/wallet';
+import { balance, balanceSync, onWalletChange, setBalanceFromServer } from '../platform/wallet';
 import { activeDraws, myTickets, enterDraw, NotEnoughPointsError, hydrateTickets, loadDraws, myOdds } from '../platform/draws';
 import { xp as xpBal, onCurrencyChange, setBalance, setLifetime, setRpWeekly, setRpMonthly, xpLifetime, rpWeekly, rpMonthly } from '../platform/currency';
-import { levelFor, LEVEL_THRESHOLDS, etbPrizesForCadence, formatEtbPrize, TOURNAMENT_ETB_PRIZES, loadConfig, type WinnerCadence } from '../platform/config';
+import { orderedCatalog, getGame, gamesInCategory, trendingGames, recentlyAddedGames, ratingFor, estMinutesFor, type GameMeta, type TournamentCadence, type GameCategory } from '../platform/catalog';
 import { getSupabase, isConfigured } from '../platform/supabase';
 import { bootstrapHubData, type HubBootstrapResult } from '../platform/hubBootstrap';
 import {
   escapeHtml, fmtPlayCount, starsHtml, categoryChipsHtml, quickActionsHtml,
   weeklyTournamentBannerHtml, dailyChallengeHtml, sidebarDashboardHtml,
   dailyMissionsHtml, nextRewardHtml, newsFeedHtml, sidebarNewsHtml,
-  rewardsTiersHtml, lbPreviewRow, hScrollShelf, comingSoonShelfHtml,
+  rewardsTiersHtml, lbPreviewRow, hScrollShelf, comingSoonShelfHtml, continuePlayingHtml,
 } from './portalSections';
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
@@ -39,22 +40,40 @@ let gamePlayCounts: Record<string, number> = {};
 const userBests: Record<string, number> = {};
 
 // --- Promo banner carousel --------------------------------------------------
-const PROMOS = [
-  { img: '/brand/ad-banner-1.png', alt: 'Every Score Counts — climb the leaderboard' },
-  { img: '/brand/ad-banner-2.png', alt: 'Weekly Fruit Slice Tournament' },
-  { img: '/brand/ad-banner-3.png', alt: 'Monthly Memory Match Tournament' },
-  { img: '/brand/ad-banner-4.png', alt: 'Win up to 50,000 ETB — Monthly & Weekly Tournaments' },
+interface PromoSlide { img: string; alt: string; href?: string }
+const PROMOS_FALLBACK: PromoSlide[] = [
+  { img: '/brand/ad-banner-1.png', alt: 'Every Score Counts — climb the leaderboard', href: '#games' },
+  { img: '/brand/ad-banner-2.png', alt: 'Weekly Fruit Slice Tournament', href: '#weeklyTournament' },
+  { img: '/brand/ad-banner-3.png', alt: 'Monthly Memory Match Tournament', href: '#weeklyTournament' },
+  { img: '/brand/ad-banner-4.png', alt: 'Win up to 50,000 ETB — Monthly & Weekly Tournaments', href: '#weeklyTournament' },
 ];
+function promosFromConfig(): PromoSlide[] {
+  const portal = config().portal;
+  if (!portal?.promos?.length) return PROMOS_FALLBACK;
+  return portal.promos.map((p) => ({
+    img: p.img,
+    alt: lang() === 'am' ? p.altAm : p.altEn,
+    href: p.href,
+  }));
+}
 let promoIdx = 0;
 function renderPromo(): void {
+  const promos = promosFromConfig();
   const track = document.querySelector('#promoTrack');
   const dots = document.querySelector('#promoDots');
-  if (!track || !dots) return;
-  const p = PROMOS[promoIdx];
-  track.innerHTML = `<div class="promo-slide promo-slide-img"><img src="${p.img}" alt="${escapeHtml(p.alt)}" class="promo-banner-img" /></div>`;
-  dots.innerHTML = PROMOS.map((_, i) => `<span class="promo-dot${i === promoIdx ? ' on' : ''}"></span>`).join('');
+  if (!track || !dots || !promos.length) return;
+  const p = promos[promoIdx % promos.length];
+  const inner = p.href
+    ? `<a href="${escapeHtml(p.href)}" class="promo-slide promo-slide-img"><img src="${p.img}" alt="${escapeHtml(p.alt)}" class="promo-banner-img" /></a>`
+    : `<div class="promo-slide promo-slide-img"><img src="${p.img}" alt="${escapeHtml(p.alt)}" class="promo-banner-img" /></div>`;
+  track.innerHTML = inner;
+  dots.innerHTML = promos.map((_, i) => `<span class="promo-dot${i === promoIdx % promos.length ? ' on' : ''}"></span>`).join('');
 }
-function advancePromo(): void { promoIdx = (promoIdx + 1) % PROMOS.length; renderPromo(); }
+function advancePromo(): void {
+  const n = promosFromConfig().length || 1;
+  promoIdx = (promoIdx + 1) % n;
+  renderPromo();
+}
 
 // Auto-advance timer the player can interrupt by swiping/tapping a dot.
 let promoTimer: ReturnType<typeof setInterval> | undefined;
@@ -63,7 +82,8 @@ function restartPromoTimer(): void {
   promoTimer = setInterval(advancePromo, 4500);
 }
 function goToPromo(i: number): void {
-  promoIdx = (i + PROMOS.length) % PROMOS.length;
+  const n = promosFromConfig().length || 1;
+  promoIdx = (i + n) % n;
   renderPromo();
   restartPromoTimer(); // a manual move resets the auto cadence
 }
@@ -512,13 +532,42 @@ let lbPreviewSeen = false;
 function renderTrending(): void {
   const host = document.querySelector('#trendingShelf');
   if (!host) return;
-  host.innerHTML = hScrollShelf(trendingGames(), (g) => gameCard(g, { compact: true }));
+  const ids = config().portal?.trendingGameIds;
+  host.innerHTML = hScrollShelf(trendingGames(ids), (g) => gameCard(g, { compact: true }));
 }
 
 function renderRecentlyAdded(): void {
   const host = document.querySelector('#recentShelf');
   if (!host) return;
-  host.innerHTML = hScrollShelf(recentlyAddedGames(), (g) => gameCard(g, { compact: true }));
+  const ids = config().portal?.recentlyAddedGameIds;
+  host.innerHTML = hScrollShelf(recentlyAddedGames(ids), (g) => gameCard(g, { compact: true }));
+}
+
+function progressPctForGame(g: GameMeta, score: number): number {
+  const par = g.play?.winScore ?? 1000;
+  return Math.min(100, Math.max(5, Math.round((score / Math.max(1, par)) * 100)));
+}
+
+function renderContinuePlaying(): void {
+  const section = document.querySelector<HTMLElement>('#continuePlaying');
+  const host = document.querySelector('#continueShelf');
+  if (!section || !host) return;
+  const recent = getRecentGames();
+  const rows = recent
+    .map((r) => {
+      const game = getGame(r.gameId);
+      if (!game) return null;
+      userBests[game.id] = r.lastScore;
+      return { game, lastScore: r.lastScore, progressPct: progressPctForGame(game, r.lastScore) };
+    })
+    .filter((x): x is NonNullable<typeof x> => !!x);
+  if (!rows.length) {
+    section.hidden = true;
+    host.innerHTML = '';
+    return;
+  }
+  section.hidden = false;
+  host.innerHTML = continuePlayingHtml(lang(), rows);
 }
 
 function renderComingSoon(): void {
@@ -564,9 +613,21 @@ function renderSidebar(): void {
   const span = Math.max(1, ceiling - floor);
   const pct = Math.min(100, Math.round(((xp - floor) / span) * 100));
   const xpToNext = Math.max(0, ceiling - xp);
+  const challenge = getChallengeProgress();
 
-  const challenge = document.querySelector('#sidebarChallenge');
-  if (challenge) challenge.innerHTML = dailyChallengeHtml();
+  const challengeHost = document.querySelector('#sidebarChallenge');
+  if (challengeHost) {
+    challengeHost.innerHTML = dailyChallengeHtml(challenge);
+    challengeHost.querySelector('#claimChallengeBtn')?.addEventListener('click', () => {
+      void claimChallengeRemote().then((res) => {
+        if (!res) return;
+        if (res.award > 0) setBalanceFromServer(res.coins);
+        setChallengeProgress(parseChallengePayload(res.challenge));
+        renderSidebar();
+        renderMyStats();
+      });
+    });
+  }
 
   const dash = document.querySelector('#sidebarDashboard');
   if (dash) {
@@ -576,24 +637,36 @@ function renderSidebar(): void {
       xp,
       nextXp: ceiling,
       coins: balanceSync(),
-      gamesPlayed: Object.keys(userBests).length,
+      gamesPlayed: getRecentGames().length || getGamesPlayedToday(),
     });
   }
 
   const missions = document.querySelector('#sidebarMissions');
-  if (missions) missions.innerHTML = dailyMissionsHtml();
+  if (missions) missions.innerHTML = dailyMissionsHtml(challenge);
 
   const next = document.querySelector('#sidebarNextReward');
   if (next) next.innerHTML = nextRewardHtml(level, xpToNext);
 
   const news = document.querySelector('#sidebarNews');
-  if (news) news.innerHTML = sidebarNewsHtml();
+  if (news) news.innerHTML = sidebarNewsHtml(lang());
+}
+
+function parseChallengePayload(raw: unknown): ChallengeProgress | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const o = raw as Record<string, unknown>;
+  return {
+    rewardCoins: Number(o.rewardCoins ?? 200),
+    claimed: Boolean(o.claimed),
+    allDone: Boolean(o.allDone),
+    tasks: Array.isArray(o.tasks) ? o.tasks as ChallengeProgress['tasks'] : [],
+    missions: Array.isArray(o.missions) ? o.missions as ChallengeProgress['missions'] : [],
+  };
 }
 
 function renderNews(): void {
   const host = document.querySelector('#newsHost');
   if (!host) return;
-  host.innerHTML = newsFeedHtml();
+  host.innerHTML = newsFeedHtml(lang());
 }
 
 function renderRewardTiers(): void {
@@ -629,6 +702,7 @@ function renderPortalSections(): void {
   renderCategoryChips();
   renderTrending();
   renderWeeklyBanner();
+  renderContinuePlaying();
   renderSidebar();
   renderRecentlyAdded();
   renderRewardTiers();

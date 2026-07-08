@@ -54,6 +54,29 @@ export interface CoinPackage {
   popular?: boolean;
 }
 
+/** Operator-managed hub content (promos, news, shelves). */
+export interface PortalPromo {
+  img: string;
+  altEn: string;
+  altAm: string;
+  href?: string;
+}
+
+export interface PortalNewsItem {
+  icon: string;
+  textEn: string;
+  textAm: string;
+  ago: string;
+}
+
+export interface PortalConfig {
+  promos?: PortalPromo[];
+  news?: PortalNewsItem[];
+  trendingGameIds?: string[];
+  recentlyAddedGameIds?: string[];
+  dailyChallenge?: { rewardCoins: number };
+}
+
 export interface AppConfig {
   coinPackages: CoinPackage[];
   /** Which checkout rails are offered to players. */
@@ -68,6 +91,8 @@ export interface AppConfig {
    *  own catalog rate; a number 0–100 forces ALL chance games to that win rate
    *  (set 100 for an end-to-end "always win" test). Skill games are unaffected. */
   winRateOverride: number | null;
+  /** Hub portal content — promos, news, curated shelves. */
+  portal?: PortalConfig;
 }
 
 // Early-stage coin economy: ~4 ETB ≈ 1 coin at entry tier, bonus on larger packs.
@@ -83,6 +108,23 @@ export const DEFAULT_CONFIG: AppConfig = {
   houseRakePct: 10,
   maintenance: false,
   winRateOverride: null,
+  portal: {
+    promos: [
+      { img: '/brand/ad-banner-1.png', altEn: 'Every Score Counts — climb the leaderboard', altAm: 'Every Score Counts — climb the leaderboard', href: '#games' },
+      { img: '/brand/ad-banner-2.png', altEn: 'Weekly Fruit Slice Tournament', altAm: 'Weekly Fruit Slice Tournament', href: '#weeklyTournament' },
+      { img: '/brand/ad-banner-3.png', altEn: 'Monthly Memory Match Tournament', altAm: 'Monthly Memory Match Tournament', href: '#weeklyTournament' },
+      { img: '/brand/ad-banner-4.png', altEn: 'Win up to 50,000 ETB', altAm: 'Win up to 50,000 ETB', href: '#weeklyTournament' },
+    ],
+    news: [
+      { icon: '🏆', textEn: 'New tournament started', textAm: 'አዲስ ውድድር ተጀመረ', ago: '2h' },
+      { icon: '🎮', textEn: '2 new games released', textAm: '2 አዲስ ጨዋታዎች ተለቀቁ', ago: '1d' },
+      { icon: '⭐', textEn: 'Weekend double points', textAm: 'የቅዳሜ እና እሁድ ድርብ ነጥቦች', ago: '2d' },
+      { icon: '🔧', textEn: 'Scheduled maintenance notice', textAm: 'የተዘጋጀ የጥገና ማስታወቂያ', ago: '3d' },
+    ],
+    trendingGameIds: ['temple-dash', 'fruit-slice', 'memory-match', 'bubble-pop', 'popblast', 'orbit-blast', 'ethiopian-quiz', 'merge-2048'],
+    recentlyAddedGameIds: ['race-car', 'slide-puzzle', 'arrow-shot', 'ball-maze', 'pipe-connect', 'rope-rescue'],
+    dailyChallenge: { rewardCoins: 200 },
+  },
 };
 
 /** Top-3 season coin prizes — mirror the default store catalogue totals. */
@@ -174,7 +216,11 @@ export function winRateOverride(): number | null {
 // a transient read error (last-known cache stays in place).
 /** Hydrate the config cache from a server payload (bootstrap or admin write). */
 export function applyConfigRemote(remote: Partial<AppConfig>): AppConfig {
-  cache = { ...DEFAULT_CONFIG, ...remote };
+  cache = {
+    ...DEFAULT_CONFIG,
+    ...remote,
+    portal: { ...DEFAULT_CONFIG.portal, ...remote.portal },
+  };
   return cache;
 }
 
@@ -193,6 +239,10 @@ export async function loadConfig(): Promise<AppConfig> {
  *  change immediately. The persistent write itself goes through the admin-action
  *  Edge Function (admin.saveConfig) — this never touches storage. */
 export function patchConfigCache(next: Partial<AppConfig>): AppConfig {
-  cache = { ...cache, ...next };
+  cache = {
+    ...cache,
+    ...next,
+    portal: next.portal ? { ...cache.portal, ...next.portal } : cache.portal,
+  };
   return cache;
 }

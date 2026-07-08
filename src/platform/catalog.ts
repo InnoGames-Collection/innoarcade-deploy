@@ -595,19 +595,21 @@ export function ratingFor(g: GameMeta): number {
   return g.rating ?? 4.5;
 }
 
-/** Horizontal-scroll trending row — curated order, catalog-backed only. */
-export function trendingGames(): GameMeta[] {
-  const picked = TRENDING_IDS.map((id) => getGame(id)).filter((g): g is GameMeta => !!g);
+/** Horizontal-scroll trending row — portal override, then curated catalog order. */
+export function trendingGames(portalIds?: string[]): GameMeta[] {
+  const ids = portalIds?.length ? portalIds : TRENDING_IDS;
+  const picked = ids.map((id) => getGame(id)).filter((g): g is GameMeta => !!g);
   if (picked.length >= 5) return picked.slice(0, 8);
-  const extra = orderedCatalog().filter((g) => !TRENDING_IDS.includes(g.id));
+  const extra = orderedCatalog().filter((g) => !ids.includes(g.id));
   return [...picked, ...extra].slice(0, 8);
 }
 
-/** Recently added shelf — explicit `addedAt` first, then curated fallbacks. */
-export function recentlyAddedGames(): GameMeta[] {
+/** Recently added shelf — portal override, then explicit addedAt, then curated fallbacks. */
+export function recentlyAddedGames(portalIds?: string[]): GameMeta[] {
+  const seedIds = portalIds?.length ? portalIds : RECENT_IDS;
   const withDate = CATALOG.filter((g) => g.addedAt)
     .sort((a, b) => (b.addedAt ?? '').localeCompare(a.addedAt ?? ''));
-  const curated = RECENT_IDS.map((id) => getGame(id)).filter((g): g is GameMeta => !!g);
+  const curated = seedIds.map((id) => getGame(id)).filter((g): g is GameMeta => !!g);
   const seen = new Set<string>();
   const out: GameMeta[] = [];
   for (const g of [...withDate, ...curated, ...orderedCatalog()]) {

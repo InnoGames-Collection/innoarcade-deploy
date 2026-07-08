@@ -1125,3 +1125,21 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .footer-col h4 { font-size: 0.78rem; font-weight: 800; text-transform: uppercase; color: #a8e06a; margin: 0 0 0.65rem; }
 .footer-col a { display: block; color: rgba(255,255,255,0.78); text-decoration: none; font-size: 0.85rem; padding: 0.2rem 0; }
 .hub-footer--full .footer-brand { border-top: 1px solid rgba(255,255,255,0.12); padding-top: 1.25rem; }
+
+.cp-list { display: flex; flex-direction: column; gap: 0.65rem; }
+.cp-card {
+  display: grid;
+  grid-template-columns: 3.2rem 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.cp-thumb { font-size: 2rem; text-align: center; }
+.cp-title { font-size: 0.92rem; font-weight: 800; margin: 0 0 0.35rem; }
+.cp-pct { font-size: 0.68rem; color: var(--muted); }
+.cp-btn { margin-top: 0.45rem; width: 100%; text-align: center; font-size: 0.78rem; padding: 0.35rem; }
+.dc-claimed { text-align: center; color: var(--accent); font-weight: 700; font-size: 0.85rem; margin: 0.35rem 0 0; }

@@ -19,6 +19,7 @@ import * as draws from './views/draws';
 import * as players from './views/players';
 import * as payments from './views/payments';
 import * as configView from './views/config';
+import * as portalView from './views/portal';
 
 const VIEWS = {
   dashboard: { mod: dashboard, icon: '📊', label: 'nav_dashboard' },
@@ -26,6 +27,7 @@ const VIEWS = {
   draws: { mod: draws, icon: '🎟️', label: 'nav_draws' },
   players: { mod: players, icon: '👥', label: 'nav_players' },
   payments: { mod: payments, icon: '💳', label: 'nav_payments' },
+  portal: { mod: portalView, icon: '🌐', label: 'nav_portal' },
   config: { mod: configView, icon: '⚙️', label: 'nav_config' },
 } as const;
 type ViewKey = keyof typeof VIEWS;

@@ -34,6 +34,21 @@ const APP_CONFIG = {
   houseRakePct: 10,
   maintenance: false,
   winRateOverride: null,
+  portal: {
+    promos: [
+      { img: '/brand/ad-banner-1.png', altEn: 'Every Score Counts — climb the leaderboard', altAm: 'Every Score Counts — climb the leaderboard', href: '#games' },
+      { img: '/brand/ad-banner-2.png', altEn: 'Weekly Fruit Slice Tournament', altAm: 'Weekly Fruit Slice Tournament', href: '#weeklyTournament' },
+      { img: '/brand/ad-banner-3.png', altEn: 'Monthly Memory Match Tournament', altAm: 'Monthly Memory Match Tournament', href: '#weeklyTournament' },
+      { img: '/brand/ad-banner-4.png', altEn: 'Win up to 50,000 ETB', altAm: 'Win up to 50,000 ETB', href: '#weeklyTournament' },
+    ],
+    news: [
+      { icon: '🏆', textEn: 'New tournament started', textAm: 'አዲስ ውድድር ተጀመረ', ago: '2h' },
+      { icon: '🎮', textEn: '2 new games released', textAm: '2 አዲስ ጨዋታዎች ተለቀቁ', ago: '1d' },
+    ],
+    trendingGameIds: ['temple-dash', 'fruit-slice', 'memory-match', 'bubble-pop', 'popblast'],
+    recentlyAddedGameIds: ['race-car', 'slide-puzzle', 'arrow-shot'],
+    dailyChallenge: { rewardCoins: 200 },
+  },
 };
 
 const digitsOf = (p) => String(p ?? '').replace(/[^\d]/g, '');

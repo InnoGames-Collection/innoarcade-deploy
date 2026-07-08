@@ -457,3 +457,20 @@ export async function fetchGameStats(): Promise<Record<string, number>> {
     return {};
   }
 }
+
+/** Claim daily challenge reward when all tasks are complete. */
+export async function claimChallengeRemote(): Promise<{
+  award: number;
+  coins: number;
+  challenge: unknown;
+} | null> {
+  if (!isConfigured()) return null;
+  try {
+    const sb = await getSupabase();
+    const { data, error } = await sb.functions.invoke('claim-challenge', { body: {} });
+    if (error || !data) return null;
+    return data as { award: number; coins: number; challenge: unknown };
+  } catch {
+    return null;
+  }
+}
