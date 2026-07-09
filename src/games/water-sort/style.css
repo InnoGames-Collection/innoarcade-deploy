@@ -1,4 +1,5 @@
-/* Water Sort — tube puzzle layout */
+/* Water Sort — glass tube puzzle layout */
+
 .ws-board {
   display: flex;
   flex-direction: column;
@@ -7,6 +8,11 @@
   padding: 4px 8px 12px;
   user-select: none;
   -webkit-user-select: none;
+  position: relative;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 100%, color-mix(in srgb, var(--game-accent, #2aa9d6) 12%, transparent) 0%, transparent 70%),
+    linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.02) 100%);
+  border-radius: 12px;
 }
 
 .ws-tubes {
@@ -14,39 +20,74 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: clamp(8px, 2.5vw, 14px);
-  max-width: 420px;
+  max-width: 440px;
+  position: relative;
 }
 
 .ws-tube {
   --tube-w: clamp(52px, 14vw, 64px);
   --tube-h: clamp(140px, 36vw, 168px);
+  --tube-cap: 4;
   width: var(--tube-w);
-  height: var(--tube-h);
-  border: 3px solid color-mix(in srgb, var(--game-accent, #2aa9d6) 55%, transparent);
-  border-radius: 0 0 14px 14px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, color-mix(in srgb, var(--game-accent, #2aa9d6) 8%, transparent) 100%);
+  height: calc(var(--tube-h) * var(--tube-cap) / 4);
+  border: 2px solid color-mix(in srgb, var(--game-accent, #2aa9d6) 40%, rgba(255, 255, 255, 0.5));
+  border-radius: 0 0 16px 16px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, color-mix(in srgb, var(--game-accent, #2aa9d6) 6%, transparent) 100%);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   display: flex;
-  flex-direction: column-reverse;
-  justify-content: flex-start;
-  padding: 3px;
-  gap: 2px;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 4px 3px 3px;
   cursor: pointer;
-  transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+  box-shadow:
+    inset 0 3px 12px rgba(255, 255, 255, 0.2),
+    inset 0 -4px 10px rgba(0, 0, 0, 0.08),
+    0 4px 14px rgba(0, 0, 0, 0.1);
   position: relative;
+  overflow: visible;
 }
 
 .ws-tube::before {
   content: '';
   position: absolute;
-  top: -6px;
-  left: -3px;
-  right: -3px;
-  height: 8px;
-  border: 3px solid color-mix(in srgb, var(--game-accent, #2aa9d6) 45%, transparent);
+  top: -7px;
+  left: -2px;
+  right: -2px;
+  height: 10px;
+  border: 2px solid color-mix(in srgb, var(--game-accent, #2aa9d6) 35%, rgba(255, 255, 255, 0.55));
   border-bottom: none;
-  border-radius: 8px 8px 0 0;
+  border-radius: 10px 10px 0 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.08) 100%);
   pointer-events: none;
+  z-index: 3;
+}
+
+.ws-tube::after {
+  content: '';
+  position: absolute;
+  top: 8%;
+  left: 12%;
+  width: 22%;
+  height: 55%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, transparent 75%);
+  pointer-events: none;
+  z-index: 4;
+}
+
+.ws-liquid-stack {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-start;
+  flex: 1;
+  width: 100%;
+  gap: 2px;
+  min-height: 0;
+  z-index: 1;
 }
 
 .ws-tube:hover:not(.ws-tube--disabled) {
@@ -55,28 +96,139 @@
 
 .ws-tube--sel {
   border-color: var(--game-accent, var(--lq-accent, #4f9e16));
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--game-accent, #4f9e16) 35%, transparent), inset 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--game-accent, #4f9e16) 35%, transparent),
+    inset 0 3px 12px rgba(255, 255, 255, 0.22),
+    0 6px 18px rgba(0, 0, 0, 0.12);
   transform: translateY(-4px);
 }
 
 .ws-tube--target {
-  border-color: color-mix(in srgb, var(--game-accent, #4f9e16) 70%, transparent);
+  border-color: color-mix(in srgb, var(--game-accent, #4f9e16) 75%, transparent);
+  animation: ws-target-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes ws-target-pulse {
+  0%, 100% { box-shadow: inset 0 3px 12px rgba(255, 255, 255, 0.2), 0 0 0 1px color-mix(in srgb, var(--game-accent, #4f9e16) 30%, transparent); }
+  50% { box-shadow: inset 0 3px 12px rgba(255, 255, 255, 0.25), 0 0 0 3px color-mix(in srgb, var(--game-accent, #4f9e16) 45%, transparent); }
+}
+
+.ws-tube--locked {
+  filter: saturate(0.88);
+}
+
+.ws-tube--narrow {
+  --tube-cap: 3;
+}
+
+.ws-tube--done {
+  border-color: color-mix(in srgb, var(--game-accent, #4f9e16) 60%, #fff);
+}
+
+.ws-lock {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  line-height: 1;
+  z-index: 6;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+}
+
+.ws-pour-preview {
+  position: absolute;
+  top: -26px;
+  right: -4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--game-accent, #4f9e16);
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 8px;
+  padding: 2px 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  z-index: 8;
+  pointer-events: none;
 }
 
 .ws-seg {
   flex: 1;
   min-height: 0;
   position: relative;
+  transition: transform 0.2s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.18s ease;
 }
 
-.ws-seg.pgem--liquid { border-radius: 3px 3px 10px 10px; }
+.ws-seg.pgem--liquid {
+  border-radius: 3px 3px 10px 10px;
+}
 
-/* Color-blind patterns overlay on illustrated liquid */
+.ws-seg--mystery {
+  border-radius: 3px 3px 10px 10px;
+  background: linear-gradient(148deg, #6b7a8a 0%, #4a5568 45%, #2d3748 100%);
+  box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.35);
+}
+
+.ws-seg--mystery::before {
+  content: '?';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(14px, 4vw, 18px);
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.55);
+  z-index: 2;
+}
+
+.ws-seg--lifting {
+  transform: translateY(-4px) scaleY(0.85);
+  opacity: 0.65;
+}
+
+.ws-seg--landing {
+  animation: ws-seg-settle 0.18s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+@keyframes ws-seg-settle {
+  0% { transform: scaleY(1.08); }
+  100% { transform: scaleY(1); }
+}
+
+/* Color-blind patterns — all 8 gem types */
+.ws-seg[data-gem='pgem--sapphire']::before,
 .ws-seg[data-color='1']::before { background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(0,0,0,.12) 3px, rgba(0,0,0,.12) 6px), linear-gradient(148deg, var(--pgem-light), var(--pgem-mid) 38%, var(--pgem-dark)); }
+.ws-seg[data-gem='pgem--emerald']::before,
 .ws-seg[data-color='2']::before { background-image: repeating-linear-gradient(-45deg, transparent, transparent 4px, rgba(255,255,255,.25) 4px, rgba(255,255,255,.25) 8px), linear-gradient(148deg, var(--pgem-light), var(--pgem-mid) 38%, var(--pgem-dark)); }
+.ws-seg[data-gem='pgem--amber']::before,
 .ws-seg[data-color='3']::before { background-image: radial-gradient(circle, rgba(0,0,0,.15) 18%, transparent 19%), linear-gradient(148deg, var(--pgem-light), var(--pgem-mid) 38%, var(--pgem-dark)); background-size: 8px 8px, auto; }
+.ws-seg[data-gem='pgem--ruby']::before,
 .ws-seg[data-color='4']::before { background-image: linear-gradient(90deg, rgba(0,0,0,.1) 50%, transparent 50%), linear-gradient(148deg, var(--pgem-light), var(--pgem-mid) 38%, var(--pgem-dark)); background-size: 6px 100%, auto; }
+.ws-seg[data-gem='pgem--amethyst']::before,
 .ws-seg[data-color='5']::before { background-image: linear-gradient(0deg, rgba(255,255,255,.2) 50%, transparent 50%), linear-gradient(148deg, var(--pgem-light), var(--pgem-mid) 38%, var(--pgem-dark)); background-size: 100% 5px, auto; }
+.ws-seg[data-gem='pgem--aquamarine']::before,
+.ws-seg[data-color='6']::before { background-image: repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,.1) 2px, rgba(0,0,0,.1) 4px), linear-gradient(148deg, var(--pgem-light), var(--pgem-mid) 38%, var(--pgem-dark)); }
+.ws-seg[data-gem='pgem--coral']::before,
+.ws-seg[data-color='7']::before { background-image: repeating-linear-gradient(60deg, transparent, transparent 3px, rgba(255,255,255,.2) 3px, rgba(255,255,255,.2) 6px), linear-gradient(148deg, var(--pgem-light), var(--pgem-mid) 38%, var(--pgem-dark)); }
+.ws-seg[data-gem='pgem--violet']::before,
+.ws-seg[data-color='8']::before { background-image: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,.1) 3px, rgba(0,0,0,.1) 5px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0,0,0,.1) 3px, rgba(0,0,0,.1) 5px), linear-gradient(148deg, var(--pgem-light), var(--pgem-mid) 38%, var(--pgem-dark)); }
+
+.ws-seg[data-color='1'],
+.ws-seg[data-color='2'],
+.ws-seg[data-color='3'],
+.ws-seg[data-color='4'],
+.ws-seg[data-color='5'] { background-image: none; }
+
+.ws-mod-badge {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--game-accent, #2aa9d6) 70%, #333);
+  margin: 0;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--game-accent, #2aa9d6) 10%, rgba(255, 255, 255, 0.9));
+}
 
 .ws-hint {
   text-align: center;
@@ -92,6 +244,26 @@
   gap: 8px;
 }
 
+.ws-tube--hint {
+  animation: ws-hint-glow 0.7s ease-in-out infinite;
+  border-color: color-mix(in srgb, #f5c518 75%, var(--game-accent, #4f9e16));
+}
+
+@keyframes ws-hint-glow {
+  0%, 100% { box-shadow: 0 0 0 2px color-mix(in srgb, #f5c518 40%, transparent); }
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, #f5c518 65%, transparent); }
+}
+
+.ws-hint-btn {
+  font-size: 13px;
+  padding: 6px 14px;
+}
+
+.ws-hint-btn[disabled] {
+  opacity: 0.45;
+  cursor: default;
+}
+
 .ws-undo {
   font-size: 13px;
   padding: 6px 14px;
@@ -102,13 +274,6 @@
   cursor: default;
 }
 
-/* Color-blind patterns per liquid id — legacy selectors kept for older builds */
-.ws-seg[data-color='1'] { background-image: none; }
-.ws-seg[data-color='2'] { background-image: none; }
-.ws-seg[data-color='3'] { background-image: none; }
-.ws-seg[data-color='4'] { background-image: none; }
-.ws-seg[data-color='5'] { background-image: none; }
-
 .ws-win-flash .ws-tube {
   animation: ws-pop 0.45s ease;
 }
@@ -116,4 +281,10 @@
 @keyframes ws-pop {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.04); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ws-tube--target { animation: none; }
+  .ws-seg--lifting,
+  .ws-seg--landing { transform: none; animation: none; opacity: 1; }
 }

@@ -4,105 +4,52 @@ import '../../styles/game-shell.css';
 import '../_casual/style.css';
 import '../_lq/lq.css';
 import './style.css';
-import { el, finishLQRound, mulberry32, shuffled, sound, mountLQ, setLQHeader, toast, emitLQLevelComplete } from '../_lq/lq';
+import { el, finishLQRound, mulberry32, sound, mountLQ, setLQHeader, toast, emitLQLevelComplete } from '../_lq/lq';
 import { puzzleCompletionScore } from '../_lq/scoring';
-import { escalateTier } from '../../platform/freeDifficulty';
 import { createHost } from '../../platform/gameHost';
 import { showFirstRunHint } from '../_shared/firstRun';
-import { gemClassesByIndex } from '../_shared/premiumGems';
+import { gemClassesByIndex, gemIdFromIndex } from '../_shared/premiumGems';
+import { animatePour, playPourSound, spawnTubeSparkles } from '../_shared/liquidPour';
+import {
+  canPour,
+  cloneTubes,
+  findHintMove,
+  isLayerRevealed,
+  isPourSourceLocked,
+  isSolved,
+  isTubeComplete,
+  pour,
+  pourAmount,
+  tubeCapacity,
+  tubeHiddenBottom,
+  type LevelModifiers,
+  type Tubes,
+} from '../_shared/tubeSort/gameRules';
+import { generateLevel, LEVEL_COUNT, type ModifierKind } from '../_shared/tubeSort/levelGen';
+import { t } from '../../i18n';
 
-const CAPACITY = 4;
-const LEVELS = 8;
-const EMPTY_TUBES = 2;
-
-/** Distinct liquid colors (id 1..N maps to index 0..N-1). */
-type Tube = number[];
-type Tubes = Tube[];
+function modifierLabel(kinds: ModifierKind[]): string | null {
+  if (!kinds.length) return null;
+  const keys: Record<ModifierKind, 'ws.mod.hidden' | 'ws.mod.locked' | 'ws.mod.narrow' | 'ws.mod.singleBuffer'> = {
+    hidden: 'ws.mod.hidden',
+    locked: 'ws.mod.locked',
+    narrow: 'ws.mod.narrow',
+    singleBuffer: 'ws.mod.singleBuffer',
+  };
+  return kinds.map((k) => t(keys[k])).join(' · ');
+}
 
 const host = createHost('water-sort');
 
-function cloneTubes(tubes: Tubes): Tubes {
-  return tubes.map((t) => t.slice());
+function starRating(moves: number, par: number): number {
+  if (moves <= par) return 3;
+  if (moves <= par + 4) return 2;
+  if (moves <= par + 8) return 1;
+  return 0;
 }
 
-function topRunLength(tube: Tube): number {
-  if (tube.length === 0) return 0;
-  const c = tube[tube.length - 1];
-  let n = 0;
-  for (let i = tube.length - 1; i >= 0 && tube[i] === c; i--) n++;
-  return n;
-}
-
-function canPour(from: Tube, to: Tube): boolean {
-  if (from.length === 0 || from === to) return false;
-  if (to.length >= CAPACITY) return false;
-  if (to.length === 0) return true;
-  return to[to.length - 1] === from[from.length - 1];
-}
-
-function pour(from: Tube, to: Tube): boolean {
-  if (!canPour(from, to)) return false;
-  const amount = Math.min(topRunLength(from), CAPACITY - to.length);
-  for (let i = 0; i < amount; i++) to.push(from.pop()!);
-  return true;
-}
-
-function isSolved(tubes: Tubes): boolean {
-  for (const t of tubes) {
-    if (t.length === 0) continue;
-    if (t.length !== CAPACITY) return false;
-    const c = t[0];
-    if (!t.every((x) => x === c)) return false;
-  }
-  return true;
-}
-
-function solvedState(numColors: number): Tubes {
-  const tubes: Tubes = [];
-  for (let c = 1; c <= numColors; c++) tubes.push(Array(CAPACITY).fill(c));
-  for (let i = 0; i < EMPTY_TUBES; i++) tubes.push([]);
-  return tubes;
-}
-
-/** Scramble from a solved layout via valid pours — guarantees solvability. */
-function scramble(numColors: number, shuffleMoves: number, rnd: () => number): Tubes {
-  const state = cloneTubes(solvedState(numColors));
-  let lastFrom = -1;
-  let lastTo = -1;
-  for (let m = 0; m < shuffleMoves; m++) {
-    const indices = shuffled(state.map((_, i) => i), rnd);
-    let poured = false;
-    for (const from of indices) {
-      if (state[from].length === 0) continue;
-      const targets = shuffled(indices.filter((i) => i !== from), rnd);
-      for (const to of targets) {
-        if (from === lastTo && to === lastFrom) continue;
-        if (!pour(state[from], state[to])) continue;
-        lastFrom = from;
-        lastTo = to;
-        poured = true;
-        break;
-      }
-      if (poured) break;
-    }
-    if (!poured) break;
-  }
-  if (isSolved(state)) {
-    const fallback = cloneTubes(state);
-    if (fallback[0].length > 0 && fallback[numColors].length < CAPACITY) {
-      pour(fallback[0], fallback[numColors]);
-    }
-    return fallback;
-  }
-  return state;
-}
-
-function levelConfig(levelIdx: number): { colors: number; shuffle: number; parMoves: number } {
-  const tier = escalateTier(levelIdx, 5, 1);
-  const colors = 3 + tier;
-  const shuffle = 10 + tier * 6;
-  const parMoves = colors * 5 + tier * 3;
-  return { colors, shuffle, parMoves };
+function renderStars(count: number): string {
+  return '★'.repeat(count) + '☆'.repeat(3 - count);
 }
 
 function render(mount: HTMLElement): void {
@@ -117,65 +64,144 @@ function render(mount: HTMLElement): void {
       if (levelCleanup) levelCleanup();
       mount.innerHTML = '';
 
-      const { colors, shuffle, parMoves } = levelConfig(levelIdx);
-      let tubes = scramble(colors, shuffle, rnd);
+      const generated = generateLevel(levelIdx, rnd);
+      let tubes = cloneTubes(generated.tubes);
+      const mods: LevelModifiers = generated.mods;
+      const { parMoves } = generated.spec;
+      const modLabel = modifierLabel(generated.spec.modifiers);
+
       const undoStack: Tubes[] = [];
       let moves = 0;
       let selected: number | null = null;
       let locked = false;
+      let hintsLeft = 1;
+      let hintFlash: { from: number; to: number } | null = null;
       const levelStart = Date.now();
+      const completedTubes = new Set<number>();
 
       const hint = el('p', { class: 'ws-hint', text: 'Tap a tube, then tap another to pour.' });
+      const modBadge = modLabel
+        ? el('p', { class: 'ws-mod-badge', text: modLabel })
+        : null;
       const toolbar = el('div', { class: 'ws-toolbar' });
       const undoBtn = el('button', {
         type: 'button',
         class: 'btn ws-undo',
         text: '↩ Undo',
-        onclick: () => undo(),
+        onclick: () => void undo(),
       });
+      const hintBtn = el('button', {
+        type: 'button',
+        class: 'btn ws-hint-btn',
+        text: `💡 ${t('ws.hint.btn')}`,
+        onclick: () => useHint(),
+      });
+      toolbar.appendChild(hintBtn);
       toolbar.appendChild(undoBtn);
       const board = el('div', { class: 'ws-board' });
       const row = el('div', { class: 'ws-tubes', role: 'group', 'aria-label': 'Water tubes' });
       board.appendChild(hint);
+      if (modBadge) board.appendChild(modBadge);
       board.appendChild(toolbar);
       board.appendChild(row);
       mount.appendChild(board);
 
-      if (levelIdx === 0) {
-        showFirstRunHint('water-sort', toast);
-      }
+      if (levelIdx === 0) showFirstRunHint('water-sort', toast);
 
       setLQHeader({
-        round: `${levelIdx + 1}/${LEVELS}`,
+        round: `${levelIdx + 1}/${LEVEL_COUNT}`,
         score: String(totalScore),
         moves: '0',
       });
 
+      function buildSegment(colorId: number, layerIdx: number, tubeIdx: number, tube: number[]): HTMLElement {
+        const hidden = tubeHiddenBottom(mods, tubeIdx);
+        const revealed = isLayerRevealed(tube, layerIdx, hidden);
+        if (!revealed) {
+          return el('div', {
+            class: 'ws-seg ws-seg--mystery',
+            'data-color': String(colorId),
+            'aria-hidden': 'true',
+          });
+        }
+        return el('div', {
+          class: `ws-seg ${gemClassesByIndex(colorId - 1, 'liquid')}`,
+          'data-color': String(colorId),
+          'data-gem': `pgem--${gemIdFromIndex(colorId - 1)}`,
+        });
+      }
+
       function paint(): void {
         row.innerHTML = '';
         tubes.forEach((tube, idx) => {
+          const cap = tubeCapacity(mods, idx);
+          const sourceLocked = isPourSourceLocked(mods, idx, tubes);
+          const tubeMod = mods.tubeMods[idx];
+          const isNarrow = cap < 4;
+          const isLocked = tubeMod?.locked && sourceLocked;
+          const previewAmt = selected != null && selected !== idx && canPour(
+            tubes[selected], tube, selected, idx, tubes, mods,
+          )
+            ? pourAmount(tubes[selected], tube, idx, mods)
+            : 0;
+
           const tubeEl = el('div', {
             class: 'ws-tube'
               + (selected === idx ? ' ws-tube--sel' : '')
-              + (selected != null && selected !== idx && canPour(tubes[selected], tube) ? ' ws-tube--target' : ''),
+              + (previewAmt > 0 ? ' ws-tube--target' : '')
+              + (isLocked ? ' ws-tube--locked' : '')
+              + (isNarrow ? ' ws-tube--narrow' : '')
+              + (hintFlash && (hintFlash.from === idx || hintFlash.to === idx) ? ' ws-tube--hint' : '')
+              + (isTubeComplete(tube, cap) ? ' ws-tube--done' : ''),
             role: 'button',
             'aria-label': `Tube ${idx + 1}`,
-            onclick: () => onTap(idx),
+            style: isNarrow ? `--tube-cap: ${cap}` : '',
+            onclick: () => void onTap(idx),
           });
-          if (tube.length === 0) {
-            tubeEl.appendChild(el('div', { class: 'ws-seg', style: 'visibility:hidden' }));
-          } else {
-            for (const colorId of tube) {
-              tubeEl.appendChild(el('div', {
-                class: `ws-seg ${gemClassesByIndex(colorId - 1, 'liquid')}`,
-                'data-color': String(colorId),
-              }));
-            }
+
+          if (isLocked) {
+            tubeEl.appendChild(el('span', { class: 'ws-lock', text: '🔒', 'aria-hidden': 'true' }));
           }
+
+          const stack = el('div', { class: 'ws-liquid-stack' });
+          if (tube.length === 0) {
+            stack.appendChild(el('div', { class: 'ws-seg ws-seg--empty', style: 'visibility:hidden' }));
+          } else {
+            tube.forEach((colorId, layerIdx) => {
+              stack.appendChild(buildSegment(colorId, layerIdx, idx, tube));
+            });
+          }
+          tubeEl.appendChild(stack);
+
+          if (previewAmt > 0) {
+            tubeEl.appendChild(el('span', {
+              class: 'ws-pour-preview',
+              text: `+${previewAmt}`,
+            }));
+          }
+
           row.appendChild(tubeEl);
         });
         setLQHeader({ moves: String(moves) });
         undoBtn.toggleAttribute('disabled', undoStack.length === 0);
+        hintBtn.toggleAttribute('disabled', hintsLeft <= 0 || locked);
+      }
+
+      function useHint(): void {
+        if (locked || hintsLeft <= 0) return;
+        const move = findHintMove(tubes, mods);
+        if (!move) {
+          toast(t('ws.hint.none'));
+          return;
+        }
+        hintsLeft--;
+        hintFlash = move;
+        sound('click');
+        paint();
+        window.setTimeout(() => {
+          hintFlash = null;
+          paint();
+        }, 2200);
       }
 
       function pushUndo(): void {
@@ -192,11 +218,28 @@ function render(mount: HTMLElement): void {
         paint();
       }
 
-      function onTap(idx: number): void {
+      function checkTubeComplete(idx: number): void {
+        const cap = tubeCapacity(mods, idx);
+        if (!isTubeComplete(tubes[idx], cap) || completedTubes.has(idx)) return;
+        completedTubes.add(idx);
+        const tubeEl = row.children[idx] as HTMLElement | undefined;
+        if (tubeEl) {
+          tubeEl.classList.add('ws-tube--done');
+          spawnTubeSparkles(tubeEl);
+          playPourSound('complete');
+        }
+      }
+
+      async function onTap(idx: number): Promise<void> {
         if (locked) return;
         if (selected == null) {
           if (tubes[idx].length === 0) {
             toast('Pick a tube with liquid');
+            return;
+          }
+          if (isPourSourceLocked(mods, idx, tubes)) {
+            sound('bad');
+            toast('Complete a tube to unlock this one');
             return;
           }
           selected = idx;
@@ -209,19 +252,43 @@ function render(mount: HTMLElement): void {
           paint();
           return;
         }
-        if (!pour(tubes[selected], tubes[idx])) {
+        if (!canPour(tubes[selected], tubes[idx], selected, idx, tubes, mods)) {
           sound('bad');
           toast('Can only pour onto matching color or empty tube');
           selected = null;
           paint();
           return;
         }
+
+        const fromIdx = selected;
+        const toIdx = idx;
+        const colorId = tubes[fromIdx][tubes[fromIdx].length - 1];
+        const amount = pourAmount(tubes[fromIdx], tubes[toIdx], toIdx, mods);
+
+        locked = true;
         pushUndo();
+
+        await animatePour({
+          board,
+          row,
+          fromIdx,
+          toIdx,
+          colorId,
+          amount,
+          onTick: () => {
+            pour(tubes[fromIdx], tubes[toIdx], fromIdx, toIdx, tubes, mods);
+            moves++;
+            selected = null;
+            paint();
+            checkTubeComplete(toIdx);
+            checkTubeComplete(fromIdx);
+          },
+        });
+
         sound('good');
-        moves++;
-        selected = null;
-        paint();
-        if (isSolved(tubes)) finishLevel();
+        locked = false;
+
+        if (isSolved(tubes, mods)) finishLevel();
       }
 
       function finishLevel(): void {
@@ -229,25 +296,30 @@ function render(mount: HTMLElement): void {
         board.classList.add('ws-win-flash');
         sound('win');
         const elapsedMs = Date.now() - levelStart;
+        const stars = starRating(moves, parMoves);
         const moveBonus = Math.max(0, parMoves - moves) * 12;
-        const levelScore = puzzleCompletionScore(elapsedMs, 0, { budgetSec: 360, base: 80 }) + moveBonus;
+        const starBonus = stars * 25;
+        const levelScore = puzzleCompletionScore(elapsedMs, 0, { budgetSec: 360, base: 80 })
+          + moveBonus + starBonus;
         totalScore += levelScore;
+        if (stars > 0) {
+          toast(`${renderStars(stars)} · +${starBonus} star bonus`, 1400);
+        }
         levelIdx++;
         emitLQLevelComplete(levelIdx, totalScore);
         setLQHeader({
-          round: `${Math.min(levelIdx + 1, LEVELS)}/${LEVELS}`,
+          round: `${Math.min(levelIdx + 1, LEVEL_COUNT)}/${LEVEL_COUNT}`,
           score: String(totalScore),
         });
-        if (levelIdx >= LEVELS) {
-          const sessionMs = Date.now() - sessionStart;
+        if (levelIdx >= LEVEL_COUNT) {
           finishLQRound(
             totalScore,
             totalScore >= host.winScore,
-            `${LEVELS}/${LEVELS} levels · ${moves} moves last`,
-            sessionMs,
+            `${LEVEL_COUNT}/${LEVEL_COUNT} levels · ${moves} moves last`,
+            Date.now() - sessionStart,
           );
         } else {
-          setTimeout(loadLevel, 700);
+          setTimeout(loadLevel, 900);
         }
       }
 

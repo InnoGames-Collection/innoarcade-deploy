@@ -1,0 +1,83 @@
+/* Shared liquid pour animation — water-sort, ball-sort */
+
+.lpour-stream {
+  position: absolute;
+  width: 10px;
+  height: var(--lpour-len, 60px);
+  transform-origin: top center;
+  transform: rotate(var(--lpour-angle, 0deg)) scaleY(0);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 20;
+  border-radius: 5px 5px 8px 8px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+  transition:
+    transform 0.34s cubic-bezier(0.33, 1, 0.68, 1),
+    opacity 0.18s ease;
+}
+
+.lpour-stream--active {
+  transform: rotate(var(--lpour-angle, 0deg)) scaleY(1);
+  opacity: 0.92;
+}
+
+.lpour-stream--fade {
+  opacity: 0;
+  transform: rotate(var(--lpour-angle, 0deg)) scaleY(0.15);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.lpour-spark {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  width: 5px;
+  height: 5px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, color-mix(in srgb, var(--game-accent, #5b8cff) 80%, #fff) 55%, transparent 100%);
+  pointer-events: none;
+  z-index: 12;
+  animation: lpour-spark 0.55s ease-out forwards;
+}
+
+@keyframes lpour-spark {
+  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--sx, 0), var(--sy, -24px)) scale(0.2); }
+}
+
+/* Sphere transfer — flying ball cluster */
+.lpour-flyer {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 20;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 3px;
+  align-items: center;
+  transition: transform 0.34s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.14s ease;
+  opacity: 0.95;
+}
+
+.lpour-flyer--active {
+  transform: translate(calc(-50% + var(--fly-tx, 0)), calc(-50% + var(--fly-ty, 0)));
+}
+
+.lpour-flyer--fade {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.lpour-fly-ball {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.28));
+  animation: lpour-fly-wobble 0.34s ease-in-out calc(var(--fly-i, 0) * 40ms) alternate;
+}
+
+@keyframes lpour-fly-wobble {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-3px); }
+}

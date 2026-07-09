@@ -15,6 +15,9 @@ import { createHost, type FinishResult, type GameHost } from '../../platform/gam
 import { emitGameEvent } from '../../platform/gameEvents';
 import { promptIfSessionExpired } from '../../platform/sessionAuth';
 import { isConfigured } from '../../platform/supabase';
+
+export { dayNumber, mulberry32, randInt, shuffled } from './rng';
+
 type Attrs = Record<string, string | EventListenerOrEventListenerObject>;
 type Child = Node | string | null | undefined | Child[];
 
@@ -38,30 +41,6 @@ export function el(tag: string, attrs?: Attrs | null, ...children: Child[]): HTM
   };
   children.forEach(append);
   return node;
-}
-
-// --- seeded RNG + helpers ---------------------------------------------------
-export function mulberry32(seed: number): () => number {
-  let a = seed >>> 0;
-  return () => {
-    a |= 0; a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-export function dayNumber(): number { return Math.floor(Date.now() / 86400000); }
-export function shuffled<T>(arr: T[], rnd?: () => number): T[] {
-  const a = arr.slice();
-  const r = rnd || Math.random;
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(r() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-export function randInt(lo: number, hi: number, rnd?: () => number): number {
-  return lo + Math.floor((rnd || Math.random)() * (hi - lo + 1));
 }
 
 // --- tiny WebAudio synth (respects the engine mute) -------------------------

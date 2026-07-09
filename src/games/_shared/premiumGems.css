@@ -92,6 +92,32 @@
     var(--pgem-mid) 45%,
     var(--pgem-dark) 100%
   );
+  animation: pgem-liquid-shimmer 4.5s ease-in-out infinite;
+}
+
+/* Meniscus highlight at liquid surface */
+.pgem--liquid::after {
+  top: auto;
+  bottom: 72%;
+  left: 8%;
+  width: 84%;
+  height: 18%;
+  border-radius: 50% 50% 40% 40% / 60% 60% 40% 40%;
+  background: radial-gradient(
+    ellipse at 50% 80%,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.12) 55%,
+    transparent 78%
+  );
+}
+
+@keyframes pgem-liquid-shimmer {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.06); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pgem--liquid::before { animation: none; }
 }
 
 .pgem--preview { opacity: 0.62; filter: saturate(0.92); }
