@@ -239,9 +239,95 @@
 
 .ws-toolbar {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
+  max-width: 440px;
 }
+
+.ws-restart,
+.ws-pause,
+.ws-mute {
+  font-size: 13px;
+  padding: 6px 12px;
+}
+
+.ws-board--paused .ws-tubes {
+  filter: saturate(0.7) brightness(0.96);
+  pointer-events: none;
+}
+
+.ws-pause-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 12px;
+}
+
+.ws-pause-overlay.hidden {
+  display: none;
+}
+
+.ws-pause-panel {
+  text-align: center;
+  padding: 20px 24px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 200px;
+}
+
+.ws-pause-panel h2 {
+  margin: 0 0 4px;
+  font-size: 1.15rem;
+}
+
+.ws-tube--shake {
+  animation: ws-shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes ws-shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-7px) rotate(-1deg); }
+  30% { transform: translateX(6px) rotate(1deg); }
+  45% { transform: translateX(-5px); }
+  60% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+}
+
+.ws-win-flash {
+  animation: ws-victory-glow 0.8s ease;
+}
+
+@keyframes ws-victory-glow {
+  0%, 100% { box-shadow: none; }
+  40% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--game-accent, #2aa9d6) 25%, transparent); }
+}
+
+.ws-win-flash .ws-tube {
+  animation: ws-pop 0.55s ease;
+  animation-delay: calc(var(--tube-i, 0) * 0.06s);
+}
+
+.ws-tubes .ws-tube:nth-child(1) { --tube-i: 0; }
+.ws-tubes .ws-tube:nth-child(2) { --tube-i: 1; }
+.ws-tubes .ws-tube:nth-child(3) { --tube-i: 2; }
+.ws-tubes .ws-tube:nth-child(4) { --tube-i: 3; }
+.ws-tubes .ws-tube:nth-child(5) { --tube-i: 4; }
+.ws-tubes .ws-tube:nth-child(6) { --tube-i: 5; }
+.ws-tubes .ws-tube:nth-child(7) { --tube-i: 6; }
+.ws-tubes .ws-tube:nth-child(8) { --tube-i: 7; }
+.ws-tubes .ws-tube:nth-child(9) { --tube-i: 8; }
+.ws-tubes .ws-tube:nth-child(10) { --tube-i: 9; }
 
 .ws-tube--hint {
   animation: ws-hint-glow 0.7s ease-in-out infinite;
@@ -273,10 +359,6 @@
   cursor: default;
 }
 
-.ws-win-flash .ws-tube {
-  animation: ws-pop 0.45s ease;
-}
-
 @keyframes ws-pop {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.04); }
@@ -284,6 +366,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ws-tube--target { animation: none; }
+  .ws-tube--shake { animation: none; }
   .ws-seg--lifting,
   .ws-seg--landing { transform: none; animation: none; opacity: 1; }
 }

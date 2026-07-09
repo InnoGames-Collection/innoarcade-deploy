@@ -10,11 +10,14 @@ import {
   animatePour,
   applyHeldPieces,
   playPourSound,
+  shakeTube,
   spawnTubeSparkles,
+  spawnVictoryBurst,
   type PourTheme,
   LIQUID_POUR_THEME,
   SPHERE_POUR_THEME,
 } from '../liquidPour';
+import { sfx } from '../../../engine/audio';
 import {
   canPour,
   cloneTubes,
@@ -25,6 +28,7 @@ import {
   isTubeComplete,
   pour,
   pourAmount,
+  pourSingleLayer,
   topRunLength,
   tubeCapacity,
   tubeHiddenBottom,
@@ -118,6 +122,12 @@ function renderStars(count: number): string {
   return '★'.repeat(count) + '☆'.repeat(3 - count);
 }
 
+function formatTimer(sec: number): string {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 function cx(theme: TubeSortTheme, base: string): string {
   return `${theme.classPrefix}-${base}`;
 }
@@ -149,18 +159,27 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
         ? generateLevelWithSpec(endlessLevelSpec(levelIdx, theme.pourStyle), rnd, theme.pourStyle, levelIdx)
         : generateLevel(levelIdx, rnd, theme.pourStyle);
       let tubes = cloneTubes(generated.tubes);
+      const initialTubes = cloneTubes(generated.tubes);
       const mods: LevelModifiers = generated.mods;
+      const initialMods: LevelModifiers = {
+        emptyTubes: mods.emptyTubes,
+        tubeMods: mods.tubeMods.map((m) => ({ ...m })),
+      };
       const { parMoves } = generated.spec;
       const modLabel = modifierLabel(generated.spec.modifiers);
       const modeLabel = modeBadgeLabel(mode);
+      const isWater = theme.gameId === 'water-sort';
 
       const undoStack: Tubes[] = [];
       let moves = 0;
       let selected: number | null = null;
       let locked = false;
+      let paused = false;
       let hintsLeft = 1;
       let hintFlash: { from: number; to: number } | null = null;
       const levelStart = Date.now();
+      let timerSec = 0;
+      let timerHandle: ReturnType<typeof setInterval> | null = null;
       const completedTubes = new Set<number>();
 
       const p = theme.classPrefix;
@@ -184,6 +203,58 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
       });
       toolbar.appendChild(hintBtn);
       toolbar.appendChild(undoBtn);
+
+      let restartBtn: HTMLButtonElement | null = null;
+      let pauseBtn: HTMLButtonElement | null = null;
+      let muteBtn: HTMLButtonElement | null = null;
+      let pauseOverlay: HTMLElement | null = null;
+
+      if (isWater) {
+        restartBtn = el('button', {
+          type: 'button',
+          class: `btn ${cx(theme, 'restart')}`,
+          text: `↺ ${t('ws.restart')}`,
+          onclick: () => void restartLevel(),
+        }) as HTMLButtonElement;
+        pauseBtn = el('button', {
+          type: 'button',
+          class: `btn ${cx(theme, 'pause')}`,
+          text: `⏸ ${t('td.pause')}`,
+          onclick: () => togglePause(),
+        }) as HTMLButtonElement;
+        muteBtn = el('button', {
+          type: 'button',
+          class: `btn ${cx(theme, 'mute')}`,
+          text: sfx.muted ? '🔇' : '🔊',
+          'aria-label': t('set.sound'),
+          onclick: () => {
+            const muted = sfx.toggleMute();
+            muteBtn!.textContent = muted ? '🔇' : '🔊';
+          },
+        }) as HTMLButtonElement;
+        toolbar.appendChild(restartBtn);
+        toolbar.appendChild(pauseBtn);
+        toolbar.appendChild(muteBtn);
+
+        pauseOverlay = el('div', { class: `${p}-pause-overlay hidden` },
+          el('div', { class: `${p}-pause-panel` },
+            el('h2', { text: t('td.paused') }),
+            el('button', {
+              type: 'button',
+              class: 'btn primary',
+              text: t('td.resume'),
+              onclick: () => togglePause(),
+            }),
+            el('button', {
+              type: 'button',
+              class: 'btn',
+              text: t('ws.restart'),
+              onclick: () => { togglePause(false); void restartLevel(); },
+            }),
+          ),
+        );
+      }
+
       const board = el('div', { class: cx(theme, 'board') });
       const row = el('div', {
         class: cx(theme, 'tubes'),
@@ -196,6 +267,7 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
       board.appendChild(toolbar);
       board.appendChild(row);
       mount.appendChild(board);
+      if (pauseOverlay) board.appendChild(pauseOverlay);
 
       if (levelIdx === 0) showFirstRunHint(theme.firstRunKey, toast);
 
@@ -203,7 +275,49 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
         round: roundLabel(levelIdx, mode),
         score: String(totalScore),
         moves: '0',
+        ...(isWater ? { time: '0:00' } : {}),
       });
+
+      function startTimer(): void {
+        if (!isWater || timerHandle) return;
+        timerHandle = setInterval(() => {
+          if (paused || locked) return;
+          timerSec++;
+          setLQHeader({ time: formatTimer(timerSec) });
+        }, 1000);
+      }
+
+      function stopTimer(): void {
+        if (timerHandle) {
+          clearInterval(timerHandle);
+          timerHandle = null;
+        }
+      }
+
+      function togglePause(force?: boolean): void {
+        if (!isWater || locked) return;
+        paused = force ?? !paused;
+        pauseOverlay?.classList.toggle('hidden', !paused);
+        pauseBtn!.textContent = paused ? `▶ ${t('td.resume')}` : `⏸ ${t('td.pause')}`;
+        board.classList.toggle(`${p}-board--paused`, paused);
+      }
+
+      function restartLevel(): void {
+        if (locked) return;
+        tubes = cloneTubes(initialTubes);
+        mods.emptyTubes = initialMods.emptyTubes;
+        mods.tubeMods = initialMods.tubeMods.map((m) => ({ ...m }));
+        undoStack.length = 0;
+        moves = 0;
+        selected = null;
+        hintsLeft = 1;
+        hintFlash = null;
+        completedTubes.clear();
+        timerSec = 0;
+        setLQHeader({ moves: '0', time: '0:00' });
+        sound('click');
+        paint();
+      }
 
       const stackClass = theme.gemVariant === 'liquid' ? 'ws-liquid-stack' : 'bs-ball-stack';
       const pieceClass = theme.gemVariant === 'liquid' ? 'ws-seg' : 'bs-ball';
@@ -327,7 +441,7 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
       }
 
       async function onTap(idx: number): Promise<void> {
-        if (locked) return;
+        if (locked || paused) return;
         if (selected == null) {
           if (tubes[idx].length === 0) {
             toast(theme.emptyToast);
@@ -350,7 +464,12 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
         }
         if (!canPour(tubes[selected], tubes[idx], selected, idx, tubes, mods)) {
           sound('bad');
-          toast(theme.invalidToast);
+          if (isWater) {
+            const destEl = row.children[idx] as HTMLElement | undefined;
+            if (destEl) shakeTube(destEl, p);
+          } else {
+            toast(theme.invalidToast);
+          }
           selected = null;
           paint();
           return;
@@ -364,17 +483,33 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
         locked = true;
         pushUndo();
 
-        await animatePour({
-          board,
-          row,
-          fromIdx,
-          toIdx,
-          colorId,
-          amount,
-          theme: theme.pourTheme,
-        });
+        const applySegment = (): void => {
+          pourSingleLayer(tubes[fromIdx], tubes[toIdx], fromIdx, toIdx, tubes, mods);
+        };
 
-        pour(tubes[fromIdx], tubes[toIdx], fromIdx, toIdx, tubes, mods, theme.pourStyle);
+        if (theme.gemVariant === 'liquid') {
+          await animatePour({
+            board,
+            row,
+            fromIdx,
+            toIdx,
+            colorId,
+            amount,
+            theme: theme.pourTheme,
+            onSegment: applySegment,
+          });
+        } else {
+          await animatePour({
+            board,
+            row,
+            fromIdx,
+            toIdx,
+            colorId,
+            amount,
+            theme: theme.pourTheme,
+          });
+          pour(tubes[fromIdx], tubes[toIdx], fromIdx, toIdx, tubes, mods, theme.pourStyle);
+        }
         moves++;
         selected = null;
         paint();
@@ -389,7 +524,9 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
 
       function finishLevel(): void {
         locked = true;
+        stopTimer();
         board.classList.add(`${p}-win-flash`);
+        if (isWater) spawnVictoryBurst(board);
         sound('win');
         const elapsedMs = Date.now() - levelStart;
         const stars = starRating(moves, parMoves);
@@ -420,7 +557,10 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
       }
 
       paint();
-      levelCleanup = () => { /* no listeners */ };
+      if (isWater) startTimer();
+      levelCleanup = () => {
+        stopTimer();
+      };
     }
 
     loadLevel();

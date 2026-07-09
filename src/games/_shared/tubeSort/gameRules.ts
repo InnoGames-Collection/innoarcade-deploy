@@ -100,6 +100,19 @@ export function pourAmount(
   return Math.min(topRunLength(from), space);
 }
 
+export function pourSingleLayer(
+  from: Tube,
+  to: Tube,
+  fromIdx: number,
+  toIdx: number,
+  tubes: Tubes,
+  mods: LevelModifiers,
+): number {
+  if (!canPour(from, to, fromIdx, toIdx, tubes, mods)) return 0;
+  to.push(from.pop()!);
+  return 1;
+}
+
 export function pour(
   from: Tube,
   to: Tube,

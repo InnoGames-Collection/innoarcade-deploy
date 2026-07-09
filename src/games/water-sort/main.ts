@@ -10,7 +10,8 @@ import { runTubeSortGame, WATER_SORT_THEME } from '../_shared/tubeSort/runGame';
 mountLQ('water-sort', (mount) => runTubeSortGame(mount, WATER_SORT_THEME), {
   headerSlots: [
     { id: 'round', labelKey: 'shell.puzzle', icon: 'round' },
-    { id: 'moves', labelKey: 'ws.moves', icon: 'question' },
+    { id: 'time', labelKey: 'ws.time', icon: 'timer' },
+    { id: 'moves', labelKey: 'ws.moves', icon: 'moves' },
     { id: 'score', labelKey: 'td.score', icon: 'score', score: true },
   ],
 });

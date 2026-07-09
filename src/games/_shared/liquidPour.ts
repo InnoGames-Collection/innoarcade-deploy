@@ -1,4 +1,4 @@
-/** Animated tube transfer — real liquid pour & per-ball sorting. */
+/** Animated tube transfer — continuous liquid stream & per-ball sorting. */
 
 import './liquidPour.css';
 import { sfx } from '../../engine/audio';
@@ -36,10 +36,13 @@ export interface PourAnimOptions {
   colorId: number;
   amount: number;
   theme?: PourTheme;
+  /** Called after each liquid segment visually transfers (water sort). */
+  onSegment?: () => void;
 }
 
-const LIQUID_LAYER_MS = 200;
-const LIQUID_LAYER_GAP_MS = 40;
+const TILT_MS = 220;
+const UNTILT_MS = 300;
+const LIQUID_SEG_MS = 240;
 const BALL_ARC_MS = 280;
 const BALL_GAP_MS = 95;
 
@@ -105,62 +108,25 @@ export function applyHeldPieces(
   pieces.slice(-amount).forEach((p) => p.classList.add(theme.heldClass));
 }
 
-async function animateWaterLayer(
-  board: HTMLElement,
-  fromTube: HTMLElement,
-  layer: HTMLElement,
-  colorId: number,
+function createLiquidStream(
   fromMouth: { x: number; y: number },
   toMouth: { x: number; y: number },
-  landY: number,
-  piece: HTMLElement,
-  tilt: string,
-  isFirst: boolean,
-): Promise<void> {
-  const pieceR = relRect(piece, board);
-  const blobW = pieceR.width;
-  const blobH = pieceR.height;
-
-  piece.classList.add('lpour-hide');
-
-  if (isFirst) {
-    fromTube.classList.add('lpour-tube-pour', tilt);
-    playPourSound('start');
-  }
-
-  const blob = document.createElement('div');
-  blob.className = `lpour-blob ${gemClassesByIndex(colorId - 1, 'liquid')}`;
-  blob.style.left = `${pieceR.left}px`;
-  blob.style.top = `${pieceR.top}px`;
-  blob.style.width = `${blobW}px`;
-  blob.style.height = `${blobH}px`;
-  layer.appendChild(blob);
-
+  colorId: number,
+): HTMLElement {
   const stream = document.createElement('div');
-  stream.className = `lpour-stream-v2 ${gemClassesByIndex(colorId - 1, 'liquid')}`;
+  stream.className = `lpour-stream-v2 lpour-stream-v2--flow ${gemClassesByIndex(colorId - 1, 'liquid')}`;
   const dx = toMouth.x - fromMouth.x;
   const dy = toMouth.y - fromMouth.y;
   const len = Math.hypot(dx, dy);
   const angle = Math.atan2(dy, dx) * (180 / Math.PI) - 90;
   stream.style.left = `${fromMouth.x}px`;
   stream.style.top = `${fromMouth.y}px`;
-  stream.style.setProperty('--lpour-len', `${Math.max(len, 24)}px`);
+  stream.style.setProperty('--lpour-len', `${Math.max(len, 28)}px`);
   stream.style.setProperty('--lpour-angle', `${angle}deg`);
-  layer.appendChild(stream);
-
-  requestAnimationFrame(() => {
-    blob.classList.add('lpour-blob--pour');
-    blob.style.left = `${toMouth.x - blobW / 2}px`;
-    blob.style.top = `${landY}px`;
-    stream.classList.add('lpour-stream-v2--on');
-  });
-
-  await wait(LIQUID_LAYER_MS);
-  blob.remove();
-  stream.remove();
-  piece.classList.remove('lpour-hide');
+  return stream;
 }
 
+/** Continuous stream pour — drain source & fill destination per segment, no flying blocks. */
 async function animateWaterPour(
   board: HTMLElement,
   row: HTMLElement,
@@ -169,51 +135,60 @@ async function animateWaterPour(
   colorId: number,
   amount: number,
   theme: PourTheme,
+  onSegment?: () => void,
 ): Promise<void> {
   const fromTube = row.children[fromIdx] as HTMLElement;
   const toTube = row.children[toIdx] as HTMLElement;
   const fromStack = fromTube.querySelector(theme.stackSelector)!;
   const toStack = toTube.querySelector(theme.stackSelector)!;
-  const pieces = Array.from(fromStack.querySelectorAll(theme.pieceSelector)).slice(-amount);
-  if (!pieces.length) return;
+  const sourceSegs = Array.from(fromStack.querySelectorAll(theme.pieceSelector)).slice(-amount);
+  if (!sourceSegs.length) return;
 
   const tilt = toIdx > fromIdx ? 'lpour-tilt-right' : toIdx < fromIdx ? 'lpour-tilt-left' : '';
-  const fromMouth = tubeMouth(board, fromTube);
-  const toMouth = tubeMouth(board, toTube);
-
   const layer = document.createElement('div');
   layer.className = 'lpour-layer';
   board.appendChild(layer);
 
-  const toRect = relRect(toStack as HTMLElement, board);
-  const layerH = pieces.length
-    ? relRect(pieces[0] as HTMLElement, board).height
-    : 14;
-  const gap = 2;
-  const existing = toStack.querySelectorAll(theme.pieceSelector).length;
-  const baseLandY = toRect.top + toRect.height - layerH - 4;
+  fromTube.classList.add('lpour-tube-pour', tilt);
+  await wait(TILT_MS);
+
+  const fromMouth = tubeMouth(board, fromTube);
+  const toMouth = tubeMouth(board, toTube);
+  const stream = createLiquidStream(fromMouth, toMouth, colorId);
+  layer.appendChild(stream);
+  requestAnimationFrame(() => stream.classList.add('lpour-stream-v2--on'));
+  playPourSound('start');
+
+  const colorClass = gemClassesByIndex(colorId - 1, 'liquid');
 
   for (let i = 0; i < amount; i++) {
-    const piece = pieces[pieces.length - 1 - i] as HTMLElement;
-    const landY = baseLandY - (existing + i) * (layerH + gap);
-    await animateWaterLayer(
-      board,
-      fromTube,
-      layer,
-      colorId,
-      fromMouth,
-      toMouth,
-      landY,
-      piece,
-      tilt,
-      i === 0,
-    );
-    if (i < amount - 1) await wait(LIQUID_LAYER_GAP_MS);
+    const srcSeg = sourceSegs[sourceSegs.length - 1 - i] as HTMLElement;
+    srcSeg.classList.add('ws-seg--draining');
+
+    const newSeg = document.createElement('div');
+    newSeg.className = `ws-seg ${colorClass} ws-seg--filling`;
+    newSeg.setAttribute('data-color', String(colorId));
+    toStack.appendChild(newSeg);
+
+    requestAnimationFrame(() => {
+      srcSeg.classList.add('ws-seg--drained');
+      newSeg.classList.add('ws-seg--filled');
+    });
+
+    await wait(LIQUID_SEG_MS);
+    onSegment?.();
+    srcSeg.remove();
+    newSeg.classList.remove('ws-seg--filling', 'ws-seg--filled');
   }
 
-  playPourSound('land');
+  stream.classList.remove('lpour-stream-v2--on');
+  await wait(100);
+  stream.remove();
   layer.remove();
+
   fromTube.classList.remove('lpour-tube-pour', 'lpour-tilt-right', 'lpour-tilt-left');
+  await wait(UNTILT_MS);
+  playPourSound('land');
 }
 
 async function animateBallPour(
@@ -279,20 +254,32 @@ async function animateBallPour(
 
 export async function animatePour(opts: PourAnimOptions): Promise<void> {
   const theme = opts.theme ?? LIQUID_POUR_THEME;
-  const { board, row, fromIdx, toIdx, colorId, amount } = opts;
+  const { board, row, fromIdx, toIdx, colorId, amount, onSegment } = opts;
   if (amount <= 0) return;
-
-  if (prefersReducedMotion()) return;
 
   const fromTube = row.children[fromIdx] as HTMLElement | undefined;
   const toTube = row.children[toIdx] as HTMLElement | undefined;
   if (!fromTube || !toTube) return;
 
+  if (prefersReducedMotion()) {
+    for (let i = 0; i < amount; i++) onSegment?.();
+    return;
+  }
+
   if (theme.variant === 'sphere') {
     await animateBallPour(board, row, fromIdx, toIdx, colorId, amount, theme);
   } else {
-    await animateWaterPour(board, row, fromIdx, toIdx, colorId, amount, theme);
+    await animateWaterPour(board, row, fromIdx, toIdx, colorId, amount, theme, onSegment);
   }
+}
+
+/** Shake a tube on invalid pour. */
+export function shakeTube(tubeEl: HTMLElement, prefix = 'ws'): void {
+  const cls = `${prefix}-tube--shake`;
+  tubeEl.classList.remove(cls);
+  void tubeEl.offsetWidth;
+  tubeEl.classList.add(cls);
+  window.setTimeout(() => tubeEl.classList.remove(cls), 480);
 }
 
 export function spawnTubeSparkles(tubeEl: HTMLElement): void {
@@ -306,4 +293,26 @@ export function spawnTubeSparkles(tubeEl: HTMLElement): void {
     tubeEl.appendChild(spark);
     window.setTimeout(() => spark.remove(), 700);
   }
+}
+
+/** Victory burst — sparkles across the board. */
+export function spawnVictoryBurst(board: HTMLElement): void {
+  if (prefersReducedMotion()) return;
+  const layer = document.createElement('div');
+  layer.className = 'lpour-victory';
+  board.appendChild(layer);
+  const rect = board.getBoundingClientRect();
+  for (let i = 0; i < 18; i++) {
+    const spark = document.createElement('span');
+    spark.className = 'lpour-victory-spark';
+    const x = 20 + Math.random() * (rect.width - 40);
+    const y = 20 + Math.random() * (rect.height * 0.6);
+    spark.style.left = `${x}px`;
+    spark.style.top = `${y}px`;
+    spark.style.setProperty('--vdx', `${(Math.random() - 0.5) * 80}px`);
+    spark.style.setProperty('--vdy', `${-40 - Math.random() * 60}px`);
+    spark.style.animationDelay = `${i * 55}ms`;
+    layer.appendChild(spark);
+  }
+  window.setTimeout(() => layer.remove(), 1600);
 }
