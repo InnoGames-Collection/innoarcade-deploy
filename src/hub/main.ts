@@ -27,6 +27,7 @@ import {
   lbPreviewRow, hScrollShelf, comingSoonShelfHtml, continuePlayingHtml,
   activityTickerHtml, notificationsPanelHtml, shelfSkeletonHtml, lbSkeletonHtml,
 } from './portalSections';
+import { getHowToGuide } from './howToGuides';
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 const lang = (): Lang => getLang();
@@ -270,65 +271,14 @@ function wireEntryCtas(): void {
 // The category shown on a card = the first token of its genre ("Chance · …").
 const category = (g: GameMeta): string => genre(g).split('·')[0].trim();
 
-// Short "how to play" guide per game (EN/AM). Surfaced from an ℹ️ button on each
-// card. Falls back to a generic line for any game without a bespoke entry.
-const HOWTO: Record<string, { en: string; am: string }> = {
-  'popblast': { en: 'Swap two neighbouring candies to line up 3+ of the same colour. Each match clears them and scores. Match as many as you can before moves run out.', am: 'ተመሳሳይ ቀለም ያላቸውን 3+ ለማሰለፍ ሁለት ጎረቤት ከረሜላዎችን ይቀያይሩ። እያንዳንዱ ግጥሚያ ነጥብ ይሰጣል።' },
-  'luckyslot': { en: 'Tap Spin and line up matching symbols across the reels to win. Each spin uses your entry; matches pay out points.', am: 'ስፒን ይንኩ፤ ተመሳሳይ ምልክቶችን ሲያሰልፉ ያሸንፋሉ።' },
-  'memory-match': { en: 'Monthly tournament: compete for real ETB prizes (top 5). Flip two cards at a time to find matching pairs. Clear all pairs fast with the fewest moves for the highest score. Your best ranks on the monthly board.', am: 'ወርሃዊ ውድድር፦ ለእውነተኛ ETB ሽልማት ይወዳደሩ (ከፍተኛ 5)። ሁለት ካርዶችን ገልብጠው ተመሳሳይ ጥንዶችን ያግኙ። በትንሹ እንቅስቃሴና በፍጥነት ያጥፉ።' },
-  'merge-2048': { en: 'Swipe to slide tiles; equal numbers merge and double. Keep merging to reach the 2048 tile.', am: 'ሰቆችን ያንሸራትቱ፤ እኩል ቁጥሮች ሲገናኙ ይዋሃዳሉ። 2048 ለመድረስ ይቀጥሉ።' },
-  'spin-wheel': { en: 'Tap to spin the wheel. Where it stops decides your reward — land on a winning wedge to score.', am: 'መንኮራኩሩን ለማሽከርከር ይንኩ። የሚያርፍበት ቦታ ሽልማትዎን ይወስናል።' },
-  'ethiopian-quiz': { en: 'Answer 5 multiple-choice questions about Ethiopia. Pick the correct option; 3+ correct wins points.', am: 'ስለ ኢትዮጵያ 5 ጥያቄዎችን ይመልሱ። ትክክለኛውን ይምረጡ፤ 3+ ሲያገኙ ነጥብ ያሸንፋሉ።' },
-  'tap-game': { en: 'Tap as fast and accurately as you can before the timer runs out. Higher taps, higher score.', am: 'ሰዓቱ ከማለቁ በፊት በፍጥነትና በትክክል ይንኩ።' },
-  'lucky-box': { en: 'Pick a box to reveal what’s inside. Some boxes hold prizes — choose well to win points.', am: 'ሳጥን ይምረጡ፤ ውስጡን ይክፈቱ። አንዳንዶቹ ሽልማት አላቸው።' },
-  'temple-dash': { en: 'Run, jump and slide to dodge obstacles. Survive as long as you can for a high score.', am: 'እንቅፋቶችን ለማምለጥ ይሩጡ፣ ይዝለሉ። በተቻለ መጠን ይኑሩ።' },
-  'sudoku': { en: 'Fill the grid so every row, column and box has 1–9 with no repeats.', am: 'እያንዳንዱ ረድፍ፣ አምድ እና ሳጥን 1–9 እንዲይዝ ሰንጠረዡን ይሙሉ።' },
-  'spell': { en: 'Spell the word from the clue letter by letter.', am: 'ከፍንጭ ቃሉን ፊደል በፊደል ይጻፉ።' },
-  'vocab': { en: 'Choose the correct meaning of the given word.', am: 'የተሰጠውን ቃል ትክክለኛ ትርጉም ይምረጡ።' },
-  'rhyme': { en: 'Pick the word that rhymes with the prompt.', am: 'ከተሰጠው ጋር የሚገጥመውን ቃል ይምረጡ።' },
-  'target24': { en: 'Combine the numbers with + − × ÷ to make exactly 24.', am: 'ቁጥሮቹን በ+ − × ÷ አጣምረው 24 ያድርጉ።' },
-  'crosssum': { en: 'Fill cells so each row and column adds to its target sum.', am: 'እያንዳንዱ ረድፍና አምድ ወደ ዒላማው እንዲደምር ይሙሉ።' },
-  'logic': { en: 'Use the clues to deduce the correct grid arrangement.', am: 'ፍንጮችን ተጠቅመው ትክክለኛውን ድልድል ያውጡ።' },
-  'sequence': { en: 'Work out the pattern and pick the next item in the sequence.', am: 'ቅጥውን አውቀው ቀጣዩን ይምረጡ።' },
-  'orbit-blast': { en: 'Tap to fire at the orbiting targets. Time your shots to clear waves and rack up a high score.', am: 'በምህዋር ያሉ ኢላማዎችን ለመምታት ይንኩ። ሞገዶችን አጽድተው ከፍተኛ ነጥብ ያስመዝግቡ።' },
-  'candy-crunch': { en: 'Swap adjacent candies to line up 3+ of a colour. Clear the board’s goals before moves run out.', am: 'ተጎራባች ከረሜላዎችን ቀይረው 3+ ተመሳሳይ ቀለም ያሰልፉ።' },
-  'brick-blitz': { en: 'Move the paddle to bounce the ball and break every brick. Don’t let the ball fall.', am: 'ኳሷን ለመመለስና ሁሉንም ጡቦች ለመስበር ፓዱን ያንቀሳቅሱ።' },
-  'fruit-slice': {
-    en: 'Weekly tournament: compete for real ETB prizes (top 5). Survive as long as you can — +2 points per second alive. Slice fruit for +10 (+2 combo bonus per streak step). Bombs −10 and reset combo. Miss 5 fruits and you are out. Difficulty ramps over time. Your total score ranks on the weekly board.',
-    am: 'ሳምንታዊ ውድድር፦ ለእውነተኛ ETB ሽልማት ይወዳደሩ (ከፍተኛ 5)። ምን ያህል ረጅም እንደሚቆዩ ይጫወቱ። በሰከንድ +2 ነጥብ። ፍራፍሬ +10 (+2 ኮምቦ ቦነስ)። ቦምብ −10። 5 ፍራፍሬ ካመለጡ ይወጣሉ። አዝነት በጊዜ ይጨምራል።',
-  },
-  'sky-hopper': { en: 'Tap to hop upward from platform to platform. Climb as high as you can without falling.', am: 'ከመድረክ ወደ መድረክ ለመዝለል ይንኩ። ሳይወድቁ ከፍ ብለው ይውጡ።' },
-  'bubble-pop': { en: 'Aim and shoot bubbles to group 3+ of a colour and pop them. Clear the board to win.', am: '3+ ተመሳሳይ ቀለም ለማሰባሰብ አረፋዎችን ይተኩሱ።' },
-  'water-sort': { en: 'Pour matching colors into tubes until each holds one color. Use empty tubes as buffers.', am: 'ተዛማጅ ቀለሞችን በቱቦች ውስጥ ያደርድሩ። ባዶ ቱቦች ይረዳሉ።' },
-  'parking-jam': { en: 'Slide cars along their lanes to clear a path. Free the red car to exit.', am: 'መኪኖችን በመንገዳቸው ያንቀሳቅሱ። ቀይ መኪኑ እንዲወጣ ያስተናግዱ።' },
-  'laser-puzzle': { en: 'Tap mirrors to rotate them. Aim the laser through every green target.', am: 'መስታዎችን ለመሽከርከር ይጫኑ። ሌዘሩን ወደ ሁሉም ኢላማዎች ያመራዉ።' },
-  'piano-tiles': { en: 'Tap only black tiles before they scroll off screen. White tiles end your run.', am: 'ጥቁር ጡንጦችን ብቻ ከመጥለቅ በፊት ይጫኑ።' },
-  'stack-tower': { en: 'Tap to drop blocks on the stack. Perfect alignment scores bonus height.', am: 'ብሎኮችን ለመጣል ይንኩ። ፍጹም ማስተካከል ተጨማሪ ነጥብ ይሰጣል።' },
-  'crossy-road': { en: 'Cross roads and rivers without getting hit. Move before the idle timer runs out.', am: 'መንገዶችን እና ወንዞችን ያልፉ። ከመቆየት በፊት ይንቀሳቀሱ።' },
-  'block-blast': { en: 'Place all three pieces on the 8×8 board. Full rows and columns clear for points.', am: 'ሦስቱን ቁራዎች በሰሌዳ ላይ ይቀምጡ። ሙሉ መስመሮች ነጥብ ይሰጣሉ።' },
-  'tile-connect': { en: 'Match pairs with a path that bends at most twice. Clear 5 boards to win.', am: 'ሁለት ጊዜ ብቻ የሚጠጋ መንገድ በመጠቀም ጥንዶችን ያገናኙ።' },
-  'hexa-block': { en: 'Place hex clusters on the honeycomb. Full rows clear for bonus points.', am: 'ሀክስ ቁራዎችን በማዕዘን ላይ ይቀምጡ።' },
-  'knife-hit': { en: 'Throw knives at the spinning log without hitting another blade.', am: 'ሌላ ቢላ ሳይገናኝ በሚሽከርከረው ምንጣፍ ላይ ቢላ ይጣሉ።' },
-  'helix-jump': { en: 'Rotate the tower so the ball falls through matching-color gaps.', am: 'ኳሱ ተዛማጅ ቀለም ክፍተቶችን እንዲمر ያሽከርክሩ።' },
-  'hill-climb': { en: 'Balance gas and brake over hills. Running out of fuel or flipping ends the run.', am: 'ነዳጅ ይከታተሉ እና መገልበጥን ያስወግዱ።' },
-  'tower-defense': { en: 'Place and upgrade towers, then survive 15 waves of enemies.', am: 'ታወሮችን ይቀምጡ እና ያሳድጉ። 15 ሞገዶችን ያሳልፉ።' },
-  'draw-bridge': { en: 'Draw a bridge across the gap, then tap DRIVE to send the car across.', am: 'ድልድይ ይሳሉ፣ ከዚያ መኪኑ እንዲያልፍ DRIVE ይጫኑ።' },
-  'ball-sort': { en: 'Sort colored balls so each tube holds one color only.', am: 'ኳሮችን በቱብ አንድ ቀለም ብቻ እንዲኖሩ ያድርጉ።' },
-  'jewel-match': { en: 'Swap jewels to match 3+. Beat three level score targets before moves run out.', am: '3+ ለማዛመድ ውድሮችን ይቀያይሩ። ዒላማዎችን ከመጨረሻቸው በፊት ያሸንፉ።' },
-  'reflex-tap': { en: 'Tap glowing targets quickly across three waves in 60 seconds.', am: 'በ60 ሰከንድ ውስጥ ኢላማዎችን በፍጥነት ይጫኑ።' },
-  'doodle-jump': { en: 'Steer left and right to land on platforms and climb higher.', am: 'መድረኮችን ለመድረስ ግራና ቀኝ ይምሩ።' },
-  'zigzag': { en: 'Stay on the zigzag path as the ball auto-runs. Tap to turn at corners.', am: 'ኳሱ በራሱ ሲሮጥ በመንገዱ ላይ ይቆዩ።' },
-  'color-switch': { en: 'Tap to change ball color and pass through matching gate segments.', am: 'ቀለም ይቀይሩ እና ተዛማጅ በሮችን ይለፉ።' },
-  'rope-rescue': { en: 'Draw a rope, tap SWING, and reach the SAFE zone without spikes.', am: 'ገመድ ይሳሉ፣ SWING ይንኩ፣ ወደ SAFE ይድረሱ።' },
-  'pipe-connect': { en: 'Rotate pipes to connect the water source to the drain. Clear 5 levels.', am: 'ቧንቧዎችን ያሽከርክሩ። 5 ደረጃዎችን ያጠናቅቁ።' },
-  'ball-maze': { en: 'Tilt or steer the ball through five mazes to the goal.', am: 'ኳሱን በሜዝ ውስጥ ወደ ዒላማው ያስመርጡ።' },
-  'arrow-shot': { en: 'Aim with wind and moving targets in mind. Build a high accuracy streak.', am: 'ነፋስን እና የሚንቀሳቀሱ ኢላማዎችን ያስተውሉ።' },
-  'slide-puzzle': { en: 'Slide tiles into the empty cell until numbers 1–15 are in order.', am: 'ቁጥሮች 1–15 በቅደም ተከተል እስኪሆኑ ድረስ ሰሌዶችን ያንቀሳቀሱ።' },
-  'race-car': { en: 'Switch lanes to dodge traffic, collect coins, and grab shields.', am: 'ትራፊክን ለማስወገድ መንገዶችን ይቀይሩ። ሳንቲም ይሰብስቡ።' },
-};
-const howToText = (g: GameMeta): { en: string; am: string } =>
-  HOWTO[g.id] ?? { en: `Tap Play to start ${g.nameEn}. Score as high as you can!`, am: `${g.nameAm}ን ለመጀመር ይጫወቱ።` };
-function howTo(g: GameMeta): string { const h = howToText(g); return lang() === 'am' ? h.am : h.en; }
+function howToStepsHtml(g: GameMeta): string {
+  const guide = getHowToGuide(g.id, g.nameEn, g.nameAm);
+  const am = lang() === 'am';
+  const goal = am ? guide.goalAm : guide.goalEn;
+  const steps = am ? guide.stepsAm : guide.stepsEn;
+  const items = steps.map((s) => `<li>${escapeHtml(s)}</li>`).join('');
+  return `<p class="howto-goal">${escapeHtml(goal)}</p><ol class="howto-steps">${items}</ol>`;
+}
 
 
 /** Default catalog art when a game has no explicit `cover`. */
@@ -486,7 +436,7 @@ function openHowTo(g: GameMeta): void {
       <button type="button" class="howto-x" aria-label="${t('hub.cancel')}">✕</button>
       <h3 class="howto-name">${g.icon} ${escapeHtml(name(g))}</h3>
       <p class="howto-sub">📖 ${t('hub.howToPlay')}</p>
-      <p class="howto-body">${escapeHtml(howTo(g))}</p>
+      <div class="howto-body">${howToStepsHtml(g)}</div>
       <button type="button" class="btn ghost howto-close">${t('hub.cancel')}</button>
     </div>`;
   document.body.appendChild(m);

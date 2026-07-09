@@ -1,30 +1,37 @@
-# Cover art prompts (AI illustration → hub WebP)
+# Hub cover art (AI illustrations)
 
-Stable-style covers: polished 3D cartoon mobile game art, 4:3, no text/logos, full-bleed.
+All **26 new catalog games** have custom 4:3 key art in `public/*.webp`. Source PNGs are archived in this folder.
 
-## water-sort
+## Regenerate all WebP from latest PNGs
 
-**File:** `assets/covers/water_sort.png` → `public/water_sort.webp`
+After updating PNGs in the Cursor assets folder or here:
 
-**Prompt:**
-> Mobile game store cover art for "Water Sort" puzzle game. Center composition: five glass laboratory test tubes in a row, each filled with vibrant layered colored liquids (cyan, magenta, lime green, orange, purple) being sorted/poured — one tube mid-pour with a glossy liquid stream. Glossy 3D cartoon style matching casual iOS/Android game icons, soft studio lighting, subtle reflections on glass. Background: rich teal-to-deep-blue gradient (#2aa9d6 to #13627e) with soft bokeh light particles and faint water ripple texture. Clean, premium, playful brain-puzzle mood. No text, no logos, no watermarks. Full-bleed illustration suitable for a 4:3 game card thumbnail.
-
-**Catalog:** `accent: #2aa9d6`, `thumb: ['#2aa9d6', '#13627e']`
-
-**Import:**
 ```bash
-node scripts/import-cover.mjs assets/covers/water_sort.png water-sort
+npm run covers:import-all
 ```
 
----
+Or point at a custom folder:
 
-## Workflow for new games
+```bash
+node scripts/import-all-covers.mjs /path/to/png/folder
+```
 
-1. Read `accent` + `thumb` from `catalog.ts` for the game id.
-2. Generate 4:3 illustration (Cursor image gen or external tool) — use genre + mechanic in the prompt; match thumb gradient in the background.
-3. Save source PNG to `assets/covers/<slug>.png`.
-4. Run `node scripts/import-cover.mjs assets/covers/<slug>.png <game-id>`.
-5. Confirm `COVERS` in `catalog.ts` maps to `<slug>.webp` (already set for Phase 3 games).
-6. `npm run build` — hub card picks up `/water_sort.webp` automatically.
+## Single game
 
-**Fallback:** `npm run covers:generate` produces gradient placeholders (no illustration).
+```bash
+npm run covers:import -- assets/covers/water_sort.png water-sort
+```
+
+## Style guide
+
+- **4:3** aspect ratio, 800×600 WebP @ quality 88
+- Premium mobile key art (App Store / Play feature quality)
+- Catalog `thumb` gradient colors in background
+- **No text, logos, or UI** on the artwork
+- Match stable covers (`bubble_pop.webp`, `sudoku.webp`) in polish level
+
+## Games with custom art
+
+water-sort, parking-jam, laser-puzzle, piano-tiles, stack-tower, crossy-road, block-blast, tile-connect, hexa-block, knife-hit, helix-jump, hill-climb, tower-defense, draw-bridge, ball-sort, jewel-match, reflex-tap, doodle-jump, zigzag, color-switch, rope-rescue, pipe-connect, ball-maze, arrow-shot, slide-puzzle, race-car
+
+**Fallback:** `npm run covers:generate` creates gradient placeholders (overwrites WebP — re-run `covers:import-all` after).

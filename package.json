@@ -16,6 +16,7 @@
     "skins:ethio-f": "node scripts/process-ethio-f-skins.mjs && node scripts/compress-runner-sprites.mjs",
     "covers:generate": "node scripts/generate-covers.mjs",
     "covers:import": "node scripts/import-cover.mjs",
+    "covers:import-all": "node scripts/import-all-covers.mjs",
     "lint:games": "node scripts/lint-game-shell.mjs"
   },
   "devDependencies": {

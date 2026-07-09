@@ -877,6 +877,10 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .howto-head h3 { font-size: 1.2rem; }
 .howto-sub { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0; }
 .howto-body { font-size: 0.95rem; line-height: 1.5; color: var(--text); margin: 0 0 0.4rem; }
+.howto-goal { font-weight: 700; color: var(--text); margin: 0 0 0.65rem; font-size: 0.92rem; }
+.howto-steps { margin: 0 0 0.5rem 1.15rem; padding: 0; display: flex; flex-direction: column; gap: 0.45rem; }
+.howto-steps li { font-size: 0.9rem; line-height: 1.45; color: var(--text); }
+.howto-steps li::marker { color: var(--accent); font-weight: 800; }
 .howto-play { text-align: center; text-decoration: none; }
 .howto-close { margin-top: 0.1rem; }
 /* Intro extras: cover banner, mode tag, economy chips, your-best-vs-top. */
@@ -895,9 +899,11 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .howto-scores { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
 
 .howto-card-rules {
+  width: min(420px, 94vw);
+  max-height: min(85dvh, 640px);
+  overflow-y: auto;
   padding: 1.4rem 1.3rem 1.2rem !important;
   gap: 0.65rem;
-  overflow: visible;
 }
 
 .howto-card-rules .howto-x {
