@@ -787,6 +787,70 @@ export const HOWTO_GUIDES: Record<string, HowToGuide> = {
       'ግድግዳ ከጋጨት ዙሩ ይቋርጣል።',
     ],
   },
+  'traffic-master': {
+    goalEn: 'Direct city traffic and keep every intersection flowing smoothly.',
+    goalAm: 'የከተማ ትራፊክን ያስተዳድሩ እያንዳንዱ تقاطع ያለሰላ peacefully እንዲሄድ ያድርጉ።',
+    stepsEn: [
+      'Coming soon — tap signals to stop or release lanes of cars.',
+      'Clear jams before vehicles stack up at red lights.',
+      'Chain smooth flows for combo bonuses on your daily score.',
+      'Beat rush-hour levels without letting any lane overflow.',
+    ],
+    stepsAm: [
+      'በቅርቡ — ሲግናሎችን መኪኖችን ለማቆም ወይም ለመልቀቅ ይጫኑ።',
+      'መኪኖች ከመጨመራቸው በፊት ትራፊክ መጨናነቅን ያስተናግዱ።',
+      'ለተጨማሪ ነጥብ ተከታታይ ጥሩ поток ይፈጥሩ።',
+      'ምንም መንገድ እንዳይoverflow ስራ ሰዓት ደረጃዎችን ያሸንፉ።',
+    ],
+  },
+  'city-rush': {
+    goalEn: 'Sprint through neon city blocks and reach the finish before time runs out.',
+    goalAm: 'በኒዮን ከተማ ጥቂት ጊዜ ከመጨረሻው በፊት ወደ መጨረሻው ይሮጡ።',
+    stepsEn: [
+      'Coming soon — swipe to dodge obstacles and collect power-ups.',
+      'Jump gaps and slide under barriers to keep your speed streak.',
+      'Grab coins and shields to extend your run multiplier.',
+      'Reach checkpoint flags to unlock harder downtown districts.',
+    ],
+    stepsAm: [
+      'በቅርቡ — እንቁላሎችን ለመቀረብ እና power-up ለመ сбор ይንቀሳቀሱ።',
+      'ክፍተቶችን ይዝለሉ፣ መሰናከሎችን ይمررو ለ속도 streak ይቀጥሉ።',
+      'multiplier ለማራዘም ሳንቲም እና shield ይሰብስቡ።',
+      'ከፍተኛ ደረጃዎችን ለመክፈት checkpoint ይደርሱ።',
+    ],
+  },
+  'mega-match': {
+    goalEn: 'Match giant gems and trigger spectacular board-clearing combos.',
+    goalAm: 'ትላልቅ gems ያዛምዱ እና ታላቅ combo ያስነሱ።',
+    stepsEn: [
+      'Coming soon — swap adjacent gems to line up three or more of a kind.',
+      'Create special mega gems by matching four or five in a row.',
+      'Use power gems to blast entire rows, columns, or color groups.',
+      'Clear level targets before your move limit expires.',
+    ],
+    stepsAm: [
+      'በቅርቡ — 3+ ተመሳሳይ gems ለማስተካከል ጎሽታዎችን ይቀይሩ።',
+      '4–5 በረድፍ match በማድረግ mega gem ይፍጠሩ።',
+      'power gem ሙሉ ረድፍ/አምድ/ቀለም ለመፍጨት ይጠቀሙ።',
+      'እንቅስቃሴ ከመጨረሻው በፊት ግቦችን ያጽዱ።',
+    ],
+  },
+  'ninja-dash': {
+    goalEn: 'Dash across moonlit rooftops as a shadow ninja and survive endless pursuit.',
+    goalAm: 'እንደ ninja በጨረራ ላይ ይሮጡ እና pursuit ይቋቋሙ።',
+    stepsEn: [
+      'Coming soon — tap to jump and swipe down to slide under traps.',
+      'Collect shuriken tokens to charge a shadow dash through obstacles.',
+      'Chain perfect landings to build your speed and score multiplier.',
+      'Survive as long as you can — one mistake ends the run.',
+    ],
+    stepsAm: [
+      'Coming soon — tap to jump and swipe down to slide under traps.',
+      'Collect shuriken tokens to charge a shadow dash through obstacles.',
+      'Chain perfect landings to build your speed and score multiplier.',
+      'Survive as long as you can — one mistake ends the run.',
+    ],
+  },
 };
 
 export function getHowToGuide(gameId: string, nameEn: string, nameAm: string): HowToGuide {

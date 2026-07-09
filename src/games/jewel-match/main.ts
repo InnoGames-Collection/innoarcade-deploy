@@ -1,6 +1,7 @@
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
 import '../_casual/style.css';
+import '../_shared/premiumGems.css';
 import './style.css';
 import { applyTranslations, getLang } from '../../i18n';
 import { sfx } from '../../engine/audio';
@@ -68,7 +69,7 @@ function paintBoard(): void {
   grid.forEach((color, i) => {
     const tile = document.createElement('button');
     tile.type = 'button';
-    tile.className = 'tile' + (color ? ` ${color}` : ' empty');
+    tile.className = 'tile pgem pgem--block' + (color ? ` pgem--${color === 'topaz' ? 'amber' : color === 'diamond' ? 'aquamarine' : color}` : ' empty');
     tile.dataset.i = String(i);
     tile.disabled = busy || gameEnded || !color;
     board.appendChild(tile);

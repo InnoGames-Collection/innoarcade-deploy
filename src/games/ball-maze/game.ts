@@ -1,5 +1,6 @@
 import { sfx } from '../../engine/audio';
 import type { Action } from '../../engine/input';
+import { drawGemCircle } from '../_shared/premiumCanvas';
 
 export const W = 480;
 export const H = 720;
@@ -187,16 +188,10 @@ export class BallMaze {
 
     const gx = ox + this.goal.x - 1.5 * CELL + CELL / 2;
     const gy = oy + this.goal.y - 1.5 * CELL + CELL / 2;
-    ctx.fillStyle = '#2ecc71';
-    ctx.beginPath();
-    ctx.arc(gx, gy, 14, 0, Math.PI * 2);
-    ctx.fill();
+    drawGemCircle(ctx, gx, gy, 14, '#2ecc71');
 
     const bx = ox + this.bx - 1.5 * CELL + CELL / 2;
     const by = oy + this.by - 1.5 * CELL + CELL / 2;
-    ctx.fillStyle = '#e17055';
-    ctx.beginPath();
-    ctx.arc(bx, by, 12, 0, Math.PI * 2);
-    ctx.fill();
+    drawGemCircle(ctx, bx, by, 12, '#e17055');
   }
 }

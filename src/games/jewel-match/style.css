@@ -26,8 +26,9 @@ body.game-shell[data-game="jewel-match"]:has(#fcPlayFrame:not(.hidden)) {
   max-width: min(100%, 400px);
   padding: 10px;
   border-radius: 14px;
-  background: linear-gradient(160deg, #1a1030, #2d1b4e);
-  border: 1px solid #4a3070;
+  background: linear-gradient(168deg, #2a3548 0%, #1e2838 45%, #151d2a 100%);
+  border: 2px solid rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 3px 14px rgba(0, 0, 0, 0.45), 0 10px 28px rgba(0, 0, 0, 0.18);
   touch-action: none;
   user-select: none;
 }
@@ -36,18 +37,13 @@ body.game-shell[data-game="jewel-match"]:has(#fcPlayFrame:not(.hidden)) {
   width: 100%;
   aspect-ratio: 1;
   border: none;
-  border-radius: 10px;
   cursor: pointer;
-  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25);
+  position: relative;
 }
 
-#jewel-match-game-wrapper .tile.ruby { background: linear-gradient(135deg, #ff6b8a, #c0392b); }
-#jewel-match-game-wrapper .tile.sapphire { background: linear-gradient(135deg, #74b9ff, #0984e3); }
-#jewel-match-game-wrapper .tile.emerald { background: linear-gradient(135deg, #55efc4, #00b894); }
-#jewel-match-game-wrapper .tile.topaz { background: linear-gradient(135deg, #ffeaa7, #fdcb6e); }
-#jewel-match-game-wrapper .tile.amethyst { background: linear-gradient(135deg, #a29bfe, #6c5ce7); }
-#jewel-match-game-wrapper .tile.diamond { background: linear-gradient(135deg, #dfe6e9, #b2bec3); }
 #jewel-match-game-wrapper .tile.empty { background: transparent; box-shadow: none; }
+#jewel-match-game-wrapper .tile.empty::before,
+#jewel-match-game-wrapper .tile.empty::after { display: none; }
 
 .combo {
   position: fixed;

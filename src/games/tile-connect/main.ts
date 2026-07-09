@@ -49,7 +49,7 @@ function render(mount: HTMLElement): void {
     });
     toolbar.appendChild(hintBtn);
     const grid = el('div', {
-      class: 'tc-board',
+      class: 'tc-board pboard',
       style: `grid-template-columns:repeat(${COLS},1fr)`,
     });
     wrap.appendChild(hint);

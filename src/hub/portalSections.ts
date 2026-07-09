@@ -464,11 +464,18 @@ export function lbPreviewRow(r: LeaderEntry): string {
 export function comingSoonCard(teaser: ComingSoonMeta, lang: Lang): string {
   const name = lang === 'am' ? teaser.nameAm : teaser.nameEn;
   const eta = lang === 'am' ? (teaser.etaAm ?? teaser.etaEn) : teaser.etaEn;
+  const cover = teaser.cover;
+  const thumbStyle = cover
+    ? ''
+    : ` style="background:linear-gradient(145deg,${teaser.thumb[0]},${teaser.thumb[1]})"`;
   return `
     <article class="cs-card">
-      <div class="cs-thumb" style="background:linear-gradient(145deg,${teaser.thumb[0]},${teaser.thumb[1]})">
-        <span class="cs-glyph">${teaser.icon}</span>
+      <div class="cs-thumb${cover ? ' cs-thumb-cover' : ''}"${thumbStyle}>
+        ${cover
+          ? `<img class="cs-cover" src="${cover}" alt="" loading="lazy" />`
+          : `<span class="cs-glyph">${teaser.icon}</span>`}
         <span class="cs-badge" data-i18n="hub.soon">${t('hub.soon')}</span>
+        <button type="button" class="gc-info cs-info" data-howto-cs="${teaser.id}" aria-label="${t('hub.howToPlay')}">?</button>
       </div>
       <h4 class="cs-title">${escapeHtml(name)}</h4>
       ${eta ? `<p class="cs-eta">${escapeHtml(eta)}</p>` : ''}

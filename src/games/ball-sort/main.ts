@@ -9,11 +9,11 @@ import { puzzleCompletionScore } from '../_lq/scoring';
 import { escalateTier } from '../../platform/freeDifficulty';
 import { createHost } from '../../platform/gameHost';
 import { showFirstRunHint } from '../_shared/firstRun';
+import { gemClassesByIndex } from '../_shared/premiumGems';
 
 const CAPACITY = 4;
 const LEVELS = 8;
 const EMPTY_TUBES = 2;
-const BALL = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22', '#6c5ce7'];
 
 type Tube = number[];
 type Tubes = Tube[];
@@ -140,9 +140,8 @@ function render(mount: HTMLElement): void {
         });
         for (const id of tube) {
           tubeEl.appendChild(el('div', {
-            class: 'bs-ball',
+            class: `bs-ball ${gemClassesByIndex(id - 1, 'sphere')}`,
             'data-color': String(id),
-            style: `background:${BALL[(id - 1) % BALL.length]}`,
           }));
         }
         row.appendChild(tubeEl);

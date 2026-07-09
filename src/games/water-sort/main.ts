@@ -9,14 +9,13 @@ import { puzzleCompletionScore } from '../_lq/scoring';
 import { escalateTier } from '../../platform/freeDifficulty';
 import { createHost } from '../../platform/gameHost';
 import { showFirstRunHint } from '../_shared/firstRun';
+import { gemClassesByIndex } from '../_shared/premiumGems';
 
 const CAPACITY = 4;
 const LEVELS = 8;
 const EMPTY_TUBES = 2;
 
 /** Distinct liquid colors (id 1..N maps to index 0..N-1). */
-const LIQUID = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22', '#6c5ce7'];
-
 type Tube = number[];
 type Tubes = Tube[];
 
@@ -168,9 +167,8 @@ function render(mount: HTMLElement): void {
           } else {
             for (const colorId of tube) {
               tubeEl.appendChild(el('div', {
-                class: 'ws-seg',
+                class: `ws-seg ${gemClassesByIndex(colorId - 1, 'liquid')}`,
                 'data-color': String(colorId),
-                style: `background:${LIQUID[(colorId - 1) % LIQUID.length]}`,
               }));
             }
           }

@@ -17,7 +17,7 @@ import {
 } from '../platform/tournaments';
 import { balance, balanceSync, onWalletChange, setBalanceFromServer } from '../platform/wallet';
 import { onCurrencyChange, setBalance, setLifetime, setRpWeekly, setRpMonthly, xpLifetime, rpWeekly, rpMonthly } from '../platform/currency';
-import { orderedCatalog, getGame, freeGamesInCategory, trendingGames, recentlyAddedGames, ratingFor, estMinutesFor, type GameMeta, type TournamentCadence, type GameCategory } from '../platform/catalog';
+import { orderedCatalog, getGame, freeGamesInCategory, trendingGames, recentlyAddedGames, ratingFor, estMinutesFor, COMING_SOON, type GameMeta, type TournamentCadence, type GameCategory } from '../platform/catalog';
 import { getSupabase, isConfigured } from '../platform/supabase';
 import { bootstrapHubData, type HubBootstrapResult } from '../platform/hubBootstrap';
 import {
@@ -427,16 +427,16 @@ function gameCard(g: GameMeta, opts?: { compact?: boolean }): string {
 
 // "How to play" modal, opened by the ℹ️ button on a card. The button lives inside
 // the card's <a>, so we stop the click from navigating.
-function openHowTo(g: GameMeta): void {
+function openHowToModal(title: string, bodyHtml: string): void {
   document.querySelector('.howto-modal')?.remove();
   const m = document.createElement('div');
   m.className = 'howto-modal';
   m.innerHTML = `<div class="howto-scrim"></div>
     <div class="howto-card howto-card-rules">
       <button type="button" class="howto-x" aria-label="${t('hub.cancel')}">✕</button>
-      <h3 class="howto-name">${g.icon} ${escapeHtml(name(g))}</h3>
+      <h3 class="howto-name">${title}</h3>
       <p class="howto-sub">📖 ${t('hub.howToPlay')}</p>
-      <div class="howto-body">${howToStepsHtml(g)}</div>
+      <div class="howto-body">${bodyHtml}</div>
       <button type="button" class="btn ghost howto-close">${t('hub.cancel')}</button>
     </div>`;
   document.body.appendChild(m);
@@ -444,6 +444,23 @@ function openHowTo(g: GameMeta): void {
   m.querySelector('.howto-scrim')!.addEventListener('click', close);
   m.querySelector('.howto-close')!.addEventListener('click', close);
   m.querySelector('.howto-x')!.addEventListener('click', close);
+}
+
+function openHowTo(g: GameMeta): void {
+  openHowToModal(`${g.icon} ${escapeHtml(name(g))}`, howToStepsHtml(g));
+}
+
+function openComingSoonHowTo(id: string): void {
+  const teaser = COMING_SOON.find((c) => c.id === id);
+  if (!teaser) return;
+  const guide = getHowToGuide(id, teaser.nameEn, teaser.nameAm);
+  const am = lang() === 'am';
+  const goal = am ? guide.goalAm : guide.goalEn;
+  const steps = am ? guide.stepsAm : guide.stepsEn;
+  const items = steps.map((s) => `<li>${escapeHtml(s)}</li>`).join('');
+  const body = `<p class="howto-goal">${escapeHtml(goal)}</p><ol class="howto-steps">${items}</ol>`;
+  const title = escapeHtml(am ? teaser.nameAm : teaser.nameEn);
+  openHowToModal(`${teaser.icon} ${title}`, body);
 }
 
 // Browse state: segmented menu filters by tournament / free (default: tournament).
@@ -1047,6 +1064,13 @@ function setupBrowse(): void {
   document.querySelector('#footerTerms')?.addEventListener('click', (e) => e.preventDefault());
   // Delegated ℹ️ "how to play" — intercept before the card link navigates.
   const howToHost = (e: Event): void => {
+    const csInfo = (e.target as HTMLElement).closest<HTMLElement>('[data-howto-cs]');
+    if (csInfo) {
+      e.preventDefault();
+      e.stopPropagation();
+      openComingSoonHowTo(csInfo.dataset.howtoCs!);
+      return;
+    }
     const info = (e.target as HTMLElement).closest<HTMLElement>('.gc-info');
     if (info) {
       e.preventDefault();
@@ -1058,6 +1082,7 @@ function setupBrowse(): void {
   document.querySelector('#gameGrid')?.addEventListener('click', howToHost);
   document.querySelector('#trendingShelf')?.addEventListener('click', howToHost);
   document.querySelector('#recentShelf')?.addEventListener('click', howToHost);
+  document.querySelector('#comingSoonShelf')?.addEventListener('click', howToHost);
 }
 
 // One-time cleanup — the economy is now 100% server-sourced, so wipe every

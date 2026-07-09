@@ -9,6 +9,7 @@ import { puzzleCompletionScore } from '../_lq/scoring';
 import { createHost } from '../../platform/gameHost';
 import { slidePuzzleScramble, slidePuzzleSolved } from '../_lq/solvable';
 import { showFirstRunHint } from '../_shared/firstRun';
+import { gemClassesByIndex } from '../_shared/premiumGems';
 
 const SIZE = 4;
 const LEVELS = 5;
@@ -58,11 +59,12 @@ function render(mountEl: HTMLElement): void {
 
   function paint(): void {
     mountEl.innerHTML = '';
-    const wrap = el('div', { class: 'sp-grid' });
+    const wrap = el('div', { class: 'sp-grid pboard' });
     tiles.forEach((v, i) => {
       wrap.appendChild(el('button', {
         type: 'button',
-        class: 'sp-tile' + (v === 0 ? ' empty' : ''),
+        class: 'sp-tile'
+          + (v === 0 ? ' empty' : ` ${gemClassesByIndex(v - 1, 'block')}`),
         ...(v === 0 ? { disabled: '' } : {}),
         onclick: () => tryMove(i),
       }, v === 0 ? '' : String(v)));

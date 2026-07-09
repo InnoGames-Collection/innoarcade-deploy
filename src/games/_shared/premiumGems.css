@@ -1,0 +1,134 @@
+/* Illustrated 3D gem blocks — shared playfield art for new GoPlay games */
+
+.pgem {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transform: translateZ(0);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.pgem::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    148deg,
+    var(--pgem-light) 0%,
+    var(--pgem-mid) 38%,
+    var(--pgem-dark) 72%,
+    color-mix(in srgb, var(--pgem-dark) 85%, #000) 100%
+  );
+  z-index: 0;
+}
+
+.pgem::after {
+  content: '';
+  position: absolute;
+  top: 7%;
+  left: 10%;
+  width: 42%;
+  height: 34%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 30%,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(255, 255, 255, 0.22) 48%,
+    transparent 72%
+  );
+  z-index: 2;
+  pointer-events: none;
+}
+
+.pgem--sapphire { --pgem-light: #b8d4ff; --pgem-mid: #5b8cff; --pgem-dark: #2a4db8; }
+.pgem--emerald { --pgem-light: #8ef0b8; --pgem-mid: #2ecc71; --pgem-dark: #1a7a42; }
+.pgem--amber { --pgem-light: #ffe08a; --pgem-mid: #f39c12; --pgem-dark: #b86a08; }
+.pgem--ruby { --pgem-light: #ff9aab; --pgem-mid: #e74c3c; --pgem-dark: #9c2418; }
+.pgem--amethyst { --pgem-light: #d4b8ff; --pgem-mid: #9b59b6; --pgem-dark: #5c2d78; }
+.pgem--aquamarine { --pgem-light: #8af0e8; --pgem-mid: #1abc9c; --pgem-dark: #0d7a68; }
+.pgem--coral { --pgem-light: #ffb89a; --pgem-mid: #e67e22; --pgem-dark: #a04a10; }
+.pgem--violet { --pgem-light: #c4b8ff; --pgem-mid: #6c5ce7; --pgem-dark: #3d28a8; }
+
+.pgem--block {
+  border-radius: 6px;
+  box-shadow:
+    inset 0 -4px 0 color-mix(in srgb, var(--pgem-dark) 70%, #000),
+    inset 0 2px 0 rgba(255, 255, 255, 0.25),
+    0 3px 8px rgba(0, 0, 0, 0.22);
+}
+
+.pgem--hex {
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  border-radius: 0;
+  box-shadow:
+    inset 0 -5px 0 color-mix(in srgb, var(--pgem-dark) 65%, #000),
+    0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.pgem--hex::after { top: 12%; left: 18%; width: 36%; height: 28%; }
+
+.pgem--sphere {
+  border-radius: 50%;
+  box-shadow:
+    inset -4px -6px 10px rgba(0, 0, 0, 0.38),
+    inset 3px 3px 8px rgba(255, 255, 255, 0.42),
+    0 5px 12px rgba(0, 0, 0, 0.24);
+}
+
+.pgem--sphere::after { top: 14%; left: 18%; width: 38%; height: 30%; }
+
+.pgem--liquid {
+  border-radius: 3px 3px 10px 10px;
+  box-shadow:
+    inset 0 -3px 6px rgba(0, 0, 0, 0.28),
+    inset 0 2px 4px rgba(255, 255, 255, 0.18);
+}
+
+.pgem--liquid::before {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pgem-light) 80%, #fff) 0%,
+    var(--pgem-mid) 45%,
+    var(--pgem-dark) 100%
+  );
+}
+
+.pgem--preview { opacity: 0.62; filter: saturate(0.92); }
+
+.pgem--pop {
+  animation: pgem-pop 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+}
+
+@keyframes pgem-pop {
+  0% { transform: scale(1); opacity: 1; }
+  35% { transform: scale(1.12); opacity: 0.95; }
+  100% { transform: scale(0.2); opacity: 0; }
+}
+
+.pboard {
+  background: linear-gradient(168deg, #2a3548 0%, #1e2838 45%, #151d2a 100%);
+  border: 2px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    inset 0 3px 14px rgba(0, 0, 0, 0.45),
+    0 10px 28px rgba(0, 0, 0, 0.18);
+}
+
+.pboard-slot {
+  background: linear-gradient(145deg, #344055 0%, #252f3f 100%);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35);
+  border-radius: 5px;
+}
+
+.pboard-clear-flash {
+  animation: pboard-flash 0.38s ease;
+}
+
+@keyframes pboard-flash {
+  0%, 100% { box-shadow: inset 0 3px 14px rgba(0, 0, 0, 0.45), 0 0 0 transparent; }
+  50% {
+    box-shadow:
+      inset 0 3px 14px rgba(0, 0, 0, 0.45),
+      0 0 22px color-mix(in srgb, var(--game-accent, #4f9e16) 55%, transparent);
+  }
+}

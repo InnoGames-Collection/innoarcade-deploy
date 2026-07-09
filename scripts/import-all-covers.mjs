@@ -37,6 +37,10 @@ const GAMES = [
   ['arrow_shot_cover.png', 'arrow-shot'],
   ['slide_puzzle_cover.png', 'slide-puzzle'],
   ['race_car_cover.png', 'race-car'],
+  ['traffic_master_cover.png', 'traffic-master'],
+  ['city_rush_cover.png', 'city-rush'],
+  ['mega_match_cover.png', 'mega-match'],
+  ['ninja_dash_cover.png', 'ninja-dash'],
 ];
 
 fs.mkdirSync(archiveDir, { recursive: true });

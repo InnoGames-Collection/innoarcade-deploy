@@ -7,6 +7,7 @@ import './style.css';
 import { el, finishLQRound, mulberry32, sound, mountLQ, setLQHeader, toast } from '../_lq/lq';
 import { createHost } from '../../platform/gameHost';
 import { showFirstRunHint } from '../_shared/firstRun';
+import { gemClasses } from '../_shared/premiumGems';
 
 const SIZE = 8;
 const COLORS = ['#5b8cff', '#2ecc71', '#f39c12', '#e74c3c', '#9b59b6', '#1abc9c'];
@@ -93,7 +94,7 @@ function render(mount: HTMLElement): void {
 
   const wrap = el('div', { class: 'bb-wrap' });
   const hint = el('p', { class: 'bb-hint', text: 'Select a piece, then tap the board to place it.' });
-  const gridEl = el('div', { class: 'bb-grid' });
+  const gridEl = el('div', { class: 'bb-grid pboard' });
   const tray = el('div', { class: 'bb-tray' });
   wrap.appendChild(hint);
   wrap.appendChild(gridEl);
@@ -133,11 +134,17 @@ function render(mount: HTMLElement): void {
     gridEl.innerHTML = '';
     for (let r = 0; r < SIZE; r++) {
       for (let c = 0; c < SIZE; c++) {
+        const fill = grid[r][c];
+        const previewColor = preview.has(`${r},${c}`) && selected != null && !fill
+          ? pieces[selected!].color
+          : null;
+        let cls = 'bb-cell';
+        if (fill) cls += ` filled ${gemClasses(fill, 'block')}`;
+        else cls += ' pboard-slot';
+        if (previewColor) cls += ` ${gemClasses(previewColor, 'block')} pgem--preview preview`;
+        else if (preview.has(`${r},${c}`)) cls += ' preview';
         const cell = el('div', {
-          class: 'bb-cell'
-            + (grid[r][c] ? ' filled' : '')
-            + (preview.has(`${r},${c}`) ? ' preview' : ''),
-          style: grid[r][c] ? `background:${grid[r][c]}` : (preview.has(`${r},${c}`) && selected != null ? `background:${pieces[selected!].color}` : ''),
+          class: cls,
           onclick: () => onCell(r, c),
         });
         gridEl.appendChild(cell);
@@ -155,7 +162,10 @@ function render(mount: HTMLElement): void {
         onclick: () => { selected = idx; sound('click'); paint(); },
       });
       for (const [r, c] of p.cells) {
-        const pc = el('div', { class: 'bb-pcell', style: `background:${p.color};grid-row:${r + 1};grid-column:${c + 1}` });
+        const pc = el('div', {
+          class: `bb-pcell ${gemClasses(p.color, 'block')}`,
+          style: `grid-row:${r + 1};grid-column:${c + 1}`,
+        });
         pieceEl.appendChild(pc);
       }
       tray.appendChild(pieceEl);
@@ -175,8 +185,8 @@ function render(mount: HTMLElement): void {
     if (lines > 0) {
       combo += lines;
       score += lines * 10 + (lines > 1 ? lines * 5 : 0);
-      gridEl.classList.add('bb-clear-flash');
-      window.setTimeout(() => gridEl.classList.remove('bb-clear-flash'), 350);
+      gridEl.classList.add('pboard-clear-flash');
+      window.setTimeout(() => gridEl.classList.remove('pboard-clear-flash'), 380);
       sound('win');
     } else {
       sound('good');

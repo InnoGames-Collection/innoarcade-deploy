@@ -534,15 +534,23 @@ export interface ComingSoonMeta {
   nameAm: string;
   icon: string;
   thumb: [string, string];
+  cover?: string;
   etaEn?: string;
   etaAm?: string;
 }
 
+export const COMING_SOON_COVERS: Record<string, string> = {
+  'traffic-master': '/traffic_master.webp',
+  'city-rush': '/city_rush.webp',
+  'mega-match': '/mega_match.webp',
+  'ninja-dash': '/ninja_dash.webp',
+};
+
 export const COMING_SOON: ComingSoonMeta[] = [
-  { id: 'traffic-master', nameEn: 'Traffic Master', nameAm: 'Traffic Master', icon: '🚦', thumb: ['#c0392b', '#2a0808'], etaEn: 'Coming Q3', etaAm: 'በቅርብ Q3' },
-  { id: 'city-rush', nameEn: 'City Rush', nameAm: 'City Rush', icon: '🏙️', thumb: ['#3498db', '#0c1a2a'], etaEn: 'Coming soon', etaAm: 'በቅርብ ቀን' },
-  { id: 'mega-match', nameEn: 'Mega Match', nameAm: 'Mega Match', icon: '💥', thumb: ['#9b59b6', '#1a0c2a'], etaEn: 'Coming soon', etaAm: 'በቅርብ ቀን' },
-  { id: 'ninja-dash', nameEn: 'Ninja Dash', nameAm: 'Ninja Dash', icon: '🥷', thumb: ['#2c3e50', '#0a1018'], etaEn: 'Coming soon', etaAm: 'በቅርብ ቀን' },
+  { id: 'traffic-master', nameEn: 'Traffic Master', nameAm: 'Traffic Master', icon: '🚦', thumb: ['#c0392b', '#2a0808'], cover: COMING_SOON_COVERS['traffic-master'], etaEn: 'Coming Q3', etaAm: 'በቅርብ Q3' },
+  { id: 'city-rush', nameEn: 'City Rush', nameAm: 'City Rush', icon: '🏙️', thumb: ['#3498db', '#0c1a2a'], cover: COMING_SOON_COVERS['city-rush'], etaEn: 'Coming soon', etaAm: 'በቅርብ ቀን' },
+  { id: 'mega-match', nameEn: 'Mega Match', nameAm: 'Mega Match', icon: '💥', thumb: ['#9b59b6', '#1a0c2a'], cover: COMING_SOON_COVERS['mega-match'], etaEn: 'Coming soon', etaAm: 'በቅርብ ቀን' },
+  { id: 'ninja-dash', nameEn: 'Ninja Dash', nameAm: 'Ninja Dash', icon: '🥷', thumb: ['#2c3e50', '#0a1018'], cover: COMING_SOON_COVERS['ninja-dash'], etaEn: 'Coming soon', etaAm: 'በቅርብ ቀን' },
 ];
 
 export const CATEGORY_CHIPS: { id: GameCategory | 'all'; icon: string; labelEn: string; labelAm: string }[] = [

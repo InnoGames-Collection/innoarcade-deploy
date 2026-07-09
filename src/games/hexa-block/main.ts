@@ -7,6 +7,7 @@ import './style.css';
 import { el, finishLQRound, mulberry32, sound, mountLQ, setLQHeader, toast } from '../_lq/lq';
 import { createHost } from '../../platform/gameHost';
 import { showFirstRunHint } from '../_shared/firstRun';
+import { gemClasses } from '../_shared/premiumGems';
 
 const ROWS = 7;
 const COLORS = ['#5b8cff', '#2ecc71', '#f39c12', '#e74c3c', '#9b59b6'];
@@ -84,8 +85,8 @@ function piecePreviewEl(p: Piece, idx: number, selected: number | null, onSelect
     for (let c = 0; c <= maxC; c++) {
       const filled = p.cells.some(([dr, dc]) => dr === r && dc === c);
       mini.appendChild(el('div', {
-        class: 'hb-cell' + (filled ? ' filled' : ' hb-cell--ghost'),
-        style: filled ? `background:${p.color};width:22px;height:26px` : 'width:22px;height:26px;opacity:0',
+        class: (filled ? `hb-cell filled ${gemClasses(p.color, 'hex')}` : 'hb-cell hb-cell--ghost'),
+        style: filled ? 'width:22px;height:26px' : 'width:22px;height:26px;opacity:0',
       }));
     }
     pieceEl.appendChild(mini);
@@ -115,7 +116,7 @@ function render(mount: HTMLElement): void {
 
   const wrap = el('div', { class: 'hb-wrap' });
   const hint = el('p', { class: 'hb-hint', text: 'Select a hex piece, then tap the board.' });
-  const boardEl = el('div', { class: 'hb-board' });
+  const boardEl = el('div', { class: 'hb-board pboard' });
   const tray = el('div', { class: 'hb-tray' });
   wrap.appendChild(hint);
   wrap.appendChild(boardEl);
@@ -153,13 +154,17 @@ function render(mount: HTMLElement): void {
       const w = rowWidth(r);
       for (let c = 0; c < w; c++) {
         const key = `${r},${c}`;
+        const fill = grid[r][c];
+        const previewColor = preview.has(key) && selected != null && !fill
+          ? pieces[selected].color
+          : null;
+        let cls = 'hb-cell';
+        if (fill) cls += ` filled ${gemClasses(fill, 'hex')}`;
+        else cls += ' pboard-slot';
+        if (previewColor) cls += ` ${gemClasses(previewColor, 'hex')} pgem--preview hb-preview`;
+        else if (preview.has(key)) cls += ' hb-preview';
         row.appendChild(el('div', {
-          class: 'hb-cell'
-            + (grid[r][c] ? ' filled' : '')
-            + (preview.has(key) ? ' hb-preview' : ''),
-          style: grid[r][c]
-            ? `background:${grid[r][c]}`
-            : (preview.has(key) && selected != null ? `background:${pieces[selected].color}` : ''),
+          class: cls,
           onclick: () => onCell(r, c),
         }));
       }

@@ -1,6 +1,7 @@
 import { sfx } from '../../engine/audio';
 import type { Action } from '../../engine/input';
 import { mulberry32 } from '../_lq/lq';
+import { drawGemCircle, drawIllustratedCar } from '../_shared/premiumCanvas';
 
 export const W = 480;
 export const H = 720;
@@ -165,16 +166,12 @@ export class RaceCar {
 
     for (const o of this.obstacles) {
       const x = LANES[o.lane];
-      ctx.fillStyle = '#e17055';
-      ctx.fillRect(x - 24, o.y - 30, 48, 60);
+      drawIllustratedCar(ctx, x - 24, o.y - 30, 48, 60, '#e17055');
     }
 
     for (const c of this.coins) {
       const x = LANES[c.lane];
-      ctx.fillStyle = '#f1c40f';
-      ctx.beginPath();
-      ctx.arc(x, c.y, 10, 0, Math.PI * 2);
-      ctx.fill();
+      drawGemCircle(ctx, x, c.y, 10, '#f1c40f');
     }
 
     const cx = LANES[0] + (LANES[2] - LANES[0]) * (this.laneT / 2);
@@ -185,9 +182,6 @@ export class RaceCar {
       ctx.arc(cx, this.carY, 38, 0, Math.PI * 2);
       ctx.stroke();
     }
-    ctx.fillStyle = '#0984e3';
-    ctx.fillRect(cx - 24, this.carY - 30, 48, 60);
-    ctx.fillStyle = '#74b9ff';
-    ctx.fillRect(cx - 18, this.carY - 22, 36, 20);
+    drawIllustratedCar(ctx, cx - 24, this.carY - 30, 48, 60, '#0984e3');
   }
 }

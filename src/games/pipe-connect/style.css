@@ -4,16 +4,22 @@
   gap: 4px;
   max-width: 360px;
   margin: 0 auto;
+  padding: 8px;
+  border-radius: 12px;
+  background: linear-gradient(168deg, #2a3548 0%, #1e2838 45%, #151d2a 100%);
+  border: 2px solid rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 3px 14px rgba(0, 0, 0, 0.45);
 }
 
 .pc-cell {
   aspect-ratio: 1;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 1.4rem;
-  background: #2d3436;
-  color: #74b9ff;
+  background: linear-gradient(145deg, #344055, #252f3f);
+  color: #9ec5ff;
   cursor: pointer;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35);
 }
 
 .pc-cell.c1 { background: #1e272e; cursor: default; }
@@ -27,6 +33,9 @@
 }
 
 @keyframes pc-flow {
-  from { background: #2d3436; }
-  to { background: #0984e3; box-shadow: inset 0 0 8px rgba(116, 185, 255, 0.6); }
+  from { background: linear-gradient(145deg, #344055, #252f3f); }
+  to {
+    background: linear-gradient(148deg, #b8d4ff, #5b8cff 38%, #2a4db8);
+    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.2), 0 0 10px rgba(91, 140, 255, 0.45);
+  }
 }

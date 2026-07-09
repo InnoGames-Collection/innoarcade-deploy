@@ -2,6 +2,7 @@
 import { sfx } from '../../engine/audio';
 import type { Action } from '../../engine/input';
 import { mulberry32 } from '../_lq/lq';
+import { drawIllustratedCar } from '../_shared/premiumCanvas';
 
 export const W = 480;
 export const H = 720;
@@ -239,10 +240,7 @@ export class CrossyRoad {
 
       for (const c of this.cars) {
         if (c.row !== z) continue;
-        ctx.fillStyle = '#e74c3c';
-        ctx.fillRect(c.x, sy + 8, c.w, CELL - 16);
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(c.x + 8, sy + 14, c.w - 16, 8);
+        drawIllustratedCar(ctx, c.x, sy + 8, c.w, CELL - 16, '#e74c3c');
       }
 
       for (const l of this.logs) {

@@ -5,22 +5,24 @@
   max-width: 320px;
   margin: 0 auto;
   padding: 8px;
-  background: #2d3436;
   border-radius: 12px;
 }
 
 .sp-tile {
   aspect-ratio: 1;
   border: none;
-  border-radius: 8px;
   font-size: 1.25rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #74b9ff, #0984e3);
+  font-weight: 800;
   color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   cursor: pointer;
 }
 
 .sp-tile.empty {
-  background: transparent;
+  background: transparent !important;
+  box-shadow: none;
   cursor: default;
 }
+
+.sp-tile.empty::before,
+.sp-tile.empty::after { display: none; }

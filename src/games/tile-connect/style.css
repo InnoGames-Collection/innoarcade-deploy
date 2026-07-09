@@ -9,9 +9,8 @@
 .tc-board {
   display: grid;
   gap: 4px;
-  background: #2a3548;
   padding: 8px;
-  border-radius: 10px;
+  border-radius: 12px;
   max-width: 360px;
 }
 
@@ -21,11 +20,16 @@
   align-items: center;
   justify-content: center;
   font-size: clamp(18px, 5vw, 24px);
-  background: linear-gradient(145deg, #f8fff0, #dcefc8);
-  border-radius: 8px;
+  background: linear-gradient(160deg, #ffffff 0%, #e8f4dc 45%, #c5ddb0 100%);
+  border-radius: 10px;
   cursor: pointer;
-  border: 2px solid #c5ddb0;
+  border: 2px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    inset 0 -4px 0 rgba(79, 158, 22, 0.18),
+    inset 0 2px 0 rgba(255, 255, 255, 0.85),
+    0 4px 10px rgba(0, 0, 0, 0.12);
   transition: transform 0.1s, box-shadow 0.1s;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .tc-tile:hover:not(.tc-empty) { transform: scale(1.04); }

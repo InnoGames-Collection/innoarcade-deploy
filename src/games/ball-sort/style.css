@@ -44,8 +44,6 @@
 .bs-ball {
   width: calc(var(--tube-w) - 14px);
   height: calc(var(--tube-w) - 14px);
-  border-radius: 50%;
-  box-shadow: inset -3px -3px 8px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
 }
 

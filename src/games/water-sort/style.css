@@ -66,9 +66,17 @@
 .ws-seg {
   flex: 1;
   min-height: 0;
-  border-radius: 4px;
-  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.12);
+  position: relative;
 }
+
+.ws-seg.pgem--liquid { border-radius: 3px 3px 10px 10px; }
+
+/* Color-blind patterns overlay on illustrated liquid */
+.ws-seg[data-color='1']::before { background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(0,0,0,.12) 3px, rgba(0,0,0,.12) 6px), linear-gradient(148deg, var(--pgem-light), var(--pgem-mid) 38%, var(--pgem-dark)); }
+.ws-seg[data-color='2']::before { background-image: repeating-linear-gradient(-45deg, transparent, transparent 4px, rgba(255,255,255,.25) 4px, rgba(255,255,255,.25) 8px), linear-gradient(148deg, var(--pgem-light), var(--pgem-mid) 38%, var(--pgem-dark)); }
+.ws-seg[data-color='3']::before { background-image: radial-gradient(circle, rgba(0,0,0,.15) 18%, transparent 19%), linear-gradient(148deg, var(--pgem-light), var(--pgem-mid) 38%, var(--pgem-dark)); background-size: 8px 8px, auto; }
+.ws-seg[data-color='4']::before { background-image: linear-gradient(90deg, rgba(0,0,0,.1) 50%, transparent 50%), linear-gradient(148deg, var(--pgem-light), var(--pgem-mid) 38%, var(--pgem-dark)); background-size: 6px 100%, auto; }
+.ws-seg[data-color='5']::before { background-image: linear-gradient(0deg, rgba(255,255,255,.2) 50%, transparent 50%), linear-gradient(148deg, var(--pgem-light), var(--pgem-mid) 38%, var(--pgem-dark)); background-size: 100% 5px, auto; }
 
 .ws-hint {
   text-align: center;
@@ -94,12 +102,12 @@
   cursor: default;
 }
 
-/* Color-blind patterns per liquid id */
-.ws-seg[data-color='1'] { background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(0,0,0,.12) 3px, rgba(0,0,0,.12) 6px) !important; }
-.ws-seg[data-color='2'] { background-image: repeating-linear-gradient(-45deg, transparent, transparent 4px, rgba(255,255,255,.25) 4px, rgba(255,255,255,.25) 8px) !important; }
-.ws-seg[data-color='3'] { background-image: radial-gradient(circle, rgba(0,0,0,.15) 18%, transparent 19%) !important; background-size: 8px 8px !important; }
-.ws-seg[data-color='4'] { background-image: linear-gradient(90deg, rgba(0,0,0,.1) 50%, transparent 50%) !important; background-size: 6px 100% !important; }
-.ws-seg[data-color='5'] { background-image: linear-gradient(0deg, rgba(255,255,255,.2) 50%, transparent 50%) !important; background-size: 100% 5px !important; }
+/* Color-blind patterns per liquid id — legacy selectors kept for older builds */
+.ws-seg[data-color='1'] { background-image: none; }
+.ws-seg[data-color='2'] { background-image: none; }
+.ws-seg[data-color='3'] { background-image: none; }
+.ws-seg[data-color='4'] { background-image: none; }
+.ws-seg[data-color='5'] { background-image: none; }
 
 .ws-win-flash .ws-tube {
   animation: ws-pop 0.45s ease;

@@ -2,6 +2,7 @@ import { sfx } from '../../engine/audio';
 import type { Action } from '../../engine/input';
 import { mulberry32 } from '../_lq/lq';
 import { drawColorBlindGlyph } from '../_shared/colorBlind';
+import { drawGemCircle } from '../_shared/premiumCanvas';
 
 export const W = 480;
 export const H = 720;
@@ -153,10 +154,7 @@ export class ColorSwitch {
       }
     }
 
-    ctx.fillStyle = COLORS[this.colorIdx];
-    ctx.beginPath();
-    ctx.arc(this.bx, this.by, 14, 0, Math.PI * 2);
-    ctx.fill();
+    drawGemCircle(ctx, this.bx, this.by, 14, COLORS[this.colorIdx]);
     drawColorBlindGlyph(ctx, this.bx, this.by, this.colorIdx, 12);
   }
 }

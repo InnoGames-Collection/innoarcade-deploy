@@ -1,6 +1,8 @@
 /* Native LexiQuest games — gameplay styles ported from the retired vendored app
    (public/lexiquest/css), trimmed to the 8 games we ship and themed to GoPlay
    green. Page-local tokens (each game is its own page). */
+@import '../_shared/premiumGems.css';
+
 :root {
   --lq-surface: #ffffff;
   --lq-surface-2: #eef6e3;
