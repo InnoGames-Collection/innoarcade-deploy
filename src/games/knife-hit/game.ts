@@ -1,6 +1,7 @@
 import { sfx } from '../../engine/audio';
 import type { Action } from '../../engine/input';
 import { Juice } from '../../engine/juice';
+import { drawGemCircle, drawWoodDisc } from '../_shared/premiumCanvas';
 
 export const W = 480;
 export const H = 720;
@@ -225,13 +226,7 @@ export class KnifeHit {
     ctx.translate(CX, CY);
     ctx.rotate(this.logAngle);
 
-    ctx.fillStyle = this.boss ? '#8B4513' : '#a0622a';
-    ctx.beginPath();
-    ctx.arc(0, 0, LOG_R, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#5c3418';
-    ctx.lineWidth = 4;
-    ctx.stroke();
+    drawWoodDisc(ctx, LOG_R, this.boss);
 
     for (const k of this.knives) {
       ctx.save();
@@ -246,10 +241,7 @@ export class KnifeHit {
       ctx.save();
       ctx.rotate(ap.angle);
       ctx.translate(0, LOG_R - 10);
-      ctx.fillStyle = '#e74c3c';
-      ctx.beginPath();
-      ctx.arc(0, 0, 11, 0, Math.PI * 2);
-      ctx.fill();
+      drawGemCircle(ctx, 0, 0, 11, '#e74c3c');
       ctx.fillStyle = '#27ae60';
       ctx.fillRect(-3, -14, 6, 5);
       ctx.restore();

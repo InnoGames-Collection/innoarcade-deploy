@@ -1,6 +1,7 @@
 import { sfx } from '../../engine/audio';
 import type { Action } from '../../engine/input';
 import { Juice } from '../../engine/juice';
+import { drawGemCircle } from '../_shared/premiumCanvas';
 
 export const W = 480;
 export const H = 720;
@@ -137,10 +138,16 @@ export class ZigZag {
     ctx.fillStyle = '#1a1a2e';
     ctx.fillRect(0, 0, W, H);
 
-    ctx.strokeStyle = '#4ecdc4';
+    const pathGrad = ctx.createLinearGradient(0, 0, W, H);
+    pathGrad.addColorStop(0, '#8ef0e8');
+    pathGrad.addColorStop(0.5, '#1abc9c');
+    pathGrad.addColorStop(1, '#0d7a68');
+    ctx.strokeStyle = pathGrad;
     ctx.lineWidth = SEG * 0.85;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+    ctx.shadowColor = '#1abc9c';
+    ctx.shadowBlur = 8;
     ctx.beginPath();
     for (let i = 0; i < this.path.length; i++) {
       const p = this.path[i];
@@ -148,11 +155,9 @@ export class ZigZag {
       else ctx.lineTo(p.x, p.y);
     }
     ctx.stroke();
+    ctx.shadowBlur = 0;
 
-    ctx.fillStyle = '#ff6b6b';
-    ctx.beginPath();
-    ctx.arc(this.bx, this.by, 14, 0, Math.PI * 2);
-    ctx.fill();
+    drawGemCircle(ctx, this.bx, this.by, 14, '#ff6b6b');
     ctx.fillStyle = '#fff';
     ctx.beginPath();
     ctx.arc(this.bx - 4, this.by - 3, 4, 0, Math.PI * 2);

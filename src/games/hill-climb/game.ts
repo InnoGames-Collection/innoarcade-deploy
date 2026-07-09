@@ -1,5 +1,6 @@
 import { sfx } from '../../engine/audio';
 import type { Action } from '../../engine/input';
+import { drawIllustratedCar } from '../_shared/premiumCanvas';
 
 export const W = 480;
 export const H = 720;
@@ -133,18 +134,7 @@ export class HillClimb {
     ctx.save();
     ctx.translate(this.x, cy - 8);
     ctx.rotate(this.angle);
-    ctx.fillStyle = '#e74c3c';
-    ctx.fillRect(-28, -18, 56, 22);
-    ctx.fillStyle = '#333';
-    ctx.beginPath();
-    ctx.arc(-18, 8, 10, 0, Math.PI * 2);
-    ctx.arc(18, 8, 10, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#ccc';
-    ctx.beginPath();
-    ctx.arc(-18, 8, 5, 0, Math.PI * 2);
-    ctx.arc(18, 8, 5, 0, Math.PI * 2);
-    ctx.fill();
+    drawIllustratedCar(ctx, -28, -18, 56, 36, '#e74c3c');
     ctx.restore();
     ctx.restore();
 

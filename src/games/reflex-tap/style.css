@@ -24,15 +24,12 @@
 #reflex-tap-wrapper .rt-target {
   position: absolute;
   border: none;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #fff59d, #f9a825);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   cursor: pointer;
   animation: rt-pulse 0.5s ease-in-out infinite alternate;
 }
 
 #reflex-tap-wrapper .rt-target.miss {
-  background: radial-gradient(circle at 35% 35%, #ffcdd2, #e53935);
+  filter: hue-rotate(-40deg) saturate(1.4);
 }
 
 @keyframes rt-pulse {

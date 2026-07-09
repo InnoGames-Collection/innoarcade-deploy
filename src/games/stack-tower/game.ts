@@ -2,6 +2,7 @@
 import { sfx } from '../../engine/audio';
 import type { Action } from '../../engine/input';
 import { Juice } from '../../engine/juice';
+import { drawGemRect } from '../_shared/premiumCanvas';
 
 export const W = 480;
 export const H = 720;
@@ -146,17 +147,13 @@ export class StackTower {
     ctx.translate(0, this.camY);
 
     for (const b of this.stack) {
-      ctx.fillStyle = b.color;
-      ctx.fillRect(b.x, b.y, b.w, BLOCK_H);
-      ctx.fillStyle = 'rgba(255,255,255,0.15)';
-      ctx.fillRect(b.x, b.y, b.w, 6);
+      drawGemRect(ctx, b.x, b.y, b.w, BLOCK_H, b.color, 4);
     }
 
     const mover = this.mover;
     if (mover && this.state === 'playing') {
-      ctx.fillStyle = mover.color;
-      ctx.fillRect(mover.x, mover.y, mover.w, BLOCK_H);
-      ctx.strokeStyle = '#fff';
+      drawGemRect(ctx, mover.x, mover.y, mover.w, BLOCK_H, mover.color, 4);
+      ctx.strokeStyle = 'rgba(255,255,255,0.45)';
       ctx.lineWidth = 2;
       ctx.strokeRect(mover.x + 1, mover.y + 1, mover.w - 2, BLOCK_H - 2);
     }

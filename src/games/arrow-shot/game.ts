@@ -1,6 +1,7 @@
 import { sfx } from '../../engine/audio';
 import type { Action } from '../../engine/input';
 import { mulberry32 } from '../_lq/lq';
+import { drawBullseye } from '../_shared/premiumCanvas';
 
 export const W = 480;
 export const H = 720;
@@ -171,14 +172,7 @@ export class ArrowShot {
     ctx.fillText(`Wind ${this.wind > 0 ? '→' : '←'} ${Math.abs(Math.round(this.wind))}`, W / 2, 24);
 
     for (const t of this.targets) {
-      ctx.fillStyle = '#e74c3c';
-      ctx.beginPath();
-      ctx.arc(t.x, t.y, t.r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.beginPath();
-      ctx.arc(t.x, t.y, t.r * 0.35, 0, Math.PI * 2);
-      ctx.fill();
+      drawBullseye(ctx, t.x, t.y, t.r);
     }
 
     ctx.fillStyle = '#5D4037';

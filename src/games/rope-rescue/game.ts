@@ -1,5 +1,6 @@
 import { sfx } from '../../engine/audio';
 import type { Action } from '../../engine/input';
+import { drawGemRect, drawPersonOrb } from '../_shared/premiumCanvas';
 
 export const W = 480;
 export const H = 720;
@@ -223,10 +224,9 @@ export class RopeRescue {
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
 
-    ctx.fillStyle = '#27ae60';
-    ctx.fillRect(this.safe.x, this.safe.y, this.safe.w, this.safe.h);
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.font = '12px system-ui';
+    drawGemRect(ctx, this.safe.x, this.safe.y, this.safe.w, this.safe.h, '#2ecc71', 8);
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.font = 'bold 12px system-ui';
     ctx.textAlign = 'center';
     ctx.fillText('SAFE', this.safe.x + this.safe.w / 2, this.safe.y + this.safe.h / 2 + 4);
 
@@ -252,20 +252,10 @@ export class RopeRescue {
       ctx.stroke();
     }
 
-    ctx.fillStyle = '#3498db';
-    ctx.beginPath();
-    ctx.arc(this.person.x, this.person.y, 18, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.font = '11px system-ui';
-    ctx.textAlign = 'center';
-    ctx.fillText('YOU', this.person.x, this.person.y + 4);
+    drawPersonOrb(ctx, this.person.x, this.person.y, 18, '#3498db', 'YOU');
 
     if (this.phase === 'swing' || this.phase === 'result') {
-      ctx.fillStyle = '#e67e22';
-      ctx.beginPath();
-      ctx.arc(this.swingPos.x, this.swingPos.y, 14, 0, Math.PI * 2);
-      ctx.fill();
+      drawPersonOrb(ctx, this.swingPos.x, this.swingPos.y, 14, '#e67e22');
     }
 
     if (this.phase === 'draw') {

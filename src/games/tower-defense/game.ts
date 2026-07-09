@@ -1,5 +1,6 @@
 import { sfx } from '../../engine/audio';
 import type { Action } from '../../engine/input';
+import { drawGemCircle } from '../_shared/premiumCanvas';
 
 export const W = 480;
 export const H = 720;
@@ -253,10 +254,7 @@ export class TowerDefense {
     }
 
     for (const t of this.towers) {
-      ctx.fillStyle = t.type === 0 ? '#5b8cff' : '#e74c3c';
-      ctx.beginPath();
-      ctx.arc(t.x, t.y, 16, 0, Math.PI * 2);
-      ctx.fill();
+      drawGemCircle(ctx, t.x, t.y, 16, t.type === 0 ? '#5b8cff' : '#e74c3c');
       ctx.fillStyle = '#fff';
       ctx.font = 'bold 12px system-ui,sans-serif';
       ctx.textAlign = 'center';
@@ -268,17 +266,11 @@ export class TowerDefense {
     }
 
     for (const s of this.shots) {
-      ctx.fillStyle = '#ffeb3b';
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, 4, 0, Math.PI * 2);
-      ctx.fill();
+      drawGemCircle(ctx, s.x, s.y, 4, '#f1c40f');
     }
 
     for (const e of this.enemies) {
-      ctx.fillStyle = '#9b59b6';
-      ctx.beginPath();
-      ctx.arc(e.x, e.y, 14, 0, Math.PI * 2);
-      ctx.fill();
+      drawGemCircle(ctx, e.x, e.y, 14, '#9b59b6');
       const w = 28;
       ctx.fillStyle = '#333';
       ctx.fillRect(e.x - w / 2, e.y - 24, w, 5);

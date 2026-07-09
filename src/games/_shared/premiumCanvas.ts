@@ -120,3 +120,101 @@ export function drawIllustratedCar(
   ctx.fill();
   ctx.restore();
 }
+
+export function drawGemArcStroke(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  r: number,
+  startAngle: number,
+  endAngle: number,
+  color: string,
+  lineWidth: number,
+): void {
+  const stops = stopsForHex(color);
+  ctx.save();
+  ctx.lineWidth = lineWidth;
+  ctx.lineCap = 'round';
+  const g = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
+  g.addColorStop(0, stops.light);
+  g.addColorStop(0.45, stops.mid);
+  g.addColorStop(1, stops.dark);
+  ctx.strokeStyle = g;
+  ctx.shadowColor = stops.mid;
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, startAngle, endAngle);
+  ctx.stroke();
+  ctx.restore();
+}
+
+export function drawWoodDisc(ctx: CanvasRenderingContext2D, r: number, boss = false): void {
+  const grad = ctx.createRadialGradient(-r * 0.25, -r * 0.3, r * 0.05, 0, 0, r);
+  if (boss) {
+    grad.addColorStop(0, '#c4884a');
+    grad.addColorStop(0.45, '#8B4513');
+    grad.addColorStop(1, '#4a2810');
+  } else {
+    grad.addColorStop(0, '#e0b070');
+    grad.addColorStop(0.5, '#a0622a');
+    grad.addColorStop(1, '#5c3418');
+  }
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.22)';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  for (let i = 1; i <= 3; i++) {
+    ctx.strokeStyle = `rgba(0,0,0,${0.08 + i * 0.04})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(0, 0, r * (0.25 + i * 0.18), 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+export function drawBullseye(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  r: number,
+  color = '#e74c3c',
+): void {
+  drawGemCircle(ctx, x, y, r, color);
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(x, y, r * 0.38, 0, Math.PI * 2);
+  ctx.fill();
+  drawGemCircle(ctx, x, y, r * 0.14, color);
+}
+
+export function drawGemPlatform(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  color: string,
+): void {
+  drawGemRect(ctx, x, y, w, h, color, 5);
+}
+
+export function drawPersonOrb(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  r: number,
+  color: string,
+  label?: string,
+): void {
+  drawGemCircle(ctx, x, y, r, color);
+  if (label) {
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, x, y + 1);
+  }
+}

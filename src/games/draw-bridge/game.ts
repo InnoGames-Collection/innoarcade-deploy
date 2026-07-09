@@ -1,5 +1,6 @@
 import { sfx } from '../../engine/audio';
 import type { Action } from '../../engine/input';
+import { drawGemRect, drawIllustratedCar } from '../_shared/premiumCanvas';
 
 export const W = 480;
 export const H = 720;
@@ -193,16 +194,9 @@ export class DrawBridge {
       ctx.stroke();
     }
 
-    ctx.fillStyle = '#e74c3c';
-    ctx.fillRect(this.car.x - 18, this.car.y - 10, 36, 20);
-    ctx.fillStyle = '#333';
-    ctx.beginPath();
-    ctx.arc(this.car.x - 10, this.car.y + 10, 6, 0, Math.PI * 2);
-    ctx.arc(this.car.x + 10, this.car.y + 10, 6, 0, Math.PI * 2);
-    ctx.fill();
+    drawIllustratedCar(ctx, this.car.x - 18, this.car.y - 10, 36, 28, '#e74c3c');
 
-    ctx.fillStyle = '#2ecc71';
-    ctx.fillRect(d.goalX - 4, d.cliffY - 60, 8, 60);
+    drawGemRect(ctx, d.goalX - 6, d.cliffY - 60, 12, 60, '#2ecc71', 4);
 
     if (this.phase === 'draw') {
       ctx.fillStyle = 'rgba(0,0,0,0.55)';

@@ -168,7 +168,7 @@ function render(mount: HTMLElement): void {
     const status = el('p', { class: 'lp-status', text: `0/${targets} targets` });
     const boardWrap = el('div', { style: 'position:relative' });
     const board = el('div', {
-      class: 'lp-board',
+      class: 'lp-board pboard',
       style: `grid-template-columns:repeat(${def.w},1fr)`,
     });
     boardWrap.appendChild(board);

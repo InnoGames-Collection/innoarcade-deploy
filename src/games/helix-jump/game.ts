@@ -2,6 +2,7 @@ import { sfx } from '../../engine/audio';
 import type { Action } from '../../engine/input';
 import { mulberry32 } from '../_lq/lq';
 import { Juice } from '../../engine/juice';
+import { drawGemArcStroke, drawGemCircle } from '../_shared/premiumCanvas';
 
 export const W = 480;
 export const H = 720;
@@ -154,19 +155,18 @@ export class HelixJump {
       ctx.save();
       ctx.translate(0, sy);
       ctx.rotate(this.towerAngle);
-      ctx.lineWidth = 22;
-      ctx.strokeStyle = ring.danger ? '#e74c3c' : '#5b8cff';
-      ctx.beginPath();
-      ctx.arc(0, 0, RING_R, ring.gapStart + GAP, ring.gapStart + Math.PI * 2 - GAP * 0.3);
-      ctx.stroke();
+      drawGemArcStroke(
+        ctx, 0, 0, RING_R,
+        ring.gapStart + GAP,
+        ring.gapStart + Math.PI * 2 - GAP * 0.3,
+        ring.danger ? '#e74c3c' : '#5b8cff',
+        22,
+      );
       ctx.restore();
     }
 
     const by = this.ballY - this.camY;
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.arc(0, by, BALL_R, 0, Math.PI * 2);
-    ctx.fill();
+    drawGemCircle(ctx, 0, by, BALL_R, '#ffffff');
     ctx.fillStyle = 'rgba(91,140,255,0.35)';
     ctx.beginPath();
     ctx.arc(0, by, BALL_R + 4, 0, Math.PI * 2);

@@ -2,12 +2,14 @@
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
 import '../_casual/style.css';
+import '../_shared/premiumGems.css';
 import './style.css';
 import { applyTranslations, getLang } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { createHost } from '../../platform/gameHost';
 import { wireFreeCasualShell } from '../../platform/freeGameShell';
 import { showFirstRunHint } from '../_shared/firstRun';
+import { gemClassesByIndex } from '../_shared/premiumGems';
 
 const COLS = 4;
 const SESSION_SEC = 60;
@@ -78,16 +80,15 @@ function resetField(): void {
 function spawnRow(): void {
   const col = Math.floor(Math.random() * COLS);
   const tileEl = document.createElement('div');
-  tileEl.className = 'pt-tile';
+  tileEl.className = `pt-tile ${gemClassesByIndex(col, 'block')}`;
   tileEl.style.top = '-76px';
   laneEls[col].appendChild(tileEl);
   tiles.push({ col, y: -76, el: tileEl, hit: false });
   for (let c = 0; c < COLS; c++) {
     if (c === col) continue;
     const ghost = document.createElement('div');
-    ghost.className = 'pt-tile';
+    ghost.className = `pt-tile pt-decoy ${gemClassesByIndex(c, 'block')} pgem--preview`;
     ghost.style.top = '-76px';
-    ghost.style.background = '#ddd';
     ghost.style.pointerEvents = 'none';
     laneEls[c].appendChild(ghost);
     tiles.push({ col: c, y: -76, el: ghost, hit: true, decoy: true });

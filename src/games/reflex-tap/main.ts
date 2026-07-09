@@ -1,6 +1,7 @@
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
 import '../_casual/style.css';
+import '../_shared/premiumGems.css';
 import './style.css';
 import { applyTranslations, getLang } from '../../i18n';
 import { sfx } from '../../engine/audio';
@@ -56,7 +57,7 @@ function spawnTarget(): void {
   const life = Math.max(350, (1500 - score * 6) / wave);
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = 'rt-target';
+  btn.className = 'rt-target pgem pgem--amber pgem--sphere';
   btn.style.width = btn.style.height = `${size}px`;
   btn.style.left = `${x}px`;
   btn.style.top = `${y}px`;

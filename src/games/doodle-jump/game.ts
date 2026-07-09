@@ -1,6 +1,7 @@
 import { sfx } from '../../engine/audio';
 import type { Action } from '../../engine/input';
 import { mulberry32 } from '../_lq/lq';
+import { drawGemCircle, drawGemPlatform } from '../_shared/premiumCanvas';
 import { Juice } from '../../engine/juice';
 
 export const W = 480;
@@ -151,25 +152,19 @@ export class DoodleJump {
     this.juice.applyShake(ctx);
     for (const p of this.platforms) {
       if (p.y > H + 40) continue;
-      ctx.fillStyle = p.crumbling ? '#8B4513' : '#2ecc71';
-      ctx.fillRect(p.x, p.y, p.w, 12);
-      ctx.fillStyle = p.crumbling ? '#6d3a1f' : '#27ae60';
-      ctx.fillRect(p.x, p.y, p.w, 4);
+      drawGemPlatform(ctx, p.x, p.y, p.w, 12, p.crumbling ? '#e67e22' : '#2ecc71');
     }
 
-    ctx.fillStyle = '#6c5ce7';
-    ctx.beginPath();
-    ctx.ellipse(this.px, this.py + 10, 16, 18, 0, 0, Math.PI * 2);
-    ctx.fill();
+    drawGemCircle(ctx, this.px, this.py + 8, 16, '#6c5ce7');
     ctx.fillStyle = '#fff';
     ctx.beginPath();
-    ctx.arc(this.px - 5, this.py + 4, 4, 0, Math.PI * 2);
-    ctx.arc(this.px + 5, this.py + 4, 4, 0, Math.PI * 2);
+    ctx.arc(this.px - 5, this.py + 2, 4, 0, Math.PI * 2);
+    ctx.arc(this.px + 5, this.py + 2, 4, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#2d3436';
     ctx.beginPath();
-    ctx.arc(this.px - 5, this.py + 4, 2, 0, Math.PI * 2);
-    ctx.arc(this.px + 5, this.py + 4, 2, 0, Math.PI * 2);
+    ctx.arc(this.px - 5, this.py + 2, 2, 0, Math.PI * 2);
+    ctx.arc(this.px + 5, this.py + 2, 2, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
