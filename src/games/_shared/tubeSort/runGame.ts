@@ -12,6 +12,7 @@ import {
   playPourSound,
   shakeTube,
   spawnTubeSparkles,
+  animateScorePop,
   spawnVictoryBurst,
   type PourTheme,
   LIQUID_POUR_THEME,
@@ -325,17 +326,39 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
       const mysteryClass = theme.gemVariant === 'liquid' ? 'ws-seg--mystery' : 'bs-ball--mystery';
       const emptyPieceClass = theme.gemVariant === 'liquid' ? 'ws-seg--empty' : '';
       const fluidManager = isWater ? new WaterBottleManager() : null;
+      let fluidAnimRaf = 0;
 
       function renderFluids(): void {
         if (!fluidManager) return;
-        fluidManager.renderAll(tubes, (idx) => ({
-          capacity: tubeCapacity(mods, idx),
-          hiddenBottom: tubeHiddenBottom(mods, idx),
-          selected: selected === idx,
-          highlightTop: selected === idx && tubes[idx].length > 0
-            ? (theme.pourStyle === 'single' ? 1 : topRunLength(tubes[idx]))
-            : undefined,
-        }));
+        fluidManager.renderAll(tubes, (idx) => {
+          const cap = tubeCapacity(mods, idx);
+          return {
+            capacity: cap,
+            hiddenBottom: tubeHiddenBottom(mods, idx),
+            selected: selected === idx,
+            completed: isTubeComplete(tubes[idx], cap),
+            highlightTop: selected === idx && tubes[idx].length > 0
+              ? (theme.pourStyle === 'single' ? 1 : topRunLength(tubes[idx]))
+              : undefined,
+            tubeSeed: idx + 1,
+          };
+        });
+      }
+
+      function startFluidAnim(): void {
+        if (!fluidManager) return;
+        const tick = (now: number) => {
+          if (!fluidManager) return;
+          fluidManager.setAnimPhase(now * 0.0012);
+          if (!locked && !paused) renderFluids();
+          fluidAnimRaf = requestAnimationFrame(tick);
+        };
+        fluidAnimRaf = requestAnimationFrame(tick);
+      }
+
+      function stopFluidAnim(): void {
+        if (fluidAnimRaf) cancelAnimationFrame(fluidAnimRaf);
+        fluidAnimRaf = 0;
       }
 
       function buildPiece(colorId: number, layerIdx: number, tubeIdx: number, tube: number[]): HTMLElement {
@@ -488,13 +511,18 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
         if (!canPour(tubes[selected], tubes[idx], selected, idx, tubes, mods)) {
           sound('bad');
           if (isWater) {
-            const destEl = row.children[idx] as HTMLElement | undefined;
-            if (destEl) shakeTube(destEl, p);
+            const srcEl = row.children[selected] as HTMLElement | undefined;
+            if (srcEl) shakeTube(srcEl, p);
+            paint();
+            window.setTimeout(() => {
+              selected = null;
+              paint();
+            }, 560);
           } else {
             toast(theme.invalidToast);
+            selected = null;
+            paint();
           }
-          selected = null;
-          paint();
           return;
         }
 
@@ -571,6 +599,7 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
           round: roundLabel(levelIdx, mode),
           score: String(totalScore),
         });
+        if (isWater) animateScorePop();
 
         const sessionDone = mode !== 'endless' && levelIdx >= LEVEL_COUNT;
         if (sessionDone) {
@@ -586,9 +615,13 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
       }
 
       paint();
-      if (isWater) startTimer();
+      if (isWater) {
+        startTimer();
+        startFluidAnim();
+      }
       levelCleanup = () => {
         stopTimer();
+        stopFluidAnim();
       };
     }
 

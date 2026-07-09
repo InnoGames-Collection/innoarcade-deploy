@@ -13,14 +13,21 @@
   transition: opacity 0.12s ease;
 }
 
-/* Water — tube tilts while pouring, returns upright on remove */
+/* Water — neck pivot tilt driven by --pour-tilt (JS RAF) */
 .lpour-tube-pour {
-  transition: transform 0.28s cubic-bezier(0.33, 1, 0.68, 1);
-  z-index: 5;
+  --pour-neck-y: 12px;
+  transform-origin: 50% var(--pour-neck-y);
+  transform: rotate(var(--pour-tilt, 0deg));
+  z-index: 8;
+  will-change: transform;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.16));
 }
 
-.lpour-tilt-right { transform: rotate(16deg); transform-origin: bottom center; }
-.lpour-tilt-left { transform: rotate(-16deg); transform-origin: bottom center; }
+.lpour-tilt-right,
+.lpour-tilt-left {
+  transform-origin: 50% var(--pour-neck-y, 12px);
+  transform: rotate(var(--pour-tilt, 0deg));
+}
 
 /* Continuous liquid stream between bottle mouths */
 .lpour-stream-v2 {
@@ -61,7 +68,7 @@
   100% { background-position: 0 14px; }
 }
 
-/* Per-segment drain / fill — no block movement */
+/* Per-segment drain / fill — legacy DOM path */
 .ws-seg--draining {
   transform-origin: bottom center;
   transition: transform 0.24s cubic-bezier(0.45, 0.05, 0.55, 1), opacity 0.2s ease;
@@ -114,19 +121,19 @@
   position: absolute;
   left: 50%;
   top: 8px;
-  width: 5px;
-  height: 5px;
-  margin-left: -2px;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
   border-radius: 50%;
   background: radial-gradient(circle, #fff 0%, color-mix(in srgb, var(--game-accent, #5b8cff) 80%, #fff) 55%, transparent 100%);
   pointer-events: none;
   z-index: 12;
-  animation: lpour-spark 0.55s ease-out forwards;
+  animation: lpour-spark 0.7s ease-out forwards;
 }
 
 @keyframes lpour-spark {
   0% { opacity: 1; transform: translate(0, 0) scale(1); }
-  100% { opacity: 0; transform: translate(var(--sx, 0), var(--sy, -24px)) scale(0.2); }
+  100% { opacity: 0; transform: translate(var(--sx, 0), var(--sy, -24px)) scale(0.15); }
 }
 
 .lpour-victory {
@@ -137,24 +144,50 @@
   overflow: hidden;
 }
 
+.lpour-confetti {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  animation: lpour-confetti-fall 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.lpour-confetti--rect {
+  width: 6px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+@keyframes lpour-confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--cdx, 0), var(--cdy, 120px)) rotate(var(--crot, 180deg)) scale(0.6);
+  }
+}
+
 .lpour-victory-spark {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: radial-gradient(circle, #fff 0%, color-mix(in srgb, var(--game-accent, #2aa9d6) 75%, #fff) 50%, transparent 100%);
-  animation: lpour-victory-pop 0.9s ease-out forwards;
+  animation: lpour-victory-pop 1s ease-out forwards;
 }
 
 @keyframes lpour-victory-pop {
   0% { opacity: 1; transform: translate(0, 0) scale(1); }
-  100% { opacity: 0; transform: translate(var(--vdx, 0), var(--vdy, -40px)) scale(0.15); }
+  100% { opacity: 0; transform: translate(var(--vdx, 0), var(--vdy, -40px)) scale(0.12); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .lpour-stream-v2,
   .lpour-ball-fly,
-  .lpour-victory-spark { transition: none; animation: none; }
+  .lpour-victory-spark,
+  .lpour-confetti { transition: none; animation: none; }
   .lpour-tube-pour { transform: none; }
   .ws-seg--draining,
   .ws-seg--filling { transition: none; transform: none; }
