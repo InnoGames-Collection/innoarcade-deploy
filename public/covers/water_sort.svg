@@ -1,16 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-hidden="true">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="ws-bg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#2aa9d6"/>
-      <stop offset="100%" stop-color="#13627e"/>
+      <stop offset="100%" stop-color="#0d4a62"/>
     </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="20%" r="70%">
+    <linearGradient id="ws-glass" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.45)"/>
+      <stop offset="50%" stop-color="rgba(255,255,255,0.08)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.25)"/>
+    </linearGradient>
+    <linearGradient id="liq-a" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8ef0b8"/>
+      <stop offset="100%" stop-color="#1a7a42"/>
+    </linearGradient>
+    <linearGradient id="liq-b" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#b8d4ff"/>
+      <stop offset="100%" stop-color="#2a4db8"/>
+    </linearGradient>
+    <linearGradient id="liq-c" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ff9aab"/>
+      <stop offset="100%" stop-color="#9c2418"/>
+    </linearGradient>
+    <radialGradient id="ws-glow" cx="50%" cy="18%" r="65%">
       <stop offset="0%" stop-color="rgba(255,255,255,0.35)"/>
       <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
     </radialGradient>
   </defs>
-  <rect width="320" height="200" fill="url(#bg)"/>
-  <rect width="320" height="200" fill="url(#glow)"/>
-  <text x="160" y="118" text-anchor="middle" font-size="88">🧪</text>
+  <rect width="320" height="200" fill="url(#ws-bg)"/>
+  <rect width="320" height="200" fill="url(#ws-glow)"/>
+  <!-- shelf -->
+  <rect x="36" y="158" width="248" height="8" rx="4" fill="rgba(255,255,255,0.18)"/>
+  <!-- tube 1 -->
+  <g transform="translate(58,42)">
+    <rect x="0" y="8" width="44" height="108" rx="0 0 10 10" fill="url(#ws-glass)" stroke="rgba(255,255,255,0.45)" stroke-width="2"/>
+    <rect x="5" y="82" width="34" height="22" rx="4" fill="url(#liq-a)"/>
+    <rect x="5" y="58" width="34" height="22" rx="4" fill="url(#liq-b)"/>
+    <rect x="5" y="34" width="34" height="22" rx="4" fill="url(#liq-b)"/>
+  </g>
+  <!-- tube 2 -->
+  <g transform="translate(118,42)">
+    <rect x="0" y="8" width="44" height="108" rx="0 0 10 10" fill="url(#ws-glass)" stroke="rgba(255,255,255,0.45)" stroke-width="2"/>
+    <rect x="5" y="82" width="34" height="22" rx="4" fill="url(#liq-c)"/>
+    <rect x="5" y="58" width="34" height="22" rx="4" fill="url(#liq-c)"/>
+    <rect x="5" y="34" width="34" height="22" rx="4" fill="url(#liq-a)"/>
+    <rect x="5" y="10" width="34" height="22" rx="4" fill="url(#liq-a)"/>
+  </g>
+  <!-- tube 3 empty -->
+  <g transform="translate(178,42)">
+    <rect x="0" y="8" width="44" height="108" rx="0 0 10 10" fill="url(#ws-glass)" stroke="rgba(255,255,255,0.45)" stroke-width="2"/>
+  </g>
+  <!-- pour stream -->
+  <path d="M152 78 C168 92, 188 98, 200 108" fill="none" stroke="#5b8cff" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+  <!-- tube 4 receiving -->
+  <g transform="translate(218,42)">
+    <rect x="0" y="8" width="44" height="108" rx="0 0 10 10" fill="url(#ws-glass)" stroke="rgba(255,255,255,0.55)" stroke-width="2.5"/>
+    <rect x="5" y="94" width="34" height="22" rx="4" fill="url(#liq-b)"/>
+  </g>
 </svg>

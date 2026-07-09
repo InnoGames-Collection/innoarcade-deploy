@@ -220,8 +220,7 @@ export function levelSpec(levelIdx: number): LevelSpec {
   return LEVEL_SPECS[Math.min(levelIdx, LEVEL_SPECS.length - 1)];
 }
 
-export function generateLevel(levelIdx: number, rnd: () => number): GeneratedLevel {
-  const spec = levelSpec(levelIdx);
+function generateFromSpec(spec: LevelSpec, rnd: () => number): GeneratedLevel {
   const baseMods = buildBaseModifiers(spec.colors, spec.modifiers);
 
   for (let attempt = 0; attempt < MAX_GEN_ATTEMPTS; attempt++) {
@@ -254,4 +253,12 @@ export function generateLevel(levelIdx: number, rnd: () => number): GeneratedLev
   const tubes = scramble(spec.colors, 12, fallbackMods, rnd);
   ensurePlayable(tubes, fallbackMods);
   return { tubes, mods: fallbackMods, spec: { ...spec, modifiers: [] } };
+}
+
+export function generateLevel(levelIdx: number, rnd: () => number): GeneratedLevel {
+  return generateFromSpec(levelSpec(levelIdx), rnd);
+}
+
+export function generateLevelWithSpec(spec: LevelSpec, rnd: () => number): GeneratedLevel {
+  return generateFromSpec(spec, rnd);
 }

@@ -1,16 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-hidden="true">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="bs-bg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#9b59b6"/>
       <stop offset="100%" stop-color="#1a0c2a"/>
     </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="20%" r="70%">
-      <stop offset="0%" stop-color="rgba(255,255,255,0.35)"/>
+    <linearGradient id="bs-glass" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.42)"/>
+      <stop offset="50%" stop-color="rgba(255,255,255,0.06)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.22)"/>
+    </linearGradient>
+    <radialGradient id="ball-em" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#1a7a42"/>
+    </radialGradient>
+    <radialGradient id="ball-sa" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#2a4db8"/>
+    </radialGradient>
+    <radialGradient id="ball-ru" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#9c2418"/>
+    </radialGradient>
+    <radialGradient id="bs-glow" cx="50%" cy="18%" r="65%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.32)"/>
       <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
     </radialGradient>
   </defs>
-  <rect width="320" height="200" fill="url(#bg)"/>
-  <rect width="320" height="200" fill="url(#glow)"/>
-  <text x="160" y="118" text-anchor="middle" font-size="88">⚪</text>
+  <rect width="320" height="200" fill="url(#bs-bg)"/>
+  <rect width="320" height="200" fill="url(#bs-glow)"/>
+  <rect x="36" y="158" width="248" height="8" rx="4" fill="rgba(255,255,255,0.16)"/>
+  <g transform="translate(62,40)">
+    <rect x="0" y="8" width="44" height="112" rx="0 0 12 12" fill="url(#bs-glass)" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
+    <circle cx="22" cy="98" r="14" fill="url(#ball-em)"/>
+    <circle cx="22" cy="70" r="14" fill="url(#ball-sa)"/>
+    <circle cx="22" cy="42" r="14" fill="url(#ball-sa)"/>
+  </g>
+  <g transform="translate(128,40)">
+    <rect x="0" y="8" width="44" height="112" rx="0 0 12 12" fill="url(#bs-glass)" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
+    <circle cx="22" cy="98" r="14" fill="url(#ball-ru)"/>
+    <circle cx="22" cy="70" r="14" fill="url(#ball-ru)"/>
+    <circle cx="22" cy="42" r="14" fill="url(#ball-em)"/>
+  </g>
+  <g transform="translate(194,40)">
+    <rect x="0" y="8" width="44" height="112" rx="0 0 12 12" fill="url(#bs-glass)" stroke="rgba(255,255,255,0.55)" stroke-width="2.5"/>
+  </g>
+  <!-- flying ball -->
+  <circle cx="168" cy="62" r="13" fill="url(#ball-sa)" opacity="0.95"/>
+  <ellipse cx="168" cy="78" rx="10" ry="4" fill="rgba(0,0,0,0.15)"/>
 </svg>
