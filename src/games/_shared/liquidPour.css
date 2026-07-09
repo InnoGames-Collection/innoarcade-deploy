@@ -1,30 +1,86 @@
-/* Shared liquid pour animation — water-sort, ball-sort */
+/* Shared pour animation — water stream & ball arcs */
 
-.lpour-stream {
+.lpour-layer {
   position: absolute;
-  width: 10px;
-  height: var(--lpour-len, 60px);
+  inset: 0;
+  pointer-events: none;
+  z-index: 30;
+  overflow: visible;
+}
+
+.lpour-hide {
+  opacity: 0 !important;
+  transition: opacity 0.12s ease;
+}
+
+/* Water — tube tilts while pouring */
+.lpour-tube-pour {
+  transition: transform 0.28s cubic-bezier(0.33, 1, 0.68, 1);
+  z-index: 5;
+}
+
+.lpour-tilt-right { transform: rotate(14deg); transform-origin: bottom center; }
+.lpour-tilt-left { transform: rotate(-14deg); transform-origin: bottom center; }
+
+/* Water blob travels from source to target */
+.lpour-blob {
+  position: absolute;
+  border-radius: 4px 4px 10px 10px;
+  box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.22), 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition:
+    left 0.52s cubic-bezier(0.45, 0.05, 0.2, 1),
+    top 0.52s cubic-bezier(0.45, 0.05, 0.2, 1);
+  z-index: 22;
+}
+
+.lpour-blob--pour {
+  filter: brightness(1.04);
+}
+
+/* Curved stream from tube mouth */
+.lpour-stream-v2 {
+  position: absolute;
+  width: 11px;
+  height: var(--lpour-len, 40px);
   transform-origin: top center;
   transform: rotate(var(--lpour-angle, 0deg)) scaleY(0);
   opacity: 0;
-  pointer-events: none;
-  z-index: 20;
-  border-radius: 5px 5px 8px 8px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
-  transition:
-    transform 0.34s cubic-bezier(0.33, 1, 0.68, 1),
-    opacity 0.18s ease;
+  border-radius: 5px;
+  z-index: 21;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.2));
+  transition: transform 0.32s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.2s ease;
 }
 
-.lpour-stream--active {
+.lpour-stream-v2--on {
   transform: rotate(var(--lpour-angle, 0deg)) scaleY(1);
-  opacity: 0.92;
+  opacity: 0.9;
 }
 
-.lpour-stream--fade {
-  opacity: 0;
-  transform: rotate(var(--lpour-angle, 0deg)) scaleY(0.15);
-  transition: opacity 0.12s ease, transform 0.12s ease;
+/* Ball — one at a time along quadratic arc */
+.lpour-ball-fly {
+  position: absolute;
+  border-radius: 50%;
+  z-index: 24;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.28));
+  animation: lpour-ball-arc 0.28s cubic-bezier(0.35, 0.05, 0.2, 1) forwards;
+}
+
+@keyframes lpour-ball-arc {
+  0% {
+    left: var(--bx0);
+    top: var(--by0);
+    transform: scale(1);
+  }
+  45% {
+    left: var(--bxm);
+    top: var(--bym);
+    transform: scale(1.06);
+  }
+  100% {
+    left: var(--bx1);
+    top: var(--by1);
+    transform: scale(1);
+  }
 }
 
 .lpour-spark {
@@ -46,38 +102,9 @@
   100% { opacity: 0; transform: translate(var(--sx, 0), var(--sy, -24px)) scale(0.2); }
 }
 
-/* Sphere transfer — flying ball cluster */
-.lpour-flyer {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  z-index: 20;
-  display: flex;
-  flex-direction: column-reverse;
-  gap: 3px;
-  align-items: center;
-  transition: transform 0.34s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.14s ease;
-  opacity: 0.95;
-}
-
-.lpour-flyer--active {
-  transform: translate(calc(-50% + var(--fly-tx, 0)), calc(-50% + var(--fly-ty, 0)));
-}
-
-.lpour-flyer--fade {
-  opacity: 0;
-  transition: opacity 0.12s ease;
-}
-
-.lpour-fly-ball {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.28));
-  animation: lpour-fly-wobble 0.34s ease-in-out calc(var(--fly-i, 0) * 40ms) alternate;
-}
-
-@keyframes lpour-fly-wobble {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-3px); }
+@media (prefers-reduced-motion: reduce) {
+  .lpour-blob,
+  .lpour-stream-v2,
+  .lpour-ball-fly { transition: none; animation: none; }
+  .lpour-tube-pour { transform: none; }
 }

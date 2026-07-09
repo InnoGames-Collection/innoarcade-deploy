@@ -8,6 +8,7 @@ import { showFirstRunHint } from '../firstRun';
 import { gemClassesByIndex, gemIdFromIndex } from '../premiumGems';
 import {
   animatePour,
+  applyHeldPieces,
   playPourSound,
   spawnTubeSparkles,
   type PourTheme,
@@ -24,6 +25,7 @@ import {
   isTubeComplete,
   pour,
   pourAmount,
+  topRunLength,
   tubeCapacity,
   tubeHiddenBottom,
   type LevelModifiers,
@@ -266,6 +268,9 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
 
           row.appendChild(tubeEl);
         });
+        if (selected != null && tubes[selected].length > 0) {
+          applyHeldPieces(row, selected, topRunLength(tubes[selected]), theme.pourTheme);
+        }
         setLQHeader({ moves: String(moves) });
         undoBtn.toggleAttribute('disabled', undoStack.length === 0);
         hintBtn.toggleAttribute('disabled', hintsLeft <= 0 || locked);
@@ -362,15 +367,14 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
           colorId,
           amount,
           theme: theme.pourTheme,
-          onTick: () => {
-            pour(tubes[fromIdx], tubes[toIdx], fromIdx, toIdx, tubes, mods);
-            moves++;
-            selected = null;
-            paint();
-            checkTubeComplete(toIdx);
-            checkTubeComplete(fromIdx);
-          },
         });
+
+        pour(tubes[fromIdx], tubes[toIdx], fromIdx, toIdx, tubes, mods);
+        moves++;
+        selected = null;
+        paint();
+        checkTubeComplete(toIdx);
+        checkTubeComplete(fromIdx);
 
         sound('good');
         locked = false;

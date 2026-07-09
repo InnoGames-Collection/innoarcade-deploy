@@ -1,31 +1,31 @@
-/** Animated tube transfer — liquid stream or flying spheres. */
+/** Animated tube transfer — real liquid pour & per-ball sorting. */
 
 import './liquidPour.css';
 import { sfx } from '../../engine/audio';
-import { gemClassesByIndex, type GemVariant } from './premiumGems';
+import { gemClassesByIndex } from './premiumGems';
 
 export interface PourTheme {
-  variant: GemVariant;
+  variant: 'liquid' | 'sphere';
   stackSelector: string;
   pieceSelector: string;
-  liftingClass: string;
-  landingClass: string;
+  tubeSelector: string;
+  heldClass: string;
 }
 
 export const LIQUID_POUR_THEME: PourTheme = {
   variant: 'liquid',
   stackSelector: '.ws-liquid-stack',
   pieceSelector: '.ws-seg',
-  liftingClass: 'ws-seg--lifting',
-  landingClass: 'ws-seg--landing',
+  tubeSelector: '.ws-tube',
+  heldClass: 'ws-seg--held',
 };
 
 export const SPHERE_POUR_THEME: PourTheme = {
   variant: 'sphere',
   stackSelector: '.bs-ball-stack',
   pieceSelector: '.bs-ball',
-  liftingClass: 'bs-ball--lifting',
-  landingClass: 'bs-ball--landing',
+  tubeSelector: '.bs-tube',
+  heldClass: 'bs-ball--held',
 };
 
 export interface PourAnimOptions {
@@ -36,29 +36,29 @@ export interface PourAnimOptions {
   colorId: number;
   amount: number;
   theme?: PourTheme;
-  onTick?: () => void;
 }
 
-const POUR_MS = 340;
-const SETTLE_MS = 120;
+const LIQUID_POUR_MS = 520;
+const BALL_ARC_MS = 280;
+const BALL_GAP_MS = 95;
 
 function prefersReducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-function tubeCenter(row: HTMLElement, idx: number): { x: number; y: number } {
-  const tube = row.children[idx] as HTMLElement | undefined;
-  if (!tube) return { x: 0, y: 0 };
-  const rowRect = row.getBoundingClientRect();
-  const rect = tube.getBoundingClientRect();
-  return {
-    x: rect.left + rect.width / 2 - rowRect.left,
-    y: rect.top + rect.height / 2 - rowRect.top,
-  };
-}
-
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function relRect(el: HTMLElement, board: HTMLElement): DOMRect {
+  const b = board.getBoundingClientRect();
+  const r = el.getBoundingClientRect();
+  return new DOMRect(r.left - b.left, r.top - b.top, r.width, r.height);
+}
+
+function tubeMouth(board: HTMLElement, tube: HTMLElement): { x: number; y: number } {
+  const t = relRect(tube, board);
+  return { x: t.left + t.width / 2, y: t.top + 6 };
 }
 
 export function playPourSound(kind: 'start' | 'land' | 'complete'): void {
@@ -89,90 +89,170 @@ export function playPourSound(kind: 'start' | 'land' | 'complete'): void {
   } catch { /* audio unavailable */ }
 }
 
+/** Lift the pourable top run when a tube is selected. */
+export function applyHeldPieces(
+  row: HTMLElement,
+  tubeIdx: number,
+  amount: number,
+  theme: PourTheme,
+): void {
+  const tube = row.children[tubeIdx] as HTMLElement | undefined;
+  if (!tube || amount <= 0) return;
+  const stack = tube.querySelector(theme.stackSelector);
+  if (!stack) return;
+  const pieces = Array.from(stack.querySelectorAll(theme.pieceSelector));
+  pieces.slice(-amount).forEach((p) => p.classList.add(theme.heldClass));
+}
+
+async function animateWaterPour(
+  board: HTMLElement,
+  row: HTMLElement,
+  fromIdx: number,
+  toIdx: number,
+  colorId: number,
+  amount: number,
+  theme: PourTheme,
+): Promise<void> {
+  const fromTube = row.children[fromIdx] as HTMLElement;
+  const toTube = row.children[toIdx] as HTMLElement;
+  const fromStack = fromTube.querySelector(theme.stackSelector)!;
+  const pieces = Array.from(fromStack.querySelectorAll(theme.pieceSelector)).slice(-amount);
+  if (!pieces.length) return;
+
+  const firstR = relRect(pieces[0] as HTMLElement, board);
+  const lastR = relRect(pieces[pieces.length - 1] as HTMLElement, board);
+  const blobH = lastR.top + lastR.height - firstR.top;
+  const blobW = Math.max(...pieces.map((p) => relRect(p as HTMLElement, board).width));
+
+  pieces.forEach((p) => p.classList.add('lpour-hide'));
+
+  const tilt = toIdx > fromIdx ? 'lpour-tilt-right' : toIdx < fromIdx ? 'lpour-tilt-left' : '';
+  fromTube.classList.add('lpour-tube-pour', tilt);
+
+  const fromMouth = tubeMouth(board, fromTube);
+  const toMouth = tubeMouth(board, toTube);
+  const toStack = toTube.querySelector(theme.stackSelector)!;
+  const destPieces = Array.from(toStack.querySelectorAll(theme.pieceSelector));
+  const landY = destPieces.length
+    ? relRect(destPieces[destPieces.length - 1] as HTMLElement, board).top - blobH - 2
+    : relRect(toStack as HTMLElement, board).top + relRect(toStack as HTMLElement, board).height - blobH - 4;
+
+  const layer = document.createElement('div');
+  layer.className = 'lpour-layer';
+  board.appendChild(layer);
+
+  const blob = document.createElement('div');
+  blob.className = `lpour-blob ${gemClassesByIndex(colorId - 1, 'liquid')}`;
+  blob.style.left = `${firstR.left}px`;
+  blob.style.top = `${firstR.top}px`;
+  blob.style.width = `${blobW}px`;
+  blob.style.height = `${blobH}px`;
+  layer.appendChild(blob);
+
+  const stream = document.createElement('div');
+  stream.className = `lpour-stream-v2 ${gemClassesByIndex(colorId - 1, 'liquid')}`;
+  const dx = toMouth.x - fromMouth.x;
+  const dy = toMouth.y - fromMouth.y;
+  const len = Math.hypot(dx, dy);
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI) - 90;
+  stream.style.left = `${fromMouth.x}px`;
+  stream.style.top = `${fromMouth.y}px`;
+  stream.style.setProperty('--lpour-len', `${Math.max(len, 24)}px`);
+  stream.style.setProperty('--lpour-angle', `${angle}deg`);
+  layer.appendChild(stream);
+
+  playPourSound('start');
+  requestAnimationFrame(() => {
+    blob.classList.add('lpour-blob--pour');
+    blob.style.left = `${toMouth.x - blobW / 2}px`;
+    blob.style.top = `${landY}px`;
+    stream.classList.add('lpour-stream-v2--on');
+  });
+
+  await wait(LIQUID_POUR_MS);
+  playPourSound('land');
+  layer.remove();
+  fromTube.classList.remove('lpour-tube-pour', 'lpour-tilt-right', 'lpour-tilt-left');
+  pieces.forEach((p) => p.classList.remove('lpour-hide'));
+}
+
+async function animateBallPour(
+  board: HTMLElement,
+  row: HTMLElement,
+  fromIdx: number,
+  toIdx: number,
+  colorId: number,
+  amount: number,
+  theme: PourTheme,
+): Promise<void> {
+  const fromTube = row.children[fromIdx] as HTMLElement;
+  const toTube = row.children[toIdx] as HTMLElement;
+  const fromStack = fromTube.querySelector(theme.stackSelector)!;
+  const toStack = toTube.querySelector(theme.stackSelector)!;
+  const sourcePieces = Array.from(fromStack.querySelectorAll(theme.pieceSelector)).slice(-amount);
+
+  const layer = document.createElement('div');
+  layer.className = 'lpour-layer';
+  board.appendChild(layer);
+
+  const toRect = relRect(toStack as HTMLElement, board);
+  const ballW = sourcePieces.length
+    ? relRect(sourcePieces[0] as HTMLElement, board).width
+    : 28;
+  const gap = 4;
+  const baseLandX = toRect.left + toRect.width / 2;
+  const startLandY = toRect.top + toRect.height - ballW - 4;
+  const existing = toStack.querySelectorAll(theme.pieceSelector).length;
+
+  sourcePieces.forEach((p) => p.classList.add('lpour-hide'));
+
+  for (let i = 0; i < amount; i++) {
+    const src = sourcePieces[sourcePieces.length - 1 - i] as HTMLElement;
+    const fromR = relRect(src, board);
+    const landY = startLandY - (existing + i) * (ballW + gap);
+
+    const flyer = document.createElement('div');
+    flyer.className = `lpour-ball-fly ${gemClassesByIndex(colorId - 1, 'sphere')}`;
+    flyer.style.width = `${ballW}px`;
+    flyer.style.height = `${ballW}px`;
+    flyer.style.left = `${fromR.left}px`;
+    flyer.style.top = `${fromR.top}px`;
+    flyer.style.setProperty('--bx0', `${fromR.left}px`);
+    flyer.style.setProperty('--by0', `${fromR.top}px`);
+    flyer.style.setProperty('--bx1', `${baseLandX - ballW / 2}px`);
+    flyer.style.setProperty('--by1', `${landY}px`);
+    flyer.style.setProperty('--bxm', `${(fromR.left + baseLandX - ballW / 2) / 2}px`);
+    flyer.style.setProperty('--bym', `${Math.min(fromR.top, landY) - 36}px`);
+    layer.appendChild(flyer);
+
+    if (i === 0) playPourSound('start');
+    requestAnimationFrame(() => flyer.classList.add('lpour-ball-fly--go'));
+    await wait(BALL_ARC_MS);
+    flyer.remove();
+    if (i < amount - 1) await wait(BALL_GAP_MS);
+  }
+
+  playPourSound('land');
+  layer.remove();
+  sourcePieces.forEach((p) => p.classList.remove('lpour-hide'));
+}
+
 export async function animatePour(opts: PourAnimOptions): Promise<void> {
   const theme = opts.theme ?? LIQUID_POUR_THEME;
-  const { board, row, fromIdx, toIdx, colorId, amount, onTick } = opts;
-  if (amount <= 0 || prefersReducedMotion()) {
-    onTick?.();
-    return;
-  }
+  const { board, row, fromIdx, toIdx, colorId, amount } = opts;
+  if (amount <= 0) return;
+
+  if (prefersReducedMotion()) return;
 
   const fromTube = row.children[fromIdx] as HTMLElement | undefined;
   const toTube = row.children[toIdx] as HTMLElement | undefined;
-  if (!fromTube || !toTube) {
-    onTick?.();
-    return;
-  }
-
-  const fromStack = fromTube.querySelector(theme.stackSelector) as HTMLElement | null;
-  const pieces = fromStack
-    ? Array.from(fromStack.querySelectorAll(theme.pieceSelector)).slice(-amount)
-    : [];
-  pieces.forEach((seg) => seg.classList.add(theme.liftingClass));
-
-  const from = tubeCenter(row, fromIdx);
-  const to = tubeCenter(row, toIdx);
-  const targetX = to.x;
-  const targetY = to.y - (theme.variant === 'sphere' ? 28 : 20);
+  if (!fromTube || !toTube) return;
 
   if (theme.variant === 'sphere') {
-    const flyer = document.createElement('div');
-    flyer.className = 'lpour-flyer';
-    for (let i = 0; i < amount; i++) {
-      const ball = document.createElement('div');
-      ball.className = `lpour-fly-ball ${gemClassesByIndex(colorId - 1, 'sphere')}`;
-      ball.style.setProperty('--fly-i', String(i));
-      flyer.appendChild(ball);
-    }
-    flyer.style.left = `${from.x}px`;
-    flyer.style.top = `${from.y - 24}px`;
-    flyer.style.setProperty('--fly-tx', `${targetX - from.x}px`);
-    flyer.style.setProperty('--fly-ty', `${targetY - from.y}px`);
-    board.appendChild(flyer);
-    playPourSound('start');
-    requestAnimationFrame(() => flyer.classList.add('lpour-flyer--active'));
-    await wait(POUR_MS);
-    flyer.classList.add('lpour-flyer--fade');
-    pieces.forEach((seg) => {
-      seg.classList.remove(theme.liftingClass);
-      seg.classList.add(theme.landingClass);
-    });
-    playPourSound('land');
-    onTick?.();
-    await wait(SETTLE_MS);
-    flyer.remove();
-    pieces.forEach((seg) => seg.classList.remove(theme.landingClass));
-    return;
+    await animateBallPour(board, row, fromIdx, toIdx, colorId, amount, theme);
+  } else {
+    await animateWaterPour(board, row, fromIdx, toIdx, colorId, amount, theme);
   }
-
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
-  const dist = Math.hypot(dx, dy);
-  const angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
-
-  const stream = document.createElement('div');
-  stream.className = `lpour-stream ${gemClassesByIndex(colorId - 1, 'liquid')}`;
-  stream.style.setProperty('--lpour-len', `${Math.max(dist, 40)}px`);
-  stream.style.setProperty('--lpour-angle', `${angle}deg`);
-  stream.style.left = `${from.x}px`;
-  stream.style.top = `${from.y - 20}px`;
-  board.appendChild(stream);
-
-  playPourSound('start');
-  requestAnimationFrame(() => stream.classList.add('lpour-stream--active'));
-
-  await wait(POUR_MS);
-  stream.classList.add('lpour-stream--fade');
-  pieces.forEach((seg) => {
-    seg.classList.remove(theme.liftingClass);
-    seg.classList.add(theme.landingClass);
-  });
-  playPourSound('land');
-  onTick?.();
-
-  await wait(SETTLE_MS);
-  stream.remove();
-  pieces.forEach((seg) => seg.classList.remove(theme.landingClass));
 }
 
 export function spawnTubeSparkles(tubeEl: HTMLElement): void {
