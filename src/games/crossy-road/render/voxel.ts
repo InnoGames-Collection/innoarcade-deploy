@@ -1,7 +1,13 @@
-// Premium voxel entities — classic lane layout (horizontal roads, vertical hops).
+// Premium illustrated entities — classic lane layout; illustrated art at high quality.
 
 import { CELL, W } from '../types';
 import type { VehicleKind } from '../types';
+import {
+  drawIllustratedChicken,
+  drawIllustratedCoin,
+  drawIllustratedLog,
+  drawIllustratedVehicle,
+} from './illustrated';
 
 interface Point {
   x: number;
@@ -105,7 +111,12 @@ export function drawVoxelChicken(
   arcZ: number,
   squash: { sx: number; sy: number },
   animT: number,
+  simple = false,
 ): void {
+  if (!simple) {
+    drawIllustratedChicken(ctx, cx, cy, unit, arcZ, squash, animT);
+    return;
+  }
   const footY = cy + unit * 0.18;
   const breathe = 1 + Math.sin(animT * 2.4) * 0.03;
   const blink = Math.sin(animT * 0.9) > 0.92;
@@ -138,6 +149,10 @@ export function drawVoxelVehicle(
   animT: number,
   simple = false,
 ): void {
+  if (!simple) {
+    drawIllustratedVehicle(ctx, cx, cy, gridSpan, kind, facingRight, unit, animT, simple);
+    return;
+  }
   const span = Math.max(0.85, Math.abs(gridSpan));
   const bounce = Math.sin(animT * 10 + cx * 0.05) * 1.5;
   const footY = cy + unit * 0.15 + bounce;
@@ -206,7 +221,12 @@ export function drawVoxelLog(
   unit: number,
   animT: number,
   gridCx: number,
+  simple = false,
 ): void {
+  if (!simple) {
+    drawIllustratedLog(ctx, cx, cy, gridSpan, unit, animT, gridCx);
+    return;
+  }
   const span = Math.max(0.7, Math.abs(gridSpan));
   const bob = Math.sin(animT * 2.2 + gridCx * 0.8) * 2.5;
   const footY = cy + unit * 0.12 + bob;
@@ -235,7 +255,12 @@ export function drawVoxelCoin(
   unit: number,
   animT: number,
   col: number,
+  simple = false,
 ): void {
+  if (!simple) {
+    drawIllustratedCoin(ctx, cx, cy, unit, animT, col);
+    return;
+  }
   const bob = Math.sin(animT * 4 + col * 1.3) * 6;
   const spin = animT * 3 + col;
   const y = cy + bob;

@@ -101,7 +101,7 @@ export function renderPremium(ctx: CanvasRenderingContext2D, s: WorldSnapshot): 
     const center = classicGridToScreen(coin.col + 0.5, coin.row, camZ, bob);
     entityQueue.push({
       depth: classicPaintDepth(center.y, coin.col),
-      draw: () => drawVoxelCoin(ctx, center.x, center.y, ENTITY_UNIT, s.animT, coin.col),
+      draw: () => drawVoxelCoin(ctx, center.x, center.y, ENTITY_UNIT, s.animT, coin.col, simpleVoxels),
     });
   }
 
@@ -136,7 +136,7 @@ export function renderPremium(ctx: CanvasRenderingContext2D, s: WorldSnapshot): 
         if (shadows) {
           drawDropShadow(ctx, cx, cy + CELL * 0.2, gridSpan * CELL * 0.36, CELL * 0.07);
         }
-        drawVoxelLog(ctx, cx, cy, gridSpan, ENTITY_UNIT, s.animT, gridCx);
+        drawVoxelLog(ctx, cx, cy, gridSpan, ENTITY_UNIT, s.animT, gridCx, simpleVoxels);
       },
     });
   }
@@ -171,6 +171,7 @@ export function renderPremium(ctx: CanvasRenderingContext2D, s: WorldSnapshot): 
         arcZ,
         squash,
         s.animT,
+        simpleVoxels,
       ),
     });
   }

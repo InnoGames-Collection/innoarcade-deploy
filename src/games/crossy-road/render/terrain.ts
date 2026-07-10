@@ -108,17 +108,179 @@ export function drawSlabTop(
   ctx: CanvasRenderingContext2D,
   corners: [Corner, Corner, Corner, Corner],
   palette: SlabPalette,
+  kind: RowKind = 'grass',
+  col = 0,
+  row = 0,
+  animT = 0,
 ): void {
-  const cx = (corners[0].x + corners[2].x) / 2;
-  const g = ctx.createLinearGradient(cx, corners[0].y, cx, corners[2].y);
-  g.addColorStop(0, palette.topLight);
-  g.addColorStop(1, palette.topDark);
+  const [nw, , se, sw] = corners;
+  const cx = (nw.x + se.x) / 2;
+
   traceDiamond(ctx, corners);
-  ctx.fillStyle = g;
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(0,0,0,0.07)';
+  if (kind === 'grass') {
+    const g = ctx.createLinearGradient(cx, nw.y, cx, sw.y);
+    g.addColorStop(0, palette.topLight);
+    g.addColorStop(0.55, palette.topDark);
+    g.addColorStop(1, shadeColor(palette.topDark, 0.88));
+    ctx.fillStyle = g;
+    ctx.fill();
+    drawGrassTexture(ctx, corners, col, row, animT);
+  } else if (kind === 'road') {
+    const g = ctx.createLinearGradient(cx, nw.y, cx, sw.y);
+    g.addColorStop(0, '#5a5a5a');
+    g.addColorStop(0.5, '#3d3d3d');
+    g.addColorStop(1, '#2a2a2a');
+    ctx.fillStyle = g;
+    ctx.fill();
+    drawAsphaltTexture(ctx, corners, col, row);
+  } else {
+    const g = ctx.createLinearGradient(cx, nw.y - 4, cx, sw.y + 4);
+    g.addColorStop(0, '#7ec8e8');
+    g.addColorStop(0.35, '#3d9fd4');
+    g.addColorStop(0.7, '#1a6fa8');
+    g.addColorStop(1, '#0d4a78');
+    ctx.fillStyle = g;
+    ctx.fill();
+    drawWaterTexture(ctx, corners, animT, col, row);
+  }
+
+  ctx.strokeStyle = 'rgba(0,0,0,0.08)';
   ctx.lineWidth = 0.75;
   ctx.stroke();
+}
+
+function shadeColor(hex: string, factor: number): string {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  const c = (v: number) => Math.max(0, Math.min(255, Math.round(v * factor)));
+  return `rgb(${c(r)},${c(g)},${c(b)})`;
+}
+
+function drawGrassTexture(
+  ctx: CanvasRenderingContext2D,
+  corners: [Corner, Corner, Corner, Corner],
+  col: number,
+  row: number,
+  animT: number,
+): void {
+  ctx.save();
+  clipDiamond(ctx, corners);
+  const [nw, ne, se] = corners;
+  const h = cellHash(col, row);
+
+  // Soft color patches (clover / worn grass)
+  for (let i = 0; i < 3; i++) {
+    const px = nw.x + ((h >> (i * 5)) & 0x1f) / 31 * (ne.x - nw.x);
+    const py = nw.y + ((h >> (i * 5 + 3)) & 0x1f) / 31 * (se.y - nw.y);
+    const tone = (h >> i) & 1 ? 'rgba(90,160,50,0.18)' : 'rgba(120,200,70,0.14)';
+    ctx.fillStyle = tone;
+    ctx.beginPath();
+    ctx.ellipse(px, py, 8 + (i * 2), 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Fine grass blades
+  const sway = Math.sin(animT * 2.5 + col * 0.6 + row) * 1.5;
+  for (let i = 0; i < 8; i++) {
+    const t = ((h >> (i * 2)) & 0x3) / 4;
+    const bx = nw.x + 6 + t * (ne.x - nw.x - 12);
+    const by = nw.y + 8 + ((h >> (i * 3)) & 0x7) / 7 * (se.y - nw.y - 16);
+    const shade = i % 2 === 0 ? 'rgba(255,255,255,0.14)' : 'rgba(40,100,20,0.2)';
+    ctx.strokeStyle = shade;
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(bx, by + 4);
+    ctx.quadraticCurveTo(bx + sway, by - 2, bx + 1 + sway * 0.5, by - 5 - (i % 3));
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawAsphaltTexture(
+  ctx: CanvasRenderingContext2D,
+  corners: [Corner, Corner, Corner, Corner],
+  col: number,
+  row: number,
+): void {
+  ctx.save();
+  clipDiamond(ctx, corners);
+  const [nw, ne, se] = corners;
+  const h = cellHash(col, row);
+
+  // Aggregate noise
+  for (let i = 0; i < 14; i++) {
+    const px = nw.x + ((h >> (i % 8)) & 0xf) / 15 * (ne.x - nw.x);
+    const py = nw.y + ((h >> ((i + 3) % 8)) & 0xf) / 15 * (se.y - nw.y);
+    ctx.fillStyle = i % 3 === 0 ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)';
+    ctx.fillRect(px, py, 2 + (i % 3), 1 + (i % 2));
+  }
+
+  // Subtle oil stain
+  if ((h & 0x7) === 0) {
+    const ox = nw.x + (ne.x - nw.x) * 0.45;
+    const oy = nw.y + (se.y - nw.y) * 0.5;
+    const oil = ctx.createRadialGradient(ox, oy, 2, ox, oy, 14);
+    oil.addColorStop(0, 'rgba(40,40,40,0.25)');
+    oil.addColorStop(1, 'rgba(40,40,40,0)');
+    ctx.fillStyle = oil;
+    ctx.beginPath();
+    ctx.ellipse(ox, oy, 12, 7, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawWaterTexture(
+  ctx: CanvasRenderingContext2D,
+  corners: [Corner, Corner, Corner, Corner],
+  animT: number,
+  col: number,
+  row: number,
+): void {
+  ctx.save();
+  clipDiamond(ctx, corners);
+  const [nw, ne, , sw] = corners;
+  const phase = animT * 35 + col * 11 + row * 7;
+  const laneH = sw.y - nw.y;
+
+  // Caustic shimmer
+  for (let i = 0; i < 5; i++) {
+    const y = nw.y + laneH * (0.15 + i * 0.17);
+    const xOff = -((phase + i * 22) % 55);
+    const shimmer = ctx.createLinearGradient(nw.x + xOff, y, ne.x + xOff + 30, y);
+    shimmer.addColorStop(0, 'rgba(255,255,255,0)');
+    shimmer.addColorStop(0.45, 'rgba(255,255,255,0.14)');
+    shimmer.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.strokeStyle = shimmer;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(nw.x + xOff, y);
+    ctx.bezierCurveTo(
+      nw.x + xOff + 18, y - 2,
+      nw.x + xOff + 32, y + 2,
+      ne.x + xOff + 10, y,
+    );
+    ctx.stroke();
+  }
+
+  // Depth sparkles
+  const cx = (nw.x + ne.x) / 2;
+  const cy = nw.y + laneH * 0.5;
+  for (let i = 0; i < 3; i++) {
+    const sx = cx + Math.sin(phase * 0.04 + i * 2.1) * 18;
+    const sy = cy + Math.cos(phase * 0.03 + i * 1.7) * 6;
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.beginPath();
+    ctx.ellipse(sx, sy, 6, 2, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Shore foam at top edge
+  ctx.fillStyle = 'rgba(220,245,255,0.35)';
+  ctx.fillRect(nw.x, nw.y, ne.x - nw.x, 3);
+  ctx.restore();
 }
 
 function drawGrassBlades(
@@ -148,24 +310,34 @@ function drawRoadDetails(
   ctx: CanvasRenderingContext2D,
   corners: [Corner, Corner, Corner, Corner],
   col: number,
-  row: number,
+  _row: number,
 ): void {
   const [nw, ne, se, sw] = corners;
-  const curb = 'rgba(180,180,175,0.85)';
-  ctx.strokeStyle = curb;
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  ctx.moveTo(nw.x, nw.y);
-  ctx.lineTo(ne.x, ne.y);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(sw.x, sw.y);
-  ctx.lineTo(se.x, se.y);
-  ctx.stroke();
+  const laneCy = (nw.y + sw.y) / 2;
+
+  // Concrete curbs with bevel
+  for (const [a, b, side] of [[nw, ne, 'top'], [sw, se, 'bottom']] as const) {
+    const curbGrad = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+    curbGrad.addColorStop(0, '#c8c8c4');
+    curbGrad.addColorStop(0.5, '#a8a8a4');
+    curbGrad.addColorStop(1, '#888884');
+    ctx.strokeStyle = curbGrad;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+    ctx.strokeStyle = side === 'top' ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.15)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y + (side === 'top' ? 1 : -1));
+    ctx.lineTo(b.x, b.y + (side === 'top' ? 1 : -1));
+    ctx.stroke();
+  }
 
   if (col === 0 || col === 7) {
-    ctx.strokeStyle = '#5a9e38';
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#4a9438';
+    ctx.lineWidth = 3.5;
     const edge = col === 0 ? [nw, sw] : [ne, se];
     ctx.beginPath();
     ctx.moveTo(edge[0].x, edge[0].y);
@@ -173,39 +345,21 @@ function drawRoadDetails(
     ctx.stroke();
   }
 
-  const axisAligned = Math.abs(nw.y - ne.y) < 1;
-  ctx.strokeStyle = 'rgba(255,240,180,0.7)';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([6, 5]);
-  ctx.beginPath();
-  if (axisAligned) {
-    const cy = (nw.y + sw.y) / 2;
-    ctx.moveTo(nw.x + 5, cy);
-    ctx.lineTo(ne.x - 5, cy);
-  } else {
-    const mid = { x: (ne.x + sw.x) / 2, y: (ne.y + sw.y) / 2 };
-    const tip = { x: (nw.x + se.x) / 2, y: (nw.y + se.y) / 2 };
-    ctx.moveTo(mid.x, mid.y);
-    ctx.lineTo(tip.x, tip.y);
-  }
-  ctx.stroke();
-  ctx.setLineDash([]);
-
+  // Lane divider — reflective paint
   ctx.save();
   clipDiamond(ctx, corners);
-  const h = cellHash(col, row);
-  ctx.strokeStyle = 'rgba(0,0,0,0.08)';
-  ctx.lineWidth = 0.5;
-  for (let i = 0; i < 4; i++) {
-    const px = ((h >> (i * 4)) & 0xf) / 16;
-    const py = ((h >> (i * 4 + 2)) & 0x3) / 4;
-    const x = nw.x + (se.x - nw.x) * px;
-    const y = nw.y + (se.y - nw.y) * py;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + 6, y + 2);
-    ctx.stroke();
-  }
+  const dashGrad = ctx.createLinearGradient(nw.x, laneCy - 2, nw.x, laneCy + 2);
+  dashGrad.addColorStop(0, 'rgba(255,250,210,0.95)');
+  dashGrad.addColorStop(0.5, 'rgba(255,235,150,0.85)');
+  dashGrad.addColorStop(1, 'rgba(230,210,120,0.75)');
+  ctx.strokeStyle = dashGrad;
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([10, 8]);
+  ctx.beginPath();
+  ctx.moveTo(nw.x + 6, laneCy);
+  ctx.lineTo(ne.x - 6, laneCy);
+  ctx.stroke();
+  ctx.setLineDash([]);
   ctx.restore();
 }
 
@@ -218,30 +372,38 @@ function drawRiverDetails(
 ): void {
   ctx.save();
   clipDiamond(ctx, corners);
-  const phase = animT * 40 + col * 12 + row * 5;
-  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-  ctx.lineWidth = 1.5;
-  for (let i = 0; i < 4; i++) {
-    const y = corners[0].y + ((corners[2].y - corners[0].y) * (0.2 + i * 0.18));
-    const xOff = -((phase + i * 30) % 50);
+  const [nw, ne, se, sw] = corners;
+  const phase = animT * 45 + col * 12 + row * 5;
+  const laneH = se.y - nw.y;
+
+  // Rolling wave crests
+  for (let i = 0; i < 3; i++) {
+    const y = nw.y + laneH * (0.25 + i * 0.28);
+    const xOff = -((phase + i * 28) % 60);
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(corners[0].x + xOff, y);
-    ctx.lineTo(corners[1].x + xOff + 40, y);
+    ctx.moveTo(nw.x + xOff, y);
+    for (let x = nw.x + xOff; x <= ne.x + 20; x += 12) {
+      ctx.quadraticCurveTo(x + 6, y - 3, x + 12, y);
+    }
     ctx.stroke();
   }
 
-  const cx = (corners[0].x + corners[2].x) / 2;
-  const cy = (corners[0].y + corners[2].y) / 2;
+  // Foam patches
+  const cx = (nw.x + ne.x) / 2;
+  const cy = (nw.y + sw.y) / 2;
   for (let i = 0; i < 2; i++) {
-    const rx = cx + ((phase * 0.3 + i * 25) % 40) - 20;
-    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    const rx = cx + ((phase * 0.25 + i * 30) % 36) - 18;
+    ctx.fillStyle = 'rgba(255,255,255,0.16)';
     ctx.beginPath();
-    ctx.ellipse(rx, cy + i * 3, 8, 2.5, -0.3, 0, Math.PI * 2);
+    ctx.ellipse(rx, cy + i * 4, 10, 3, -0.25, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  ctx.fillStyle = 'rgba(200,240,255,0.2)';
-  ctx.fillRect(corners[3].x, corners[0].y, corners[1].x - corners[3].x, 4);
+  // Shore wash
+  ctx.fillStyle = 'rgba(180,230,255,0.28)';
+  ctx.fillRect(sw.x, sw.y - 5, ne.x - sw.x, 5);
   ctx.restore();
 }
 
@@ -268,7 +430,7 @@ export function drawTerrainCell(
   const palette = paletteFor(kind, !!opts.isStart, col, row);
   if (!opts.topOnly) drawSlabSides(ctx, corners, palette, SLAB_DEPTH, col, 7);
   if (!opts.sidesOnly) {
-    drawSlabTop(ctx, corners, palette);
+    drawSlabTop(ctx, corners, palette, kind, col, row, opts.animT ?? 0);
     if (kind === 'grass' && opts.animT !== undefined && opts.grassBlades !== false) {
       drawGrassBlades(ctx, corners, col, row, opts.animT);
     }
