@@ -47,8 +47,9 @@ export const BALL_SQUASH_MAX = 1.06;
 export const CAM_FOV = 44;
 export const CAM_Y = 5.6;
 export const CAM_Z = 8.2;
-export const CAM_LOOK_Y = -0.15;
-export const CAM_LOOK_Z = 0.9;
+/** Look at the ball contact point so screen alignment matches physics angles. */
+export const CAM_LOOK_Y = BALL_SCREEN_Y;
+export const CAM_LOOK_Z = BALL_WORLD_Z;
 
 /** ~2.1× ball diameter — reference pacing between decisions. */
 export const RING_SPACING_BASE = 2.1;

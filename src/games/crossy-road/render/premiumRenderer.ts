@@ -1,21 +1,16 @@
-// Premium isometric renderer — Phase 2+3: terrain, voxels, parallax, decorations.
+// Premium renderer — classic layout (horizontal roads, vertical hops) + voxel polish.
 
 import {
-  cellDiamondScreen,
-  gridToScreen,
-  paintDepth,
-  type IsoCamera,
-  type ScreenOrigin,
-} from '../iso';
+  classicCellCorners,
+  classicGridToScreen,
+  classicPaintDepth,
+  classicPlayerCenter,
+} from '../classic';
 import {
   CELL,
   COLS,
-  H,
   hopProgress,
-  playerGridPos,
   rowAt,
-  SCREEN_ANCHOR_Y,
-  W,
   type WorldSnapshot,
 } from '../types';
 import { hopArcHeight, hopSquash } from './animation';
@@ -42,10 +37,8 @@ export function renderPremium(ctx: CanvasRenderingContext2D, s: WorldSnapshot): 
   const quality = getRenderQuality();
   drawBackground(ctx, s, quality);
 
-  const camera: IsoCamera = { x: s.camIsoX, y: s.camIsoY };
-  const origin: ScreenOrigin = { x: W / 2, y: H * SCREEN_ANCHOR_Y };
+  const camZ = s.camZ;
   const bob = s.camBob;
-  const { gx: playerGx, gz: playerGz } = playerGridPos(s);
   const t = hopProgress(s.hopT);
 
   drawQueue.length = 0;
@@ -62,8 +55,8 @@ export function renderPremium(ctx: CanvasRenderingContext2D, s: WorldSnapshot): 
     const row = rowAt(s.rows, z);
     const isStart = z <= 0;
     for (let col = 0; col < COLS; col++) {
-      const corners = cellDiamondScreen(col, z, camera, origin, bob);
-      const depth = paintDepth(z, col);
+      const corners = classicCellCorners(col, z, camZ, bob);
+      const depth = classicPaintDepth(z, col);
       const opts = { isStart, animT: s.animT, col, row: z, ...terrainDetail };
 
       if (quality.splitTerrainPasses) {
@@ -85,7 +78,7 @@ export function renderPremium(ctx: CanvasRenderingContext2D, s: WorldSnapshot): 
       if (quality.grassDecor && row.kind === 'grass') {
         drawQueue.push({
           depth: depth + 0.03,
-          draw: () => drawGrassDecor(ctx, col, z, camera, origin, bob, s.animT, isStart),
+          draw: () => drawGrassDecor(ctx, col, z, camZ, bob, s.animT, isStart),
         });
       }
     }
@@ -93,8 +86,8 @@ export function renderPremium(ctx: CanvasRenderingContext2D, s: WorldSnapshot): 
 
   for (const coin of s.coins) {
     if (coin.row < zMin || coin.row > zMax) continue;
-    const center = gridToScreen(coin.col + 0.5, coin.row + 0.5, camera, origin, bob);
-    const depth = paintDepth(coin.row, coin.col + 0.5) + 0.15;
+    const center = classicGridToScreen(coin.col + 0.5, coin.row + 0.5, camZ, bob);
+    const depth = classicPaintDepth(coin.row, coin.col) + 0.15;
     drawQueue.push({
       depth,
       draw: () => drawVoxelCoin(ctx, center.x, center.y, ENTITY_UNIT, s.animT, coin.col),
@@ -107,8 +100,8 @@ export function renderPremium(ctx: CanvasRenderingContext2D, s: WorldSnapshot): 
   for (const c of s.cars) {
     if (c.row < zMin || c.row > zMax) continue;
     const gridCx = (c.x + c.w * 0.5) / CELL;
-    const center = gridToScreen(gridCx, c.row + 0.5, camera, origin, bob);
-    const depth = paintDepth(c.row, gridCx) + 0.2;
+    const center = classicGridToScreen(gridCx, c.row + 0.5, camZ, bob);
+    const depth = classicPaintDepth(c.row, gridCx) + 0.2;
     const gridSpan = c.w / CELL;
     const facingRight = c.speed > 0;
     drawQueue.push({
@@ -141,8 +134,8 @@ export function renderPremium(ctx: CanvasRenderingContext2D, s: WorldSnapshot): 
   for (const l of s.logs) {
     if (l.row < zMin || l.row > zMax) continue;
     const gridCx = (l.x + l.w * 0.5) / CELL;
-    const center = gridToScreen(gridCx, l.row + 0.5, camera, origin, bob);
-    const depth = paintDepth(l.row, gridCx) + 0.2;
+    const center = classicGridToScreen(gridCx, l.row + 0.5, camZ, bob);
+    const depth = classicPaintDepth(l.row, gridCx) + 0.2;
     const gridSpan = l.w / CELL;
     drawQueue.push({
       depth,
@@ -155,14 +148,14 @@ export function renderPremium(ctx: CanvasRenderingContext2D, s: WorldSnapshot): 
     });
   }
 
-  const playerCenter = gridToScreen(playerGx, playerGz, camera, origin, bob);
+  const playerCenter = classicPlayerCenter(s);
   const arcZ = hopArcHeight(t, CELL * 0.45);
   const squash = hopSquash(t);
   const shadowAlpha = s.hopT > 0 ? 0.1 + (1 - t) * 0.08 : 0.22;
 
   if (shadows) {
     drawQueue.push({
-      depth: paintDepth(playerGz, playerGx) + 0.5,
+      depth: classicPaintDepth(s.pz, s.px) + 0.5,
       draw: () => drawDropShadow(
         ctx,
         playerCenter.x,
@@ -174,13 +167,13 @@ export function renderPremium(ctx: CanvasRenderingContext2D, s: WorldSnapshot): 
     });
   }
   drawQueue.push({
-    depth: paintDepth(playerGz, playerGx) + 0.55,
+    depth: classicPaintDepth(s.pz, s.px) + 0.55,
     draw: () => {
       if (s.eagleT <= 0) {
         drawVoxelChicken(
           ctx,
           playerCenter.x,
-          playerCenter.y - arcZ * 0.12,
+          playerCenter.y - arcZ,
           ENTITY_UNIT,
           arcZ,
           squash,
@@ -198,6 +191,6 @@ export function renderPremium(ctx: CanvasRenderingContext2D, s: WorldSnapshot): 
   drawPremiumHud(ctx, s);
 
   if (s.eagleT > 0) {
-    drawEagleSwoop(ctx, s, playerCenter.x, playerCenter.y - arcZ * 0.12);
+    drawEagleSwoop(ctx, s, playerCenter.x, playerCenter.y - arcZ);
   }
 }

@@ -9,7 +9,8 @@ import {
 import {
   BallTrail, BokehField, LandingSplats, ParticleSystem, SmashShards, SpeedLines,
 } from './effects';
-import { approachZone, ballAngle, breakAnimScale } from './physics';
+import { ballRingAngle } from './coords';
+import { approachZone, breakAnimScale } from './physics';
 import {
   createPlatformGeometry, makeGradientBackground, makePlatformMaterial,
   platformArc, ringAccentColor, ringColor,
@@ -319,10 +320,11 @@ export class HelixWorld {
           rv.dangerKey = dKey;
           rv.dangerMesh.geometry = createPlatformGeometry(ring.dangerStart, ring.dangerArc);
         }
-        const dangerPulse = 0.26 + Math.sin(time * 5.5 + phase * 1.3) * 0.14;
+        const dangerPulse = 0.34 + Math.sin(time * 5.5 + phase * 1.3) * 0.18;
         rv.dangerMat.color.set(THEME.danger);
         rv.dangerMat.emissive.set(THEME.danger);
         rv.dangerMat.emissiveIntensity = dangerPulse;
+        rv.dangerMesh.position.y = 0.022;
         rv.dangerMesh.visible = true;
       } else {
         rv.dangerKey = '';
@@ -425,7 +427,7 @@ export class HelixWorld {
   addLandingSplat(ringId: number, color: string, towerAngle: number): void {
     const rv = this.ringPool.find((r) => r.ringId === ringId);
     if (!rv) return;
-    this.splats.place(rv.group, color, ballAngle(towerAngle));
+    this.splats.place(rv.group, color, ballRingAngle(towerAngle));
   }
 
   ringOffset(ballY: number, ringY: number): number {

@@ -169,14 +169,21 @@ function drawRoadDetails(
     ctx.stroke();
   }
 
-  const mid = { x: (ne.x + sw.x) / 2, y: (ne.y + sw.y) / 2 };
-  const tip = { x: (nw.x + se.x) / 2, y: (nw.y + se.y) / 2 };
+  const axisAligned = Math.abs(nw.y - ne.y) < 1;
   ctx.strokeStyle = 'rgba(255,240,180,0.7)';
   ctx.lineWidth = 2;
   ctx.setLineDash([6, 5]);
   ctx.beginPath();
-  ctx.moveTo(mid.x, mid.y);
-  ctx.lineTo(tip.x, tip.y);
+  if (axisAligned) {
+    const cy = (nw.y + sw.y) / 2;
+    ctx.moveTo(nw.x + 5, cy);
+    ctx.lineTo(ne.x - 5, cy);
+  } else {
+    const mid = { x: (ne.x + sw.x) / 2, y: (ne.y + sw.y) / 2 };
+    const tip = { x: (nw.x + se.x) / 2, y: (nw.y + se.y) / 2 };
+    ctx.moveTo(mid.x, mid.y);
+    ctx.lineTo(tip.x, tip.y);
+  }
   ctx.stroke();
   ctx.setLineDash([]);
 

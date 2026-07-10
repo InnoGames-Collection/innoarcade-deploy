@@ -22,7 +22,7 @@ export function towerConfigForDepth(passed: number): TowerConfig {
     depth: passed,
     gapArc: Math.max(MIN_GAP, GAP_ARC - t * 0.2),
     spacing: Math.max(2.0, RING_SPACING_BASE - t * 0.28),
-    dangerChance: passed < 3 ? 0.18 : 0.22 + t * 0.28,
+    dangerChance: passed < 3 ? 0.42 : 0.38 + t * 0.22,
   };
 }
 
@@ -126,9 +126,10 @@ export function createRing(
   const ringGap = pickGapArc(cfg, rnd, depth);
   const gapStart = placeGapStart(ringGap, rnd, prev, solidUnderBall);
 
-  const forceDanger = depth >= 3 && depth % 5 === 0;
-  let hasDanger = depth >= 3 && (forceDanger || rnd() < cfg.dangerChance);
-  if (prev && ringHasDanger(prev)) hasDanger = forceDanger || rnd() < cfg.dangerChance * 0.25;
+  const layer = Math.max(0, Math.floor(y / cfg.spacing));
+  const forceDanger = layer >= 2 && layer % 4 === 0;
+  let hasDanger = layer >= 2 && (forceDanger || rnd() < cfg.dangerChance);
+  if (prev && ringHasDanger(prev)) hasDanger = forceDanger || rnd() < cfg.dangerChance * 0.35;
 
   let dangerStart = 0;
   let dangerArc = 0;

@@ -3,11 +3,10 @@ import { Juice } from '../../engine/juice';
 import type { Action } from '../../engine/input';
 import { mulberry32 } from '../_lq/lq';
 import { crossyRoadAudio } from './crossyRoadAudio';
+import { classicCamTarget, classicGridToScreen } from './classic';
 import { resetQualityTier } from './render/quality';
-import { gridToIso, gridToScreen, lerpCamera } from './iso';
 import { renderWorld } from './render';
 import {
-  CAM_LERP,
   CELL,
   COLS,
   EAGLE_DUR,
@@ -16,7 +15,6 @@ import {
   IDLE_LIMIT,
   CAMP_LIMIT,
   PREMIUM_RENDER,
-  SCREEN_ANCHOR_Y,
   W,
   type Car,
   type Coin,
@@ -51,8 +49,6 @@ export class CrossyRoad {
   private pz = 0;
   private maxZ = 0;
   private camZ = 0;
-  private camIsoX = 0;
-  private camIsoY = 0;
   private camBob = 0;
   private rows: Row[] = [];
   private cars: Car[] = [];
@@ -77,9 +73,6 @@ export class CrossyRoad {
     this.pz = 0;
     this.maxZ = 0;
     this.camZ = 0;
-    const startIso = gridToIso(this.px + 0.5, this.pz + 0.5);
-    this.camIsoX = startIso.x;
-    this.camIsoY = startIso.y;
     this.camBob = 0;
     this.rows = [];
     this.cars = [];
@@ -244,21 +237,16 @@ export class CrossyRoad {
   }
 
   private updateCamera(dt: number): void {
-    if (PREMIUM_RENDER) {
-      const snap = this.buildSnapshot();
-      const { gx, gz } = playerGridPos(snap);
-      const target = gridToIso(gx, gz);
-      const cam = { x: this.camIsoX, y: this.camIsoY };
-      lerpCamera(cam, target.x, target.y, dt, CAM_LERP);
-      this.camIsoX = cam.x;
-      this.camIsoY = cam.y;
-      const p = hopProgress(this.hopT);
-      this.camBob = this.hopT > 0 ? Math.sin(p * Math.PI) * 3 : 0;
-    } else {
-      const targetCam = this.pz * CELL - H * 0.55;
-      this.camZ += (targetCam - this.camZ) * Math.min(1, dt * 6);
-      this.camBob = 0;
-    }
+    const snap = this.buildSnapshot();
+    const { gz } = playerGridPos(snap);
+    const targetCam = classicCamTarget(gz);
+    this.camZ += (targetCam - this.camZ) * Math.min(1, dt * 6);
+    const p = hopProgress(this.hopT);
+    this.camBob = this.hopT > 0 ? Math.sin(p * Math.PI) * 3 : 0;
+  }
+
+  private screenAtGrid(gx: number, gz: number): { x: number; y: number } {
+    return classicGridToScreen(gx, gz, this.camZ, this.camBob);
   }
 
   private checkLanding(): void {
@@ -280,23 +268,8 @@ export class CrossyRoad {
     this.coins += 1;
     crossyRoadAudio.coin();
 
-    let sx: number;
-    let sy: number;
-    if (PREMIUM_RENDER) {
-      const p = gridToScreen(
-        this.px + 0.5,
-        this.pz + 0.5,
-        { x: this.camIsoX, y: this.camIsoY },
-        { x: W / 2, y: H * SCREEN_ANCHOR_Y },
-        this.camBob,
-      );
-      sx = p.x;
-      sy = p.y;
-    } else {
-      sx = this.px * CELL + CELL / 2;
-      sy = H - (this.pz * CELL - this.camZ) - CELL / 2;
-    }
-    this.juice.burst(sx, sy, '#f1c40f', 12, 130, 4);
+    const p = this.screenAtGrid(this.px + 0.5, this.pz + 0.5);
+    this.juice.burst(p.x, p.y, '#f1c40f', 12, 130, 4);
   }
 
   private spawnLandingParticles(kind: Row['kind']): void {

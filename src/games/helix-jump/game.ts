@@ -10,11 +10,11 @@ import {
   RING_COLORS, SIM_SPEED, STREAK_SHATTER_THRESHOLD, THEME,
 } from './constants';
 import { helixAudio } from './helixAudio';
+import { ballRingAngle } from './coords';
 import {
   applyBounce,
   applyFallBoost,
   applyLandingFx,
-  ballAngle,
   clearYThroughRing,
   findApproachRing,
   findSweepCollision,
@@ -99,7 +99,7 @@ export class HelixJump {
     this.cleared.clear();
     this.cfg = towerConfigForDepth(0);
     const firstRingY = this.cfg.spacing * 1.5;
-    const startBallAng = ballAngle(0);
+    const startBallAng = ballRingAngle(0);
     let prev: Ring | undefined;
     for (let i = 0; i < 24; i++) {
       const solidUnder = i === 0 ? startBallAng : undefined;
@@ -258,7 +258,7 @@ export class HelixJump {
     const ry = this.world.ringOffset(this.ball.y, wy);
     const px = Math.cos(BALL_CONTACT_ANGLE) * BALL_CONTACT_R;
     const pz = Math.sin(BALL_CONTACT_ANGLE) * BALL_CONTACT_R;
-    const contactAngle = ballAngle(this.rotation.angle);
+    const contactAngle = ballRingAngle(this.rotation.angle);
 
     if (hit.passedGap) {
       const throughY = clearYThroughRing(wy);
