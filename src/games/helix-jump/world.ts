@@ -331,13 +331,9 @@ export class HelixWorld {
 
       const isApproach = ring.id === approachId;
       const zone = isApproach ? approachZone(ring, towerAngle) : 'none';
-      let scaleXZ = 1;
-      let yBob = 0;
 
       if (isApproach) {
         const alert = 0.5 + 0.5 * Math.sin(time * 9.5);
-        scaleXZ = 1 + alert * 0.035;
-        yBob = Math.sin(time * 7.5 + phase) * 0.025;
         if (zone === 'gap') {
           rv.safeMat.emissive.set(THEME.accent);
           rv.safeMat.emissiveIntensity = 0.22 + alert * 0.18;
@@ -350,17 +346,17 @@ export class HelixWorld {
         }
       }
 
-      rv.group.position.y = ballY - ringWorldY(ring, time) + yBob;
+      rv.group.position.y = ballY - ringWorldY(ring, time);
       if (ring.broken) {
         const scale = breakAnimScale(ring.breakAnim);
-        rv.group.scale.set(scale * scaleXZ, scale, scale * scaleXZ);
+        rv.group.scale.set(scale, scale, scale);
         const fade = 1 - ring.breakAnim * 0.85;
         rv.safeMat.opacity = fade;
         rv.safeMat.transparent = true;
         rv.dangerMat.opacity = fade;
         rv.dangerMat.transparent = true;
       } else {
-        rv.group.scale.set(scaleXZ, 1, scaleXZ);
+        rv.group.scale.set(1, 1, 1);
         rv.safeMat.opacity = 1;
         rv.safeMat.transparent = false;
         rv.dangerMat.opacity = 1;

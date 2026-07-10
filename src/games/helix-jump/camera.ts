@@ -5,7 +5,6 @@ export class CameraController {
   shake = 0;
   private shakePhase = 0;
   private shakeX = 0;
-  private shakeY = 0;
 
   readonly camera: THREE.PerspectiveCamera;
 
@@ -25,7 +24,8 @@ export class CameraController {
   }
 
   addShake(amount: number): void {
-    this.shake = Math.max(this.shake, amount * 0.2);
+    // Keep shake tiny — vertical camera motion desyncs the fixed ball from scrolling rings.
+    this.shake = Math.max(this.shake, amount * 0.08);
   }
 
   addImpactPunch(_amount: number): void {
@@ -33,28 +33,25 @@ export class CameraController {
   }
 
   update(dt: number): void {
-    this.shake = Math.max(0, this.shake - dt * 18);
+    this.shake = Math.max(0, this.shake - dt * 22);
     if (this.shake > 0.001) {
       this.shakePhase += dt * 20;
-      const s = this.shake * 0.1;
+      const s = this.shake * 0.04;
       this.shakeX = Math.sin(this.shakePhase * 1.4) * s;
-      this.shakeY = Math.cos(this.shakePhase) * s * 0.35;
     } else {
       this.shakeX = 0;
-      this.shakeY = 0;
     }
   }
 
   applyView(): void {
-    this.camera.position.set(this.shakeX, CAM_Y + this.shakeY, CAM_Z);
-    this.camera.lookAt(this.shakeX * 0.08, CAM_LOOK_Y, CAM_LOOK_Z);
+    this.camera.position.set(this.shakeX, CAM_Y, CAM_Z);
+    this.camera.lookAt(0, CAM_LOOK_Y, CAM_LOOK_Z);
   }
 
   reset(): void {
     this.shake = 0;
     this.shakePhase = 0;
     this.shakeX = 0;
-    this.shakeY = 0;
     this.camera.fov = CAM_FOV;
     this.camera.updateProjectionMatrix();
   }

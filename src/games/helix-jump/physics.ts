@@ -1,10 +1,13 @@
 import {
-  BALL_CONTACT_ANGLE, BALL_R, BALL_ROLL_RATE, BALL_SQUASH_MAX, BALL_SQUASH_MIN,
-  BALL_STRETCH_MAX, BOUNCE_RESTITUTION, BOUNCE_UP_MAX, BOUNCE_UP_VEL,
-  BOUNCE_VEL, DANGER_TOLERANCE, FALL_STRETCH_SPEED, FALL_TERMINAL_VY,
+  BALL_CONTACT_ANGLE, BALL_CONTACT_R, BALL_R, BALL_ROLL_RATE, BALL_SQUASH_MAX,
+  BALL_SQUASH_MIN, BALL_STRETCH_MAX, BOUNCE_RESTITUTION, BOUNCE_UP_MAX,
+  BOUNCE_UP_VEL, BOUNCE_VEL, DANGER_TOLERANCE, FALL_STRETCH_SPEED, FALL_TERMINAL_VY,
   GAP_PASS_TOLERANCE, GRAVITY_BASE,
   RING_HEIGHT, SOLID_EDGE_INSET,
 } from './constants';
+
+/** Angular half-width of the ball on the platform rim. */
+const BALL_HALF_ARC = Math.asin(Math.min(0.99, BALL_R / BALL_CONTACT_R));
 import { easeOutBack } from './easing';
 import { ringWorldY } from './towerGenerator';
 import type { BallState, CollisionHit, LandingFx, Ring } from './types';
@@ -29,7 +32,7 @@ export function gapTolerance(_vy: number): number {
 }
 
 /**
- * Ball over the empty hole — matches mesh gap [gapStart, gapStart + gapArc).
+ * Entire ball fits in the mesh gap [gapStart, gapStart + gapArc).
  * Solid wedge mesh begins at gapStart + gapArc.
  */
 export function inGapOpening(
@@ -39,13 +42,8 @@ export function inGapOpening(
   tol = GAP_PASS_TOLERANCE,
 ): boolean {
   const rel = normalizeAngle(ballAng - gapStart);
-  return rel < gapArc - tol;
-}
-
-/** Looser — approach highlight only. */
-export function inGapLoose(ballAng: number, gapStart: number, gapArc: number): boolean {
-  const rel = normalizeAngle(ballAng - gapStart);
-  return rel < gapArc + GAP_PASS_TOLERANCE;
+  const inset = BALL_HALF_ARC + tol;
+  return rel >= inset && rel + BALL_HALF_ARC < gapArc - tol;
 }
 
 export function inDangerZone(ballAng: number, dangerStart: number, dangerArc: number): boolean {
@@ -223,7 +221,7 @@ export function approachZone(
   towerAngle: number,
 ): 'gap' | 'safe' | 'danger' | 'none' {
   const ang = ballAngle(towerAngle);
-  if (inGapLoose(ang, ring.gapStart, ring.gapArc)) return 'gap';
+  if (inGapOpening(ang, ring.gapStart, ring.gapArc)) return 'gap';
   if (inDangerZone(ang, ring.dangerStart, ring.dangerArc)) return 'danger';
   if (onSolid(ang, ring.gapStart, ring.gapArc)) return 'safe';
   return 'none';
