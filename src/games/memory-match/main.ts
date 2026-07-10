@@ -218,7 +218,11 @@ async function submitRound(score: number, cleared: boolean, durationMs: number):
       $('#mmNewBest').classList.toggle('hidden', !isRecord);
       if (isRecord) bumpScoreStat();
     },
-    onSync: () => { syncAttemptsUi(); void refreshTournamentPanel(); },
+    onSync: () => {
+      formatOverReward();
+      syncAttemptsUi();
+      void refreshTournamentPanel();
+    },
   });
 }
 
@@ -481,10 +485,38 @@ resumeBtn.addEventListener('click', () => { playSfx('click'); resumeRound(); });
 restartBtn.addEventListener('click', () => { playSfx('click'); void restartRoundMM(); });
 
 const muteBtn = $('#mmMuteBtn') as HTMLButtonElement;
+
+function formatOverReward(): void {
+  const el = $('#mmRunReward');
+  el.classList.remove('mm-run-reward-ready');
+  const pending = el.querySelector('.mm-rr-pending');
+  if (pending) return;
+
+  const stats = [...el.querySelectorAll<HTMLElement>('.mm-rr-stat')];
+  if (stats.length === 0) return;
+
+  const bestLabel = t('td.best').toLowerCase();
+  const rankLabel = t('td.rank').toLowerCase();
+  stats.forEach((stat) => {
+    const label = stat.querySelector('b')?.textContent?.trim().toLowerCase() ?? '';
+    if (label === bestLabel || label.startsWith(`${bestLabel} `)) stat.remove();
+  });
+
+  const remaining = [...el.querySelectorAll<HTMLElement>('.mm-rr-stat')];
+  remaining.forEach((stat) => {
+    if (stat.classList.contains('xp') || stat.classList.contains('coins')) return;
+    const label = stat.querySelector('b')?.textContent?.trim().toLowerCase() ?? '';
+    if (label === rankLabel || label.startsWith(`${rankLabel} `)) stat.classList.add('mm-rr-rank');
+    else stat.classList.add('mm-rr-attempts');
+  });
+
+  if (remaining.length > 0) el.classList.add('mm-run-reward-ready');
+}
+
 function syncMuteBtn(): void {
-  muteBtn.textContent = mmSfx.isMuted() ? '🔇' : '🔊';
-  muteBtn.classList.toggle('muted', mmSfx.isMuted());
-  muteBtn.setAttribute('aria-label', mmSfx.isMuted() ? 'Unmute' : 'Mute');
+  const muted = mmSfx.isMuted();
+  muteBtn.classList.toggle('is-muted', muted);
+  muteBtn.setAttribute('aria-label', muted ? 'Unmute' : 'Mute');
 }
 muteBtn.addEventListener('click', () => { mmSfx.toggleMute(); syncMuteBtn(); });
 $('#mmHomeBtn').addEventListener('click', () => { playSfx('click'); goMenuMM(); });
