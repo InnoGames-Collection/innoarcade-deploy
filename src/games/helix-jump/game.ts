@@ -27,7 +27,7 @@ import {
 import { clearGeometryCache } from './geometry';
 import { drawFlash, drawHud, tickDisplayScore } from './renderer';
 import { RotationController } from './rotation';
-import { depthMilestonePoints, gapPassPoints, gravityScaleForDepth, simSpeedForDepth, smashPoints } from './scoring';
+import { depthMilestonePoints, gapPassPoints, progressionForDepth, smashPoints } from './scoring';
 import { BALL_SKINS, getBallSkin, type BallSkin } from './skins';
 import { loadSave, recordPlay, vibrate } from './saveData';
 import { createRing, resetRingIds, ringWorldY, towerConfigForDepth } from './towerGenerator';
@@ -171,18 +171,19 @@ export class HelixJump {
   update(dt: number): void {
     if (this.state !== 'playing') return;
 
-    const speedMul = simSpeedForDepth(this.depth);
+    const prog = progressionForDepth(this.depth);
+    const speedMul = prog.simSpeed;
     const capped = Math.min(dt, 1 / 45) * SIM_SPEED * speedMul;
     this.time += capped;
     this.rotation.update(capped);
 
-    const gravity = gravityForDepth(this.depth, this.fallMul) * gravityScaleForDepth(this.depth);
+    const gravity = gravityForDepth(this.depth, this.fallMul) * prog.gravity;
     const steps = substepCount(this.ball.vy, capped);
     let prevY = this.ball.y;
 
     for (let s = 0; s < steps; s++) {
       const subDt = capped / steps;
-      integrateBall(this.ball, gravity, subDt);
+      integrateBall(this.ball, gravity, subDt, prog.fallCap);
       this.resolveCollisions(prevY);
       prevY = this.ball.y;
       if (this.state !== 'playing') return;
@@ -283,7 +284,7 @@ export class HelixJump {
         this.world.particles.comboBurst(px, ry, pz, mult);
         helixAudio.gapPass(this.combo);
         if (hit.perfect) {
-          this.world.particles.burst(px, ry, pz, THEME.fever, 8, 4);
+          this.world.particles.burst(px, ry, pz, THEME.fever, 4, 2);
         }
         if (this.combo >= FEVER_THRESHOLD && this.feverLeft <= 0) {
           this.feverLeft = FEVER_DURATION;

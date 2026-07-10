@@ -1,4 +1,4 @@
-import { COMBO_CAP } from './constants';
+import { COMBO_CAP, FALL_TERMINAL_VY } from './constants';
 
 /** Points for passing through a gap (combo-scaled, depth-scaled). */
 export function gapPassPoints(depth: number, combo: number, perfect: boolean): number {
@@ -19,14 +19,35 @@ export function smashPoints(multiplier: number, feverHit: boolean): number {
   return (feverHit ? 28 : 16) + multiplier * 5;
 }
 
-/** Simulation speed multiplier — ramps from calm start to brisk late game. */
-export function simSpeedForDepth(depth: number): number {
-  const t = Math.min(1, depth / 70);
-  return 0.74 + t * 0.38;
+export interface DepthProgression {
+  simSpeed: number;
+  gravity: number;
+  fallCap: number;
+  dangerChance: number;
+  moveChance: number;
+  narrowGapChance: number;
 }
 
-/** Gravity scale — gentle early, faster falls later. */
+/** All depth-based difficulty knobs in one place. */
+export function progressionForDepth(depth: number): DepthProgression {
+  const t = Math.min(1, depth / 55);
+  const late = Math.min(1, Math.max(0, depth - 25) / 45);
+  return {
+    simSpeed: 0.72 + t * 0.48 + late * 0.12,
+    gravity: 1 + t * 0.45 + late * 0.2,
+    fallCap: FALL_TERMINAL_VY + t * 4 + late * 3,
+    dangerChance: 0.32 + t * 0.38 + late * 0.15,
+    moveChance: 0.04 + t * 0.22 + late * 0.12,
+    narrowGapChance: Math.min(0.42, Math.max(0, depth - 3) * 0.012),
+  };
+}
+
+/** @deprecated Use progressionForDepth().simSpeed */
+export function simSpeedForDepth(depth: number): number {
+  return progressionForDepth(depth).simSpeed;
+}
+
+/** @deprecated Use progressionForDepth().gravity */
 export function gravityScaleForDepth(depth: number): number {
-  const t = Math.min(1, depth / 90);
-  return 1 + t * 0.35;
+  return progressionForDepth(depth).gravity;
 }

@@ -2,6 +2,7 @@ import {
   DANGER_ARC_MAX, DANGER_ARC_MIN, DANGER_TOLERANCE, GAP_ARC, RING_COLORS, RING_SPACING_BASE,
 } from './constants';
 import { normalizeAngle } from './coords';
+import { progressionForDepth } from './scoring';
 import type { Ring } from './types';
 
 export interface TowerConfig {
@@ -18,12 +19,12 @@ const MOVE_FREQ = 1.8;
 const SOLID_UNDER_MARGIN = 0.4;
 
 export function towerConfigForDepth(passed: number): TowerConfig {
-  const t = Math.min(1, passed / 95);
+  const t = Math.min(1, passed / 75);
   return {
     depth: passed,
-    gapArc: Math.max(MIN_GAP, GAP_ARC - t * 0.26),
-    spacing: Math.max(1.88, RING_SPACING_BASE - t * 0.34),
-    dangerChance: passed < 2 ? 0.38 : 0.34 + t * 0.28,
+    gapArc: Math.max(MIN_GAP, GAP_ARC - t * 0.3),
+    spacing: Math.max(1.78, RING_SPACING_BASE - t * 0.4),
+    dangerChance: progressionForDepth(passed).dangerChance,
   };
 }
 
@@ -102,10 +103,14 @@ export function ringWorldY(ring: Ring, time: number): number {
 }
 
 function pickGapArc(cfg: TowerConfig, rnd: () => number, depth: number): number {
-  if (depth < 8) return cfg.gapArc;
+  const prog = progressionForDepth(depth);
+  if (rnd() < prog.narrowGapChance) {
+    return Math.max(MIN_GAP, cfg.gapArc * (0.86 + rnd() * 0.08));
+  }
+  if (depth < 5) return cfg.gapArc;
   const roll = rnd();
-  if (roll < 0.14) return Math.max(MIN_GAP, cfg.gapArc * 0.9);
-  if (roll > 0.86) return Math.min(TAU - MIN_SOLID, cfg.gapArc * 1.06);
+  if (roll < 0.18) return Math.max(MIN_GAP, cfg.gapArc * 0.9);
+  if (roll > 0.84) return Math.min(TAU - MIN_SOLID, cfg.gapArc * 1.05);
   return cfg.gapArc;
 }
 
@@ -117,13 +122,14 @@ export function createRing(
   solidUnderBall?: number,
 ): Ring {
   const depth = cfg.depth;
+  const prog = progressionForDepth(depth);
   const ringGap = pickGapArc(cfg, rnd, depth);
   const gapStart = placeGapStart(ringGap, rnd, prev, solidUnderBall);
 
   const layer = Math.max(0, Math.floor(y / cfg.spacing));
-  const forceDanger = layer >= 2 && layer % 4 === 0;
-  let hasDanger = layer >= 2 && (forceDanger || rnd() < cfg.dangerChance);
-  if (prev && ringHasDanger(prev)) hasDanger = forceDanger || rnd() < cfg.dangerChance * 0.35;
+  const forceDanger = layer >= 1 && (layer % 3 === 0 || layer % 5 === 0);
+  let hasDanger = layer >= 1 && (forceDanger || rnd() < prog.dangerChance);
+  if (prev && ringHasDanger(prev)) hasDanger = forceDanger || rnd() < prog.dangerChance * 0.4;
 
   let dangerStart = 0;
   let dangerArc = 0;
@@ -134,14 +140,14 @@ export function createRing(
 
   let moveAmp = 0;
   let movePhase = 0;
-  if (depth > 8 && rnd() < 0.08 + depth * 0.004) {
-    moveAmp = 0.08 + rnd() * 0.16;
+  if (depth > 2 && rnd() < prog.moveChance) {
+    moveAmp = 0.1 + rnd() * (0.1 + depth * 0.005);
     movePhase = rnd() * TAU;
   }
 
   let spinVel = 0;
-  if (depth > 18 && rnd() < 0.06 + depth * 0.003) {
-    spinVel = (rnd() < 0.5 ? -1 : 1) * (0.3 + rnd() * 0.45);
+  if (depth > 12 && rnd() < 0.05 + depth * 0.004) {
+    spinVel = (rnd() < 0.5 ? -1 : 1) * (0.25 + rnd() * 0.4);
   }
 
   const colorIndex = (depth + nextRingId) % RING_COLORS.length;

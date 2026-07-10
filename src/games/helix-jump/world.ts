@@ -46,7 +46,6 @@ export class HelixWorld {
   private readonly ballRig = new THREE.Group();
   private readonly ball: THREE.Mesh;
   private readonly ballMat: THREE.MeshStandardMaterial;
-  private readonly ballGlow: THREE.PointLight;
   private readonly ballShadow: THREE.Mesh;
   private readonly pillar: THREE.Mesh;
   private readonly ringPool: RingVisual[] = [];
@@ -157,13 +156,13 @@ export class HelixWorld {
     this.ballShadow.renderOrder = 5;
     this.scene.add(this.ballShadow);
 
-    const ballGeo = new THREE.SphereGeometry(BALL_R, 36, 36);
+    const ballGeo = new THREE.SphereGeometry(BALL_R, 32, 32);
     this.ballMat = new THREE.MeshStandardMaterial({
       color: 0xb24bf3,
-      roughness: 0.1,
-      metalness: 0.06,
-      emissive: 0x3a1060,
-      emissiveIntensity: 0.32,
+      roughness: 0.42,
+      metalness: 0.04,
+      emissive: 0x000000,
+      emissiveIntensity: 0,
     });
     this.ball = new THREE.Mesh(ballGeo, this.ballMat);
     this.ball.castShadow = true;
@@ -171,10 +170,6 @@ export class HelixWorld {
     this.ball.renderOrder = 30;
     this.ball.position.set(0, 0, 0);
     this.ballRig.add(this.ball);
-
-    this.ballGlow = new THREE.PointLight(0xb24bf3, 0.65, 5);
-    this.ballGlow.position.z = 0.15;
-    this.ball.add(this.ballGlow);
 
     this.particles = new ParticleSystem(this.scene);
     this.shards = new SmashShards(this.scene);
@@ -345,7 +340,7 @@ export class HelixWorld {
     }
   }
 
-  updateBall(ball: BallState, skin: BallSkin, fever: boolean, dt: number, combo = 0): void {
+  updateBall(ball: BallState, skin: BallSkin, fever: boolean, dt: number, _combo = 0): void {
     this.ballRig.position.set(BALL_WORLD_X, BALL_SCREEN_Y, BALL_WORLD_Z);
     this.ballShadow.position.set(BALL_WORLD_X, BALL_SCREEN_Y - BALL_R - 0.05, BALL_WORLD_Z);
     const shadowScale = 1 + Math.min(0.2, Math.abs(ball.vy) * 0.008);
@@ -378,17 +373,13 @@ export class HelixWorld {
     if (fever) {
       this.feverLight = Math.min(1, this.feverLight + dt * 3);
       this.ballMat.emissive.set(THEME.fever);
-      this.ballMat.emissiveIntensity = 0.55 + Math.sin(performance.now() * 0.014) * 0.15;
-      this.ballGlow.color.set(THEME.fever);
-      this.ballGlow.intensity = 1.4;
+      this.ballMat.emissiveIntensity = 0.18;
       if (this.bloomPass) this.bloomPass.strength = 0.48;
     } else {
       this.feverLight = Math.max(0, this.feverLight - dt * 4);
-      this.ballMat.emissive.copy(col).multiplyScalar(0.22);
-      this.ballMat.emissiveIntensity = 0.2 + Math.min(0.12, combo * 0.02);
-      this.ballGlow.color.copy(col);
-      this.ballGlow.intensity = 0.55 + Math.min(0.25, Math.abs(ball.vy) * 0.02);
-      if (this.bloomPass) this.bloomPass.strength = 0.3 + Math.min(0.06, Math.abs(ball.vy) * 0.003);
+      this.ballMat.emissive.set(0x000000);
+      this.ballMat.emissiveIntensity = 0;
+      if (this.bloomPass) this.bloomPass.strength = 0.3;
     }
   }
 

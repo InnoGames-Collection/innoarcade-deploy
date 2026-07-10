@@ -51,12 +51,12 @@ export class ParticleSystem {
     geo.setAttribute('size', new THREE.BufferAttribute(this.sizes, 1));
 
     const mat = new THREE.PointsMaterial({
-      size: 0.22,
+      size: 0.1,
       vertexColors: true,
       transparent: true,
-      opacity: 0.92,
+      opacity: 0.75,
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
+      blending: THREE.NormalBlending,
       sizeAttenuation: true,
     });
 
@@ -110,17 +110,13 @@ export class ParticleSystem {
   }
 
   emitLanding(x: number, y: number, z: number, color: string, impact: number): void {
+    if (impact < 6) return;
     const c = new THREE.Color(color);
-    const dustC = new THREE.Color('#e8e0f0');
-    const n = 4 + Math.floor(impact / 5);
+    const n = Math.min(2, 1 + Math.floor(impact / 12));
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2;
-      const sp = 0.8 + Math.random() * 1.6;
-      this.spawn(x, y, z, dustC, Math.cos(a) * sp, Math.random() * 0.8, Math.sin(a) * sp * 0.35, 0.04, 0.32);
-    }
-    for (let i = 0; i < 3; i++) {
-      const a = Math.random() * Math.PI * 2;
-      this.spawn(x, y, z, c, Math.cos(a) * 1.2, 1.2 + Math.random() * 0.8, Math.sin(a) * 0.8, 0.06, 0.22);
+      const sp = 0.5 + Math.random() * 0.8;
+      this.spawn(x, y, z, c, Math.cos(a) * sp, Math.random() * 0.4, Math.sin(a) * sp * 0.25, 0.03, 0.2);
     }
     this.syncBuffers();
   }
@@ -135,25 +131,15 @@ export class ParticleSystem {
     this.syncBuffers();
   }
 
-  emitComboFire(x: number, y: number, z: number, mult: number): void {
-    const fire = new THREE.Color(THEME.fever);
-    const n = 6 + mult * 2;
-    for (let i = 0; i < n; i++) {
-      const a = Math.random() * Math.PI * 2;
-      this.spawn(x, y, z, fire, Math.cos(a) * 3, 2 + Math.random() * 4, Math.sin(a) * 2, 0.1, 0.35);
-    }
-    this.syncBuffers();
-  }
-
   comboBurst(x: number, y: number, z: number, mult: number): void {
+    if (mult < 3) return;
     const hue = (mult * 0.12) % 1;
-    const col = new THREE.Color().setHSL(hue, 0.85, 0.62);
-    this.burst(x, y, z, col.getHex(), 8 + mult * 2, 4 + mult * 0.6);
-    this.emitComboFire(x, y, z, mult);
+    const col = new THREE.Color().setHSL(hue, 0.85, 0.52);
+    this.burst(x, y, z, col.getHex(), 4 + mult, 2.5 + mult * 0.3);
   }
 
   feverRing(x: number, y: number, z: number): void {
-    this.burst(x, y, z, THEME.fever, 28, 8);
+    this.burst(x, y, z, THEME.fever, 12, 5);
   }
 
   landing(x: number, y: number, z: number, color: string, impact = 8): void {
@@ -334,136 +320,6 @@ export class SmashShards {
   }
 }
 
-export class BallTrail {
-  readonly group = new THREE.Group();
-  private readonly points: THREE.Mesh[] = [];
-  private readonly geo = new THREE.SphereGeometry(0.11, 8, 8);
-  private head = 0;
-
-  constructor() {
-    for (let i = 0; i < 14; i++) {
-      const mat = new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-      });
-      const m = new THREE.Mesh(this.geo, mat);
-      m.visible = false;
-      m.renderOrder = 18;
-      this.group.add(m);
-      this.points.push(m);
-    }
-  }
-
-  push(vy: number, color: string, combo = 0, fever = false): void {
-    const speed = Math.abs(vy);
-    const falling = vy > 1.5;
-    const streak = combo >= 2 || fever || falling;
-    const minSpeed = fever ? 0.6 : streak ? 1.0 : 2.2;
-    if (!falling || speed < minSpeed) return;
-
-    const m = this.points[this.head];
-    this.head = (this.head + 1) % this.points.length;
-
-    const t = Math.min(1, speed / 18);
-    const slot = (this.head % 10);
-    m.position.set(
-      (Math.random() - 0.5) * 0.1,
-      0.12 + slot * 0.16,
-      0.08 + (Math.random() - 0.5) * 0.06,
-    );
-    const mat = m.material as THREE.MeshBasicMaterial;
-    mat.color.set(fever ? THEME.fever : color);
-    mat.opacity = fever
-      ? 0.42 + t * 0.38
-      : streak ? 0.28 + t * 0.4 : 0.18 + t * 0.3;
-    const scale = fever ? 0.42 + t * 0.38 : 0.36 + t * 0.34;
-    m.scale.setScalar(scale);
-    m.visible = true;
-    m.userData.life = 1;
-  }
-
-  update(dt: number): void {
-    const fade = dt * 3.6;
-    for (const m of this.points) {
-      if (!m.visible) continue;
-      m.userData.life -= fade;
-      m.position.y += dt * 0.35;
-      if (m.userData.life <= 0) {
-        m.visible = false;
-        continue;
-      }
-      (m.material as THREE.MeshBasicMaterial).opacity *= 0.94;
-      m.scale.multiplyScalar(0.988);
-    }
-  }
-
-  clear(): void {
-    for (const m of this.points) m.visible = false;
-  }
-}
-
-export class SpeedLines {
-  readonly group = new THREE.Group();
-  private readonly lines: THREE.Mesh[] = [];
-  private active = 0;
-
-  constructor(parent: THREE.Group) {
-    const geo = new THREE.PlaneGeometry(0.04, 0.5);
-    for (let i = 0; i < 8; i++) {
-      const mat = new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        side: THREE.DoubleSide,
-      });
-      const m = new THREE.Mesh(geo, mat);
-      m.visible = false;
-      m.renderOrder = 17;
-      this.group.add(m);
-      this.lines.push(m);
-    }
-    parent.add(this.group);
-  }
-
-  setIntensity(combo: number, fever: boolean, vy = 0): void {
-    const fallBoost = vy > 6 ? Math.min(3, (vy - 6) * 0.25) : 0;
-    const target = fever ? 8 : combo >= 3 ? Math.min(6, combo - 1) + fallBoost : fallBoost > 0 ? Math.ceil(fallBoost) : 0;
-    this.active = Math.min(this.lines.length, Math.round(target));
-    for (let i = 0; i < this.lines.length; i++) {
-      const m = this.lines[i];
-      const on = i < this.active;
-      m.visible = on;
-      if (on) {
-        const ang = (i / Math.max(1, this.active)) * Math.PI * 2;
-        m.position.set(Math.cos(ang) * 0.5, 0.15 + (i % 3) * 0.18, Math.sin(ang) * 0.15 + 0.08);
-        m.rotation.z = ang;
-        (m.material as THREE.MeshBasicMaterial).opacity = fever ? 0.32 : 0.14 + Math.min(0.12, vy * 0.005);
-        (m.material as THREE.MeshBasicMaterial).color.set(fever ? THEME.fever : '#ffffff');
-        m.scale.y = 0.35 + Math.min(0.55, vy * 0.02);
-      }
-    }
-  }
-
-  update(dt: number): void {
-    if (this.active <= 0) return;
-    for (const m of this.lines) {
-      if (!m.visible) continue;
-      m.position.y -= dt * 2.5;
-      if (m.position.y < -0.8) m.position.y = 0.6;
-    }
-  }
-
-  clear(): void {
-    this.active = 0;
-    for (const m of this.lines) m.visible = false;
-  }
-}
-
 interface Splat {
   mesh: THREE.Mesh;
   life: number;
@@ -528,45 +384,5 @@ export class LandingSplats {
       s.mesh.visible = false;
       s.mesh.removeFromParent();
     }
-  }
-}
-
-export class BokehField {
-  private readonly points: THREE.Points;
-
-  constructor(scene: THREE.Scene) {
-    const n = 48;
-    const pos = new Float32Array(n * 3);
-    const sizes = new Float32Array(n);
-    for (let i = 0; i < n; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 30;
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 40;
-      pos[i * 3 + 2] = -8 - Math.random() * 20;
-      sizes[i] = 0.15 + Math.random() * 0.35;
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-    const mat = new THREE.PointsMaterial({
-      color: 0xffffff,
-      size: 0.25,
-      transparent: true,
-      opacity: 0.2,
-      depthWrite: false,
-      sizeAttenuation: true,
-    });
-    this.points = new THREE.Points(geo, mat);
-    scene.add(this.points);
-  }
-
-  update(dt: number): void {
-    const pos = this.points.geometry.attributes.position as THREE.BufferAttribute;
-    for (let i = 0; i < pos.count; i++) {
-      let y = pos.getY(i);
-      y += dt * (0.15 + (i % 5) * 0.04);
-      if (y > 18) y = -18;
-      pos.setY(i, y);
-    }
-    pos.needsUpdate = true;
   }
 }

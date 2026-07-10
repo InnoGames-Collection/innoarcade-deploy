@@ -29,9 +29,14 @@ export function gravityForDepth(passed: number, fallMul: number): number {
   return (GRAVITY_BASE + Math.min(8, passed * 0.055)) * fallMul;
 }
 
-export function integrateBall(ball: BallState, gravity: number, dt: number): void {
+export function integrateBall(
+  ball: BallState,
+  gravity: number,
+  dt: number,
+  terminalVy = FALL_TERMINAL_VY,
+): void {
   ball.vy += gravity * dt;
-  if (ball.vy > FALL_TERMINAL_VY) ball.vy = FALL_TERMINAL_VY;
+  if (ball.vy > terminalVy) ball.vy = terminalVy;
   ball.y += ball.vy * dt;
   ball.rollAngle += ball.vy * dt * BALL_ROLL_RATE;
 
