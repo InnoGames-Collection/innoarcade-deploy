@@ -12,11 +12,11 @@ export interface FruitPalette {
 }
 
 const PALETTES: Record<FruitType, FruitPalette> = {
-  apple: { base: '#e63946', dark: '#a4161a', light: '#ff6b7a', accent: '#2d8a4e', juice: '#dc2626', seed: '#5c3d1e' },
-  banana: { base: '#ffd60a', dark: '#e6b800', light: '#fff3a0', accent: '#8b6914', juice: '#fbbf24', seed: '#6b4423' },
-  cherry: { base: '#a4161a', dark: '#6b0f12', light: '#e63946', accent: '#2d5016', juice: '#991b1b', seed: '#3d2817' },
-  orange: { base: '#ff8c42', dark: '#e6732a', light: '#ffb380', accent: '#2d8a4e', juice: '#f97316', seed: '#fef3c7' },
-  peach: { base: '#fdbcb4', dark: '#e89a8e', light: '#ffe4e0', accent: '#2d8a4e', juice: '#fda4af', seed: '#5c3d1e' },
+  apple: { base: '#ef4444', dark: '#991b1b', light: '#fca5a5', accent: '#15803d', juice: '#dc2626', seed: '#5c3d1e' },
+  banana: { base: '#facc15', dark: '#ca8a04', light: '#fef08a', accent: '#92400e', juice: '#eab308', seed: '#6b4423' },
+  cherry: { base: '#b91c1c', dark: '#7f1d1d', light: '#f87171', accent: '#166534', juice: '#991b1b', seed: '#3d2817' },
+  orange: { base: '#f97316', dark: '#c2410c', light: '#fdba74', accent: '#15803d', juice: '#ea580c', seed: '#fef3c7' },
+  peach: { base: '#fda4af', dark: '#e879a0', light: '#ffe4e6', accent: '#15803d', juice: '#fb7185', seed: '#5c3d1e' },
 };
 
 export function getFruitPalette(type: FruitType): FruitPalette {
@@ -115,12 +115,19 @@ function drawRoundFruit(
     ctx.fill();
   }
 
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.62)';
   ctx.beginPath();
-  ctx.ellipse(-r * 0.28, -r * 0.32, r * 0.22, r * 0.14, -0.5, 0, Math.PI * 2);
+  ctx.ellipse(-r * 0.28, -r * 0.32, r * 0.24, r * 0.15, -0.5, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+  // Rim light
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.92, -Math.PI * 0.7, Math.PI * 0.1);
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
   ctx.beginPath();
   ctx.arc(-r * 0.15, -r * 0.15, r * 0.08, 0, Math.PI * 2);
   ctx.fill();

@@ -206,19 +206,36 @@ export function drawSliceTrail(
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
-  ctx.strokeStyle = `rgba(180, 220, 255, ${alpha * 0.45})`;
-  ctx.lineWidth = 6;
+  // Motion-blur style: faded wider under-stroke
+  ctx.strokeStyle = `rgba(120, 190, 255, ${alpha * 0.35})`;
+  ctx.lineWidth = 9;
   ctx.beginPath();
   ctx.moveTo(points[0].x, points[0].y);
   for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
   ctx.stroke();
 
-  ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.9})`;
-  ctx.lineWidth = 3;
+  ctx.strokeStyle = `rgba(200, 230, 255, ${alpha * 0.55})`;
+  ctx.lineWidth = 5;
   ctx.beginPath();
   ctx.moveTo(points[0].x, points[0].y);
   for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
   ctx.stroke();
+
+  ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.95})`;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+  ctx.stroke();
+
+  // Spark tips along the trail
+  for (let i = 1; i < points.length; i += 2) {
+    const p = points[i];
+    ctx.fillStyle = `rgba(220, 240, 255, ${alpha * 0.7})`;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 1.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   ctx.restore();
 }
@@ -278,8 +295,6 @@ export function drawComboEffect(
     ctx.arc(cx, cy, 120, 0, Math.PI * 2);
     ctx.fill();
   } else {
-    ctx.shadowColor = 'rgba(255, 200, 100, 0.6)';
-    ctx.shadowBlur = 20;
     const g = ctx.createRadialGradient(cx, cy, 10, cx, cy, 80);
     g.addColorStop(0, `rgba(255, 220, 150, ${alpha * 0.3})`);
     g.addColorStop(1, 'rgba(255, 200, 100, 0)');
@@ -287,7 +302,6 @@ export function drawComboEffect(
     ctx.beginPath();
     ctx.arc(cx, cy, 80, 0, Math.PI * 2);
     ctx.fill();
-    ctx.shadowBlur = 0;
   }
 
   ctx.restore();

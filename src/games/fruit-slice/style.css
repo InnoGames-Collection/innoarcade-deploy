@@ -206,6 +206,7 @@ body.game-shell[data-game="fruit-slice"] {
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
   transition: color 0.2s, text-shadow 0.2s;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 .fs-stat-time .fs-stat-icon,
@@ -237,9 +238,10 @@ body.game-shell[data-game="fruit-slice"] {
   overflow: hidden;
   box-shadow:
     0 8px 28px rgba(20, 60, 20, 0.2),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  background: #4db8ff;
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+    inset 0 -20px 40px rgba(255, 220, 150, 0.06);
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  background: #38bdf8;
 }
 
 #game {
@@ -303,14 +305,20 @@ body.game-shell[data-game="fruit-slice"] {
 
 /* Menu / pause / game-over panels — glassmorphism */
 body.game-shell[data-game="fruit-slice"] .game-panel {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 255, 255, 0.58) 100%);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.6) 100%);
   backdrop-filter: blur(20px) saturate(1.4);
   -webkit-backdrop-filter: blur(20px) saturate(1.4);
-  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
   border-radius: 20px;
   box-shadow:
     0 16px 48px rgba(20, 60, 20, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  animation: fsPanelIn 0.35s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+@keyframes fsPanelIn {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 body.game-shell[data-game="fruit-slice"] .game-panel .btn.primary {

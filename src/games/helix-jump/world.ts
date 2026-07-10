@@ -14,10 +14,13 @@ import { CameraController } from './camera';
 
 interface RingVisual {
   ringId: number;
-  geoKey: string;
+  safeKey: string;
+  dangerKey: string;
   group: THREE.Group;
-  mesh: THREE.Mesh;
-  mat: THREE.MeshStandardMaterial;
+  safeMesh: THREE.Mesh;
+  safeMat: THREE.MeshStandardMaterial;
+  dangerMesh: THREE.Mesh;
+  dangerMat: THREE.MeshStandardMaterial;
 }
 
 export class HelixWorld {
@@ -62,7 +65,7 @@ export class HelixWorld {
 
     this.scene = new THREE.Scene();
     this.scene.background = makeGradientBackground();
-    this.scene.fog = new THREE.Fog(0xe8d4ff, 28, 70);
+    this.scene.fog = new THREE.Fog(0xe8d4ff, 32, 82);
 
     this.cameraCtrl = new CameraController(W / H);
 
@@ -189,20 +192,42 @@ export class HelixWorld {
   }
 
   private createRingVisual(): RingVisual {
-    const geo = createPlatformGeometry(0, Math.PI * 1.6);
-    const mat = new THREE.MeshStandardMaterial({
+    const safeGeo = createPlatformGeometry(0, Math.PI * 1.6);
+    const safeMat = new THREE.MeshStandardMaterial({
       color: 0xff5c8a,
       roughness: 0.28,
       metalness: 0.12,
     });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
+    const safeMesh = new THREE.Mesh(safeGeo, safeMat);
+    safeMesh.castShadow = true;
+    safeMesh.receiveShadow = true;
+
+    const dangerGeo = createPlatformGeometry(0, 0.5);
+    const dangerMat = new THREE.MeshStandardMaterial({
+      color: 0x1a1a2e,
+      roughness: 0.28,
+      metalness: 0.12,
+    });
+    const dangerMesh = new THREE.Mesh(dangerGeo, dangerMat);
+    dangerMesh.castShadow = true;
+    dangerMesh.receiveShadow = true;
+    dangerMesh.position.y = 0.015;
+    dangerMesh.visible = false;
 
     const group = new THREE.Group();
-    group.add(mesh);
+    group.add(safeMesh);
+    group.add(dangerMesh);
 
-    return { ringId: -1, geoKey: '', group, mesh, mat };
+    return {
+      ringId: -1,
+      safeKey: '',
+      dangerKey: '',
+      group,
+      safeMesh,
+      safeMat,
+      dangerMesh,
+      dangerMat,
+    };
   }
 
   syncRings(rings: Ring[], gapArc: number, ballY: number): void {
@@ -228,33 +253,48 @@ export class HelixWorld {
       }
 
       const solid = platformArc(gapArc);
-      const start = ring.gapStart + gapArc;
-      const key = `${start.toFixed(3)}_${solid.toFixed(3)}`;
-      if (rv.geoKey !== key) {
-        rv.geoKey = key;
-        rv.mesh.geometry = createPlatformGeometry(start, solid);
+      const safeStart = ring.gapStart + gapArc;
+      const safeKey = `${safeStart.toFixed(3)}_${solid.toFixed(3)}`;
+      if (rv.safeKey !== safeKey) {
+        rv.safeKey = safeKey;
+        rv.safeMesh.geometry = createPlatformGeometry(safeStart, solid);
       }
 
-      const col = ringColor(ring.colorIndex, ring.danger);
-      rv.mat.color.copy(col);
-      if (ring.danger) {
-        rv.mat.emissive.set(THEME.dangerDark);
-        rv.mat.emissiveIntensity = 0.35;
+      const safeCol = ringColor(ring.colorIndex, false);
+      rv.safeMat.color.copy(safeCol);
+      rv.safeMat.emissive.copy(safeCol).multiplyScalar(0.12);
+      rv.safeMat.emissiveIntensity = 0.25;
+
+      if (ring.dangerArc > 0) {
+        const dKey = `${ring.dangerStart.toFixed(3)}_${ring.dangerArc.toFixed(3)}`;
+        if (rv.dangerKey !== dKey) {
+          rv.dangerKey = dKey;
+          rv.dangerMesh.geometry = createPlatformGeometry(ring.dangerStart, ring.dangerArc);
+        }
+        const dangerCol = ringColor(-1, true);
+        rv.dangerMat.color.copy(dangerCol);
+        rv.dangerMat.emissive.set(THEME.dangerDark);
+        rv.dangerMat.emissiveIntensity = 0.35;
+        rv.dangerMesh.visible = true;
       } else {
-        rv.mat.emissive.copy(col).multiplyScalar(0.12);
-        rv.mat.emissiveIntensity = 0.25;
+        rv.dangerKey = '';
+        rv.dangerMesh.visible = false;
       }
 
       rv.group.position.y = ballY - ring.y;
       if (ring.broken) {
         const t = ring.breakAnim;
         rv.group.scale.setScalar(1 - t * 0.85);
-        rv.mat.opacity = 1 - t;
-        rv.mat.transparent = true;
+        rv.safeMat.opacity = 1 - t;
+        rv.safeMat.transparent = true;
+        rv.dangerMat.opacity = 1 - t;
+        rv.dangerMat.transparent = true;
       } else {
         rv.group.scale.setScalar(1);
-        rv.mat.opacity = 1;
-        rv.mat.transparent = false;
+        rv.safeMat.opacity = 1;
+        rv.safeMat.transparent = false;
+        rv.dangerMat.opacity = 1;
+        rv.dangerMat.transparent = false;
       }
     }
   }

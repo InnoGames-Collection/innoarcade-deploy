@@ -3,14 +3,10 @@
 
 import { sfx } from '../../engine/audio';
 import type { Action } from '../../engine/input';
-import { OrchardBackground } from './renderer/background';
 import {
-  createJuiceBurst, createBombBurst, updateParticles, drawParticles,
-  drawSliceTrail, drawComboEffect, type VfxParticle,
-} from './renderer/effects';
-import {
-  drawFruit, drawBomb, drawSlicedHalf,
-} from './renderer/fruits';
+  SceneRenderer, createJuiceBurst, createBombBurst, updateParticles,
+  type VfxParticle,
+} from './renderer/scene';
 
 export const W = 480;
 export const H = 720;
@@ -40,11 +36,8 @@ interface Fruit {
   type: typeof FRUIT_TYPES[number];
   sliced: boolean;
   sliceTime: number;
-  // Visual-only
   rot: number;
   rotSpeed: number;
-  spawnAge: number;
-  scale: number;
 }
 
 interface Bomb {
@@ -73,6 +66,8 @@ export class FruitSlice {
 
   private time = 0;
   private timeScoreBank = 0;
+  // Difficulty ramp: spawn rate + object speed scale up with elapsed time, so the
+  // endless run eventually outpaces the player (no hard end — you fail by misses).
   private speedMul = 1;
   private fruits: Fruit[] = [];
   private bombs: Bomb[] = [];
@@ -81,10 +76,9 @@ export class FruitSlice {
   private screenShake = 0;
   private spawnCursor = 0;
   private currentSlice: Array<{ x: number; y: number }> = [];
-  private bg = new OrchardBackground();
+  private scene = new SceneRenderer();
   private comboFlash = 0;
   private lastCombo = 0;
-  private menuBgTime = 0;
 
   start(): void {
     this.score = 0;
@@ -123,7 +117,6 @@ export class FruitSlice {
   startSlice(x: number, y: number): void {
     if (this.state !== 'playing') return;
     this.currentSlice = [{ x, y }];
-    this.checkSliceCollisions(x, y);
   }
 
   continueSlice(x: number, y: number): void {
@@ -161,6 +154,7 @@ export class FruitSlice {
     }
   }
 
+  /** Elapsed run time in whole seconds (timer counts up). */
   elapsedSeconds(): number {
     return Math.floor(this.time);
   }
@@ -198,6 +192,7 @@ export class FruitSlice {
     }
   }
 
+  // Bombs cost points and reset combo; the run ends only when lives reach 0.
   private hitBomb(bomb: Bomb): void {
     if (bomb.hit) return;
     bomb.hit = true;
@@ -211,7 +206,7 @@ export class FruitSlice {
 
   update(dt: number): void {
     if (this.state === 'playing') {
-      this.bg.update(dt);
+      this.scene.updateBackground(dt);
     }
 
     if (this.state !== 'playing') return;
@@ -228,6 +223,8 @@ export class FruitSlice {
     this.screenShake = Math.max(0, this.screenShake - dt * 8);
     this.comboFlash = Math.max(0, this.comboFlash - dt * 2);
 
+    // Ramp difficulty with time: spawn faster + everything moves faster, so it
+    // becomes progressively harder to keep up (≈2× speed at 45s, 3× at 90s).
     this.speedMul = 1 + this.time / 45;
     const grav = 380 * this.speedMul;
 
@@ -267,12 +264,11 @@ export class FruitSlice {
     this.fruits = this.fruits.filter((f) => f.y < H + 50 && f.sliceTime < 0.3);
     this.bombs = this.bombs.filter((b) => b.y < H + 50);
     this.particles = this.particles.filter((p) => p.life < p.maxLife);
-    this.slices = this.slices.filter((s) => this.time - s.createdAt < 0.2);
+    this.slices = this.slices.filter((s) => this.time - s.createdAt < 0.15);
 
     if (this.fruits.some((f) => !f.sliced && f.y > H)) {
       this.lives -= 1;
       this.combo = 0;
-      this.lastCombo = 0;
       if (this.lives <= 0) {
         this.endRun();
       }
@@ -292,12 +288,9 @@ export class FruitSlice {
     } else {
       const type = FRUIT_TYPES[Math.floor(Math.random() * FRUIT_TYPES.length)];
       this.fruits.push({
-        x, y: -20, vx, vy, type,
-        sliced: false, sliceTime: 0,
+        x, y: -20, vx, vy, type, sliced: false, sliceTime: 0,
         rot: Math.random() * Math.PI * 2,
         rotSpeed: (Math.random() - 0.5) * 4,
-        spawnAge: 0,
-        scale: 1,
       });
     }
   }
@@ -309,65 +302,22 @@ export class FruitSlice {
   }
 
   render(ctx: CanvasRenderingContext2D): void {
-    const shake = this.screenShake * 4;
-
-    ctx.save();
-    ctx.translate(
-      shake * (Math.random() - 0.5),
-      shake * (Math.random() - 0.5),
-    );
-
-    this.bg.render(ctx, this.time);
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(0, 0, W, H);
-    ctx.clip();
-
-    const warmLight = ctx.createRadialGradient(W * 0.7, 80, 20, W * 0.5, H * 0.4, 400);
-    warmLight.addColorStop(0, 'rgba(255, 240, 180, 0.08)');
-    warmLight.addColorStop(1, 'rgba(255, 240, 180, 0)');
-    ctx.fillStyle = warmLight;
-    ctx.fillRect(0, 0, W, H);
-
-    for (const bomb of this.bombs) {
-      if (!bomb.hit) drawBomb(ctx, bomb.x, bomb.y, BOMB_RADIUS, this.time);
-    }
-
-    for (const fruit of this.fruits) {
-      if (fruit.sliced) {
-        const alpha = Math.max(0, 1 - fruit.sliceTime / 0.3);
-        const offset = fruit.sliceTime * 60;
-        drawSlicedHalf(ctx, fruit.x - offset, fruit.y + offset * 0.3, FRUIT_RADIUS, fruit.type, -1, alpha);
-        drawSlicedHalf(ctx, fruit.x + offset, fruit.y + offset * 0.3, FRUIT_RADIUS, fruit.type, 1, alpha);
-        continue;
-      }
-      drawFruit(ctx, fruit.x, fruit.y, FRUIT_RADIUS, fruit.type, fruit.rot, 1);
-    }
-
-    for (const s of this.slices) {
-      const age = this.time - s.createdAt;
-      drawSliceTrail(ctx, s.points, age, 0.2);
-    }
-
-    if (this.currentSlice.length > 1) {
-      drawSliceTrail(ctx, this.currentSlice, 0, 0.25);
-    }
-
-    drawParticles(ctx, this.particles);
-
-    if (this.combo >= 2 && this.comboFlash > 0) {
-      drawComboEffect(ctx, this.combo, this.comboFlash, W / 2, H * 0.35);
-    }
-
-    ctx.restore();
-    ctx.restore();
+    this.scene.render(ctx, {
+      time: this.time,
+      combo: this.combo,
+      comboFlash: this.comboFlash,
+      screenShake: this.screenShake,
+      fruits: this.fruits,
+      bombs: this.bombs,
+      particles: this.particles,
+      slices: this.slices,
+      currentSlice: this.currentSlice,
+      fruitRadius: FRUIT_RADIUS,
+      bombRadius: BOMB_RADIUS,
+    });
   }
 
-  /** Render background only — used for menu backdrop. */
   renderMenuBg(ctx: CanvasRenderingContext2D): void {
-    this.menuBgTime += 0.016;
-    this.bg.update(0.016);
-    this.bg.renderMenu(ctx, this.menuBgTime);
+    this.scene.renderMenuBg(ctx);
   }
 }

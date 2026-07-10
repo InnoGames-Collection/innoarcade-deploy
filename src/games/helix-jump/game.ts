@@ -90,7 +90,7 @@ export class HelixJump {
     clearGeometryCache();
     this.cleared.clear();
     this.cfg = towerConfigForDepth(0);
-    const firstRingY = this.cfg.spacing * 2.15;
+    const firstRingY = this.cfg.spacing * 2.0;
     let prev: Ring | undefined;
     for (let i = 0; i < 24; i++) {
       const ring = createRing(firstRingY + i * this.cfg.spacing, this.rnd, this.cfg, prev);
@@ -301,7 +301,7 @@ export class HelixJump {
     pz: number,
     mult: number,
   ): void {
-    if (ring.broken || ring.danger) return;
+    if (ring.broken) return;
     this.breakRing(ring, ry, px, pz, mult, false);
     vibrate(4 + mult);
   }
@@ -320,9 +320,7 @@ export class HelixJump {
     this.bonusScore += feverHit ? 2 : 1;
     this.score = this.depth + this.bonusScore;
 
-    const color = ring.danger
-      ? THEME.danger
-      : RING_COLORS[ring.colorIndex] ?? this.skin.color;
+    const color = RING_COLORS[ring.colorIndex] ?? this.skin.color;
     const shardCount = feverHit ? 14 : 10 + mult * 2;
     const particleCount = feverHit ? 18 : 10 + mult * 2;
     const spread = feverHit ? 5.5 : 4 + mult * 0.35;

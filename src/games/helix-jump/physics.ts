@@ -1,6 +1,7 @@
 import {
   BALL_CONTACT_ANGLE, BALL_R, BOUNCE_RESTITUTION, BOUNCE_UP_MAX, BOUNCE_UP_VEL,
-  BOUNCE_VEL, GAP_PASS_TOLERANCE, GRAVITY_BASE, RING_HEIGHT, SOLID_EDGE_INSET,
+  BOUNCE_VEL, DANGER_TOLERANCE, GAP_PASS_TOLERANCE, GRAVITY_BASE, RING_HEIGHT,
+  SOLID_EDGE_INSET,
 } from './constants';
 import type { BallState, CollisionHit, Ring } from './types';
 
@@ -24,6 +25,13 @@ export function ballAngle(towerAngle: number): number {
 export function inGap(ballAng: number, gapStart: number, gapArc: number): boolean {
   const rel = normalizeAngle(ballAng - gapStart);
   return rel < gapArc + GAP_PASS_TOLERANCE;
+}
+
+/** Hazard wedge on solid platform (reference: orange segment only). */
+export function inDangerZone(ballAng: number, dangerStart: number, dangerArc: number): boolean {
+  if (dangerArc <= 0) return false;
+  const rel = normalizeAngle(ballAng - dangerStart);
+  return rel < dangerArc + DANGER_TOLERANCE;
 }
 
 /** Solid segment — requires clear contact past gap edge to avoid false bounces. */
@@ -71,7 +79,7 @@ function evaluateRing(
     return { ring, screenY: ring.y - ball.y, passedGap: true, bounced: false, smashed: false, died: false, perfect: false };
   }
 
-  if (ring.danger) {
+  if (inDangerZone(ang, ring.dangerStart, ring.dangerArc)) {
     return { ring, screenY: ring.y - ball.y, passedGap: false, bounced: false, smashed: false, died: true, perfect: false };
   }
   if (feverActive) {

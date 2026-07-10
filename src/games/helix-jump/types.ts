@@ -5,7 +5,8 @@ export interface Ring {
   y: number;
   gapStart: number;
   colorIndex: number;
-  danger: boolean;
+  dangerStart: number;
+  dangerArc: number;
   broken: boolean;
   breakAnim: number;
 }

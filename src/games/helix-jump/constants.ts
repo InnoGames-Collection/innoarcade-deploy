@@ -18,6 +18,10 @@ export const BALL_CONTACT_R = RING_INNER + BALL_R * 0.95;
 /** Camera-facing contact angle — ball fixed south of helix axis. */
 export const BALL_CONTACT_ANGLE = -Math.PI / 2;
 export const GAP_ARC = 1.08;
+/** Orange hazard wedge on solid platforms (reference: partial segment, not full ring). */
+export const DANGER_ARC_MIN = 0.42;
+export const DANGER_ARC_MAX = 0.62;
+export const DANGER_TOLERANCE = 0.035;
 /** Angular grace when gap-aligned — generous pass, tight solid edge. */
 export const GAP_PASS_TOLERANCE = 0.04;
 export const SOLID_EDGE_INSET = 0.07;
