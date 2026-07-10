@@ -149,7 +149,7 @@ export function createRing(
     spinVel = (rnd() < 0.5 ? -1 : 1) * (0.3 + rnd() * 0.45);
   }
 
-  const colorIndex = depth % RING_COLORS.length;
+  const colorIndex = (depth + nextRingId) % RING_COLORS.length;
 
   return {
     id: nextRingId++,

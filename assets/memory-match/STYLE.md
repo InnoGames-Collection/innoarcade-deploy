@@ -113,18 +113,15 @@ Keep existing colors exactly. Do not remap to the palette above.
 ### 5. Nexsus (`nexsus.png`) — replaces WiFi
 
 - **Replaces:** `phone.png` (generic WiFi symbol).
-- **Inspired by:** znexus telecloud branding (cloud + network), not the wordmark.
-- **Motifs:** Connected nodes, fiber lines, soft green/blue glow, central hub.
-- **Colors:** Ethio Telecom family greens and blues.
-- **Must not include:** Text, letters, “znexus”, WiFi arcs, or the full znexus telecloud logo.
+- **Inspired by:** znexus telecloud logo — the **cloud outline** shape and green/blue brand split.
+- **Motifs:** Thick glossy blue cloud border; lime-green upper glow and blue lower glow inside (where the wordmark sits in the official logo).
+- **Must not include:** Text, letters, WiFi arcs, network hub nodes, or decorations outside the cloud.
 
 ### 6. Teleconnect (`teleconnect.png`) — replaces Birr
 
 - **Replaces:** `cash.png` (ETB banknotes).
-- **Inspired by:** teleConnect interlocking C-link shapes, not the wordmark.
-- **Motifs:** Interlocking rounded links, fiber optic cable, signal flow dots, connection paths.
-- **Colors:** Green-blue gradients with subtle glow.
-- **Must not include:** Text, “teleConnect”, currency, or birr notes.
+- **Inspired by:** teleConnect logo symbol — **interlocking C-links** (blue left, green right with speech-bubble tail) plus small blue sparkle star.
+- **Must not include:** Text, “teleConnect” wordmark, currency, or birr notes.
 
 ---
 

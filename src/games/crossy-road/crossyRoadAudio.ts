@@ -26,6 +26,10 @@ export const crossyRoadAudio = {
     sfx.click();
   },
 
+  coin(): void {
+    sfx.coin();
+  },
+
   gameOver(): void {
     sfx.crash();
     sfx.stopMusic();

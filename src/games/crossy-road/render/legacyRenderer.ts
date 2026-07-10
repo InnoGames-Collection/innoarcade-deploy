@@ -43,6 +43,30 @@ export function renderLegacy(ctx: CanvasRenderingContext2D, s: WorldSnapshot): v
       ctx.fillStyle = '#8B5A2B';
       ctx.fillRect(l.x, sy + 10, l.w, CELL - 20);
     }
+
+    for (const coin of s.coins) {
+      if (coin.row !== z) continue;
+      const cx = coin.col * CELL + CELL / 2;
+      const bob = Math.sin(s.animT * 4 + coin.col) * 4;
+      ctx.fillStyle = '#f1c40f';
+      ctx.beginPath();
+      ctx.arc(cx, sy + CELL / 2 - bob, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#d4a017';
+      ctx.font = 'bold 11px system-ui,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('★', cx, sy + CELL / 2 - bob);
+    }
+  }
+
+  if (s.eagleT > 0) {
+    const drawPx = s.px * CELL + CELL / 2;
+    ctx.fillStyle = '#5d4037';
+    ctx.font = '48px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🦅', W / 2 + (drawPx - W / 2) * 0.5, 80);
+    return;
   }
 
   const t = hopProgress(s.hopT);

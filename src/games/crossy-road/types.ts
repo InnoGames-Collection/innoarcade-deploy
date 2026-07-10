@@ -7,6 +7,8 @@ export const CELL = W / COLS;
 
 export const HOP_DUR = 0.14;
 export const IDLE_LIMIT = 14;
+export const CAMP_LIMIT = 5;
+export const EAGLE_DUR = 0.85;
 export const CAM_LERP = 4.2;
 export const SCREEN_ANCHOR_Y = 0.55;
 
@@ -40,6 +42,11 @@ export interface Log {
   speed: number;
 }
 
+export interface Coin {
+  row: number;
+  col: number;
+}
+
 export interface Row {
   z: number;
   kind: RowKind;
@@ -62,9 +69,13 @@ export interface WorldSnapshot {
   camIsoY: number;
   camBob: number;
   animT: number;
+  campT: number;
+  eagleT: number;
+  coinsCollected: number;
   rows: readonly Row[];
   cars: readonly Car[];
   logs: readonly Log[];
+  coins: readonly Coin[];
 }
 
 export function rowAt(rows: readonly Row[], z: number): Row {

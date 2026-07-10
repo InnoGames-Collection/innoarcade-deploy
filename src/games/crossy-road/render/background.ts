@@ -1,6 +1,7 @@
 // Parallax sky, mountains, and clouds — premium backdrop.
 
 import { H, W, type WorldSnapshot } from '../types';
+import type { RenderQuality } from './quality';
 
 interface Cloud {
   x: number;
@@ -16,7 +17,17 @@ const CLOUDS: Cloud[] = [
   { x: 160, y: 140, scale: 0.6, speed: 3 },
 ];
 
-export function drawBackground(ctx: CanvasRenderingContext2D, s: WorldSnapshot): void {
+const MOUNTAIN_LAYERS = [
+  { color: '#6a9a6a', y: H * 0.42, amp: 28, freq: 0.008, parallax: 0.15 },
+  { color: '#5a8a5a', y: H * 0.48, amp: 36, freq: 0.012, parallax: 0.25 },
+  { color: '#4a7a4a', y: H * 0.54, amp: 22, freq: 0.015, parallax: 0.35 },
+];
+
+export function drawBackground(
+  ctx: CanvasRenderingContext2D,
+  s: WorldSnapshot,
+  quality: RenderQuality,
+): void {
   const sky = ctx.createLinearGradient(0, 0, 0, H);
   sky.addColorStop(0, '#7ec8f0');
   sky.addColorStop(0.35, '#a8e0f8');
@@ -26,22 +37,24 @@ export function drawBackground(ctx: CanvasRenderingContext2D, s: WorldSnapshot):
   ctx.fillRect(0, 0, W, H);
 
   const parallax = s.pz * 2;
-  drawMountains(ctx, parallax);
-  drawClouds(ctx, s.animT);
+  drawMountains(ctx, parallax, quality);
+  if (quality.cloudCount > 0) drawClouds(ctx, s.animT, quality.cloudCount);
 }
 
-function drawMountains(ctx: CanvasRenderingContext2D, parallax: number): void {
-  const layers = [
-    { color: '#6a9a6a', y: H * 0.42, amp: 28, freq: 0.008, off: parallax * 0.15 },
-    { color: '#5a8a5a', y: H * 0.48, amp: 36, freq: 0.012, off: parallax * 0.25 },
-    { color: '#4a7a4a', y: H * 0.54, amp: 22, freq: 0.015, off: parallax * 0.35 },
-  ];
-  for (const layer of layers) {
+function drawMountains(
+  ctx: CanvasRenderingContext2D,
+  parallax: number,
+  quality: RenderQuality,
+): void {
+  const step = quality.mountainStep;
+  for (let i = 0; i < quality.mountainLayers; i++) {
+    const layer = MOUNTAIN_LAYERS[i];
+    if (!layer) continue;
     ctx.fillStyle = layer.color;
     ctx.beginPath();
     ctx.moveTo(0, H);
-    for (let x = 0; x <= W; x += 8) {
-      const y = layer.y + Math.sin(x * layer.freq + layer.off) * layer.amp;
+    for (let x = 0; x <= W; x += step) {
+      const y = layer.y + Math.sin(x * layer.freq + parallax * layer.parallax) * layer.amp;
       ctx.lineTo(x, y);
     }
     ctx.lineTo(W, H);
@@ -50,8 +63,10 @@ function drawMountains(ctx: CanvasRenderingContext2D, parallax: number): void {
   }
 }
 
-function drawClouds(ctx: CanvasRenderingContext2D, animT: number): void {
-  for (const c of CLOUDS) {
+function drawClouds(ctx: CanvasRenderingContext2D, animT: number, count: number): void {
+  for (let i = 0; i < count; i++) {
+    const c = CLOUDS[i];
+    if (!c) continue;
     const x = ((c.x + animT * c.speed) % (W + 120)) - 60;
     drawCloudPuff(ctx, x, c.y, 34 * c.scale);
   }

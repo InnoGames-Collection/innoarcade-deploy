@@ -120,6 +120,7 @@ export function drawVoxelVehicle(
   facingRight: boolean,
   unit: number,
   animT: number,
+  simple = false,
 ): void {
   const span = Math.max(0.85, Math.abs(gridSpan));
   const bounce = Math.sin(animT * 10 + cx * 0.05) * 1.2;
@@ -136,35 +137,43 @@ export function drawVoxelVehicle(
 
   draw3DBox(ctx, cx, footY, 2, span * 0.96, 0.54, bodyH, pal.body, unit);
 
-  if (kind === 'van') {
-    draw3DBox(ctx, cx, footY - unit * 0.02, unit * 0.48, span * 0.82, 0.5, unit * 0.14, pal.accent, unit);
-    draw3DBox(ctx, cx, footY - unit * 0.04, bodyH + 3, span * 0.22, 0.08, unit * 0.06, '#1f74e0', unit);
-    draw3DBox(ctx, cx + span * unit * 0.28, footY - unit * 0.04, bodyH + 3, span * 0.12, 0.08, unit * 0.06, '#27ae60', unit);
-  } else if (kind === 'taxi') {
-    draw3DBox(ctx, cx, footY - unit * 0.02, bodyH + 2, span * 0.5, 0.12, unit * 0.08, '#2c2c2c', unit);
-  } else if (kind === 'police') {
-    draw3DBox(ctx, cx, footY - unit * 0.04, bodyH + 4, span * 0.35, 0.1, unit * 0.08, '#3498db', unit);
-    draw3DBox(ctx, cx, footY - unit * 0.04, bodyH + 4, span * 0.12, 0.08, unit * 0.06, '#e74c3c', unit);
-  } else {
-    const winCount = kind === 'bus' ? 4 : 2;
-    for (let i = 0; i < winCount; i++) {
-      const wx = cx + (i - (winCount - 1) / 2) * span * unit * 0.22;
-      draw3DBox(ctx, wx, footY - unit * 0.04, bodyH + 3, 0.18, 0.14, unit * 0.1, pal.accent, unit);
+  if (!simple) {
+    if (kind === 'van') {
+      draw3DBox(ctx, cx, footY - unit * 0.02, unit * 0.48, span * 0.82, 0.5, unit * 0.14, pal.accent, unit);
+      draw3DBox(ctx, cx, footY - unit * 0.04, bodyH + 3, span * 0.22, 0.08, unit * 0.06, '#1f74e0', unit);
+      draw3DBox(ctx, cx + span * unit * 0.28, footY - unit * 0.04, bodyH + 3, span * 0.12, 0.08, unit * 0.06, '#27ae60', unit);
+    } else if (kind === 'taxi') {
+      draw3DBox(ctx, cx, footY - unit * 0.02, bodyH + 2, span * 0.5, 0.12, unit * 0.08, '#2c2c2c', unit);
+    } else if (kind === 'police') {
+      draw3DBox(ctx, cx, footY - unit * 0.04, bodyH + 4, span * 0.35, 0.1, unit * 0.08, '#3498db', unit);
+      draw3DBox(ctx, cx, footY - unit * 0.04, bodyH + 4, span * 0.12, 0.08, unit * 0.06, '#e74c3c', unit);
+    } else {
+      const winCount = kind === 'bus' ? 4 : 2;
+      for (let i = 0; i < winCount; i++) {
+        const wx = cx + (i - (winCount - 1) / 2) * span * unit * 0.22;
+        draw3DBox(ctx, wx, footY - unit * 0.04, bodyH + 3, 0.18, 0.14, unit * 0.1, pal.accent, unit);
+      }
     }
+    draw3DBox(ctx, cx, footY - unit * 0.02, bodyH + 1, span * 0.98, 0.08, unit * 0.06, pal.trim, unit);
   }
 
-  draw3DBox(ctx, cx, footY - unit * 0.02, bodyH + 1, span * 0.98, 0.08, unit * 0.06, pal.trim, unit);
-
-  const wheelN = kind === 'bus' ? 4 : 2;
+  const wheelN = simple ? 2 : (kind === 'bus' ? 4 : 2);
   const slots = wheelN === 4 ? [-0.32, -0.1, 0.1, 0.32] : [-0.22, 0.22];
-  const wheelRot = animT * 8;
-  for (const slot of slots) {
-    const wx = cx + slot * span * unit;
-    draw3DBox(ctx, wx, footY + unit * 0.08, 0, 0.14, 0.12, unit * 0.14, '#1a1a1a', unit);
-    ctx.fillStyle = '#555';
-    ctx.beginPath();
-    ctx.ellipse(wx + Math.cos(wheelRot) * 2, footY + unit * 0.14, 2, 1, 0, 0, Math.PI * 2);
-    ctx.fill();
+  if (!simple) {
+    const wheelRot = animT * 8;
+    for (const slot of slots) {
+      const wx = cx + slot * span * unit;
+      draw3DBox(ctx, wx, footY + unit * 0.08, 0, 0.14, 0.12, unit * 0.14, '#1a1a1a', unit);
+      ctx.fillStyle = '#555';
+      ctx.beginPath();
+      ctx.ellipse(wx + Math.cos(wheelRot) * 2, footY + unit * 0.14, 2, 1, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else {
+    for (const slot of slots) {
+      const wx = cx + slot * span * unit;
+      draw3DBox(ctx, wx, footY + unit * 0.08, 0, 0.14, 0.12, unit * 0.12, '#1a1a1a', unit);
+    }
   }
 
   ctx.restore();
@@ -193,6 +202,29 @@ export function drawVoxelLog(
     ctx.lineTo(cx + i * span * unit * 0.15, footY + unit * 0.1);
     ctx.stroke();
   }
+}
+
+export function drawVoxelCoin(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  unit: number,
+  animT: number,
+  col: number,
+): void {
+  const bob = Math.sin(animT * 4 + col * 1.3) * 4;
+  const spin = animT * 3 + col;
+  const footY = cy + unit * 0.1 + bob;
+  const thick = 0.08 + Math.abs(Math.cos(spin)) * 0.06;
+
+  draw3DBox(ctx, cx, footY, 6, 0.22, thick, unit * 0.2, '#f1c40f', unit);
+  draw3DBox(ctx, cx, footY - unit * 0.02, unit * 0.18, 0.18, thick * 0.9, unit * 0.04, '#f9e076', unit);
+
+  ctx.fillStyle = '#d4a017';
+  ctx.font = `bold ${Math.max(7, unit * 0.16)}px system-ui,sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('★', cx, footY - unit * 0.08);
 }
 
 export function drawDropShadow(

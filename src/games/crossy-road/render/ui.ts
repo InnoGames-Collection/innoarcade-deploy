@@ -1,6 +1,6 @@
 // Premium in-canvas HUD — tutorial, idle countdown, glass banners.
 
-import { H, IDLE_LIMIT, W, type WorldSnapshot } from '../types';
+import { CAMP_LIMIT, H, IDLE_LIMIT, W, type WorldSnapshot } from '../types';
 
 const ET_GREEN = '#4f9e16';
 const ET_BLUE = '#1f74e0';
@@ -108,8 +108,35 @@ function drawIdleWarning(ctx: CanvasRenderingContext2D, s: WorldSnapshot): void 
   ctx.restore();
 }
 
+function drawCampWarning(ctx: CanvasRenderingContext2D, s: WorldSnapshot): void {
+  const remaining = Math.max(0, Math.ceil(CAMP_LIMIT - s.campT));
+  const urgency = s.campT / CAMP_LIMIT;
+  const pulse = 0.75 + Math.sin(s.animT * 14) * 0.25;
+  const w = 168;
+  const h = 36;
+  const x = W / 2 - w / 2;
+  const y = 58;
+
+  ctx.save();
+  ctx.globalAlpha = 0.9 + urgency * 0.1;
+  ctx.fillStyle = `rgba(155,89,182,${0.55 + pulse * 0.35})`;
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, 18);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.fillStyle = '#fff';
+  ctx.font = '700 12px system-ui,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`🦅 Eagle incoming! ${remaining}s`, W / 2, y + h / 2);
+  ctx.restore();
+}
+
 export function drawPremiumHud(ctx: CanvasRenderingContext2D, s: WorldSnapshot): void {
   if (s.state !== 'playing') return;
   if (s.tutorialT > 0) drawTutorialBanner(ctx, s);
+  else if (s.eagleT <= 0 && s.campT > 3) drawCampWarning(ctx, s);
   else if (s.idleT > 8) drawIdleWarning(ctx, s);
 }

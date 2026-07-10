@@ -26,8 +26,8 @@ const TARGET_FILL = 0.87;
 const REFS = {
   telebirr: 'WhatsApp_Image_2026-07-10_at_4.43.38_PM-f727cd39-cb9f-4360-b864-8326c1ea158b.png',
   ethio: 'WhatsApp_Image_2026-07-10_at_4.44.00_PM-4a12e3e2-1fc6-4067-8c78-cd538d3515fc.png',
-  nexsus: 'nexsus.png',
-  teleconnect: 'teleconnect.png',
+  nexsus: 'nexsus-v3.png',
+  teleconnect: 'teleconnect-v2.png',
 };
 
 function refPath(name) {

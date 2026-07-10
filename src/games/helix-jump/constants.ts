@@ -7,13 +7,13 @@ export const CX = W / 2;
 /** World units — Y increases downward in gameplay space. */
 export const BALL_R = 0.24;
 /** Outer platform lip — reference: short wedges around a thick pillar. */
-export const RING_R = 3.05;
+export const RING_R = 2.38;
 /** Thick central pillar — ~38% of platform diameter (reference). */
 export const PILLAR_R = 1.18;
 /** Platform inner lip hugs the pillar. */
 export const RING_INNER = PILLAR_R + 0.06;
-export const RING_THICKNESS = 0.42;
-export const RING_HEIGHT = 0.34;
+export const RING_THICKNESS = 0.3;
+export const RING_HEIGHT = 0.26;
 /** Ball sits on inner rim, screen-fixed south of axis. */
 export const BALL_CONTACT_R = RING_INNER + BALL_R * 0.88;
 /** Camera-facing contact angle — ball fixed toward camera (+Z). */
@@ -78,16 +78,16 @@ export const THEME = {
 } as const;
 
 export const RING_COLORS = [
-  '#6EC6FF',
-  '#FFB74D',
-  '#CE93D8',
-  '#81C784',
-  '#F06292',
-  '#FFF176',
-  '#4DD0E1',
-  '#FF8A65',
-  '#AED581',
+  '#5BCEFA',
+  '#FF6B9D',
+  '#B388FF',
+  '#69F0AE',
+  '#FFD166',
+  '#4FC3F7',
+  '#F48FB1',
+  '#80CBC4',
   '#9575CD',
+  '#FFAB40',
 ] as const;
 
 export const SAVE_KEY = 'helix-jump.save.v2';

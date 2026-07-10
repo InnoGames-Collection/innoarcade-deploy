@@ -241,6 +241,9 @@ export interface TerrainOpts {
   row?: number;
   sidesOnly?: boolean;
   topOnly?: boolean;
+  grassBlades?: boolean;
+  roadDetails?: boolean;
+  riverDetails?: boolean;
 }
 
 export function drawTerrainCell(
@@ -255,11 +258,11 @@ export function drawTerrainCell(
   if (!opts.topOnly) drawSlabSides(ctx, corners, palette);
   if (!opts.sidesOnly) {
     drawSlabTop(ctx, corners, palette);
-    if (kind === 'grass' && opts.animT !== undefined) {
+    if (kind === 'grass' && opts.animT !== undefined && opts.grassBlades !== false) {
       drawGrassBlades(ctx, corners, col, row, opts.animT);
     }
-    if (kind === 'road') drawRoadDetails(ctx, corners, col, row);
-    if (kind === 'river' && opts.animT !== undefined) {
+    if (kind === 'road' && opts.roadDetails !== false) drawRoadDetails(ctx, corners, col, row);
+    if (kind === 'river' && opts.animT !== undefined && opts.riverDetails !== false) {
       drawRiverDetails(ctx, corners, opts.animT, col, row);
     }
   }

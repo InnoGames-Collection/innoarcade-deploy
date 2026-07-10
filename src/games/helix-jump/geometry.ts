@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 import { RING_COLORS, RING_HEIGHT, RING_INNER, RING_THICKNESS, RING_R, THEME } from './constants';
 
-const PLATFORM_OUTER = RING_R + RING_THICKNESS * 0.5;
+const PLATFORM_OUTER = RING_R + RING_THICKNESS * 0.45;
 const PLATFORM_INNER = RING_INNER;
 const GEO_CACHE = new Map<string, THREE.BufferGeometry>();
 
 function geoKey(start: number, arc: number): string {
-  return `${RING_INNER.toFixed(2)}_${start.toFixed(3)}_${arc.toFixed(3)}`;
+  return `${PLATFORM_OUTER.toFixed(2)}_${RING_HEIGHT.toFixed(2)}_${start.toFixed(3)}_${arc.toFixed(3)}`;
 }
 
 export function platformArc(gapArc: number): number {
@@ -18,7 +18,7 @@ export function createPlatformGeometry(startAngle: number, arcLength: number): T
   const cached = GEO_CACHE.get(key);
   if (cached) return cached;
 
-  const segments = Math.max(16, Math.ceil(arcLength * 8));
+  const segments = Math.max(14, Math.ceil(arcLength * 10));
   const shape = new THREE.Shape();
   const outerPts: THREE.Vector2[] = [];
   const innerPts: THREE.Vector2[] = [];
@@ -42,9 +42,9 @@ export function createPlatformGeometry(startAngle: number, arcLength: number): T
   const geo = new THREE.ExtrudeGeometry(shape, {
     depth: RING_HEIGHT,
     bevelEnabled: true,
-    bevelThickness: 0.06,
-    bevelSize: 0.05,
-    bevelSegments: 3,
+    bevelThickness: 0.035,
+    bevelSize: 0.03,
+    bevelSegments: 2,
     curveSegments: segments,
   });
   geo.rotateX(-Math.PI / 2);
@@ -67,17 +67,29 @@ export function createWedgeGeometry(arcLength: number, startAngle = 0): THREE.Bu
 }
 
 export function makePlatformMaterial(color: THREE.Color, danger = false): THREE.MeshStandardMaterial {
+  const base = color.clone();
+  if (!danger) {
+    base.offsetHSL(0, 0.04, -0.04);
+  }
   return new THREE.MeshStandardMaterial({
-    color,
-    roughness: danger ? 0.28 : 0.38,
-    metalness: danger ? 0.06 : 0.04,
-    emissive: color.clone().multiplyScalar(danger ? 0.06 : 0.04),
-    emissiveIntensity: danger ? 0.25 : 0.12,
+    color: base,
+    roughness: danger ? 0.2 : 0.24,
+    metalness: danger ? 0.14 : 0.1,
+    emissive: color.clone(),
+    emissiveIntensity: danger ? 0.2 : 0.1,
   });
 }
+
 export function ringColor(index: number, danger: boolean): THREE.Color {
   if (danger) return new THREE.Color(THEME.danger);
   return new THREE.Color(RING_COLORS[Math.abs(index) % RING_COLORS.length]);
+}
+
+/** Slightly shifted companion tone for wedge edge glow. */
+export function ringAccentColor(index: number): THREE.Color {
+  const c = ringColor(index, false).clone();
+  c.offsetHSL(0.06, 0.12, 0.14);
+  return c;
 }
 
 export function makeGradientBackground(): THREE.Texture {

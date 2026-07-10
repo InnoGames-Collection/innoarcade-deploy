@@ -3,19 +3,23 @@ import { Juice } from '../../engine/juice';
 import type { Action } from '../../engine/input';
 import { mulberry32 } from '../_lq/lq';
 import { crossyRoadAudio } from './crossyRoadAudio';
+import { resetQualityTier } from './render/quality';
 import { gridToIso, gridToScreen, lerpCamera } from './iso';
 import { renderWorld } from './render';
 import {
   CAM_LERP,
   CELL,
   COLS,
+  EAGLE_DUR,
   H,
   HOP_DUR,
   IDLE_LIMIT,
+  CAMP_LIMIT,
   PREMIUM_RENDER,
   SCREEN_ANCHOR_Y,
   W,
   type Car,
+  type Coin,
   type GameState,
   type Log,
   type Row,
@@ -29,12 +33,15 @@ const VEHICLE_KINDS: VehicleKind[] = [
   'sedan', 'suv', 'taxi', 'bus', 'police', 'van', 'minibus',
 ];
 
+const COIN_SPAWN_CHANCE = 0.38;
+
 export type { GameState } from './types';
 export { W, H, COLS, CELL, PREMIUM_RENDER } from './types';
 
 export class CrossyRoad {
   state: GameState = 'menu';
   score = 0;
+  coins = 0;
   best = 0;
 
   onStateChange: (s: GameState) => void = () => {};
@@ -50,17 +57,22 @@ export class CrossyRoad {
   private rows: Row[] = [];
   private cars: Car[] = [];
   private logs: Log[] = [];
+  private coinItems: Coin[] = [];
   private rnd = mulberry32(42);
   private hopT = 0;
   private fromPx = 0;
   private fromPz = 0;
   private idleT = 0;
+  private campT = 0;
+  private eagleT = 0;
+  private lastHopDz = 0;
   private tutorialT = 6;
   private animT = 0;
   private juice = new Juice();
 
   start(): void {
     this.score = 0;
+    this.coins = 0;
     this.px = Math.floor(COLS / 2);
     this.pz = 0;
     this.maxZ = 0;
@@ -72,12 +84,17 @@ export class CrossyRoad {
     this.rows = [];
     this.cars = [];
     this.logs = [];
+    this.coinItems = [];
     this.rnd = mulberry32((Math.random() * 1e9) | 0);
     this.hopT = 0;
     this.idleT = 0;
+    this.campT = 0;
+    this.eagleT = 0;
+    this.lastHopDz = 0;
     this.tutorialT = 6;
     this.animT = 0;
     this.juice = new Juice();
+    resetQualityTier();
     for (let z = -4; z <= 12; z++) this.ensureRow(z);
     this.setState('playing');
   }
@@ -91,7 +108,7 @@ export class CrossyRoad {
   }
 
   handleAction(a: Action): void {
-    if (this.state !== 'playing' || this.hopT > 0) return;
+    if (this.state !== 'playing' || this.hopT > 0 || this.eagleT > 0) return;
     if (a === 'up') this.hop(0, 1);
     else if (a === 'down') this.hop(0, -1);
     else if (a === 'left') this.hop(-1, 0);
@@ -108,6 +125,8 @@ export class CrossyRoad {
     this.pz += dz;
     this.hopT = HOP_DUR;
     this.idleT = 0;
+    this.lastHopDz = dz;
+    if (dz > 0 || (dz === 0 && dx !== 0)) this.campT = 0;
     crossyRoadAudio.hop();
     if (this.pz > this.maxZ) {
       this.maxZ = this.pz;
@@ -147,6 +166,11 @@ export class CrossyRoad {
         speed: speed * dir * 0.85,
       });
     }
+    if (kind === 'grass' && z > 0 && this.rnd() < COIN_SPAWN_CHANCE) {
+      const col = Math.floor(this.rnd() * COLS);
+      const taken = this.coinItems.some((c) => c.row === z && c.col === col);
+      if (!taken) this.coinItems.push({ row: z, col });
+    }
   }
 
   private rowAt(z: number): Row {
@@ -158,11 +182,25 @@ export class CrossyRoad {
     this.animT += dt;
     this.juice.update(dt);
 
+    if (this.eagleT > 0) {
+      this.eagleT = Math.max(0, this.eagleT - dt);
+      if (this.eagleT === 0) {
+        this.die();
+        return;
+      }
+    }
+
     if (this.hopT > 0) {
       this.hopT = Math.max(0, this.hopT - dt);
       if (this.hopT === 0) this.checkLanding();
-    } else {
+    } else if (this.eagleT <= 0) {
       this.idleT += dt;
+      if (this.lastHopDz <= 0) {
+        this.campT += dt;
+        if (this.campT >= CAMP_LIMIT) {
+          this.eagleT = EAGLE_DUR;
+        }
+      }
       if (this.idleT > IDLE_LIMIT) this.die();
     }
 
@@ -180,7 +218,7 @@ export class CrossyRoad {
     }
 
     const row = this.rowAt(this.pz);
-    if (row.kind === 'river' && this.hopT === 0) {
+    if (this.eagleT <= 0 && row.kind === 'river' && this.hopT === 0) {
       const log = this.logs.find(
         (l) => l.row === this.pz
           && this.px * CELL + CELL / 2 >= l.x
@@ -195,13 +233,14 @@ export class CrossyRoad {
       }
     }
 
-    if (row.kind === 'road') this.checkCarHit();
+    if (this.eagleT <= 0 && row.kind === 'road') this.checkCarHit();
 
     this.updateCamera(dt);
 
     this.rows = this.rows.filter((r) => r.z > this.pz - 8);
     this.cars = this.cars.filter((c) => c.row > this.pz - 8);
     this.logs = this.logs.filter((l) => l.row > this.pz - 8);
+    this.coinItems = this.coinItems.filter((c) => c.row > this.pz - 8);
   }
 
   private updateCamera(dt: number): void {
@@ -231,6 +270,33 @@ export class CrossyRoad {
       if (!onLog) this.die();
     }
     this.spawnLandingParticles(row.kind);
+    this.tryCollectCoin();
+  }
+
+  private tryCollectCoin(): void {
+    const idx = this.coinItems.findIndex((c) => c.row === this.pz && c.col === this.px);
+    if (idx < 0) return;
+    this.coinItems.splice(idx, 1);
+    this.coins += 1;
+    crossyRoadAudio.coin();
+
+    let sx: number;
+    let sy: number;
+    if (PREMIUM_RENDER) {
+      const p = gridToScreen(
+        this.px + 0.5,
+        this.pz + 0.5,
+        { x: this.camIsoX, y: this.camIsoY },
+        { x: W / 2, y: H * SCREEN_ANCHOR_Y },
+        this.camBob,
+      );
+      sx = p.x;
+      sy = p.y;
+    } else {
+      sx = this.px * CELL + CELL / 2;
+      sy = H - (this.pz * CELL - this.camZ) - CELL / 2;
+    }
+    this.juice.burst(sx, sy, '#f1c40f', 12, 130, 4);
   }
 
   private spawnLandingParticles(kind: Row['kind']): void {
@@ -293,9 +359,13 @@ export class CrossyRoad {
       camIsoY: this.camIsoY,
       camBob: this.camBob,
       animT: this.animT,
+      campT: this.campT,
+      eagleT: this.eagleT,
+      coinsCollected: this.coins,
       rows: this.rows,
       cars: this.cars,
       logs: this.logs,
+      coins: this.coinItems,
     };
   }
 

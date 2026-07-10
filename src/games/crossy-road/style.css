@@ -84,6 +84,19 @@ body[data-game="crossy-road"] .fp-stat-score.cr-score-bump .fp-stat-value {
   color: var(--cr-blue);
 }
 
+body[data-game="crossy-road"] .fp-stat-coins .fp-stat-label {
+  color: #d4a017;
+}
+
+body[data-game="crossy-road"] .fp-stat-coins .fp-stat-value {
+  color: #f1c40f;
+}
+
+body[data-game="crossy-road"] .fp-stat-coins.cr-coin-bump .fp-stat-value {
+  transform: scale(1.18);
+  color: #e67e22;
+}
+
 body[data-game="crossy-road"] .arc-hud-actions button {
   background: var(--cr-glass);
   border-color: rgba(31, 116, 224, 0.2);

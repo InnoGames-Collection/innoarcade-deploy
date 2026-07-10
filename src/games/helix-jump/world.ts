@@ -12,7 +12,7 @@ import {
 import { approachZone, ballAngle, breakAnimScale } from './physics';
 import {
   createPlatformGeometry, makeGradientBackground, makePlatformMaterial,
-  platformArc, ringColor,
+  platformArc, ringAccentColor, ringColor,
 } from './geometry';
 import { ringWorldY } from './towerGenerator';
 import type { BallState, Ring } from './types';
@@ -305,9 +305,13 @@ export class HelixWorld {
       }
 
       const safeCol = ringColor(ring.colorIndex, false);
+      const accentCol = ringAccentColor(ring.colorIndex);
+      const phase = ring.id * 0.62;
+      const breathe = 0.09 + Math.sin(time * 2.6 + phase) * 0.045;
+
       rv.safeMat.color.copy(safeCol);
-      rv.safeMat.emissive.copy(safeCol).multiplyScalar(0.06);
-      rv.safeMat.emissiveIntensity = 0.12;
+      rv.safeMat.emissive.copy(accentCol);
+      rv.safeMat.emissiveIntensity = 0.11 + breathe;
 
       if (ring.dangerArc > 0) {
         const dKey = `${ring.dangerStart.toFixed(3)}_${ring.dangerArc.toFixed(3)}`;
@@ -315,10 +319,10 @@ export class HelixWorld {
           rv.dangerKey = dKey;
           rv.dangerMesh.geometry = createPlatformGeometry(ring.dangerStart, ring.dangerArc);
         }
-        const dangerCol = ringColor(-1, true);
-        rv.dangerMat.color.copy(dangerCol);
-        rv.dangerMat.emissive.set(THEME.dangerDark);
-        rv.dangerMat.emissiveIntensity = 0.35;
+        const dangerPulse = 0.26 + Math.sin(time * 5.5 + phase * 1.3) * 0.14;
+        rv.dangerMat.color.set(THEME.danger);
+        rv.dangerMat.emissive.set(THEME.danger);
+        rv.dangerMat.emissiveIntensity = dangerPulse;
         rv.dangerMesh.visible = true;
       } else {
         rv.dangerKey = '';
@@ -327,27 +331,36 @@ export class HelixWorld {
 
       const isApproach = ring.id === approachId;
       const zone = isApproach ? approachZone(ring, towerAngle) : 'none';
-      if (isApproach && zone === 'gap') {
-        rv.safeMat.emissive.set(THEME.accent);
-        rv.safeMat.emissiveIntensity = 0.16;
-      } else if (isApproach && zone === 'danger') {
-        rv.dangerMat.emissive.set(THEME.danger);
-        rv.dangerMat.emissiveIntensity = 0.28;
-      } else if (isApproach && zone === 'safe') {
-        rv.safeMat.emissiveIntensity = 0.14;
+      let scaleXZ = 1;
+      let yBob = 0;
+
+      if (isApproach) {
+        const alert = 0.5 + 0.5 * Math.sin(time * 9.5);
+        scaleXZ = 1 + alert * 0.035;
+        yBob = Math.sin(time * 7.5 + phase) * 0.025;
+        if (zone === 'gap') {
+          rv.safeMat.emissive.set(THEME.accent);
+          rv.safeMat.emissiveIntensity = 0.22 + alert * 0.18;
+        } else if (zone === 'danger') {
+          rv.dangerMat.emissive.set(THEME.danger);
+          rv.dangerMat.emissiveIntensity = 0.42 + alert * 0.22;
+        } else if (zone === 'safe') {
+          rv.safeMat.emissive.copy(accentCol);
+          rv.safeMat.emissiveIntensity = 0.16 + alert * 0.1;
+        }
       }
 
-      rv.group.position.y = ballY - ringWorldY(ring, time);
+      rv.group.position.y = ballY - ringWorldY(ring, time) + yBob;
       if (ring.broken) {
         const scale = breakAnimScale(ring.breakAnim);
-        rv.group.scale.setScalar(scale);
+        rv.group.scale.set(scale * scaleXZ, scale, scale * scaleXZ);
         const fade = 1 - ring.breakAnim * 0.85;
         rv.safeMat.opacity = fade;
         rv.safeMat.transparent = true;
         rv.dangerMat.opacity = fade;
         rv.dangerMat.transparent = true;
       } else {
-        rv.group.scale.setScalar(1);
+        rv.group.scale.set(scaleXZ, 1, scaleXZ);
         rv.safeMat.opacity = 1;
         rv.safeMat.transparent = false;
         rv.dangerMat.opacity = 1;

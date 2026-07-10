@@ -7,6 +7,7 @@ import { standardStateOverlay, wireFreeEngineMain, wireMutePause } from '../../p
 import './style.css';
 import { applyTranslations, getLang } from '../../i18n';
 import { crossyRoadAudio } from './crossyRoadAudio';
+import { getMaxDpr, reportFrameTime } from './render/quality';
 import { GameLoop } from '../../engine/loop';
 import { Input } from '../../engine/input';
 import { sfx } from '../../engine/audio';
@@ -25,11 +26,15 @@ const canvas = $('#game') as unknown as HTMLCanvasElement;
 const ctx = canvas.getContext('2d')!;
 
 function currentDpr(): number {
-  return Math.min(window.devicePixelRatio || 1, 2);
+  return Math.min(window.devicePixelRatio || 1, getMaxDpr());
 }
+
+let appliedDpr = currentDpr();
 
 function applyCanvasBackingStore(): void {
   const dpr = currentDpr();
+  if (dpr === appliedDpr && canvas.width === Math.round(W * dpr)) return;
+  appliedDpr = dpr;
   canvas.width = Math.round(W * dpr);
   canvas.height = Math.round(H * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -68,8 +73,11 @@ if (typeof ResizeObserver !== 'undefined') {
 const game = new CrossyRoad();
 const run = trackArcadeRunStart(GAME_ID);
 const scoreVal = $('#scoreVal');
+const coinVal = $('#coinVal');
 const scoreStat = scoreVal.closest('.fp-stat-score') as HTMLElement | null;
+const coinStat = coinVal.closest('.fp-stat-coins') as HTMLElement | null;
 let lastScore = 0;
+let lastCoins = 0;
 
 function bumpScoreHud(): void {
   if (!scoreStat) return;
@@ -77,6 +85,14 @@ function bumpScoreHud(): void {
   void scoreStat.offsetWidth;
   scoreStat.classList.add('cr-score-bump');
   window.setTimeout(() => scoreStat.classList.remove('cr-score-bump'), 320);
+}
+
+function bumpCoinHud(): void {
+  if (!coinStat) return;
+  coinStat.classList.remove('cr-coin-bump');
+  void coinStat.offsetWidth;
+  coinStat.classList.add('cr-coin-bump');
+  window.setTimeout(() => coinStat.classList.remove('cr-coin-bump'), 320);
 }
 
 function syncAudio(state: GameState): void {
@@ -112,10 +128,13 @@ game.onStateChange = (state) => {
   if (state === 'playing') {
     requestAnimationFrame(fitCanvas);
     lastScore = game.score;
+    lastCoins = game.coins;
   }
 };
 game.onGameOver = (score, record) => {
   if (record) crossyRoadAudio.newBest();
+  const finalCoins = document.getElementById('finalCoins');
+  if (finalCoins) finalCoins.textContent = String(game.coins);
   submitArcadeScore(score, run.getRunStart(), shell, { budgetSec: 90, gameId: GAME_ID, winScore: host.winScore });
 };
 
@@ -133,14 +152,23 @@ wireMutePause($('#muteBtn'), $('#pauseBtn'), game, sfx);
 document.addEventListener('visibilitychange', () => { if (document.hidden) game.pause(); });
 
 const loop = new GameLoop(
-  (dt) => game.update(dt),
+  (dt) => {
+    if (game.state === 'playing') reportFrameTime(dt);
+    game.update(dt);
+  },
   () => {
+    applyCanvasBackingStore();
     game.render(ctx);
     const scaled = scaleArcadeScore(game.score);
     scoreVal.textContent = String(scaled);
+    coinVal.textContent = String(game.coins);
     if (game.state === 'playing' && game.score > lastScore) {
       bumpScoreHud();
       lastScore = game.score;
+    }
+    if (game.state === 'playing' && game.coins > lastCoins) {
+      bumpCoinHud();
+      lastCoins = game.coins;
     }
   },
 );
