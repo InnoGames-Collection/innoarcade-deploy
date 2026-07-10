@@ -29,6 +29,8 @@ ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 const game = new CrossyRoad();
 const run = trackArcadeRunStart(GAME_ID);
 const scoreVal = $('#scoreVal');
+const coinVal = $('#coinVal');
+const finalCoins = $('#finalCoins');
 
 const shell = wireFreeEngineMain({
   host,
@@ -51,7 +53,11 @@ const shell = wireFreeEngineMain({
 
 const syncChrome = bindHubCanvasChrome({ playWrapper, backdrop: $('#fcBackdrop'), shell, gameId: GAME_ID, skipFirstRun: true });
 
-game.onStateChange = (state) => { run.onStateChange(state); syncChrome(state); };
+game.onStateChange = (state) => {
+  run.onStateChange(state);
+  syncChrome(state);
+  if (state === 'over') finalCoins.textContent = String(game.coins);
+};
 game.onGameOver = (score) => { submitArcadeScore(score, run.getRunStart(), shell, { budgetSec: 90, gameId: GAME_ID, winScore: host.winScore }); };
 
 const input = new Input(canvas);
@@ -69,7 +75,11 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) game.
 
 const loop = new GameLoop(
   (dt) => game.update(dt),
-  () => { game.render(ctx); scoreVal.textContent = String(scaleArcadeScore(game.score)); },
+  () => {
+    game.render(ctx);
+    scoreVal.textContent = String(scaleArcadeScore(game.score));
+    coinVal.textContent = String(game.coins);
+  },
 );
 
 document.documentElement.lang = getLang();
