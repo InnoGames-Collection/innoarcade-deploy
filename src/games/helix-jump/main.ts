@@ -155,7 +155,7 @@ window.addEventListener('resize', () => {
 });
 
 const scoreEl = $('#scoreVal');
-const scorePill = document.querySelector('.hx-score-pill');
+const scoreStat = document.querySelector('.fp-stat-score');
 const hudEl = $('#hud');
 let lastScore = 0;
 const loop = new GameLoop(
@@ -170,7 +170,7 @@ const loop = new GameLoop(
       void scoreEl.offsetWidth;
       scoreEl.classList.add('hx-score-pop');
     }
-    scorePill?.classList.toggle('hx-fever', game.feverLeft > 0);
+    scoreStat?.classList.toggle('hx-fever', game.feverLeft > 0);
     hudEl?.classList.toggle('hx-fever', game.feverLeft > 0);
   },
 );

@@ -76,6 +76,54 @@
   min-height: 44px;
 }
 
+.arcade-shell[data-game='helix-jump'] .hx-fp-stats {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.arcade-shell[data-game='helix-jump'] .hx-fp-stats .fp-stat {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: none;
+}
+
+.arcade-shell[data-game='helix-jump'] .hx-fp-stats .fp-stat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #5a5a72;
+}
+
+.arcade-shell[data-game='helix-jump'] .hx-fp-stats .fp-stat-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #2d6cdf;
+  text-shadow: none;
+}
+
+.arcade-shell[data-game='helix-jump'] .hx-fp-stats .fp-stat-icon {
+  color: #2d6cdf;
+  width: 16px;
+  height: 16px;
+}
+
+.arcade-shell[data-game='helix-jump'] .hx-fp-stats .fp-stat-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.arcade-shell[data-game='helix-jump'] .fp-stat-score.hx-fever .fp-stat-value,
+.arcade-shell[data-game='helix-jump'] .fp-stat-score.hx-fever .fp-stat-icon {
+  color: #e6a800;
+}
+
 .arcade-shell[data-game='helix-jump'] .hx-hud-bar .arc-hud-actions {
   background: transparent;
   border-radius: 0;
@@ -236,7 +284,8 @@
   }
 }
 
-.arcade-shell[data-game='helix-jump'] #scoreVal.hx-score-pop {
+.arcade-shell[data-game='helix-jump'] #scoreVal.hx-score-pop,
+.arcade-shell[data-game='helix-jump'] .fp-stat-value.hx-score-pop {
   animation: hx-score-pop 0.45s cubic-bezier(0.34, 1.45, 0.64, 1);
 }
 

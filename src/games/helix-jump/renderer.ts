@@ -11,6 +11,7 @@ export interface HudState {
   multiplier: number;
   depth: number;
   feverThreshold: number;
+  scorePop: { amount: number; ttl: number };
 }
 
 export function drawHud(ctx: CanvasRenderingContext2D, hud: HudState): void {
@@ -20,17 +21,24 @@ export function drawHud(ctx: CanvasRenderingContext2D, hud: HudState): void {
   const fever = hud.feverLeft > 0;
   const comboActive = hud.combo > 1;
 
-  // Depth / level pill (glass card, bottom-left)
-  drawGlassCard(ctx, 14, H - 58, 88, 44);
   ctx.textAlign = 'left';
-  ctx.font = '600 10px system-ui, -apple-system, sans-serif';
-  ctx.fillStyle = 'rgba(60,60,80,0.65)';
-  ctx.fillText('DEPTH', 24, H - 40);
-  ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
-  ctx.fillStyle = THEME.accent;
-  ctx.fillText(String(hud.depth), 24, H - 22);
+  ctx.font = '600 11px system-ui, -apple-system, sans-serif';
+  ctx.fillStyle = 'rgba(40,40,60,0.5)';
+  ctx.fillText(`Level ${hud.depth}`, 16, H - 16);
 
-  // Fever progress ring (top center)
+  if (hud.scorePop.ttl > 0 && hud.scorePop.amount > 0) {
+    const t = hud.scorePop.ttl / 0.85;
+    const y = 108 + (1 - t) * 18;
+    const alpha = Math.min(1, t * 1.4);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
+    ctx.fillStyle = fever ? THEME.fever : THEME.accent;
+    ctx.fillText(`+${hud.scorePop.amount}`, CX, y);
+    ctx.restore();
+  }
+
   if (comboActive || fever) {
     const cx = CX;
     const cy = 36;
@@ -59,7 +67,6 @@ export function drawHud(ctx: CanvasRenderingContext2D, hud: HudState): void {
     ctx.fillText(fever ? 'FEVER' : `×${hud.combo}`, cx, cy + 5);
   }
 
-  // Combo / fever label
   if (comboActive) {
     ctx.textAlign = 'center';
     ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
@@ -80,30 +87,10 @@ export function drawHud(ctx: CanvasRenderingContext2D, hud: HudState): void {
     ctx.shadowBlur = 0;
   }
 
-  // Hint
   ctx.textAlign = 'center';
   ctx.font = '600 12px system-ui, -apple-system, sans-serif';
   ctx.fillStyle = 'rgba(40,40,60,0.45)';
   ctx.fillText('Drag to rotate', CX, H - 14);
-}
-
-function drawGlassCard(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-): void {
-  const r = 14;
-  ctx.save();
-  ctx.beginPath();
-  ctx.roundRect(x, y, w, h, r);
-  ctx.fillStyle = 'rgba(255,255,255,0.72)';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.restore();
 }
 
 export function drawFlash(
@@ -119,7 +106,6 @@ export function drawFlash(
   ctx.restore();
 }
 
-/** Lerp displayed score toward target for smooth counter animation. */
 export function tickDisplayScore(current: number, target: number, dt: number): number {
   if (current === target) return target;
   const step = Math.max(1, Math.ceil(Math.abs(target - current) * easeOutCubic(Math.min(1, dt * 8))));
