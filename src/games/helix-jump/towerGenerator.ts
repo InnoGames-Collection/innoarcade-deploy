@@ -18,12 +18,12 @@ const MOVE_FREQ = 1.8;
 const SOLID_UNDER_MARGIN = 0.4;
 
 export function towerConfigForDepth(passed: number): TowerConfig {
-  const t = Math.min(1, passed / 140);
+  const t = Math.min(1, passed / 95);
   return {
     depth: passed,
-    gapArc: Math.max(MIN_GAP, GAP_ARC - t * 0.2),
-    spacing: Math.max(2.0, RING_SPACING_BASE - t * 0.28),
-    dangerChance: passed < 3 ? 0.42 : 0.38 + t * 0.22,
+    gapArc: Math.max(MIN_GAP, GAP_ARC - t * 0.26),
+    spacing: Math.max(1.88, RING_SPACING_BASE - t * 0.34),
+    dangerChance: passed < 2 ? 0.38 : 0.34 + t * 0.28,
   };
 }
 
@@ -134,13 +134,13 @@ export function createRing(
 
   let moveAmp = 0;
   let movePhase = 0;
-  if (depth > 40 && rnd() < 0.12) {
-    moveAmp = 0.1 + rnd() * 0.18;
+  if (depth > 8 && rnd() < 0.08 + depth * 0.004) {
+    moveAmp = 0.08 + rnd() * 0.16;
     movePhase = rnd() * TAU;
   }
 
   let spinVel = 0;
-  if (depth > 60 && rnd() < 0.08) {
+  if (depth > 18 && rnd() < 0.06 + depth * 0.003) {
     spinVel = (rnd() < 0.5 ? -1 : 1) * (0.3 + rnd() * 0.45);
   }
 

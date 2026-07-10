@@ -7,7 +7,7 @@ import {
   H, PILLAR_HEIGHT, PILLAR_R, THEME, W,
 } from './constants';
 import {
-  BallTrail, BokehField, LandingSplats, ParticleSystem, SmashShards, SpeedLines,
+  LandingSplats, ParticleSystem, SmashShards,
 } from './effects';
 import { ballRingAngle } from './coords';
 import { approachZone, breakAnimScale } from './physics';
@@ -39,16 +39,12 @@ export class HelixWorld {
   readonly cameraCtrl: CameraController;
   readonly particles: ParticleSystem;
   readonly shards: SmashShards;
-  readonly trail: BallTrail;
   readonly splats: LandingSplats;
-  readonly speedLines: SpeedLines;
-  readonly bokeh: BokehField;
 
   private readonly helix = new THREE.Group();
   private readonly tower = new THREE.Group();
   private readonly ballRig = new THREE.Group();
   private readonly ball: THREE.Mesh;
-  private readonly ballHalo: THREE.Mesh;
   private readonly ballMat: THREE.MeshStandardMaterial;
   private readonly ballGlow: THREE.PointLight;
   private readonly ballShadow: THREE.Mesh;
@@ -176,30 +172,12 @@ export class HelixWorld {
     this.ball.position.set(0, 0, 0);
     this.ballRig.add(this.ball);
 
-    this.ballHalo = new THREE.Mesh(
-      new THREE.SphereGeometry(BALL_R * 1.38, 20, 20),
-      new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        transparent: true,
-        opacity: 0.14,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-      }),
-    );
-    this.ballHalo.renderOrder = 28;
-    this.ballHalo.position.set(0, 0, -0.02);
-    this.ballRig.add(this.ballHalo);
-
-    this.ballGlow = new THREE.PointLight(0xb24bf3, 0.85, 6);
-    this.ballGlow.position.z = 0.2;
+    this.ballGlow = new THREE.PointLight(0xb24bf3, 0.65, 5);
+    this.ballGlow.position.z = 0.15;
     this.ball.add(this.ballGlow);
 
-    this.bokeh = new BokehField(this.scene);
     this.particles = new ParticleSystem(this.scene);
     this.shards = new SmashShards(this.scene);
-    this.trail = new BallTrail();
-    this.ballRig.add(this.trail.group);
-    this.speedLines = new SpeedLines(this.ballRig);
     this.splats = new LandingSplats();
 
     const flashGeo = new THREE.PlaneGeometry(40, 60);
@@ -375,7 +353,6 @@ export class HelixWorld {
     (this.ballShadow.material as THREE.MeshBasicMaterial).opacity =
       0.18 + Math.min(0.1, Math.abs(ball.vy) * 0.004);
     this.ball.position.set(0, 0, 0);
-    this.ballHalo.position.set(0, 0, -0.02);
 
     let sx = 1;
     let sy = 1;
@@ -393,7 +370,6 @@ export class HelixWorld {
       sx = 1 - st * 0.22;
     }
     this.ball.scale.set(sx, sy, sx);
-    this.ballHalo.scale.set(sx * 1.05, sy * 1.05, sx * 1.05);
     this.ball.rotation.x = ball.rollAngle * 0.35;
     this.ball.rotation.z = ball.vy > 0 ? ball.rollAngle * 0.12 : -ball.rollAngle * 0.2;
 
@@ -404,24 +380,16 @@ export class HelixWorld {
       this.ballMat.emissive.set(THEME.fever);
       this.ballMat.emissiveIntensity = 0.55 + Math.sin(performance.now() * 0.014) * 0.15;
       this.ballGlow.color.set(THEME.fever);
-      this.ballGlow.intensity = 1.8;
-      (this.ballHalo.material as THREE.MeshBasicMaterial).color.set(THEME.fever);
-      (this.ballHalo.material as THREE.MeshBasicMaterial).opacity = 0.22 + this.feverLight * 0.12;
+      this.ballGlow.intensity = 1.4;
       if (this.bloomPass) this.bloomPass.strength = 0.48;
     } else {
       this.feverLight = Math.max(0, this.feverLight - dt * 4);
       this.ballMat.emissive.copy(col).multiplyScalar(0.22);
-      this.ballMat.emissiveIntensity = 0.2 + Math.min(0.15, combo * 0.02);
+      this.ballMat.emissiveIntensity = 0.2 + Math.min(0.12, combo * 0.02);
       this.ballGlow.color.copy(col);
-      this.ballGlow.intensity = 0.75 + Math.min(0.35, Math.abs(ball.vy) * 0.025);
-      (this.ballHalo.material as THREE.MeshBasicMaterial).color.copy(col);
-      const fallGlow = ball.vy > 3 ? Math.min(0.2, (ball.vy - 3) * 0.018) : 0;
-      (this.ballHalo.material as THREE.MeshBasicMaterial).opacity = 0.1 + fallGlow;
-      if (this.bloomPass) this.bloomPass.strength = 0.3 + Math.min(0.08, Math.abs(ball.vy) * 0.003);
+      this.ballGlow.intensity = 0.55 + Math.min(0.25, Math.abs(ball.vy) * 0.02);
+      if (this.bloomPass) this.bloomPass.strength = 0.3 + Math.min(0.06, Math.abs(ball.vy) * 0.003);
     }
-
-    this.trail.push(ball.vy, skin.color, combo, fever);
-    this.speedLines.setIntensity(combo, fever, ball.vy);
   }
 
   addLandingSplat(ringId: number, color: string, towerAngle: number): void {
@@ -453,10 +421,7 @@ export class HelixWorld {
     this.particles.beginFrame();
     this.particles.update(dt);
     this.shards.update(dt);
-    this.trail.update(dt);
-    this.speedLines.update(dt);
     this.splats.update(dt);
-    this.bokeh.update(dt);
 
     if (this.flashMesh && this.flashOpacity > 0) {
       this.flashOpacity = Math.max(0, this.flashOpacity - dt * 2.8);
@@ -473,8 +438,6 @@ export class HelixWorld {
   clear(): void {
     this.particles.clear();
     this.shards.clear();
-    this.trail.clear();
-    this.speedLines.clear();
     this.splats.clear();
     for (const rv of this.ringPool) {
       this.tower.remove(rv.group);

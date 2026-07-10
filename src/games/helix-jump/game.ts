@@ -27,6 +27,7 @@ import {
 import { clearGeometryCache } from './geometry';
 import { drawFlash, drawHud, tickDisplayScore } from './renderer';
 import { RotationController } from './rotation';
+import { depthMilestonePoints, gapPassPoints, gravityScaleForDepth, simSpeedForDepth, smashPoints } from './scoring';
 import { BALL_SKINS, getBallSkin, type BallSkin } from './skins';
 import { loadSave, recordPlay, vibrate } from './saveData';
 import { createRing, resetRingIds, ringWorldY, towerConfigForDepth } from './towerGenerator';
@@ -45,6 +46,7 @@ export class HelixJump {
   combo = 0;
   feverLeft = 0;
   depth = 0;
+  scorePop = { amount: 0, ttl: 0 };
 
   onStateChange: (s: GameState) => void = () => {};
   onGameOver: (score: number, record: boolean) => void = () => {};
@@ -57,7 +59,6 @@ export class HelixJump {
   private rings: Ring[] = [];
   private rnd = mulberry32(7);
   private cleared = new Set<number>();
-  private bonusScore = 0;
   private fallMul = 1;
   private skin: BallSkin = getBallSkin(loadSave());
   private cfg = towerConfigForDepth(0);
@@ -84,8 +85,8 @@ export class HelixJump {
     const skinIdx = BALL_SKINS.findIndex((s) => s.id === save.selectedSkin);
     this.score = 0;
     this.displayScore = 0;
-    this.bonusScore = 0;
     this.depth = 0;
+    this.scorePop = { amount: 0, ttl: 0 };
     this.combo = 0;
     this.feverLeft = 0;
     this.fallMul = 1;
@@ -170,11 +171,12 @@ export class HelixJump {
   update(dt: number): void {
     if (this.state !== 'playing') return;
 
-    const capped = Math.min(dt, 1 / 45) * SIM_SPEED;
+    const speedMul = simSpeedForDepth(this.depth);
+    const capped = Math.min(dt, 1 / 45) * SIM_SPEED * speedMul;
     this.time += capped;
     this.rotation.update(capped);
 
-    const gravity = gravityForDepth(this.depth, this.fallMul);
+    const gravity = gravityForDepth(this.depth, this.fallMul) * gravityScaleForDepth(this.depth);
     const steps = substepCount(this.ball.vy, capped);
     let prevY = this.ball.y;
 
@@ -209,6 +211,10 @@ export class HelixJump {
 
     this.displayScore = tickDisplayScore(this.displayScore, this.score, capped);
 
+    if (this.scorePop.ttl > 0) {
+      this.scorePop.ttl = Math.max(0, this.scorePop.ttl - capped);
+    }
+
     if (this.flashAlpha > 0) {
       this.flashAlpha = Math.max(0, this.flashAlpha - capped * 2.5);
     }
@@ -236,6 +242,7 @@ export class HelixJump {
         multiplier: mult,
         depth: this.depth,
         feverThreshold: FEVER_THRESHOLD,
+        scorePop: this.scorePop,
       });
       drawFlash(this.hudCtx, this.flashColor, this.flashAlpha);
     }
@@ -269,8 +276,7 @@ export class HelixJump {
         this.cleared.add(hit.ring.id);
         this.combo++;
         const mult = Math.min(COMBO_CAP, this.combo);
-        this.bonusScore += mult;
-        this.score = this.depth + this.bonusScore;
+        this.addScore(gapPassPoints(this.depth, this.combo, hit.perfect));
         applyFallBoost(this.ball, this.combo);
         this.fallMul = Math.min(1.35, this.fallMul + 0.022 + mult * 0.01);
         this.camera.addShake(0.015 + mult * 0.004);
@@ -278,7 +284,6 @@ export class HelixJump {
         helixAudio.gapPass(this.combo);
         if (hit.perfect) {
           this.world.particles.burst(px, ry, pz, THEME.fever, 8, 4);
-          this.bonusScore += 1;
         }
         if (this.combo >= FEVER_THRESHOLD && this.feverLeft <= 0) {
           this.feverLeft = FEVER_DURATION;
@@ -351,8 +356,7 @@ export class HelixJump {
     if (ring.broken) return;
     ring.broken = true;
     ring.breakAnim = 0.01;
-    this.bonusScore += feverHit ? 2 : 1;
-    this.score = this.depth + this.bonusScore;
+    this.addScore(smashPoints(mult, feverHit));
 
     const color = RING_COLORS[ring.colorIndex] ?? this.skin.color;
     const shardCount = feverHit ? 16 : 10 + mult * 2;
@@ -370,7 +374,7 @@ export class HelixJump {
     while (this.rings.length && this.rings[0].y < this.ball.y - 4) {
       this.rings.shift();
       this.depth++;
-      this.score = this.depth + this.bonusScore;
+      this.addScore(depthMilestonePoints(this.depth));
       this.cfg = towerConfigForDepth(this.depth);
       const last = this.rings[this.rings.length - 1];
       this.spawnRing(last.y + this.cfg.spacing);
@@ -380,6 +384,12 @@ export class HelixJump {
   private spawnRing(y: number): void {
     const prev = this.rings[this.rings.length - 1];
     this.rings.push(createRing(y, this.rnd, this.cfg, prev));
+  }
+
+  private addScore(amount: number): void {
+    if (amount <= 0) return;
+    this.score += amount;
+    this.scorePop = { amount, ttl: 0.85 };
   }
 
   private die(hitRing: Ring | undefined, contactAngle: number): void {
