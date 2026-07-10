@@ -1,12 +1,15 @@
-// Fruit Slice — swipe-to-slice arcade with trail detection, fruit physics, bombs, and combos.
-// Enterprise-grade with particle effects, screen shake, and progressive difficulty.
+// ═══════════════════════════════════════════════════════════════
+//  GAME ENGINE — Fruit Slice  [FROZEN — do not modify gameplay]
+//  Logic only: physics, collisions, scoring, spawning, state.
+//  All canvas drawing is delegated to ./rendering/
+// ═══════════════════════════════════════════════════════════════
 
 import { sfx } from '../../engine/audio';
 import type { Action } from '../../engine/input';
 import {
   SceneRenderer, createJuiceBurst, createBombBurst, updateParticles,
   type VfxParticle,
-} from './renderer/scene';
+} from './rendering';
 
 export const W = 480;
 export const H = 720;
