@@ -12,7 +12,6 @@ import {
 import { helixAudio } from './helixAudio';
 import {
   applyBounce,
-  applyFallBoost,
   applyLandingFx,
   clearYThroughRing,
   findApproachRing,
@@ -268,8 +267,7 @@ export class HelixJump {
         const mult = Math.min(COMBO_CAP, this.combo);
         this.bonusScore += mult;
         this.score = this.depth + this.bonusScore;
-        applyFallBoost(this.ball, this.combo);
-        this.fallMul = Math.min(1.1, this.fallMul + 0.015 + mult * 0.003);
+        this.fallMul = Math.min(1.04, this.fallMul + 0.008);
         this.camera.addShake(0.015 + mult * 0.004);
         this.world.particles.comboBurst(px, ry, pz, mult);
         helixAudio.gapPass(this.combo);
@@ -304,7 +302,6 @@ export class HelixJump {
 
     if (hit.smashed) {
       this.breakRing(hit.ring, wy, px, pz, 2, true, contactAngle);
-      applyFallBoost(this.ball, 1);
       helixAudio.breakPlatform();
       return;
     }

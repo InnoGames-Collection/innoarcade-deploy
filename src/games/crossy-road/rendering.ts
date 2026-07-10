@@ -348,3 +348,78 @@ export function drawRiverRow(ctx: CanvasRenderingContext2D, sy: number, w: numbe
     ctx.fillRect(x, sy + cell * 0.35, 14, 3);
   }
 }
+
+type IsoCorner = { x: number; y: number };
+
+function traceDiamond(ctx: CanvasRenderingContext2D, corners: [IsoCorner, IsoCorner, IsoCorner, IsoCorner]): void {
+  ctx.beginPath();
+  ctx.moveTo(corners[0].x, corners[0].y);
+  ctx.lineTo(corners[1].x, corners[1].y);
+  ctx.lineTo(corners[2].x, corners[2].y);
+  ctx.lineTo(corners[3].x, corners[3].y);
+  ctx.closePath();
+}
+
+export function fillIsoCell(
+  ctx: CanvasRenderingContext2D,
+  corners: [IsoCorner, IsoCorner, IsoCorner, IsoCorner],
+  fill: string | CanvasGradient,
+): void {
+  traceDiamond(ctx, corners);
+  ctx.fillStyle = fill;
+  ctx.fill();
+}
+
+export function strokeIsoCell(
+  ctx: CanvasRenderingContext2D,
+  corners: [IsoCorner, IsoCorner, IsoCorner, IsoCorner],
+  stroke: string,
+  lineWidth = 1,
+): void {
+  traceDiamond(ctx, corners);
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = lineWidth;
+  ctx.stroke();
+}
+
+export function drawIsoGrassCell(
+  ctx: CanvasRenderingContext2D,
+  corners: [IsoCorner, IsoCorner, IsoCorner, IsoCorner],
+  isStart: boolean,
+): void {
+  const top = isStart ? '#6ab04c' : '#7ec850';
+  const bottom = isStart ? '#5a9a3e' : '#6eb844';
+  const cx = (corners[0].x + corners[2].x) / 2;
+  const g = ctx.createLinearGradient(cx, corners[0].y, cx, corners[2].y);
+  g.addColorStop(0, top);
+  g.addColorStop(1, bottom);
+  fillIsoCell(ctx, corners, g);
+}
+
+export function drawIsoRoadCell(
+  ctx: CanvasRenderingContext2D,
+  corners: [IsoCorner, IsoCorner, IsoCorner, IsoCorner],
+): void {
+  const cx = (corners[0].x + corners[2].x) / 2;
+  const g = ctx.createLinearGradient(cx, corners[0].y, cx, corners[2].y);
+  g.addColorStop(0, '#555');
+  g.addColorStop(1, '#3d3d3d');
+  fillIsoCell(ctx, corners, g);
+  strokeIsoCell(ctx, corners, 'rgba(240,192,64,0.35)', 1);
+}
+
+export function drawIsoRiverCell(
+  ctx: CanvasRenderingContext2D,
+  corners: [IsoCorner, IsoCorner, IsoCorner, IsoCorner],
+  t: number,
+  col: number,
+): void {
+  const cx = (corners[0].x + corners[2].x) / 2;
+  const g = ctx.createLinearGradient(cx, corners[0].y, cx, corners[2].y);
+  g.addColorStop(0, '#5dade2');
+  g.addColorStop(1, '#2980b9');
+  fillIsoCell(ctx, corners, g);
+  const shimmer = corners[0].x + ((t * 40 + col * 17) % 30);
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.fillRect(shimmer, (corners[0].y + corners[2].y) / 2 - 2, 14, 3);
+}

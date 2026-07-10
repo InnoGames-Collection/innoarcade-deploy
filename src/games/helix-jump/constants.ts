@@ -16,8 +16,8 @@ export const RING_THICKNESS = 0.42;
 export const RING_HEIGHT = 0.34;
 /** Ball sits on inner rim, screen-fixed south of axis. */
 export const BALL_CONTACT_R = RING_INNER + BALL_R * 0.88;
-/** Camera-facing contact angle — ball fixed south of helix axis. */
-export const BALL_CONTACT_ANGLE = -Math.PI / 2;
+/** Camera-facing contact angle — ball fixed toward camera (+Z). */
+export const BALL_CONTACT_ANGLE = Math.PI / 2;
 /** Fixed screen Y for the ball rig (world scrolls past it). */
 export const BALL_SCREEN_Y = 0;
 export const BALL_RENDER_Z = 0.3;
@@ -27,21 +27,21 @@ export const DANGER_ARC_MIN = 0.42;
 export const DANGER_ARC_MAX = 0.62;
 export const DANGER_TOLERANCE = 0.035;
 /** Angular grace when gap-aligned — widens with fall speed in physics. */
-export const GAP_PASS_TOLERANCE = 0.05;
-export const GAP_PASS_VEL_BONUS = 0.004;
-export const SOLID_EDGE_INSET = 0.05;
-/** Landing assist — snap to safe zone when grazing gap edge. */
-export const LANDING_ASSIST_ANGLE = 0.09;
+export const GAP_PASS_TOLERANCE = 0.03;
+export const GAP_PASS_VEL_BONUS = 0;
+export const SOLID_EDGE_INSET = 0.04;
+/** Landing assist — only when nearly centered in the gap at speed. */
+export const LANDING_ASSIST_ANGLE = 0.04;
 
-export const GRAVITY_BASE = 11;
-export const BOUNCE_VEL = 9;
-export const BOUNCE_UP_VEL = 5.0;
-export const BOUNCE_UP_MAX = 5.6;
-export const BOUNCE_RESTITUTION = 0.04;
-export const FALL_TERMINAL_VY = 9;
-export const FALL_STRETCH_SPEED = 18;
-export const BALL_STRETCH_MAX = 0.1;
-export const BALL_ROLL_RATE = 1.6;
+export const GRAVITY_BASE = 7;
+export const BOUNCE_VEL = 7;
+export const BOUNCE_UP_VEL = 3.8;
+export const BOUNCE_UP_MAX = 4.4;
+export const BOUNCE_RESTITUTION = 0.03;
+export const FALL_TERMINAL_VY = 6;
+export const FALL_STRETCH_SPEED = 14;
+export const BALL_STRETCH_MAX = 0.08;
+export const BALL_ROLL_RATE = 1.2;
 export const BALL_SQUASH_MIN = 0.72;
 export const BALL_SQUASH_MAX = 1.06;
 export const CAM_FOV = 42;
@@ -53,7 +53,7 @@ export const CAM_LOOK_Y = 0;
 /** ~2.5× ball diameter between platforms — more air time for control. */
 export const RING_SPACING_BASE = 2.5;
 /** Global sim scale — keeps motion readable on mobile without changing feel ratios. */
-export const SIM_SPEED = 0.78;
+export const SIM_SPEED = 0.55;
 export const FEVER_THRESHOLD = 4;
 export const FEVER_DURATION = 2.8;
 export const COMBO_CAP = 8;

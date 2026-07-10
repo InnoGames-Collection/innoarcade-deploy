@@ -2,7 +2,7 @@ import {
   BALL_CONTACT_ANGLE, BALL_R, BALL_ROLL_RATE, BALL_SQUASH_MAX, BALL_SQUASH_MIN,
   BALL_STRETCH_MAX, BOUNCE_RESTITUTION, BOUNCE_UP_MAX, BOUNCE_UP_VEL,
   BOUNCE_VEL, DANGER_TOLERANCE, FALL_STRETCH_SPEED, FALL_TERMINAL_VY,
-  GAP_PASS_TOLERANCE, GAP_PASS_VEL_BONUS, GRAVITY_BASE, LANDING_ASSIST_ANGLE,
+  GAP_PASS_TOLERANCE, GRAVITY_BASE,
   RING_HEIGHT, SOLID_EDGE_INSET,
 } from './constants';
 import { easeOutBack } from './easing';
@@ -23,9 +23,9 @@ export function ballAngle(towerAngle: number): number {
   return normalizeAngle(towerAngle + BALL_CONTACT_ANGLE);
 }
 
-/** Gap tolerance grows with downward speed — fair high-speed passes. */
-export function gapTolerance(vy: number): number {
-  return GAP_PASS_TOLERANCE + Math.min(0.14, Math.max(0, vy) * GAP_PASS_VEL_BONUS);
+/** Gap tolerance — fixed small margin only (no speed cheating). */
+export function gapTolerance(_vy: number): number {
+  return GAP_PASS_TOLERANCE;
 }
 
 export function inGap(ballAng: number, gapStart: number, gapArc: number, tol = GAP_PASS_TOLERANCE): boolean {
@@ -52,7 +52,7 @@ function gapCenterDist(ballAng: number, gapStart: number, gapArc: number): numbe
 }
 
 export function gravityForDepth(passed: number, fallMul: number): number {
-  return (GRAVITY_BASE + Math.min(4, passed * 0.035)) * fallMul;
+  return (GRAVITY_BASE + Math.min(2.5, passed * 0.02)) * fallMul;
 }
 
 export function integrateBall(ball: BallState, gravity: number, dt: number): void {
@@ -129,14 +129,14 @@ function evaluateRingCrossing(
   const impactSpeed = Math.abs(ball.vy);
 
   const passedGap = inGap(ang, ring.gapStart, ring.gapArc, tol);
-  const solid = onSolid(ang, ring.gapStart, ring.gapArc);
+  const solid = onSolid(ang, ring.gapStart, ring.gapArc, tol);
   const gapDist = gapCenterDist(ang, ring.gapStart, ring.gapArc);
-  const nearGapEdge = !passedGap && gapDist < ring.gapArc * 0.5 + LANDING_ASSIST_ANGLE;
+  const nearGapCenter = passedGap && gapDist < ring.gapArc * 0.22;
 
-  const perfect = passedGap && Math.abs(ball.y - ringY) < 0.05 && ball.vy > 2.5;
+  const perfect = passedGap && nearGapCenter && Math.abs(ball.y - ringY) < 0.05 && ball.vy > 1.8;
 
-  // Smart pass: in gap, near gap center at speed, or landing-assist at gap lip.
-  if (passedGap || (nearGapEdge && ball.vy > 3)) {
+  // Only pass when the ball is actually over the gap opening.
+  if (passedGap) {
     return {
       ring, screenY: ringY - ball.y, passedGap: true, bounced: false,
       smashed: false, died: false, perfect, impactSpeed,
@@ -144,10 +144,7 @@ function evaluateRingCrossing(
   }
 
   if (!solid) {
-    return {
-      ring, screenY: ringY - ball.y, passedGap: true, bounced: false,
-      smashed: false, died: false, perfect: false, impactSpeed,
-    };
+    return null;
   }
 
   // Must be crossing the top surface plane (not side-grazing).
@@ -271,10 +268,8 @@ export function clearYThroughRing(ringY: number): number {
   return ringY + PLATFORM_TOP + BALL_R * 0.15;
 }
 
-export function applyFallBoost(ball: BallState, combo: number): void {
-  if (ball.vy <= 0) return;
-  const boost = 0.12 + Math.min(combo, 8) * 0.06;
-  ball.vy = Math.min(FALL_TERMINAL_VY, ball.vy + boost);
+export function applyFallBoost(_ball: BallState, _combo: number): void {
+  // Disabled — fall speed stays controllable; combos should not accelerate the drop.
 }
 
 export function breakAnimScale(t: number): number {

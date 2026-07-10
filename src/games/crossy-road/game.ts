@@ -7,13 +7,23 @@ import {
   drawChicken,
   drawCoin,
   drawEagle,
-  drawGrassRow,
+  drawIsoGrassCell,
+  drawIsoRoadCell,
+  drawIsoRiverCell,
   drawLog,
-  drawRiverRow,
-  drawRoadRow,
   drawVehicle,
   type VehicleKind,
 } from './rendering';
+import {
+  cellCenterScreen,
+  cellDiamondScreen,
+  gridToIso,
+  gridToScreen,
+  lerpCamera,
+  paintDepth,
+  type IsoCamera,
+  type ScreenOrigin,
+} from './iso';
 
 export const W = 480;
 export const H = 720;
@@ -22,6 +32,7 @@ export const CELL = W / COLS;
 const HOP_DUR = 0.16;
 const CAMP_LIMIT = 5;
 const CAM_LERP = 4.2;
+const SCREEN_ANCHOR_Y = 0.55;
 
 type RowKind = 'grass' | 'road' | 'river';
 
@@ -73,7 +84,7 @@ export class CrossyRoad {
   private px = Math.floor(COLS / 2);
   private pz = 0;
   private maxZ = 0;
-  private camZ = 0;
+  private camIso: IsoCamera = { x: 0, y: 0 };
   private rows: Row[] = [];
   private cars: Car[] = [];
   private logs: Log[] = [];
@@ -95,7 +106,8 @@ export class CrossyRoad {
     this.px = Math.floor(COLS / 2);
     this.pz = 0;
     this.maxZ = 0;
-    this.camZ = 0;
+    const startIso = gridToIso(this.px + 0.5, this.pz + 0.5, CELL);
+    this.camIso = { x: startIso.x, y: startIso.y };
     this.rows = [];
     this.cars = [];
     this.logs = [];
@@ -232,20 +244,40 @@ export class CrossyRoad {
     return this.rows.find((r) => r.z === z) ?? { z, kind: 'grass', dir: 1, speed: 0 };
   }
 
-  private worldY(z: number): number {
-    return H - (z * CELL - this.camZ) - CELL;
+  private screenOrigin(): ScreenOrigin {
+    return { x: W / 2, y: H * SCREEN_ANCHOR_Y };
+  }
+
+  private playerGridPos(): { gx: number; gz: number } {
+    const hopProgress = this.hopT > 0 ? 1 - this.hopT / HOP_DUR : 1;
+    const gx = this.hopT > 0
+      ? this.fromPx + (this.px - this.fromPx) * hopProgress + 0.5
+      : this.px + 0.5;
+    const gz = this.hopT > 0
+      ? this.fromPz + (this.pz - this.fromPz) * hopProgress + 0.5
+      : this.pz + 0.5;
+    return { gx, gz };
+  }
+
+  private atScreen(gridX: number, gridY: number): { x: number; y: number } {
+    return gridToScreen(gridX, gridY, CELL, this.camIso, this.screenOrigin());
+  }
+
+  private updateCamera(dt: number): void {
+    const { gx, gz } = this.playerGridPos();
+    const target = gridToIso(gx, gz, CELL);
+    lerpCamera(this.camIso, target.x, target.y, dt, CAM_LERP);
   }
 
   private spawnLandingFx(): void {
     const row = this.rowAt(this.pz);
-    const cx = this.px * CELL + CELL / 2;
-    const cy = this.worldY(this.pz) + CELL * 0.72;
+    const pos = this.atScreen(this.px + 0.5, this.pz + 0.85);
     if (row.kind === 'river' || this.onRiver) {
-      this.juice.burst(cx, cy, 'rgba(180,220,255,0.85)', 6, 90, 3);
-      this.juice.burst(cx, cy, 'rgba(52,152,219,0.7)', 4, 60, 2);
+      this.juice.burst(pos.x, pos.y, 'rgba(180,220,255,0.85)', 6, 90, 3);
+      this.juice.burst(pos.x, pos.y, 'rgba(52,152,219,0.7)', 4, 60, 2);
     } else {
-      this.juice.burst(cx, cy, 'rgba(180,150,100,0.55)', 5, 70, 2.5);
-      this.juice.burst(cx, cy, 'rgba(120,180,80,0.45)', 3, 50, 2);
+      this.juice.burst(pos.x, pos.y, 'rgba(180,150,100,0.55)', 5, 70, 2.5);
+      this.juice.burst(pos.x, pos.y, 'rgba(120,180,80,0.45)', 3, 50, 2);
     }
   }
 
@@ -255,16 +287,14 @@ export class CrossyRoad {
     this.coinItems = this.coinItems.filter((c) => c !== hit);
     this.coins += 1;
     sfx.coin();
-    const cx = this.px * CELL + CELL / 2;
-    const cy = this.worldY(this.pz) + CELL / 2;
-    this.juice.burst(cx, cy, '#f2b21a', 8, 100, 3);
+    const pos = this.atScreen(this.px + 0.5, this.pz + 0.5);
+    this.juice.burst(pos.x, pos.y, '#f2b21a', 8, 100, 3);
   }
 
   private startEagle(): void {
     if (this.eagle) return;
-    const cx = this.px * CELL + CELL / 2;
-    const cy = this.worldY(this.pz) + CELL / 2;
-    this.eagle = { t: 0, grabX: cx, grabY: cy };
+    const pos = this.atScreen(this.px + 0.5, this.pz + 0.5);
+    this.eagle = { t: 0, grabX: pos.x, grabY: pos.y };
     sfx.slide();
   }
 
@@ -321,13 +351,11 @@ export class CrossyRoad {
         this.px += shift;
         if (this.px < 0 || this.px >= COLS) this.die('water');
         if (!wasRiver && Math.abs(shift) > 0.001) {
-          const cx = this.px * CELL + CELL / 2;
-          const cy = this.worldY(this.pz) + CELL * 0.75;
-          this.juice.burst(cx, cy, 'rgba(160,210,255,0.6)', 2, 40, 1.5);
+          const pos = this.atScreen(this.px + 0.5, this.pz + 0.85);
+          this.juice.burst(pos.x, pos.y, 'rgba(160,210,255,0.6)', 2, 40, 1.5);
         } else if (Math.abs(this.px - prevPx) > 0.02 && Math.random() < dt * 3) {
-          const cx = this.px * CELL + CELL / 2;
-          const cy = this.worldY(this.pz) + CELL * 0.8;
-          this.juice.burst(cx, cy, 'rgba(130,200,255,0.5)', 1, 25, 1.2);
+          const pos = this.atScreen(this.px + 0.5, this.pz + 0.9);
+          this.juice.burst(pos.x, pos.y, 'rgba(130,200,255,0.5)', 1, 25, 1.2);
         }
       } else {
         this.die('water');
@@ -336,9 +364,7 @@ export class CrossyRoad {
 
     if (row.kind === 'road' && this.hopT === 0) this.checkCarHit();
 
-    const targetCam = this.pz * CELL - H * 0.55;
-    const lerp = 1 - Math.exp(-dt * CAM_LERP);
-    this.camZ += (targetCam - this.camZ) * lerp;
+    this.updateCamera(dt);
 
     this.juice.update(dt);
     this.rows = this.rows.filter((r) => r.z > this.pz - 8);
@@ -381,49 +407,101 @@ export class CrossyRoad {
     ctx.fillStyle = '#87c06a';
     ctx.fillRect(0, 0, W, H);
 
-    const visRows = Math.ceil(H / CELL) + 2;
-    const baseZ = Math.floor(this.camZ / CELL);
+    const origin = this.screenOrigin();
+    const cam = this.camIso;
+    const { gx: playerGx, gz: playerGz } = this.playerGridPos();
+    const hopProgress = this.hopT > 0 ? 1 - this.hopT / HOP_DUR : 1;
+
+    type DrawItem = { depth: number; draw: () => void };
+    const queue: DrawItem[] = [];
+
+    const zMin = this.pz - 12;
+    const zMax = this.pz + 16;
+
+    for (let z = zMin; z <= zMax; z++) {
+      const row = this.rowAt(z);
+      for (let col = 0; col < COLS; col++) {
+        const corners = cellDiamondScreen(col, z, CELL, cam, origin);
+        const depth = paintDepth(z, col);
+        queue.push({
+          depth,
+          draw: () => {
+            if (row.kind === 'grass') drawIsoGrassCell(ctx, corners, z <= 0);
+            else if (row.kind === 'road') drawIsoRoadCell(ctx, corners);
+            else drawIsoRiverCell(ctx, corners, this.animT, col);
+          },
+        });
+      }
+    }
+
+    for (const coin of this.coinItems) {
+      const center = cellCenterScreen(coin.col, coin.row, CELL, cam, origin);
+      const depth = paintDepth(coin.row, coin.col) + 0.1;
+      queue.push({
+        depth,
+        draw: () => drawCoin(ctx, center.x, center.y, coin.spin),
+      });
+    }
+
+    for (const c of this.cars) {
+      const gridCx = (c.x + c.w / 2) / CELL;
+      const center = gridToScreen(gridCx, c.row + 0.5, CELL, cam, origin);
+      const depth = paintDepth(c.row, gridCx);
+      const facingRight = c.speed > 0;
+      const drawW = c.w * 0.55;
+      const drawH = CELL * 0.55;
+      queue.push({
+        depth,
+        draw: () => drawVehicle(
+          ctx,
+          c.kind,
+          center.x - drawW / 2,
+          center.y - drawH / 2,
+          drawW,
+          drawH,
+          facingRight,
+        ),
+      });
+    }
+
+    for (const l of this.logs) {
+      const gridCx = (l.x + l.w / 2) / CELL;
+      const center = gridToScreen(gridCx, l.row + 0.5, CELL, cam, origin);
+      const depth = paintDepth(l.row, gridCx);
+      const drawW = l.w * 0.55;
+      const drawH = CELL * 0.5;
+      queue.push({
+        depth,
+        draw: () => drawLog(
+          ctx,
+          center.x - drawW / 2,
+          center.y - drawH / 2,
+          drawW,
+          drawH,
+        ),
+      });
+    }
+
+    if (!this.eagle) {
+      const playerCenter = gridToScreen(playerGx, playerGz, CELL, cam, origin);
+      queue.push({
+        depth: paintDepth(playerGz, playerGx) + 0.5,
+        draw: () => drawChicken(
+          ctx,
+          playerCenter.x,
+          playerCenter.y,
+          CELL,
+          hopProgress,
+          this.hopT > 0,
+        ),
+      });
+    }
+
+    queue.sort((a, b) => a.depth - b.depth);
 
     ctx.save();
     this.juice.applyShake(ctx);
-
-    for (let i = -1; i < visRows; i++) {
-      const z = baseZ + i;
-      const row = this.rowAt(z);
-      const sy = this.worldY(z);
-      if (sy < -CELL || sy > H + CELL) continue;
-
-      if (row.kind === 'grass') drawGrassRow(ctx, sy, W, CELL, z <= 0);
-      else if (row.kind === 'road') drawRoadRow(ctx, sy, W, CELL);
-      else drawRiverRow(ctx, sy, W, CELL, this.animT);
-
-      for (const coin of this.coinItems) {
-        if (coin.row !== z) continue;
-        drawCoin(ctx, coin.col * CELL + CELL / 2, sy + CELL / 2, coin.spin);
-      }
-
-      for (const c of this.cars) {
-        if (c.row !== z) continue;
-        drawVehicle(ctx, c.kind, c.x, sy + 6, c.w, CELL - 12, c.speed > 0);
-      }
-
-      for (const l of this.logs) {
-        if (l.row !== z) continue;
-        drawLog(ctx, l.x, sy + 6, l.w, CELL - 12);
-      }
-    }
-
-    const hopProgress = this.hopT > 0 ? 1 - this.hopT / HOP_DUR : 1;
-    const drawPx = this.hopT > 0 ? this.fromPx + (this.px - this.fromPx) * hopProgress : this.px;
-    const drawPz = this.hopT > 0 ? this.fromPz + (this.pz - this.fromPz) * hopProgress : this.pz;
-    const py = this.worldY(drawPz);
-    const cx = drawPx * CELL + CELL / 2;
-    const cy = py + CELL / 2;
-
-    if (!this.eagle) {
-      drawChicken(ctx, cx, cy, CELL, hopProgress, this.hopT > 0);
-    }
-
+    for (const item of queue) item.draw();
     this.juice.drawParticles(ctx);
     ctx.restore();
 
@@ -431,7 +509,7 @@ export class CrossyRoad {
       const e = this.eagle;
       const p = Math.min(1, e.t / 1.1);
       const ease = 1 - Math.pow(1 - Math.min(1, p * 1.15), 3);
-      const ex = e.grabX + (W / 2 - e.grabX) * (1 - ease) * 0.15;
+      const ex = e.grabX + (origin.x - e.grabX) * (1 - ease) * 0.15;
       const ey = -60 + (e.grabY - 30) * ease;
       const scale = 0.6 + ease * 0.9;
       drawEagle(ctx, ex, ey, scale, this.animT * 12);
