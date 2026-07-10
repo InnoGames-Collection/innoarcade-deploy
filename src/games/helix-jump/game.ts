@@ -102,7 +102,7 @@ export class HelixJump {
     const startBallAng = ballAngle(0);
     let prev: Ring | undefined;
     for (let i = 0; i < 24; i++) {
-      const solidUnder = i < 5 ? startBallAng : undefined;
+      const solidUnder = i === 0 ? startBallAng : undefined;
       const ring = createRing(firstRingY + i * this.cfg.spacing, this.rnd, this.cfg, prev, solidUnder);
       this.rings.push(ring);
       prev = ring;
@@ -258,7 +258,7 @@ export class HelixJump {
     const ry = this.world.ringOffset(this.ball.y, wy);
     const px = Math.cos(BALL_CONTACT_ANGLE) * BALL_CONTACT_R;
     const pz = Math.sin(BALL_CONTACT_ANGLE) * BALL_CONTACT_R;
-    const contactAngle = this.rotation.angle + BALL_CONTACT_ANGLE;
+    const contactAngle = ballAngle(this.rotation.angle);
 
     if (hit.passedGap) {
       const throughY = clearYThroughRing(wy);

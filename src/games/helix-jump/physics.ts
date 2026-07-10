@@ -20,7 +20,8 @@ function normalizeAngle(a: number): number {
 }
 
 export function ballAngle(towerAngle: number): number {
-  return normalizeAngle(towerAngle + BALL_CONTACT_ANGLE);
+  // Tower mesh rotates by -angle; ball is fixed in world at +Z (π/2).
+  return normalizeAngle(BALL_CONTACT_ANGLE - towerAngle);
 }
 
 export function gapTolerance(_vy: number): number {

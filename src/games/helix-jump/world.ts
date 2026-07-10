@@ -3,13 +3,13 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import {
-  BALL_CONTACT_ANGLE, BALL_R, BALL_SCREEN_Y, BALL_WORLD_X, BALL_WORLD_Z,
+  BALL_R, BALL_SCREEN_Y, BALL_WORLD_X, BALL_WORLD_Z,
   H, PILLAR_HEIGHT, PILLAR_R, THEME, W,
 } from './constants';
 import {
   BallTrail, BokehField, LandingSplats, ParticleSystem, SmashShards, SpeedLines,
 } from './effects';
-import { approachZone, breakAnimScale } from './physics';
+import { approachZone, ballAngle, breakAnimScale } from './physics';
 import {
   createPlatformGeometry, makeGradientBackground, makePlatformMaterial,
   platformArc, ringColor,
@@ -416,7 +416,7 @@ export class HelixWorld {
   addLandingSplat(ringId: number, color: string, towerAngle: number): void {
     const rv = this.ringPool.find((r) => r.ringId === ringId);
     if (!rv) return;
-    this.splats.place(rv.group, color, towerAngle + BALL_CONTACT_ANGLE);
+    this.splats.place(rv.group, color, ballAngle(towerAngle));
   }
 
   ringOffset(ballY: number, ringY: number): number {

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { RING_HEIGHT, RING_INNER, RING_THICKNESS, RING_R, THEME } from './constants';
+import { RING_COLORS, RING_HEIGHT, RING_INNER, RING_THICKNESS, RING_R, THEME } from './constants';
 
 const PLATFORM_OUTER = RING_R + RING_THICKNESS * 0.5;
 const PLATFORM_INNER = RING_INNER;
@@ -77,8 +77,7 @@ export function makePlatformMaterial(color: THREE.Color, danger = false): THREE.
 }
 export function ringColor(index: number, danger: boolean): THREE.Color {
   if (danger) return new THREE.Color(THEME.danger);
-  const cols = ['#f5efe6', '#f0e8dc', '#ebe4d4', '#f8f4ee'];
-  return new THREE.Color(cols[Math.max(0, index) % cols.length]);
+  return new THREE.Color(RING_COLORS[Math.abs(index) % RING_COLORS.length]);
 }
 
 export function makeGradientBackground(): THREE.Texture {

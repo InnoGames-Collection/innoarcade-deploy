@@ -80,14 +80,16 @@ export const THEME = {
 } as const;
 
 export const RING_COLORS = [
-  '#f5efe6',
-  '#f0e8dc',
-  '#ebe4d4',
-  '#f5efe6',
-  '#f0e8dc',
-  '#ebe4d4',
-  '#f5efe6',
-  '#f0e8dc',
+  '#6EC6FF',
+  '#FFB74D',
+  '#CE93D8',
+  '#81C784',
+  '#F06292',
+  '#FFF176',
+  '#4DD0E1',
+  '#FF8A65',
+  '#AED581',
+  '#9575CD',
 ] as const;
 
 export const SAVE_KEY = 'helix-jump.save.v2';
