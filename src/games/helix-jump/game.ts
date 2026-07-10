@@ -7,7 +7,7 @@ import type { Action } from '../../engine/input';
 import { mulberry32 } from '../_lq/lq';
 import { CameraController } from './camera';
 import {
-  COMBO_CAP, FEVER_DURATION, FEVER_THRESHOLD, RING_COLORS, RING_HEIGHT, THEME, BALL_R,
+  BALL_CONTACT_R, COMBO_CAP, FEVER_DURATION, FEVER_THRESHOLD, RING_COLORS, RING_HEIGHT, THEME, BALL_R,
 } from './constants';
 import {
   applyBounce,
@@ -18,6 +18,7 @@ import {
   restYOnPlatform,
   substepCount,
 } from './physics';
+import { clearGeometryCache } from './geometry';
 import { drawFlash, drawHud } from './renderer';
 import { RotationController } from './rotation';
 import { BALL_SKINS, getBallSkin, type BallSkin } from './skins';
@@ -84,6 +85,7 @@ export class HelixJump {
     resetRingIds();
     this.rings = [];
     this.world.clear();
+    clearGeometryCache();
     this.cleared.clear();
     this.cfg = towerConfigForDepth(0);
     const firstRingY = this.cfg.spacing * 2.15;
@@ -220,6 +222,8 @@ export class HelixJump {
 
     const wy = hit.ring.y;
     const ry = this.world.ringOffset(this.ball.y, wy);
+    const px = 0;
+    const pz = -BALL_CONTACT_R;
 
     if (hit.passedGap) {
       if (!this.cleared.has(hit.ring.id)) {
@@ -232,9 +236,9 @@ export class HelixJump {
         this.fallMul = Math.min(1.4, this.fallMul + 0.05 + mult * 0.01);
         const shake = 0.05 + mult * 0.015;
         this.camera.addShake(shake);
-        this.world.particles.comboBurst(0, ry, 0, mult);
+        this.world.particles.comboBurst(px, ry, pz, mult);
         if (hit.perfect) {
-          this.world.particles.burst(0, ry, 0, THEME.fever, 8, 4);
+          this.world.particles.burst(px, ry, pz, THEME.fever, 8, 4);
           this.bonusScore += 1;
         }
         sfx.coin();
@@ -244,7 +248,7 @@ export class HelixJump {
           this.flashColor = 'rgba(255,217,61,0.35)';
           this.flashAlpha = 0.4;
           this.world.flash('#ffd93d', 0.35);
-          this.world.particles.feverRing(0, ry, 0);
+          this.world.particles.feverRing(px, ry, pz);
           this.camera.addShake(0.18);
         }
       }
@@ -267,7 +271,7 @@ export class HelixJump {
       applyFallBoost(this.ball, 2);
       const color = hit.ring.danger ? THEME.danger : RING_COLORS[hit.ring.colorIndex] ?? this.skin.color;
       this.world.shards.burst(ry, color, this.rotation.angle, 14);
-      this.world.particles.burst(0, ry, 0, color, 18, 5.5);
+      this.world.particles.burst(px, ry, pz, color, 18, 5.5);
       this.camera.addShake(0.14);
       sfx.coin();
       vibrate(10);
@@ -280,7 +284,7 @@ export class HelixJump {
       this.ball.y = restYOnPlatform(hit.ring.y);
       const landShake = 0.08 + Math.min(0.12, Math.abs(impact) / 40);
       this.camera.addShake(landShake);
-      this.world.particles.landing(0, ry, 0, this.skin.color);
+      this.world.particles.landing(px, ry, pz, this.skin.color);
       sfx.coin();
       vibrate(12);
     }
@@ -308,7 +312,7 @@ export class HelixJump {
     this.flashColor = 'rgba(229,57,53,0.45)';
     this.flashAlpha = 0.5;
     this.world.flash('#e53935', 0.45);
-    this.world.particles.burst(0, 0, 0, THEME.danger, 22, 7);
+    this.world.particles.burst(0, 0, -BALL_CONTACT_R, THEME.danger, 22, 7);
     vibrate(35);
 
     const result = recordPlay(this.score);

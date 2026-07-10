@@ -7,10 +7,13 @@ export const CX = W / 2;
 /** World units — Y increases downward in gameplay space. */
 export const BALL_R = 0.55;
 export const RING_R = 4.05;
-export const RING_INNER = 0.55;
+/** Hollow shaft — smaller than the ball so the ball rests on platform inner rim. */
+export const RING_INNER = 0.30;
 export const RING_THICKNESS = 0.62;
 export const RING_HEIGHT = 0.34;
-export const PILLAR_R = 0.24;
+export const PILLAR_R = 0.20;
+/** Ball sits on platform ring, offset from thin pillar axis (reference Helix Jump). */
+export const BALL_CONTACT_R = RING_INNER + BALL_R * 0.38;
 export const GAP_ARC = 1.12;
 
 export const GRAVITY_BASE = 26;

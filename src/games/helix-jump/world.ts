@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {
-  BALL_R, H, PILLAR_R, THEME, W,
+  BALL_CONTACT_R, BALL_R, H, PILLAR_R, THEME, W,
 } from './constants';
 import {
   BallTrail, ParticleSystem, SmashShards,
@@ -30,6 +30,8 @@ export class HelixWorld {
 
   private readonly helix = new THREE.Group();
   private readonly tower = new THREE.Group();
+  /** Ball rig — separate from helix pivot so ball never inherits tower rotation. */
+  private readonly ballRig = new THREE.Group();
   private readonly ball: THREE.Mesh;
   private readonly ballOutline: THREE.Mesh;
   private readonly ballMat: THREE.MeshStandardMaterial;
@@ -103,7 +105,7 @@ export class HelixWorld {
     this.scene.add(ground);
 
     this.pillar = new THREE.Mesh(
-      new THREE.CylinderGeometry(PILLAR_R, PILLAR_R * 1.05, 200, 24),
+      new THREE.CylinderGeometry(PILLAR_R, PILLAR_R * 1.05, 200, 20),
       new THREE.MeshStandardMaterial({
         color: THEME.pillar,
         roughness: 0.28,
@@ -112,9 +114,19 @@ export class HelixWorld {
     );
     this.pillar.castShadow = true;
     this.pillar.receiveShadow = true;
+    // Helix pivot: thin central column + platforms rotate together.
     this.helix.add(this.pillar);
     this.helix.add(this.tower);
     this.scene.add(this.helix);
+
+    // Ball on platform contact ring (south / camera side), not on pillar axis.
+    const contactAngle = -Math.PI / 2;
+    this.ballRig.position.set(
+      Math.cos(contactAngle) * BALL_CONTACT_R,
+      0,
+      Math.sin(contactAngle) * BALL_CONTACT_R,
+    );
+    this.scene.add(this.ballRig);
 
     const ballGeo = new THREE.SphereGeometry(BALL_R, 32, 32);
     this.ballMat = new THREE.MeshStandardMaterial({
@@ -127,8 +139,8 @@ export class HelixWorld {
     this.ball = new THREE.Mesh(ballGeo, this.ballMat);
     this.ball.castShadow = true;
     this.ball.renderOrder = 20;
-    this.ball.position.z = 0.12;
-    this.scene.add(this.ball);
+    this.ball.position.z = 0.14;
+    this.ballRig.add(this.ball);
 
     this.ballOutline = new THREE.Mesh(
       new THREE.SphereGeometry(BALL_R * 1.12, 24, 24),
@@ -140,8 +152,8 @@ export class HelixWorld {
       }),
     );
     this.ballOutline.renderOrder = 19;
-    this.ballOutline.position.z = 0.12;
-    this.scene.add(this.ballOutline);
+    this.ballOutline.position.z = 0.14;
+    this.ballRig.add(this.ballOutline);
 
     this.ballGlow = new THREE.PointLight(0xffffff, 1.1, 8);
     this.ballGlow.position.z = 0.2;
@@ -246,8 +258,10 @@ export class HelixWorld {
   }
 
   updateBall(ball: BallState, skin: BallSkin, fever: boolean, dt: number): void {
-    this.ball.position.set(0, 0, 0.12);
-    this.ballOutline.position.set(0, 0, 0.12);
+    // Ball rig stays on contact ring; only squash animates locally.
+    this.ballRig.position.y = 0;
+    this.ball.position.set(0, 0, 0.14);
+    this.ballOutline.position.set(0, 0, 0.14);
     const sy = ball.squash;
     const stretch = 1 - sy;
     const sx = 1 - stretch * 0.14;
@@ -300,7 +314,7 @@ export class HelixWorld {
   }
 
   render(): void {
-    this.cameraCtrl.applyView();
+    this.cameraCtrl.applyView(this.ballRig.position);
     this.renderer.render(this.scene, this.cameraCtrl.camera);
   }
 

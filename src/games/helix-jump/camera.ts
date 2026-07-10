@@ -56,14 +56,18 @@ export class CameraController {
     }
   }
 
-  applyView(): void {
+  applyView(ballOffset = new THREE.Vector3()): void {
     const scrollY = -this.y * 0.04;
     this.camera.position.set(
-      this.shakeX,
+      ballOffset.x + this.shakeX,
       CameraController.CAM_Y + this.shakeY + scrollY * 0.15,
       CameraController.CAM_Z,
     );
-    this.camera.lookAt(this.shakeX * 0.25, scrollY * 0.1, 0);
+    this.camera.lookAt(
+      ballOffset.x + this.shakeX * 0.25,
+      ballOffset.y + scrollY * 0.1,
+      ballOffset.z,
+    );
   }
 
   reset(): void {

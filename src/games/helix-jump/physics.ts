@@ -12,7 +12,7 @@ function normalizeAngle(a: number): number {
   return r;
 }
 
-/** Ball is fixed at the bottom of the screen (-Z). Tower rotates around Y. */
+/** Ball is fixed south of helix axis (-Z). Tower rotates around axis origin. */
 export function ballAngle(towerAngle: number): number {
   return normalizeAngle(towerAngle - Math.PI / 2);
 }

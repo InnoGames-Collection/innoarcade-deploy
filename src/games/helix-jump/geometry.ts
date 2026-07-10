@@ -6,7 +6,7 @@ const PLATFORM_INNER = RING_INNER;
 const GEO_CACHE = new Map<string, THREE.BufferGeometry>();
 
 function geoKey(start: number, arc: number): string {
-  return `${start.toFixed(3)}_${arc.toFixed(3)}`;
+  return `${RING_INNER.toFixed(2)}_${start.toFixed(3)}_${arc.toFixed(3)}`;
 }
 
 export function platformArc(gapArc: number): number {
