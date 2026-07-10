@@ -1,18 +1,22 @@
 import * as THREE from 'three';
 import { CAM_FOV, CAM_LOOK_Y, CAM_LOOK_Z, CAM_Y, CAM_Z } from './constants';
+import { clamp } from './easing';
+
+/** Vertical bias so the fixed ball rig sits ~40% above the bottom of the view. */
+const CAM_FRAMING_Y = 0.55;
+/** Max allowed lag (game Y) before the camera hard-catches-up. */
+const MAX_LAG = 1.0;
+/** Predictive lead while falling fast (seconds of motion). */
+const FALL_PREDICT = 0.07;
 
 export class CameraController {
-  shake = 0;
-  private shakePhase = 0;
-  private shakeX = 0;
-  private shakeY = 0;
-
   readonly camera: THREE.PerspectiveCamera;
+
+  private smoothY = 0;
 
   constructor(aspect: number) {
     this.camera = new THREE.PerspectiveCamera(CAM_FOV, aspect, 0.1, 120);
-    this.camera.position.set(0, CAM_Y, CAM_Z);
-    this.camera.lookAt(0, CAM_LOOK_Y, CAM_LOOK_Z);
+    this.applyView();
   }
 
   resize(aspect: number): void {
@@ -20,46 +24,59 @@ export class CameraController {
     this.camera.updateProjectionMatrix();
   }
 
-  follow(_ballVy: number, _combo: number, _fever: boolean, _dt: number): void {
-    // Fixed camera — tower scrolls via ring offsets, not view shake/zoom.
-  }
+  follow(ballY: number, ballVy: number, _combo: number, _fever: boolean, dt: number): void {
+    const falling = ballVy > 0.4;
+    const rising = ballVy < -0.4;
 
-  addShake(amount: number): void {
-    this.shake = Math.max(this.shake, amount * 0.2);
-  }
+    let stiffness = 6.5;
+    if (falling) {
+      stiffness = 11 + clamp(ballVy, 0, 14) * 2.4;
+    } else if (rising) {
+      stiffness = 8.5;
+    }
 
-  addImpactPunch(_amount: number): void {
-    // disabled
-  }
+    const alpha = 1 - Math.exp(-stiffness * dt);
+    const predict = falling ? ballVy * FALL_PREDICT : 0;
+    const goal = ballY + predict;
 
-  update(dt: number): void {
-    this.shake = Math.max(0, this.shake - dt * 18);
-    if (this.shake > 0.001) {
-      this.shakePhase += dt * 20;
-      const s = this.shake * 0.1;
-      this.shakeX = Math.sin(this.shakePhase * 1.4) * s;
-      this.shakeY = Math.cos(this.shakePhase) * s * 0.35;
-    } else {
-      this.shakeX = 0;
-      this.shakeY = 0;
+    this.smoothY += (goal - this.smoothY) * alpha;
+
+    const lag = ballY - this.smoothY;
+    if (lag > MAX_LAG) {
+      this.smoothY += (lag - MAX_LAG) * clamp(alpha * 3.2, 0, 1);
+    } else if (lag < -0.55) {
+      this.smoothY += (lag + 0.55) * clamp(alpha * 2.2, 0, 1);
     }
   }
 
+  /** Shake disabled — camera follow only. */
+  addShake(_amount: number): void {
+    // no-op
+  }
+
+  addImpactPunch(_amount: number): void {
+    // no-op
+  }
+
+  update(_dt: number): void {
+    // no shake decay
+  }
+
   applyView(): void {
-    this.camera.position.set(this.shakeX, CAM_Y + this.shakeY, CAM_Z);
-    this.camera.lookAt(this.shakeX * 0.08, CAM_LOOK_Y, CAM_LOOK_Z);
+    const y = this.smoothY + CAM_FRAMING_Y;
+    this.camera.position.set(0, CAM_Y + y, CAM_Z);
+    this.camera.lookAt(0, CAM_LOOK_Y + y, CAM_LOOK_Z);
   }
 
   reset(): void {
-    this.shake = 0;
-    this.shakePhase = 0;
-    this.shakeX = 0;
-    this.shakeY = 0;
+    this.smoothY = 0;
     this.camera.fov = CAM_FOV;
     this.camera.updateProjectionMatrix();
+    this.applyView();
   }
 
-  snapTo(): void {
-    // fixed camera
+  snapTo(ballY = 0): void {
+    this.smoothY = ballY;
+    this.applyView();
   }
 }

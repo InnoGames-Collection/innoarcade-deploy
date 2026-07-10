@@ -1,1 +1,9 @@
-.arc-canvas-wrap canvas { touch-action: manipulation; }
+body[data-game="crossy-road"] .arc-canvas-wrap {
+  background: linear-gradient(180deg, #a8d878 0%, #87c06a 100%);
+}
+
+.arc-canvas-wrap canvas {
+  display: block;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}

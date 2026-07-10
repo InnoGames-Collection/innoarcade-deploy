@@ -2,37 +2,28 @@
 import { sfx } from '../../engine/audio';
 import type { Action } from '../../engine/input';
 import { mulberry32 } from '../_lq/lq';
-import { drawIllustratedCar } from '../_shared/premiumCanvas';
+import { gridToIso, lerpCamera } from './iso';
+import { renderWorld } from './render';
+import {
+  CAM_LERP,
+  CELL,
+  COLS,
+  H,
+  HOP_DUR,
+  IDLE_LIMIT,
+  PREMIUM_RENDER,
+  W,
+  type Car,
+  type GameState,
+  type Log,
+  type Row,
+  type WorldSnapshot,
+  hopProgress,
+  playerGridPos,
+} from './types';
 
-export const W = 480;
-export const H = 720;
-export const COLS = 8;
-export const CELL = W / COLS;
-
-type RowKind = 'grass' | 'road' | 'river';
-
-interface Car {
-  row: number;
-  x: number;
-  w: number;
-  speed: number;
-}
-
-interface Log {
-  row: number;
-  x: number;
-  w: number;
-  speed: number;
-}
-
-interface Row {
-  z: number;
-  kind: RowKind;
-  dir: number;
-  speed: number;
-}
-
-export type GameState = 'menu' | 'playing' | 'paused' | 'over';
+export type { GameState } from './types';
+export { W, H, COLS, CELL, PREMIUM_RENDER } from './types';
 
 export class CrossyRoad {
   state: GameState = 'menu';
@@ -46,6 +37,9 @@ export class CrossyRoad {
   private pz = 0;
   private maxZ = 0;
   private camZ = 0;
+  private camIsoX = 0;
+  private camIsoY = 0;
+  private camBob = 0;
   private rows: Row[] = [];
   private cars: Car[] = [];
   private logs: Log[] = [];
@@ -55,6 +49,7 @@ export class CrossyRoad {
   private fromPz = 0;
   private idleT = 0;
   private tutorialT = 6;
+  private animT = 0;
 
   start(): void {
     this.score = 0;
@@ -62,6 +57,10 @@ export class CrossyRoad {
     this.pz = 0;
     this.maxZ = 0;
     this.camZ = 0;
+    const startIso = gridToIso(this.px + 0.5, this.pz + 0.5);
+    this.camIsoX = startIso.x;
+    this.camIsoY = startIso.y;
+    this.camBob = 0;
     this.rows = [];
     this.cars = [];
     this.logs = [];
@@ -69,6 +68,7 @@ export class CrossyRoad {
     this.hopT = 0;
     this.idleT = 0;
     this.tutorialT = 6;
+    this.animT = 0;
     for (let z = -4; z <= 12; z++) this.ensureRow(z);
     this.setState('playing');
   }
@@ -97,7 +97,7 @@ export class CrossyRoad {
     this.fromPz = this.pz;
     this.px += dx;
     this.pz += dz;
-    this.hopT = 0.14;
+    this.hopT = HOP_DUR;
     this.idleT = 0;
     sfx.click();
     if (this.pz > this.maxZ) {
@@ -109,7 +109,7 @@ export class CrossyRoad {
 
   private ensureRow(z: number): void {
     if (this.rows.some((r) => r.z === z)) return;
-    let kind: RowKind = 'grass';
+    let kind: Row['kind'] = 'grass';
     if (z > 0) {
       const roll = this.rnd();
       if (roll < 0.42) kind = 'road';
@@ -145,13 +145,14 @@ export class CrossyRoad {
 
   update(dt: number): void {
     if (this.state !== 'playing') return;
+    this.animT += dt;
 
     if (this.hopT > 0) {
       this.hopT = Math.max(0, this.hopT - dt);
       if (this.hopT === 0) this.checkLanding();
     } else {
       this.idleT += dt;
-      if (this.idleT > 14) this.die();
+      if (this.idleT > IDLE_LIMIT) this.die();
     }
 
     if (this.tutorialT > 0) this.tutorialT -= dt;
@@ -169,7 +170,11 @@ export class CrossyRoad {
 
     const row = this.rowAt(this.pz);
     if (row.kind === 'river' && this.hopT === 0) {
-      const log = this.logs.find((l) => l.row === this.pz && this.px * CELL + CELL / 2 >= l.x && this.px * CELL + CELL / 2 <= l.x + l.w);
+      const log = this.logs.find(
+        (l) => l.row === this.pz
+          && this.px * CELL + CELL / 2 >= l.x
+          && this.px * CELL + CELL / 2 <= l.x + l.w,
+      );
       if (log) {
         const shift = log.speed * dt / CELL;
         this.px += shift;
@@ -181,11 +186,29 @@ export class CrossyRoad {
 
     if (row.kind === 'road') this.checkCarHit();
 
-    const targetCam = this.pz * CELL - H * 0.55;
-    this.camZ += (targetCam - this.camZ) * Math.min(1, dt * 6);
+    this.updateCamera(dt);
+
     this.rows = this.rows.filter((r) => r.z > this.pz - 8);
     this.cars = this.cars.filter((c) => c.row > this.pz - 8);
     this.logs = this.logs.filter((l) => l.row > this.pz - 8);
+  }
+
+  private updateCamera(dt: number): void {
+    if (PREMIUM_RENDER) {
+      const snap = this.buildSnapshot();
+      const { gx, gz } = playerGridPos(snap);
+      const target = gridToIso(gx, gz);
+      const cam = { x: this.camIsoX, y: this.camIsoY };
+      lerpCamera(cam, target.x, target.y, dt, CAM_LERP);
+      this.camIsoX = cam.x;
+      this.camIsoY = cam.y;
+      const p = hopProgress(this.hopT);
+      this.camBob = this.hopT > 0 ? Math.sin(p * Math.PI) * 3 : 0;
+    } else {
+      const targetCam = this.pz * CELL - H * 0.55;
+      this.camZ += (targetCam - this.camZ) * Math.min(1, dt * 6);
+      this.camBob = 0;
+    }
   }
 
   private checkLanding(): void {
@@ -215,63 +238,29 @@ export class CrossyRoad {
     this.onGameOver(this.score, this.score > this.best);
   }
 
+  buildSnapshot(): WorldSnapshot {
+    return {
+      state: this.state,
+      px: this.px,
+      pz: this.pz,
+      fromPx: this.fromPx,
+      fromPz: this.fromPz,
+      hopT: this.hopT,
+      idleT: this.idleT,
+      tutorialT: this.tutorialT,
+      camZ: this.camZ,
+      camIsoX: this.camIsoX,
+      camIsoY: this.camIsoY,
+      camBob: this.camBob,
+      animT: this.animT,
+      rows: this.rows,
+      cars: this.cars,
+      logs: this.logs,
+    };
+  }
+
   render(ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = '#87c06a';
-    ctx.fillRect(0, 0, W, H);
-
-    const visRows = Math.ceil(H / CELL) + 2;
-    const baseZ = Math.floor(this.camZ / CELL);
-
-    for (let i = -1; i < visRows; i++) {
-      const z = baseZ + i;
-      const row = this.rowAt(z);
-      const sy = H - (z * CELL - this.camZ) - CELL;
-      if (sy < -CELL || sy > H + CELL) continue;
-
-      if (row.kind === 'grass') ctx.fillStyle = z <= 0 ? '#6ab04c' : '#7ec850';
-      else if (row.kind === 'road') ctx.fillStyle = '#4a4a4a';
-      else ctx.fillStyle = '#3498db';
-      ctx.fillRect(0, sy, W, CELL + 1);
-
-      if (row.kind === 'road') {
-        ctx.fillStyle = '#f0c040';
-        for (let x = 0; x < W; x += 40) ctx.fillRect(x, sy + CELL / 2 - 2, 18, 4);
-      }
-
-      for (const c of this.cars) {
-        if (c.row !== z) continue;
-        drawIllustratedCar(ctx, c.x, sy + 8, c.w, CELL - 16, '#e74c3c');
-      }
-
-      for (const l of this.logs) {
-        if (l.row !== z) continue;
-        ctx.fillStyle = '#8B5A2B';
-        ctx.fillRect(l.x, sy + 10, l.w, CELL - 20);
-      }
-    }
-
-    const t = this.hopT > 0 ? 1 - this.hopT / 0.14 : 1;
-    const drawPx = this.hopT > 0 ? this.fromPx + (this.px - this.fromPx) * t : this.px;
-    const drawPz = this.hopT > 0 ? this.fromPz + (this.pz - this.fromPz) * t : this.pz;
-    const py = H - (drawPz * CELL - this.camZ) - CELL;
-    const hopBounce = this.hopT > 0 ? Math.sin(t * Math.PI) * 10 : 0;
-
-    ctx.font = `${CELL - 8}px serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('🐔', drawPx * CELL + CELL / 2, py + CELL / 2 - hopBounce);
-
-    if (this.state === 'playing' && this.tutorialT > 0) {
-      ctx.fillStyle = 'rgba(0,0,0,0.55)';
-      ctx.fillRect(0, H - 56, W, 56);
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 14px system-ui,sans-serif';
-      ctx.fillText('Swipe or tap arrows to hop forward', W / 2, H - 28);
-    } else if (this.state === 'playing' && this.idleT > 10) {
-      ctx.fillStyle = 'rgba(231,76,60,0.85)';
-      ctx.font = 'bold 14px system-ui,sans-serif';
-      ctx.fillText('Hop soon!', W / 2, 28);
-    }
+    renderWorld(ctx, this.buildSnapshot());
   }
 
   private setState(s: GameState): void {

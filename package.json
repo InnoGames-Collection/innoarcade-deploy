@@ -18,7 +18,9 @@
     "covers:import": "node scripts/import-cover.mjs",
     "covers:import-all": "node scripts/import-all-covers.mjs",
     "lint:games": "node scripts/lint-game-shell.mjs",
-    "icons:validate": "node scripts/validate-memory-match-icons.mjs"
+    "icons:validate": "node scripts/validate-memory-match-icons.mjs",
+    "icons:process": "node scripts/process-memory-match-icons.mjs",
+    "icons:deploy": "node scripts/process-memory-match-icons.mjs --deploy"
   },
   "devDependencies": {
     "sharp": "^0.34.5",

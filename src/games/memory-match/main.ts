@@ -14,12 +14,12 @@ import {
   pushShellHistory, wireFreeShellCloseButtons, wireFreeShellBackNavigation,
   type FreeShellNavHandlers,
 } from '../../platform/freeShellNav';
-import cashIcon from './icons/cash.png';
-import coffeeIcon from './icons/coffee.png';
-import injeraIcon from './icons/injera.png';
-import logoBlueIcon from './icons/logo-blue.png';
-import logoGreenIcon from './icons/logo-green.png';
-import phoneIcon from './icons/phone.png';
+import telebirrIcon from './icons/telebirr.png';
+import ethioTelecomIcon from './icons/ethio-telecom.png';
+import mesobIcon from './icons/mesob.png';
+import jebenaIcon from './icons/jebena.png';
+import nexsusIcon from './icons/nexsus.png';
+import teleconnectIcon from './icons/teleconnect.png';
 
 const GAME_ID = 'memory-match';
 const host = createHost(GAME_ID);
@@ -37,12 +37,12 @@ const PAIR_COUNT = 6;
 interface CardIcon { id: string; src: string; alt: string; }
 
 const CARD_ICONS: CardIcon[] = [
-  { id: 'logo-blue', src: logoBlueIcon, alt: 'Logo' },
-  { id: 'injera', src: injeraIcon, alt: 'Injera platter' },
-  { id: 'coffee', src: coffeeIcon, alt: 'Coffee ceremony' },
-  { id: 'cash', src: cashIcon, alt: 'Cash' },
-  { id: 'logo-green', src: logoGreenIcon, alt: 'Green logo' },
-  { id: 'phone', src: phoneIcon, alt: 'WiFi' },
+  { id: 'telebirr', src: telebirrIcon, alt: 'Telebirr' },
+  { id: 'mesob', src: mesobIcon, alt: 'Mesob' },
+  { id: 'jebena', src: jebenaIcon, alt: 'Jebena' },
+  { id: 'teleconnect', src: teleconnectIcon, alt: 'Teleconnect' },
+  { id: 'ethio-telecom', src: ethioTelecomIcon, alt: 'Ethio Telecom' },
+  { id: 'nexsus', src: nexsusIcon, alt: 'Nexsus' },
 ];
 
 const ICON_BY_ID = new Map(CARD_ICONS.map((icon) => [icon.id, icon]));

@@ -118,7 +118,7 @@ export class HelixJump {
     };
     this.rotation.reset();
     this.camera.reset();
-    this.camera.snapTo();
+    this.camera.snapTo(this.ball.y);
     this.world.syncRings(this.rings, this.cfg.gapArc, this.ball.y, this.time, this.rotation.angle);
     this.world.updateBall(this.ball, this.skin, false, 0);
     helixAudio.startSession();
@@ -189,7 +189,7 @@ export class HelixJump {
     this.fallMul = Math.max(1, this.fallMul - capped * 0.1);
 
     const fever = this.feverLeft > 0;
-    this.camera.follow(this.ball.vy, this.combo, fever, capped);
+    this.camera.follow(this.ball.y, this.ball.vy, this.combo, fever, capped);
     this.camera.update(capped);
     this.recycleRings();
 
