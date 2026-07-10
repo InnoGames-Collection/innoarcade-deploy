@@ -263,6 +263,7 @@ export class HelixJump {
     if (hit.passedGap) {
       const throughY = clearYThroughRing(wy);
       if (this.ball.y < throughY) this.ball.y = throughY;
+      if (this.ball.vy < 1.5) this.ball.vy = Math.max(this.ball.vy, 2.5);
 
       if (!this.cleared.has(hit.ring.id)) {
         this.cleared.add(hit.ring.id);

@@ -2,8 +2,8 @@ import {
   BALL_CONTACT_ANGLE, BALL_R, BALL_ROLL_RATE, BALL_SQUASH_MAX, BALL_SQUASH_MIN,
   BALL_STRETCH_MAX, BOUNCE_RESTITUTION, BOUNCE_UP_MAX, BOUNCE_UP_VEL,
   BOUNCE_VEL, DANGER_TOLERANCE, FALL_STRETCH_SPEED, FALL_TERMINAL_VY,
-  GAP_EDGE_INSET, GAP_PASS_TOLERANCE, GRAVITY_BASE,
-  RING_HEIGHT,
+  GAP_PASS_TOLERANCE, GRAVITY_BASE,
+  RING_HEIGHT, SOLID_EDGE_INSET,
 } from './constants';
 import { easeOutBack } from './easing';
 import { ringWorldY } from './towerGenerator';
@@ -29,8 +29,8 @@ export function gapTolerance(_vy: number): number {
 }
 
 /**
- * True only when the ball sits over the empty gap arc [gapStart, gapStart + gapArc).
- * Matches platform geometry: safe mesh starts at gapStart + gapArc.
+ * Ball over the empty hole — matches mesh gap [gapStart, gapStart + gapArc).
+ * Solid wedge mesh begins at gapStart + gapArc.
  */
 export function inGapOpening(
   ballAng: number,
@@ -39,14 +39,13 @@ export function inGapOpening(
   tol = GAP_PASS_TOLERANCE,
 ): boolean {
   const rel = normalizeAngle(ballAng - gapStart);
-  const inset = GAP_EDGE_INSET;
-  return rel > inset - tol && rel < gapArc - inset + tol;
+  return rel < gapArc - tol;
 }
 
 /** Looser — approach highlight only. */
 export function inGapLoose(ballAng: number, gapStart: number, gapArc: number): boolean {
   const rel = normalizeAngle(ballAng - gapStart);
-  return rel < gapArc + GAP_PASS_TOLERANCE * 2;
+  return rel < gapArc + GAP_PASS_TOLERANCE;
 }
 
 export function inDangerZone(ballAng: number, dangerStart: number, dangerArc: number): boolean {
@@ -55,9 +54,10 @@ export function inDangerZone(ballAng: number, dangerStart: number, dangerArc: nu
   return rel < dangerArc + DANGER_TOLERANCE;
 }
 
-/** Solid platform wedge (everything that is not the gap opening). */
+/** On the solid platform wedge (not the hole). */
 export function onSolid(ballAng: number, gapStart: number, gapArc: number): boolean {
-  return !inGapOpening(ballAng, gapStart, gapArc);
+  const rel = normalizeAngle(ballAng - gapStart);
+  return rel >= gapArc - SOLID_EDGE_INSET;
 }
 
 function gapCenterDist(ballAng: number, gapStart: number, gapArc: number): number {
@@ -265,7 +265,7 @@ export function restYOnPlatform(ringY: number): number {
 }
 
 export function clearYThroughRing(ringY: number): number {
-  return ringY + PLATFORM_TOP + BALL_R * 0.1;
+  return ringY + PLATFORM_TOP + BALL_R * 0.35;
 }
 
 export function applyFallBoost(ball: BallState, combo: number): void {
