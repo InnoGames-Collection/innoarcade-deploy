@@ -61,7 +61,8 @@ body.game-shell[data-game="memory-match"]:has(#memory-match-wrapper:not(.hidden)
   overflow: hidden;
 }
 
-.mm-stage:has(#menuOverlay:not(.hidden)) .mm-bg-gradient {
+.mm-stage:has(#menuOverlay:not(.hidden)) .mm-bg-gradient,
+.mm-stage:has(#memory-match-wrapper:not(.hidden)) .mm-bg-gradient {
   background: linear-gradient(
     180deg,
     #3d8010 0%,
@@ -74,12 +75,14 @@ body.game-shell[data-game="memory-match"]:has(#memory-match-wrapper:not(.hidden)
   );
 }
 
-.mm-stage:has(#menuOverlay:not(.hidden)) .mm-bg-blob-a {
+.mm-stage:has(#menuOverlay:not(.hidden)) .mm-bg-blob-a,
+.mm-stage:has(#memory-match-wrapper:not(.hidden)) .mm-bg-blob-a {
   background: rgba(61, 128, 16, 0.45);
   top: -5%;
 }
 
-.mm-stage:has(#menuOverlay:not(.hidden)) .mm-bg-blob-b {
+.mm-stage:has(#menuOverlay:not(.hidden)) .mm-bg-blob-b,
+.mm-stage:has(#memory-match-wrapper:not(.hidden)) .mm-bg-blob-b {
   background: rgba(79, 158, 22, 0.4);
   bottom: -3%;
 }
@@ -177,8 +180,8 @@ body.game-shell[data-game="memory-match"]:has(#memory-match-wrapper:not(.hidden)
   width: 14px;
   height: 14px;
   flex-shrink: 0;
-  color: var(--mm-green);
-  opacity: 0.9;
+  color: var(--mm-blue);
+  opacity: 0.95;
 }
 
 .mm-stat-head {
@@ -199,8 +202,8 @@ body.game-shell[data-game="memory-match"]:has(#memory-match-wrapper:not(.hidden)
   margin: 0;
   border: none;
   border-radius: 50%;
-  background: rgba(79, 158, 22, 0.12);
-  color: var(--mm-green);
+  background: rgba(31, 116, 224, 0.12);
+  color: var(--mm-blue);
   cursor: pointer;
   flex-shrink: 0;
   transition: transform 0.15s var(--mm-ease-bounce), background 0.15s;
@@ -232,7 +235,7 @@ body.game-shell[data-game="memory-match"]:has(#memory-match-wrapper:not(.hidden)
 .mm-ico-score {
   padding: 2px;
   border-radius: 4px;
-  background: rgba(79, 158, 22, 0.1);
+  background: rgba(31, 116, 224, 0.1);
   box-sizing: content-box;
 }
 
@@ -397,10 +400,10 @@ body.game-shell[data-game="memory-match"]:has(#memory-match-wrapper:not(.hidden)
 }
 
 .mm-card-back {
-  background: linear-gradient(145deg, var(--mm-green-light) 0%, var(--mm-green) 55%, var(--mm-green-dark) 100%);
+  background: linear-gradient(145deg, #4fc3f7 0%, #1f74e0 55%, #1558b8 100%);
   border: 2px solid rgba(255, 255, 255, 0.35);
   box-shadow:
-    0 4px 14px rgba(20, 60, 20, 0.2),
+    0 4px 14px rgba(20, 50, 100, 0.22),
     inset 0 2px 0 rgba(255, 255, 255, 0.35),
     inset 0 -3px 6px rgba(0, 0, 0, 0.08);
   transform: rotateY(0deg);
@@ -586,7 +589,22 @@ body.game-shell[data-game="memory-match"] #mmHomeBtn {
   flex-wrap: wrap;
   gap: 10px;
   justify-content: center;
+  align-items: center;
   width: 100%;
+}
+
+.mm-btn-action,
+body.game-shell[data-game="memory-match"] #mmStartBtn.mm-btn-play {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  background: linear-gradient(135deg, #4fc3f7 0%, #1f74e0 55%, #1558b8 100%) !important;
+  border: 2px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 4px 14px rgba(31, 116, 224, 0.38) !important;
+}
+
+.mm-btn-action:active:not(:disabled),
+body.game-shell[data-game="memory-match"] #mmStartBtn.mm-btn-play:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 /* ── Shared shell cards (menu + game over) ── */
@@ -732,23 +750,10 @@ body.game-shell[data-game="memory-match"] #mmStartBtn.mm-btn-play {
   width: auto;
   max-width: 100%;
   align-self: center;
-  color: #fff !important;
-  -webkit-text-fill-color: #fff !important;
-  background: linear-gradient(135deg, #4fc3f7 0%, #1f74e0 55%, #1558b8 100%) !important;
-  border: 2px solid rgba(255, 255, 255, 0.35) !important;
-  box-shadow: 0 4px 14px rgba(31, 116, 224, 0.38) !important;
 }
 
-body.game-shell[data-game="memory-match"] #mmStartBtn.mm-btn-play:active:not(:disabled) {
-  transform: scale(0.96);
-}
-
-/* End screen — stats + grid only */
+/* End screen */
 .mm-playframe.mm-ended .mm-actions {
-  display: none !important;
-}
-
-#mmOverOverlay {
   display: none !important;
 }
 

@@ -3,7 +3,7 @@
 import '../../styles/base.css';
 import '../../styles/game-shell.css';
 import './style.css';
-import { applyTranslations, getLang } from '../../i18n';
+import { applyTranslations, getLang, t } from '../../i18n';
 import { createHost } from '../../platform/gameHost';
 import {
   applyTournamentPlayLabels, promptTournamentEntry, refreshTournamentMenuPanel,
@@ -89,7 +89,7 @@ const restartBtn = $('#mm-restart-btn') as HTMLButtonElement;
 function playButtons() {
   return {
     start: phase === 'menu' ? startBtn : null,
-    again: null,
+    again: phase === 'over' ? ($('#mmAgainBtn') as HTMLButtonElement) : null,
     restart: restartBtn,
   };
 }
@@ -170,11 +170,69 @@ function hideOverOverlay(): void {
   overlay.setAttribute('aria-hidden', 'true');
 }
 
+function showOverOverlay(): void {
+  const overlay = $('#mmOverOverlay');
+  const panel = overlay.querySelector<HTMLElement>('.mm-over-panel')!;
+  const cleared = pairs === PAIR_COUNT;
+  panel.classList.toggle('mm-victory', cleared);
+
+  $('#mmFinalTime').textContent = fmtTime(spentSeconds());
+  $('#mmFinalBest').textContent = SCORE_PLACEHOLDER;
+  $('#mmOverRank').innerHTML = `${t('td.rank')} <strong>…</strong>`;
+  $('#mmFinalAttempts').textContent = '…';
+  $('#mmOverSummary').querySelectorAll('.mm-sum-reward').forEach((n) => n.remove());
+  $('#mmNewBest').classList.add('hidden');
+  $('#mmRunReward').innerHTML = `<span class="mm-rr-pending">…</span>`;
+  $('#mmBoardOver').innerHTML = '';
+  syncAttemptsUi();
+  overlay.classList.remove('hidden');
+  overlay.setAttribute('aria-hidden', 'false');
+}
+
+function formatOverReward(): void {
+  const rewardEl = $('#mmRunReward');
+  const summaryEl = $('#mmOverSummary');
+  summaryEl.querySelectorAll('.mm-sum-reward').forEach((n) => n.remove());
+  if (rewardEl.querySelector('.mm-rr-pending')) return;
+
+  const stats = [...rewardEl.querySelectorAll<HTMLElement>('.mm-rr-stat')];
+  const rankLabel = t('td.rank').toLowerCase();
+  const bestLabel = t('td.best').toLowerCase();
+  let rankVal = '—/—';
+  let attemptsVal = String(tournamentAttemptsLeft(GAME_ID));
+
+  for (const stat of stats) {
+    const label = stat.querySelector('b')?.textContent?.trim().toLowerCase() ?? '';
+    if (label === rankLabel || label.startsWith(`${rankLabel} `)) {
+      rankVal = stat.textContent?.replace(stat.querySelector('b')?.textContent ?? '', '').trim() ?? '—/—';
+    } else if (label !== bestLabel && !stat.classList.contains('xp') && !stat.classList.contains('coins')) {
+      const strong = stat.querySelector('strong');
+      if (strong) attemptsVal = strong.textContent ?? attemptsVal;
+    }
+  }
+
+  $('#mmOverRank').innerHTML = `${t('td.rank')} <strong>${rankVal}</strong>`;
+  $('#mmFinalAttempts').textContent = attemptsVal;
+
+  for (const stat of stats) {
+    if (!stat.classList.contains('xp') && !stat.classList.contains('coins')) continue;
+    const chip = document.createElement('span');
+    chip.className = 'mm-over-sum-item mm-sum-reward';
+    if (stat.classList.contains('xp')) chip.classList.add('mm-sum-xp');
+    if (stat.classList.contains('coins')) chip.classList.add('mm-sum-coins');
+    chip.textContent = stat.textContent?.trim() ?? '';
+    summaryEl.appendChild(chip);
+  }
+}
+
 function getOverlay(): string | null {
   const pause = document.getElementById('pauseOverlay') ??
     (resumeBtn.closest('.mm-actions')?.querySelector('#mm-resume-btn:not(.hidden)') ? 'paused' : null);
   if (typeof pause === 'string') return pause;
-  if (phase === 'over') return 'over';
+  if (phase === 'over') {
+    const overEl = document.getElementById('mmOverOverlay');
+    if (overEl && !overEl.classList.contains('hidden')) return 'over';
+  }
   if (phase === 'paused') return 'paused';
   return null;
 }
@@ -197,11 +255,14 @@ async function submitRound(score: number, cleared: boolean, durationMs: number):
     boardEl: $('#mmBoardOver'),
     cssPrefix: 'mm-rr',
     boardLimit: 5,
-    showToast: () => { /* silent end screen */ },
-    onBest: (_best, isRecord) => {
+    showToast,
+    onBest: (best, isRecord) => {
+      $('#mmFinalBest').textContent = best.toLocaleString();
+      $('#mmNewBest').classList.toggle('hidden', !isRecord);
       if (isRecord) bumpScoreStat();
     },
     onSync: () => {
+      formatOverReward();
       syncAttemptsUi();
       void refreshTournamentPanel();
     },
@@ -406,6 +467,7 @@ function endRound(): void {
   scoreEl.textContent = String(lastFinalScore);
   bumpScoreStat();
   refreshStats();
+  showOverOverlay();
   void submitRound(lastFinalScore, cleared, durationMs);
 }
 
@@ -456,6 +518,13 @@ function checkMatch(): void {
 }
 
 startBtn.addEventListener('click', () => { playSfx('click'); void onPlayOrEnter(); });
+$('#mmAgainBtn').addEventListener('click', () => { playSfx('click'); void onPlayOrEnter(); });
+$('#mmHomeBtn').addEventListener('click', () => { playSfx('click'); goMenuMM(); });
+$('#mmOverOverlay .gp-close-corner').addEventListener('click', (e) => {
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  goMenuMM();
+});
 pauseBtn.addEventListener('click', () => { playSfx('click'); pauseRound(); });
 resumeBtn.addEventListener('click', () => { playSfx('click'); resumeRound(); });
 restartBtn.addEventListener('click', () => { playSfx('click'); void restartRoundMM(); });
