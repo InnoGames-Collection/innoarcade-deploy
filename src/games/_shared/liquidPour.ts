@@ -8,7 +8,6 @@ import { isWaterSortPage, waterSortPourSound } from '../water-sort/audio';
 import {
   clearStreamCanvas,
   drawConnectedPourStream,
-  drawLiquidStream,
   drawSplashParticles,
   drawLandingRipple,
   easeInOutCubic,

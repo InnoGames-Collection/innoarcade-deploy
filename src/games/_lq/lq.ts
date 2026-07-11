@@ -226,6 +226,9 @@ export interface MountLQOptions {
   headerSlots?: FreePlayHeaderSlot[];
   /** Show pause button and pause overlay during play. */
   pauseable?: boolean;
+  onPause?: () => void;
+  onResume?: () => void;
+  onAbandon?: () => void;
 }
 
 /** Boot a native LexiQuest brain game inside the free hub shell. */
@@ -246,6 +249,9 @@ export function mountLQ(
       { id: 'score', labelKey: 'td.score', icon: 'score', score: true },
     ],
     pauseable: opts?.pauseable,
+    onPause: opts?.onPause,
+    onResume: opts?.onResume,
+    onAbandon: opts?.onAbandon,
   });
   lqFinish = (score, isWin, summary, durationMs) => {
     shell.finishPlay(score, isWin, summary ?? '', durationMs);

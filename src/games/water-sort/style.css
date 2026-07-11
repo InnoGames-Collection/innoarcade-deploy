@@ -192,6 +192,19 @@
   filter: blur(0.2px);
 }
 
+.ws-tube .ws-glass-edge {
+  position: absolute;
+  top: 12%;
+  right: 6%;
+  width: 14%;
+  height: 50%;
+  border-radius: 50%;
+  background: linear-gradient(200deg, rgba(255, 255, 255, 0.22) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 4;
+  opacity: 0.5;
+}
+
 .ws-fluid-canvas {
   position: absolute;
   left: 5px;

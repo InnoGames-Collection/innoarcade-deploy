@@ -912,6 +912,12 @@ export class WaterBottleManager {
       anchor.setAttribute('aria-hidden', 'true');
       tubeEl.appendChild(anchor);
     }
+    if (!tubeEl.querySelector('.ws-glass-edge')) {
+      const edge = document.createElement('span');
+      edge.className = 'ws-glass-edge';
+      edge.setAttribute('aria-hidden', 'true');
+      tubeEl.appendChild(edge);
+    }
     return canvas;
   }
 

@@ -8,30 +8,123 @@
   </head>
   <body class="game-shell casual-shell brain-shell" data-game="sudoku">
     <div id="stage" class="fc-stage game-shell-stage">
-      <div id="fcBackdrop" class="fc-backdrop" aria-hidden="true"></div>
+      <div id="fcBackdrop" class="fc-backdrop" aria-hidden="true">
+        <div class="sdk-bg-layer">
+          <div class="sdk-bg-orb sdk-bg-orb--1"></div>
+          <div class="sdk-bg-orb sdk-bg-orb--2"></div>
+          <div class="sdk-bg-orb sdk-bg-orb--3"></div>
+          <div class="sdk-bg-shape sdk-bg-shape--1"></div>
+          <div class="sdk-bg-shape sdk-bg-shape--2"></div>
+        </div>
+      </div>
       <div id="fcPlayFrame" class="fc-playframe hidden">
         <button id="closeBtn" class="gp-close gp-close-corner hidden" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
         <div id="lq-mount"></div>
       </div>
       <div id="menuOverlay" class="game-overlay">
-        <div class="game-panel panel-clean">
+        <div class="game-panel panel-clean sdk-menu-panel">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <div class="sdk-menu-hero">
+            <div class="sdk-menu-illus" aria-hidden="true">
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="6" y="6" width="52" height="52" rx="10" fill="url(#sdkGridGrad)" stroke="rgba(31,116,224,0.2)" stroke-width="1.5"/>
+                <path d="M6 22h52M6 38h52M22 6v52M42 6v52" stroke="rgba(31,116,224,0.25)" stroke-width="1.5"/>
+                <text x="14" y="19" fill="#1a3a5c" font-size="9" font-weight="800" font-family="system-ui,sans-serif">5</text>
+                <text x="30" y="19" fill="#34b38a" font-size="9" font-weight="800" font-family="system-ui,sans-serif">2</text>
+                <text x="46" y="35" fill="#1a3a5c" font-size="9" font-weight="800" font-family="system-ui,sans-serif">4</text>
+                <text x="14" y="51" fill="#34b38a" font-size="9" font-weight="800" font-family="system-ui,sans-serif">1</text>
+                <text x="46" y="51" fill="#1f74e0" font-size="9" font-weight="800" font-family="system-ui,sans-serif">6</text>
+                <defs>
+                  <linearGradient id="sdkGridGrad" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="rgba(240,248,255,0.95)"/>
+                    <stop offset="1" stop-color="rgba(232,250,242,0.9)"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <div class="sdk-menu-title">Sudoku</div>
+            <div class="sdk-menu-sub">Relax with elegant 6×6 puzzles</div>
+          </div>
+          <button type="button" id="sdkPlayBtn" class="sdk-play-cta" data-i18n="hub.play">Play</button>
+          <div class="sdk-diff-row" role="group" aria-label="Difficulty">
+            <button type="button" class="sdk-diff-chip sdk-diff-chip--active" data-sdk-diff="easy">Easy</button>
+            <button type="button" class="sdk-diff-chip" data-sdk-diff="medium">Medium</button>
+            <button type="button" class="sdk-diff-chip" data-sdk-diff="hard">Hard</button>
+          </div>
+          <div class="sdk-mode-grid">
+            <button type="button" class="sdk-mode-card sdk-mode-card--daily" id="sdkDailyBtn">
+              <span class="sdk-mode-card__icon" aria-hidden="true">📅</span>
+              <span class="sdk-mode-card__label">Daily Challenge</span>
+              <span class="sdk-mode-card__desc">Fresh puzzles every day</span>
+            </button>
+            <button type="button" class="sdk-mode-card sdk-mode-card--tournament sdk-mode-card--locked" disabled>
+              <span class="sdk-mode-card__icon" aria-hidden="true">🏆</span>
+              <span class="sdk-mode-card__label">Tournament</span>
+              <span class="sdk-mode-card__desc">Compete nationwide</span>
+              <span class="sdk-mode-card__badge">Soon</span>
+            </button>
+          </div>
+          <div class="sdk-menu-actions">
+            <button type="button" class="sdk-menu-action" id="sdkLeaderMenuBtn">
+              <span aria-hidden="true">📊</span>
+              <span>Leaderboard</span>
+            </button>
+            <button type="button" class="sdk-menu-action" id="sdkHowBtn">
+              <span aria-hidden="true">❓</span>
+              <span>How to Play</span>
+            </button>
+            <button type="button" class="sdk-menu-action" id="sdkSettingsBtn">
+              <span aria-hidden="true">⚙️</span>
+              <span>Settings</span>
+            </button>
+          </div>
           <div class="shell-free-menu" id="freeMenu"></div>
-          <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
+          <button id="startBtn" class="visually-hidden" data-i18n="hub.play">Play</button>
         </div>
       </div>
       <div id="overOverlay" class="game-overlay hidden" aria-hidden="true">
-        <div class="game-panel">
+        <div class="game-panel sdk-over-panel">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <div class="sdk-over-hero">
+            <div class="sdk-over-trophy" aria-hidden="true">🏆</div>
+          </div>
           <h2 data-i18n="td.gameOver">Game over</h2>
           <p id="fcOverSummary" class="fc-over-summary"></p>
           <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
-          <div class="shell-over-final">
-            <div class="shell-over-stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
-            <div class="shell-over-stat"><span data-i18n="td.best">Best</span><strong id="finalBest">—</strong></div>
+          <div class="sdk-over-grid">
+            <div class="sdk-over-stat sdk-over-stat--score">
+              <span data-i18n="td.score">Score</span>
+              <strong id="finalScore">0</strong>
+            </div>
+            <div class="sdk-over-stat">
+              <span>Time</span>
+              <strong id="sdkOverTime">—</strong>
+            </div>
+            <div class="sdk-over-stat">
+              <span>Accuracy</span>
+              <strong id="sdkOverAccuracy">—</strong>
+            </div>
+            <div class="sdk-over-stat">
+              <span>Mistakes</span>
+              <strong id="sdkOverMistakes">0</strong>
+            </div>
+            <div class="sdk-over-stat">
+              <span>Difficulty</span>
+              <strong id="sdkOverDifficulty">—</strong>
+            </div>
+            <div class="sdk-over-stat">
+              <span data-i18n="td.best">Best</span>
+              <strong id="finalBest">—</strong>
+            </div>
+          </div>
+          <div class="shell-over-final hidden" aria-hidden="true">
+            <div class="shell-over-stat"><span data-i18n="td.score">Score</span><strong>0</strong></div>
+            <div class="shell-over-stat"><span data-i18n="td.best">Best</span><strong>—</strong></div>
           </div>
           <div class="shell-run-reward" id="runReward"></div>
           <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
+          <button type="button" id="sdkLeaderBtn" class="btn">Leaderboard</button>
+          <button type="button" id="sdkHomeBtn" class="btn">Home</button>
         </div>
       </div>
     </div>
