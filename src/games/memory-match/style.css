@@ -596,16 +596,45 @@ body.game-shell[data-game="memory-match"] .mm-shell-card.game-panel {
   width: min(380px, 94vw);
 }
 
+body.game-shell[data-game="memory-match"] .mm-menu-panel.mm-shell-card {
+  padding: 14px 14px 12px;
+  padding-top: 28px;
+}
+
 .mm-tourney-card {
   width: 100%;
   border-radius: 14px;
   background: rgba(244, 252, 240, 0.95);
   border: 1px solid rgba(79, 158, 22, 0.14);
-  padding: 12px 12px 10px;
+  padding: 10px 12px 8px;
   flex: 1 1 auto;
   min-height: 0;
-  overflow: hidden;
-  text-align: center;
+  overflow: visible;
+  text-align: left;
+}
+
+body.game-shell[data-game="memory-match"] .mm-tourney-card .gt-head-inline {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+  text-align: left;
+}
+
+body.game-shell[data-game="memory-match"] .mm-tourney-card .gt-game-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+body.game-shell[data-game="memory-match"] .mm-tourney-card .gt-head-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
 }
 
 body.game-shell[data-game="memory-match"] .mm-tourney-card .gt-head {
@@ -616,11 +645,12 @@ body.game-shell[data-game="memory-match"] .mm-tourney-card .gt-title {
   font-size: 1rem;
   font-weight: 800;
   color: var(--shell-text, #14271a);
+  line-height: 1.2;
 }
 
 body.game-shell[data-game="memory-match"] .mm-tourney-card .gt-cadence {
-  font-size: 0.72rem;
-  margin: 2px 0 6px;
+  font-size: 0.7rem;
+  margin: 0;
   color: var(--shell-muted, #5f7262);
 }
 
@@ -649,6 +679,40 @@ body.game-shell[data-game="memory-match"] .mm-tourney-card .gt-board {
   display: flex;
   flex-direction: column;
   gap: 3px;
+  margin-top: 4px;
+}
+
+body.game-shell[data-game="memory-match"] .mm-tourney-card .gt-board-sep {
+  height: 1px;
+  margin: 2px 0;
+  background: rgba(79, 158, 22, 0.15);
+}
+
+body.game-shell[data-game="memory-match"] .mm-tourney-card .gt-row.me {
+  background: rgba(79, 158, 22, 0.12);
+  font-weight: 700;
+}
+
+body.game-shell[data-game="memory-match"] #mmStartBtn {
+  margin-top: 4px;
+  background: linear-gradient(135deg, #6ab82e 0%, #4f9e16 55%, #3d7d12 100%) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 4px 14px rgba(79, 158, 22, 0.4) !important;
+}
+
+/* End screen — stats + grid only */
+.mm-playframe.mm-ended .mm-actions {
+  display: none !important;
+}
+
+.mm-toast {
+  display: none !important;
+}
+
+#mmOverOverlay {
+  display: none !important;
 }
 
 body.game-shell[data-game="memory-match"] .mm-tourney-card .gt-row {

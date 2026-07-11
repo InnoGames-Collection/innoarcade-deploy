@@ -21,7 +21,7 @@ import nexsusIcon from './icons/nexsus.png';
 import teleconnectIcon from './icons/teleconnect.png';
 import { mmSfx } from './mm-sfx';
 import {
-  burstConfetti, showScorePopup, spawnMatchVfx,
+  showScorePopup, spawnMatchVfx,
 } from './mm-vfx';
 
 const GAME_ID = 'memory-match';
@@ -68,6 +68,7 @@ let toastT = 0;
 let roundStartMs = 0;
 
 function showToast(msg: string): void {
+  if (phase === 'over') return;
   const el = $('#toast');
   el.textContent = msg;
   el.classList.remove('hidden');
@@ -88,7 +89,7 @@ const restartBtn = $('#mm-restart-btn') as HTMLButtonElement;
 function playButtons() {
   return {
     start: phase === 'menu' ? startBtn : null,
-    again: phase === 'over' ? ($('#mmAgainBtn') as HTMLButtonElement) : null,
+    again: null,
     restart: restartBtn,
   };
 }
@@ -143,38 +144,18 @@ function setPhase(next: Phase): void {
   phase = next;
   if (next === 'menu') showMenu();
   else showGame();
-  $('#mmCloseBtn').classList.toggle('hidden', next === 'menu' || next === 'over');
+  const playframe = $('#memory-match-wrapper');
+  playframe.classList.toggle('mm-ended', next === 'over');
+  $('#mmCloseBtn').classList.toggle('hidden', next === 'menu');
   pauseBtn.classList.toggle('hidden', next !== 'playing');
   resumeBtn.classList.toggle('hidden', next !== 'paused');
   restartBtn.classList.toggle('hidden', next !== 'paused');
-  grid.classList.toggle('mm-paused', next === 'paused' || next === 'over');
+  grid.classList.toggle('mm-paused', next === 'paused');
   syncAttemptsUi();
   if (next !== 'menu' && prev === 'menu') pushShellHistory();
   if (next === 'paused' && prev !== 'paused') pushShellHistory();
   if (next === 'over' && prev !== 'over') pushShellHistory();
-}
-
-function showOverOverlay(final: number): void {
-  void final;
-  const overlay = $('#mmOverOverlay');
-  const panel = overlay.querySelector<HTMLElement>('.mm-over-panel')!;
-  const cleared = pairs === PAIR_COUNT;
-  panel.classList.toggle('mm-victory', cleared);
-
-  $('#mmFinalTime').textContent = fmtTime(spentSeconds());
-  $('#mmFinalBest').textContent = SCORE_PLACEHOLDER;
-  $('#mmOverRank').innerHTML = `${t('td.rank')} <strong>…</strong>`;
-  $('#mmFinalAttempts').textContent = '…';
-  $('#mmOverSummary').querySelectorAll('.mm-sum-reward').forEach((n) => n.remove());
-  $('#mmNewBest').classList.add('hidden');
-  $('#mmRunReward').innerHTML = `<span class="mm-rr-pending">…</span>`;
-  $('#mmRunReward').classList.remove('hidden');
-  $('#mmBoardOver').innerHTML = '';
-  $('#mmCloseBtn').classList.add('hidden');
-  syncAttemptsUi();
-  overlay.classList.remove('hidden');
-  overlay.setAttribute('aria-hidden', 'false');
-  if (cleared) burstConfetti(true);
+  if (next === 'over') refreshStats();
 }
 
 function hideOverOverlay(): void {
@@ -187,8 +168,7 @@ function getOverlay(): string | null {
   const pause = document.getElementById('pauseOverlay') ??
     (resumeBtn.closest('.mm-actions')?.querySelector('#mm-resume-btn:not(.hidden)') ? 'paused' : null);
   if (typeof pause === 'string') return pause;
-  const over = document.getElementById('mmOverOverlay');
-  if (over && !over.classList.contains('hidden')) return 'over';
+  if (phase === 'over') return 'over';
   if (phase === 'paused') return 'paused';
   return null;
 }
@@ -211,14 +191,11 @@ async function submitRound(score: number, cleared: boolean, durationMs: number):
     boardEl: $('#mmBoardOver'),
     cssPrefix: 'mm-rr',
     boardLimit: 5,
-    showToast,
-    onBest: (best, isRecord) => {
-      $('#mmFinalBest').textContent = best.toLocaleString();
-      $('#mmNewBest').classList.toggle('hidden', !isRecord);
+    showToast: () => { /* silent end screen */ },
+    onBest: (_best, isRecord) => {
       if (isRecord) bumpScoreStat();
     },
     onSync: () => {
-      formatOverReward();
       syncAttemptsUi();
       void refreshTournamentPanel();
     },
@@ -239,17 +216,21 @@ function popStat(id: string): void {
 }
 
 function refreshStats(): void {
-  const secs = Math.max(0, secondsLeft);
+  const spent = spentSeconds();
+  const secs = phase === 'over' ? spent : Math.max(0, secondsLeft);
   timeEl.textContent = fmtTime(secs);
   movesEl.textContent = String(moves);
   pairsEl.textContent = `${pairs}/${PAIR_COUNT}`;
   scoreEl.textContent = scoreDisplayText();
 
   const fill = $('#mm-timer-fill');
-  fill.style.width = `${(secs / ROUND_SECONDS) * 100}%`;
+  const fillPct = phase === 'over'
+    ? (spent / ROUND_SECONDS) * 100
+    : (Math.max(0, secondsLeft) / ROUND_SECONDS) * 100;
+  fill.style.width = `${fillPct}%`;
   const bar = fill.parentElement!;
-  bar.classList.toggle('mm-timer-low', secs > 0 && secs <= 30);
-  bar.classList.toggle('mm-timer-critical', secs > 0 && secs <= 10);
+  bar.classList.toggle('mm-timer-low', phase !== 'over' && secs > 0 && secs <= 30);
+  bar.classList.toggle('mm-timer-critical', phase !== 'over' && secs > 0 && secs <= 10);
 }
 
 
@@ -418,7 +399,7 @@ function endRound(): void {
   setPhase('over');
   scoreEl.textContent = String(lastFinalScore);
   bumpScoreStat();
-  showOverOverlay(lastFinalScore);
+  refreshStats();
   void submitRound(lastFinalScore, cleared, durationMs);
 }
 
@@ -469,57 +450,11 @@ function checkMatch(): void {
 }
 
 startBtn.addEventListener('click', () => { playSfx('click'); void onPlayOrEnter(); });
-$('#mmAgainBtn').addEventListener('click', () => { playSfx('click'); void onPlayOrEnter(); });
-$('#mmOverOverlay .gp-close-corner').addEventListener('click', (e) => {
-  e.preventDefault();
-  e.stopImmediatePropagation();
-  goMenuMM();
-});
 pauseBtn.addEventListener('click', () => { playSfx('click'); pauseRound(); });
 resumeBtn.addEventListener('click', () => { playSfx('click'); resumeRound(); });
 restartBtn.addEventListener('click', () => { playSfx('click'); void restartRoundMM(); });
 
 const muteBtn = $('#mmMuteBtn') as HTMLButtonElement;
-
-function formatOverReward(): void {
-  const rewardEl = $('#mmRunReward');
-  const summaryEl = $('#mmOverSummary');
-  summaryEl.querySelectorAll('.mm-sum-reward').forEach((n) => n.remove());
-
-  if (rewardEl.querySelector('.mm-rr-pending')) return;
-
-  const stats = [...rewardEl.querySelectorAll<HTMLElement>('.mm-rr-stat')];
-  const rankLabel = t('td.rank').toLowerCase();
-  const bestLabel = t('td.best').toLowerCase();
-
-  let rankVal = '—/—';
-  let attemptsVal = String(tournamentAttemptsLeft(GAME_ID));
-
-  for (const stat of stats) {
-    const label = stat.querySelector('b')?.textContent?.trim().toLowerCase() ?? '';
-    if (label === rankLabel || label.startsWith(`${rankLabel} `)) {
-      rankVal = stat.textContent?.replace(stat.querySelector('b')?.textContent ?? '', '').trim() ?? '—/—';
-    } else if (label !== bestLabel && !stat.classList.contains('xp') && !stat.classList.contains('coins')) {
-      const strong = stat.querySelector('strong');
-      if (strong) attemptsVal = strong.textContent ?? attemptsVal;
-    }
-  }
-
-  $('#mmOverRank').innerHTML = `${t('td.rank')} <strong>${rankVal}</strong>`;
-  $('#mmFinalAttempts').textContent = attemptsVal;
-
-  for (const stat of stats) {
-    if (!stat.classList.contains('xp') && !stat.classList.contains('coins')) continue;
-    const chip = document.createElement('span');
-    chip.className = 'mm-over-sum-item mm-sum-reward';
-    if (stat.classList.contains('xp')) chip.classList.add('mm-sum-xp');
-    if (stat.classList.contains('coins')) chip.classList.add('mm-sum-coins');
-    chip.textContent = stat.textContent?.trim() ?? '';
-    summaryEl.appendChild(chip);
-  }
-
-  rewardEl.classList.add('hidden');
-}
 
 function syncMuteBtn(): void {
   const muted = mmSfx.isMuted();
@@ -527,7 +462,6 @@ function syncMuteBtn(): void {
   muteBtn.setAttribute('aria-label', muted ? 'Unmute' : 'Mute');
 }
 muteBtn.addEventListener('click', () => { mmSfx.toggleMute(); syncMuteBtn(); });
-$('#mmHomeBtn').addEventListener('click', () => { playSfx('click'); goMenuMM(); });
 
 const stage = document.getElementById('stage');
 if (stage) {

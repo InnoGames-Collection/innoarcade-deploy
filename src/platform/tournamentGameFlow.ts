@@ -61,7 +61,7 @@ export async function refreshTournamentMenuPanel(
 
   mount.innerHTML = renderShellMenuTournamentHtml(
     title, icon, walletCoins, serverBest, attemptsLeft, board,
-    { cadence: tourney.cadence, gameId, ...opts },
+    { cadence: tourney.cadence, gameId, standing, ...opts },
   );
   return { serverBest, attemptsLeft };
 }

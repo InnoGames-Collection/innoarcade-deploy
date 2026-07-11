@@ -11,6 +11,8 @@ export interface ShellMenuTournamentOpts {
   hint?: string;
   /** Hide the separate best row when the player already appears on the board. */
   hideBestIfOnBoard?: boolean;
+  /** Player standing when not in the top-N board rows. */
+  standing?: LeaderEntry | null;
 }
 
 function cadenceBadgeHtml(cadence: TournamentCadence): string {
@@ -67,12 +69,15 @@ export function renderShellMenuTournamentHtml(
     ? ''
     : `<div class="gt-best">${t('td.yourBest')}: <strong>${serverBest.toLocaleString()}</strong></div>`;
   return `
-    <div class="gt-head">
-      <span class="gt-title">${gameIcon} ${escHtml(gameTitle)}</span>
+    <div class="gt-head gt-head-inline">
+      <span class="gt-game-icon" aria-hidden="true">${gameIcon}</span>
+      <div class="gt-head-text">
+        <span class="gt-title">${escHtml(gameTitle)}</span>
+        ${cadenceRow}
+      </div>
     </div>
-    ${cadenceRow}
     ${bestRow}
     ${hintRow}
     ${attemptsLeft > 0 ? `<div class="gt-status"><span class="gt-attempts">🎟️ ${t('td.attemptsLeft')}: <strong>${attemptsLeft}</strong></span></div>` : ''}
-    <div class="gt-board">${tournamentBoardHtml(board)}</div>`;
+    <div class="gt-board">${tournamentBoardHtml(board, opts?.standing)}</div>`;
 }
