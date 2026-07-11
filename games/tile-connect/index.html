@@ -21,7 +21,7 @@
       </div>
       <div id="fcPlayFrame" class="fc-playframe hidden">
         <button id="closeBtn" class="gp-close gp-close-corner hidden" aria-label="Close">✕</button>
-        <div class="tc-hud-actions">
+        <div class="tc-hud-row" id="tcHudRow">
           <button type="button" id="tcSettingsBtn" class="tc-settings-btn" aria-label="Sound">🔊</button>
         </div>
         <div id="lq-mount"></div>
@@ -32,8 +32,8 @@
           <div class="tc-menu-hero">
             <div class="tc-menu-icon" aria-hidden="true">🔗</div>
             <div class="tc-menu-title">Tile Connect</div>
-            <div class="tc-menu-sub">Link matching tiles with paths that bend twice</div>
           </div>
+          <div class="shell-free-menu" id="freeMenu"></div>
           <div class="tc-mode-grid" id="tcModeGrid">
             <button type="button" class="tc-mode-card tc-mode-card--classic" data-tc-mode="classic">
               <span class="tc-mode-card__icon" aria-hidden="true">🎯</span>
@@ -58,7 +58,6 @@
               <span class="tc-mode-card__badge">Soon</span>
             </button>
           </div>
-          <div class="shell-free-menu" id="freeMenu"></div>
           <button id="startBtn" class="visually-hidden" data-i18n="hub.play">Play</button>
         </div>
       </div>

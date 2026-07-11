@@ -12,7 +12,6 @@ import { tileConnectCanConnect, tileConnectFindHint } from '../_lq/solvable';
 import { buildSolvableTileBoard } from '../_lq/levelGen';
 import { showFirstRunHint } from '../_shared/firstRun';
 import { sfx } from '../../engine/audio';
-import { t } from '../../i18n';
 import { tcSfx } from './sounds';
 import {
   animateCountUp,
@@ -106,7 +105,6 @@ function render(mount: HTMLElement): void {
 
     const wrap = el('div', { class: 'tc-wrap' });
     const fxLayer = el('div', { class: 'tc-fx-layer' });
-    const hint = el('p', { class: 'tc-hint', text: t('lq.help.tile-connect') });
     const toolbar = el('div', { class: 'tc-toolbar' });
     const hintBtn = el('button', {
       type: 'button',
@@ -134,7 +132,6 @@ function render(mount: HTMLElement): void {
     boardWrap.appendChild(lineSvg);
     boardWrap.appendChild(grid);
 
-    wrap.appendChild(hint);
     wrap.appendChild(toolbar);
     wrap.appendChild(boardWrap);
     wrap.appendChild(fxLayer);
@@ -326,6 +323,14 @@ function wireMenu(): void {
   });
 }
 
+function wireHudRow(): void {
+  const hudRow = document.getElementById('tcHudRow');
+  const stats = document.getElementById('fpStats');
+  const btn = document.getElementById('tcSettingsBtn');
+  if (!hudRow || !stats || !btn) return;
+  hudRow.insertBefore(stats, btn);
+}
+
 function wireSettings(): void {
   const btn = document.getElementById('tcSettingsBtn');
   if (!btn) return;
@@ -352,4 +357,5 @@ mountLQ('tile-connect', render, {
 
 initBgParticles();
 wireMenu();
+wireHudRow();
 wireSettings();
