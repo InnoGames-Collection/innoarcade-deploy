@@ -149,6 +149,7 @@ body[data-game='tile-connect'] #lq-mount.fc-game-body {
   background: transparent;
   border: none;
   box-shadow: none;
+  overflow: hidden;
 }
 
 /* ── HUD row (stats + sound in one line) ── */

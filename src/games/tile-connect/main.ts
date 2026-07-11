@@ -17,6 +17,7 @@ import {
   animateCountUp,
   animateHudValue,
   boardClusterLayout,
+  clampBoardScale,
   centerOf,
   drawConnectionLine,
   findConnectionPath,
@@ -37,6 +38,7 @@ const LEVELS = 5;
 const host = createHost('tile-connect');
 
 let pauseHintFn: (() => void) | null = null;
+let boardResizeHandler: (() => void) | null = null;
 
 function remaining(board: (string | null)[][]): number {
   let n = 0;
@@ -94,6 +96,10 @@ function render(mount: HTMLElement): void {
   }
 
   function loadLevel(): void {
+    if (boardResizeHandler) {
+      window.removeEventListener('resize', boardResizeHandler);
+      boardResizeHandler = null;
+    }
     mount.innerHTML = '';
     const rnd = mulberry32((Math.random() * 1e9) | 0);
     const pairs = 8 + levelIdx * 2;
@@ -108,6 +114,7 @@ function render(mount: HTMLElement): void {
 
     const wrap = el('div', { class: 'tc-wrap' });
     const fxLayer = el('div', { class: 'tc-fx-layer' });
+    const boardViewport = el('div', { class: 'tc-board-viewport' });
     const boardWrap = el('div', { class: 'tc-board-wrap' });
     const lineSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     lineSvg.setAttribute('class', 'tc-line-layer');
@@ -125,8 +132,9 @@ function render(mount: HTMLElement): void {
     });
     boardWrap.appendChild(lineSvg);
     boardWrap.appendChild(grid);
+    boardViewport.appendChild(boardWrap);
 
-    wrap.appendChild(boardWrap);
+    wrap.appendChild(boardViewport);
     wrap.appendChild(fxLayer);
     mount.appendChild(wrap);
 
@@ -155,14 +163,23 @@ function render(mount: HTMLElement): void {
 
     pauseHintFn = showHint;
 
-    function updateBoardLayout(): void {
+    function applyBoardScale(): void {
       const layout = boardClusterLayout(board, ROWS, COLS, remaining(board), initialTiles);
-      boardWrap.style.setProperty('--tc-board-scale', layout.scale.toFixed(3));
-      boardWrap.style.setProperty('--tc-origin-x', layout.originX);
-      boardWrap.style.setProperty('--tc-origin-y', layout.originY);
       grid.style.gap = layout.gap;
       grid.style.padding = layout.pad;
+      boardWrap.style.setProperty('--tc-board-scale', '1');
+      const clamped = clampBoardScale(boardViewport, grid, layout.scale);
+      boardWrap.style.setProperty('--tc-board-scale', clamped.toFixed(3));
     }
+
+    function updateBoardLayout(): void {
+      applyBoardScale();
+      requestAnimationFrame(applyBoardScale);
+    }
+
+    const onResize = (): void => { applyBoardScale(); };
+    boardResizeHandler = onResize;
+    window.addEventListener('resize', onResize);
 
     function paint(): void {
       grid.innerHTML = '';
