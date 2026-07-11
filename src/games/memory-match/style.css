@@ -518,9 +518,7 @@ body.game-shell[data-game="memory-match"]:has(#memory-match-wrapper:not(.hidden)
   border: 2px solid rgba(255, 255, 255, 0.25);
 }
 
-body.game-shell[data-game="memory-match"] .mm-btn-primary,
-body.game-shell[data-game="memory-match"] #mmAgainBtn,
-body.game-shell[data-game="memory-match"] #mmHomeBtn {
+body.game-shell[data-game="memory-match"] .mm-btn-primary {
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
   background: linear-gradient(135deg, var(--mm-green-light) 0%, var(--mm-green) 100%) !important;
@@ -594,7 +592,9 @@ body.game-shell[data-game="memory-match"] #mmHomeBtn {
 }
 
 .mm-btn-action,
-body.game-shell[data-game="memory-match"] #mmStartBtn.mm-btn-play {
+body.game-shell[data-game="memory-match"] #mmStartBtn.mm-btn-play,
+body.game-shell[data-game="memory-match"] #mmAgainBtn,
+body.game-shell[data-game="memory-match"] #mmHomeBtn {
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
   background: linear-gradient(135deg, #4fc3f7 0%, #1f74e0 55%, #1558b8 100%) !important;
@@ -907,7 +907,10 @@ body.game-shell[data-game="memory-match"] .game-panel.mm-over-panel {
 
 .mm-over-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
   gap: 10px;
   width: 100%;
   margin-top: 12px;
