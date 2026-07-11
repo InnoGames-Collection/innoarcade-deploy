@@ -56,11 +56,17 @@ import { WaterBottleManager } from './waterFluid';
 import { renderModeMenu } from './modeMenu';
 import { t } from '../../../i18n';
 import {
-  bumpStat,
-  mountBoardBubbles,
-  showLevelCompleteCelebration,
+  bumpStat as bumpBallStat,
+  mountBoardBubbles as mountBallBubbles,
+  showLevelCompleteCelebration as showBallLevelComplete,
 } from '../../ball-sort/levelComplete';
 import { ballSortSound } from '../../ball-sort/audio';
+import {
+  bumpStat as bumpWaterStat,
+  mountBoardBubbles as mountWaterBubbles,
+  showLevelCompleteCelebration as showWaterLevelComplete,
+} from '../../water-sort/levelComplete';
+import { waterSortSound } from '../../water-sort/audio';
 
 export interface TubeSortTheme {
   gameId: string;
@@ -145,9 +151,11 @@ function cx(theme: TubeSortTheme, base: string): string {
 export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void {
   const host = createHost(theme.gameId);
   const isBall = theme.gameId === 'ball-sort';
+  const isWater = theme.gameId === 'water-sort';
 
   function playSound(name: 'click' | 'good' | 'bad' | 'win'): void {
     if (isBall) ballSortSound(name);
+    else if (isWater) waterSortSound(name);
     else sound(name);
   }
 
@@ -184,7 +192,6 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
       const { parMoves } = generated.spec;
       const modLabel = modifierLabel(generated.spec.modifiers);
       const modeLabel = modeBadgeLabel(mode);
-      const isWater = theme.gameId === 'water-sort';
 
       const undoStack: Tubes[] = [];
       let moves = 0;
@@ -284,7 +291,11 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
       board.appendChild(row);
       mount.appendChild(board);
       if (pauseOverlay) board.appendChild(pauseOverlay);
-      let removeBubbles: (() => void) | null = isBall ? mountBoardBubbles(board) : null;
+      let removeBubbles: (() => void) | null = isBall
+        ? mountBallBubbles(board)
+        : isWater
+          ? mountWaterBubbles(board)
+          : null;
 
       if (levelIdx === 0) showFirstRunHint(theme.firstRunKey, toast);
 
@@ -452,7 +463,8 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
           applyHeldPieces(row, selected, held, theme.pourTheme);
         }
         setLQHeader({ moves: String(moves) });
-        if (isBall) bumpStat('fpStat-moves');
+        if (isBall) bumpBallStat('fpStat-moves');
+        else if (isWater) bumpWaterStat('fpStat-moves');
         undoBtn.toggleAttribute('disabled', undoStack.length === 0);
         hintBtn.toggleAttribute('disabled', hintsLeft <= 0 || locked);
       }
@@ -619,7 +631,9 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
           + moveBonus + starBonus;
         totalScore += levelScore;
         if (isBall) {
-          showLevelCompleteCelebration(board, { stars, levelScore, starBonus });
+          showBallLevelComplete(board, { stars, levelScore, starBonus });
+        } else if (isWater) {
+          showWaterLevelComplete(board, { stars, levelScore, starBonus });
         } else if (stars > 0) {
           toast(`${renderStars(stars)} · +${starBonus} star bonus`, 1400);
         }
@@ -630,7 +644,8 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
           score: String(totalScore),
         });
         if (isWater || isBall) animateScorePop();
-        if (isBall) bumpStat('fpStat-score');
+        if (isBall) bumpBallStat('fpStat-score');
+        else if (isWater) bumpWaterStat('fpStat-score');
 
         const sessionDone = mode !== 'endless' && levelIdx >= LEVEL_COUNT;
         if (sessionDone) {

@@ -15,6 +15,7 @@ import { GameLoop } from '../../engine/loop';
 import { Input } from '../../engine/input';
 import { sfx } from '../../engine/audio';
 import { FruitSlice, W, H, type GameState } from './game';
+import { preloadFruitImages } from './rendering/fruitImages';
 
 const GAME_ID = 'fruit-slice';
 const host = createHost(GAME_ID);
@@ -386,6 +387,7 @@ document.documentElement.lang = getLang();
 applyTranslations();
 ensureMenuBg();
 setPhase('menu');
+void preloadFruitImages();
 loop.start();
 
 void refreshTournamentPanel();

@@ -4,6 +4,7 @@ import './liquidPour.css';
 import { sfx } from '../../engine/audio';
 import { gemClassesByIndex } from './premiumGems';
 import { ballSortPourSound, isBallSortPage } from '../ball-sort/audio';
+import { isWaterSortPage, waterSortPourSound } from '../water-sort/audio';
 import {
   clearStreamCanvas,
   drawLiquidStream,
@@ -113,6 +114,10 @@ function relRect(el: HTMLElement, board: HTMLElement): DOMRect {
 export function playPourSound(kind: 'start' | 'land' | 'complete'): void {
   if (isBallSortPage()) {
     ballSortPourSound(kind);
+    return;
+  }
+  if (isWaterSortPage()) {
+    waterSortPourSound(kind);
     return;
   }
   if (sfx.muted) return;
@@ -351,7 +356,7 @@ async function animateWaterPour(opts: PourAnimOptions): Promise<void> {
       if (streamAlpha > 0) {
         const fromMouth = tubeMouthOnBoard(board, fromTube);
         const toMouth = tubeMouthOnBoard(board, toTube);
-        drawLiquidStream(streamCtx, fromMouth, toMouth, colorId, 10, elapsed * 0.006, streamAlpha);
+        drawLiquidStream(streamCtx, fromMouth, toMouth, colorId, 11, elapsed * 0.006, streamAlpha);
       }
       if (splashPool.particles.length) {
         drawSplashParticles(streamCtx, splashPool.particles);
@@ -526,7 +531,9 @@ export function spawnVictoryBurst(board: HTMLElement): void {
   const rect = board.getBoundingClientRect();
   const colors = isBallSortPage()
     ? ['#4f9e16', '#1f74e0', '#6cc52f', '#ffffff', '#3d8010', '#2aa9d6']
-    : ['#5b8cff', '#2ecc71', '#f39c12', '#e74c3c', '#9b59b6', '#1abc9c'];
+    : isWaterSortPage()
+      ? ['#4f9e16', '#2aa9d6', '#1f74e0', '#ffffff', '#22c55e', '#3d7aff', '#f5a623']
+      : ['#5b8cff', '#2ecc71', '#f39c12', '#e74c3c', '#9b59b6', '#1abc9c'];
   for (let i = 0; i < 36; i++) {
     const piece = document.createElement('span');
     const isRect = i % 3 === 0;
@@ -557,7 +564,7 @@ export function spawnVictoryBurst(board: HTMLElement): void {
 export function animateScorePop(): void {
   const el = document.getElementById('fpStat-score');
   if (!el) return;
-  const popCls = isBallSortPage() ? 'bs-score-pop' : 'ws-score-pop';
+  const popCls = isBallSortPage() ? 'bs-score-pop' : isWaterSortPage() ? 'ws-score-pop' : 'ws-score-pop';
   el.classList.remove(popCls);
   void el.offsetWidth;
   el.classList.add(popCls);

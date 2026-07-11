@@ -13,6 +13,13 @@ const BALL_MODE_ICONS: Record<string, string> = {
   tournament: '🏆',
 };
 
+const WATER_MODE_ICONS: Record<string, string> = {
+  classic: '🧪',
+  daily: '💧',
+  endless: '🌊',
+  tournament: '🏆',
+};
+
 export function renderModeMenu(
   mount: HTMLElement,
   gameId: string,
@@ -20,6 +27,9 @@ export function renderModeMenu(
   onStart: (mode: SessionMode) => void,
 ): void {
   const isBallSort = gameId === 'ball-sort';
+  const isWaterSort = gameId === 'water-sort';
+  const usePremiumCards = isBallSort || isWaterSort;
+  const modeIcons = isBallSort ? BALL_MODE_ICONS : WATER_MODE_ICONS;
   const { collected, total } = gemCatalogProgress(gameId);
   const owned = new Set(collectedGems(gameId));
 
@@ -39,8 +49,8 @@ export function renderModeMenu(
       class: `ts-mode-card ts-mode-card--${m.id}`,
       onclick: () => onStart(m.id),
     });
-    if (isBallSort) {
-      btn.appendChild(el('span', { class: 'ts-mode-card__icon', text: BALL_MODE_ICONS[m.id] ?? '⚪' }));
+    if (usePremiumCards) {
+      btn.appendChild(el('span', { class: 'ts-mode-card__icon', text: modeIcons[m.id] ?? '⚪' }));
       const body = el('div', { class: 'ts-mode-card__body' });
       body.appendChild(el('span', { class: 'ts-mode-card__label', text: m.label }));
       body.appendChild(el('span', { class: 'ts-mode-card__desc', text: m.desc }));
@@ -53,12 +63,12 @@ export function renderModeMenu(
     grid.appendChild(btn);
   }
 
-  if (isBallSort) {
+  if (usePremiumCards) {
     const tourney = el('div', {
       class: 'ts-mode-card ts-mode-card--tournament ts-mode-card--locked',
       'aria-disabled': 'true',
     });
-    tourney.appendChild(el('span', { class: 'ts-mode-card__icon', text: BALL_MODE_ICONS.tournament }));
+    tourney.appendChild(el('span', { class: 'ts-mode-card__icon', text: modeIcons.tournament }));
     const tBody = el('div', { class: 'ts-mode-card__body' });
     tBody.appendChild(el('span', { class: 'ts-mode-card__label', text: 'Tournament' }));
     tBody.appendChild(el('span', {

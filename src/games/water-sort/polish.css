@@ -1,0 +1,292 @@
+/* Water Sort — shell, HUD, typography & button polish */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+body[data-game='water-sort'] {
+  --ws-brand-green: #4f9e16;
+  --ws-brand-blue: #2aa9d6;
+  --ws-brand-deep: #1f74e0;
+  --game-accent: #2aa9d6;
+  font-family: 'Plus Jakarta Sans', 'Avenir Next', 'Segoe UI', Roboto, system-ui, sans-serif;
+}
+
+body[data-game='water-sort'].game-shell {
+  --game-accent: #2aa9d6;
+  --grad-brand: linear-gradient(135deg, #6cc52f 0%, #4f9e16 40%, #2aa9d6 75%, #1f74e0 100%);
+}
+
+/* Play frame backdrop */
+body[data-game='water-sort'] .fc-backdrop,
+body[data-game='water-sort'] .fc-playframe {
+  background:
+    radial-gradient(ellipse 100% 65% at 50% -8%, rgba(42, 169, 214, 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse 75% 50% at 15% 95%, rgba(79, 158, 22, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 45% at 90% 30%, rgba(31, 116, 224, 0.08) 0%, transparent 45%),
+    linear-gradient(172deg, #f4fbff 0%, #eef8f4 38%, #f0f6fc 72%, #f8fcff 100%);
+}
+
+body[data-game='water-sort'] .fc-playframe {
+  border-color: rgba(42, 169, 214, 0.14);
+  box-shadow:
+    0 14px 48px rgba(26, 100, 160, 0.12),
+    0 4px 14px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+/* Premium glass HUD stats */
+body[data-game='water-sort'] .fp-stats {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.8) 100%);
+  border: 1px solid rgba(42, 169, 214, 0.12);
+  border-radius: 20px;
+  box-shadow:
+    0 8px 24px rgba(26, 100, 160, 0.11),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px) saturate(1.2);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+}
+
+body[data-game='water-sort'] .fp-stat {
+  padding: 10px 8px;
+  border-right-color: rgba(42, 169, 214, 0.08);
+  transition: background 0.2s ease;
+}
+
+body[data-game='water-sort'] .fp-stat-label {
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  color: #6a8090;
+}
+
+body[data-game='water-sort'] .fp-stat-value {
+  font-size: 1.12rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--ws-brand-green);
+  transition: transform 0.3s cubic-bezier(0.34, 1.45, 0.64, 1);
+}
+
+body[data-game='water-sort'] .fp-stat-value.ws-stat-bump {
+  animation: ws-stat-bump 0.45s cubic-bezier(0.34, 1.45, 0.64, 1);
+}
+
+@keyframes ws-stat-bump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+body[data-game='water-sort'] .fp-stat-score .fp-stat-value {
+  color: var(--ws-brand-blue);
+}
+
+body[data-game='water-sort'] .fp-stat-icon {
+  width: 20px;
+  height: 20px;
+}
+
+body[data-game='water-sort'] .fp-stat-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Shell menu overlay */
+body[data-game='water-sort'] #menuOverlay .game-panel {
+  background: linear-gradient(168deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 250, 255, 0.95) 100%);
+  border: 1px solid rgba(42, 169, 214, 0.12);
+  box-shadow: 0 22px 64px rgba(26, 100, 160, 0.15);
+  border-radius: 24px;
+}
+
+body[data-game='water-sort'] #startBtn {
+  width: 100%;
+  padding: 15px 24px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  border-radius: 18px;
+  border: none;
+  background: var(--grad-brand);
+  color: #fff;
+  box-shadow:
+    0 8px 24px rgba(42, 169, 214, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  transition: transform 0.2s cubic-bezier(0.34, 1.2, 0.64, 1), box-shadow 0.2s ease;
+}
+
+body[data-game='water-sort'] #startBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(42, 169, 214, 0.38);
+}
+
+body[data-game='water-sort'] #startBtn:active {
+  transform: scale(0.97);
+}
+
+/* Game over overlay */
+body[data-game='water-sort'] #overOverlay .game-panel {
+  background: linear-gradient(168deg, #ffffff 0%, #eef8fc 100%);
+  border-radius: 24px;
+  border: 1px solid rgba(42, 169, 214, 0.12);
+  box-shadow: 0 26px 68px rgba(26, 100, 160, 0.16);
+}
+
+body[data-game='water-sort'] #overOverlay h2 {
+  font-weight: 800;
+  background: linear-gradient(135deg, #3d9e12, #2aa9d6, #1f74e0);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+body[data-game='water-sort'] .shell-over-stat strong {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--ws-brand-blue);
+}
+
+body[data-game='water-sort'] #againBtn {
+  border-radius: 18px;
+  font-weight: 800;
+  padding: 14px 28px;
+  box-shadow: 0 8px 24px rgba(42, 169, 214, 0.28);
+}
+
+/* Toast */
+body[data-game='water-sort'] #toast {
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 14px;
+  background: linear-gradient(135deg, #2d6a10 0%, #1a7aaa 55%, #1f5ab8 100%);
+  box-shadow: 0 10px 28px rgba(26, 100, 160, 0.22);
+  top: 72px;
+}
+
+/* Mode badges in-game */
+body[data-game='water-sort'] .ts-mode-badge {
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 5px 16px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(42, 169, 214, 0.12);
+  box-shadow: 0 3px 10px rgba(26, 100, 160, 0.08);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+body[data-game='water-sort'] .ts-mode-badge--daily {
+  color: #b8780a;
+  background: linear-gradient(145deg, rgba(255, 248, 237, 0.95), rgba(255, 255, 255, 0.88));
+}
+
+body[data-game='water-sort'] .ts-mode-badge--endless {
+  color: #1a6aaa;
+  background: linear-gradient(145deg, rgba(232, 248, 255, 0.95), rgba(255, 255, 255, 0.88));
+}
+
+/* Victory confetti — Ethio Telecom palette */
+body[data-game='water-sort'] .lpour-confetti {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+body[data-game='water-sort'] .lpour-spark {
+  background: radial-gradient(circle, #fff 0%, color-mix(in srgb, var(--ws-brand-blue) 75%, #fff) 55%, transparent 100%);
+}
+
+body[data-game='water-sort'] .lpour-victory-spark {
+  background: radial-gradient(circle, #fff 0%, color-mix(in srgb, var(--ws-brand-green) 70%, #fff) 50%, transparent 100%);
+}
+
+/* In-game toolbar buttons */
+body[data-game='water-sort'] .btn.ws-hint-btn,
+body[data-game='water-sort'] .btn.ws-undo,
+body[data-game='water-sort'] .btn.ws-restart,
+body[data-game='water-sort'] .btn.ws-pause,
+body[data-game='water-sort'] .btn.ws-mute {
+  border: none;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.82) 100%);
+  color: color-mix(in srgb, var(--ws-brand-green) 75%, #0f2a3a);
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 11px 18px;
+  min-height: 46px;
+  min-width: 46px;
+  box-shadow:
+    0 4px 16px rgba(26, 100, 160, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  transition: transform 0.16s cubic-bezier(0.34, 1.2, 0.64, 1), box-shadow 0.16s ease;
+}
+
+body[data-game='water-sort'] .btn.ws-hint-btn:hover:not([disabled]),
+body[data-game='water-sort'] .btn.ws-undo:hover:not([disabled]),
+body[data-game='water-sort'] .btn.ws-restart:hover:not([disabled]),
+body[data-game='water-sort'] .btn.ws-pause:hover:not([disabled]),
+body[data-game='water-sort'] .btn.ws-mute:hover:not([disabled]) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(26, 100, 160, 0.14);
+}
+
+body[data-game='water-sort'] .btn.ws-hint-btn:active:not([disabled]),
+body[data-game='water-sort'] .btn.ws-undo:active:not([disabled]),
+body[data-game='water-sort'] .btn.ws-restart:active:not([disabled]),
+body[data-game='water-sort'] .btn.ws-pause:active:not([disabled]),
+body[data-game='water-sort'] .btn.ws-mute:active:not([disabled]) {
+  transform: scale(0.96);
+}
+
+body[data-game='water-sort'] .btn.ws-hint-btn[disabled],
+body[data-game='water-sort'] .btn.ws-undo[disabled] {
+  opacity: 0.4;
+}
+
+/* Pause panel */
+body[data-game='water-sort'] .ws-pause-overlay {
+  background: rgba(244, 251, 255, 0.75);
+  backdrop-filter: blur(8px) saturate(1.2);
+  -webkit-backdrop-filter: blur(8px) saturate(1.2);
+}
+
+body[data-game='water-sort'] .ws-pause-panel {
+  border-radius: 22px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 250, 255, 0.92) 100%);
+  border: 1px solid rgba(42, 169, 214, 0.12);
+  box-shadow: 0 16px 48px rgba(26, 100, 160, 0.14);
+}
+
+body[data-game='water-sort'] .ws-pause-panel h2 {
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--ws-brand-green), var(--ws-brand-blue));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+body[data-game='water-sort'] .ws-pause-panel .btn.primary {
+  border-radius: 16px;
+  font-weight: 800;
+  background: var(--grad-brand);
+  box-shadow: 0 6px 20px rgba(42, 169, 214, 0.28);
+}
+
+body[data-game='water-sort'] .ws-pause-panel .btn:not(.primary) {
+  border-radius: 16px;
+  font-weight: 700;
+}
+
+/* Hint text */
+body[data-game='water-sort'] .ws-hint {
+  font-size: 13px;
+  font-weight: 500;
+  color: #5a7080;
+  letter-spacing: 0.01em;
+}
+
+/* Modifier badge */
+body[data-game='water-sort'] .ws-mod-badge {
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 5px 14px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(42, 169, 214, 0.1);
+  box-shadow: 0 2px 8px rgba(26, 100, 160, 0.06);
+}

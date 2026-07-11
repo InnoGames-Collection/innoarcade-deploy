@@ -4,6 +4,8 @@ import '../../styles/game-shell.css';
 import '../_casual/style.css';
 import '../_lq/lq.css';
 import './style.css';
+import './modes.css';
+import './polish.css';
 import { mountLQ } from '../_lq/lq';
 import { runTubeSortGame, WATER_SORT_THEME } from '../_shared/tubeSort/runGame';
 
