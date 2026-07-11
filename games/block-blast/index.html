@@ -58,25 +58,31 @@
         </div>
       </div>
       <div id="overOverlay" class="game-overlay hidden" aria-hidden="true">
-        <div class="game-panel">
+        <div class="game-panel bb-over-panel">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close">✕</button>
-          <h2 data-i18n="td.gameOver">Game over</h2>
-          <p id="fcOverSummary" class="fc-over-summary"></p>
-          <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
-          <div class="shell-over-final">
-            <div class="shell-over-stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
-            <div class="shell-over-stat"><span data-i18n="td.best">Best</span><strong id="finalBest">—</strong></div>
+          <div class="bb-over-body">
+            <h2 data-i18n="td.gameOver">Game over</h2>
+            <p id="fcOverSummary" class="fc-over-summary"></p>
+            <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
+            <div class="shell-over-final">
+              <div class="shell-over-stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
+              <div class="shell-over-stat"><span data-i18n="td.best">Best</span><strong id="finalBest">—</strong></div>
+            </div>
+            <div class="bb-over-stats">
+              <div class="bb-over-stat"><span data-i18n="bb.lines">Lines</span><strong id="bbOverLines">0</strong></div>
+              <div class="bb-over-stat"><span>Best Combo</span><strong id="bbOverCombo">×0</strong></div>
+              <div class="bb-over-stat"><span data-i18n="shell.moves">Moves</span><strong id="bbOverMoves">0</strong></div>
+              <div class="bb-over-stat"><span>Result</span><strong id="bbOverResult">—</strong></div>
+            </div>
+            <div class="shell-run-reward" id="runReward"></div>
           </div>
-          <div class="bb-over-stats">
-            <div class="bb-over-stat"><span data-i18n="bb.lines">Lines</span><strong id="bbOverLines">0</strong></div>
-            <div class="bb-over-stat"><span>Best Combo</span><strong id="bbOverCombo">×0</strong></div>
-            <div class="bb-over-stat"><span data-i18n="shell.moves">Moves</span><strong id="bbOverMoves">0</strong></div>
-            <div class="bb-over-stat"><span>Result</span><strong id="bbOverResult">—</strong></div>
+          <div class="bb-over-actions">
+            <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
+            <div class="bb-over-actions-row">
+              <button type="button" id="bbLeaderBtn" class="btn">Leaderboard</button>
+              <button type="button" id="bbHomeBtn" class="btn">Home</button>
+            </div>
           </div>
-          <div class="shell-run-reward" id="runReward"></div>
-          <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
-          <button type="button" id="bbLeaderBtn" class="btn">Leaderboard</button>
-          <button type="button" id="bbHomeBtn" class="btn">Home</button>
         </div>
       </div>
     </div>

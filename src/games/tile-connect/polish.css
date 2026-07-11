@@ -750,14 +750,56 @@ body[data-game='tile-connect'] #tcLeaderBtn:active {
 }
 
 /* ── Game over ── */
-body[data-game='tile-connect'] #overOverlay .game-panel {
+body[data-game='tile-connect'] #overOverlay.game-overlay {
+  align-items: center;
+  justify-content: center;
+  padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+body[data-game='tile-connect'] #overOverlay .game-panel.tc-over-panel {
   background: var(--tc-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--tc-glass-border);
   box-shadow: 0 20px 60px rgba(31, 74, 140, 0.14);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: min(100%, 380px);
+  max-width: 400px;
+  max-height: calc(100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  gap: 0;
+  padding: 30px 14px 14px;
+  margin: auto;
   overflow: hidden;
+}
+
+body[data-game='tile-connect'] .tc-over-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+body[data-game='tile-connect'] .tc-over-actions {
+  flex-shrink: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(31, 116, 224, 0.08);
+  background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.45) 24%);
 }
 
 body[data-game='tile-connect'] #overOverlay h2 {
@@ -772,9 +814,9 @@ body[data-game='tile-connect'] #overOverlay h2 {
 body[data-game='tile-connect'] .tc-over-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  margin: 12px 0;
+  margin: 6px 0;
 }
 
 body[data-game='tile-connect'] .tc-over-stat {
@@ -782,10 +824,10 @@ body[data-game='tile-connect'] .tc-over-stat {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 10px 8px;
+  padding: 8px 6px;
   background: rgba(255, 255, 255, 0.55);
   border: 1px solid rgba(31, 116, 224, 0.08);
-  border-radius: 14px;
+  border-radius: 12px;
 }
 
 body[data-game='tile-connect'] .tc-over-stat span {
@@ -804,15 +846,30 @@ body[data-game='tile-connect'] .tc-over-stat strong {
 
 body[data-game='tile-connect'] .shell-over-final {
   background: rgba(255, 255, 255, 0.5);
-  border-radius: 16px;
-  padding: 12px 20px;
+  border-radius: 14px;
+  padding: 10px 16px;
   border: 1px solid rgba(31, 116, 224, 0.08);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 body[data-game='tile-connect'] .shell-over-stat strong {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 800;
   color: var(--tc-green);
+}
+
+body[data-game='tile-connect'] .shell-run-reward {
+  margin: 0;
+}
+
+body[data-game='tile-connect'] #overOverlay .tc-over-actions .btn {
+  width: 100%;
+  margin: 0;
+}
+
+body[data-game='tile-connect'] #overOverlay #tcLeaderBtn {
+  margin-top: 0;
 }
 
 body[data-game='tile-connect'] .new-best {

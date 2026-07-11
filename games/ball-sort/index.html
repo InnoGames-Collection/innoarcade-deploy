@@ -57,18 +57,22 @@
         </div>
       </div>
       <div id="overOverlay" class="game-overlay hidden" aria-hidden="true">
-        <div class="game-panel">
+        <div class="game-panel bs-over-panel">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close">✕</button>
-          <h2 data-i18n="td.gameOver">Game over</h2>
-          <p id="fcOverSummary" class="fc-over-summary"></p>
-          <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
-          <div class="shell-over-final">
-            <div class="shell-over-stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
-            <div class="shell-over-stat"><span data-i18n="td.best">Best</span><strong id="finalBest">—</strong></div>
+          <div class="bs-over-body">
+            <h2 data-i18n="td.gameOver">Game over</h2>
+            <p id="fcOverSummary" class="fc-over-summary"></p>
+            <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
+            <div class="shell-over-final">
+              <div class="shell-over-stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
+              <div class="shell-over-stat"><span data-i18n="td.best">Best</span><strong id="finalBest">—</strong></div>
+            </div>
+            <div class="shell-run-reward" id="runReward"></div>
           </div>
-          <div class="shell-run-reward" id="runReward"></div>
-          <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
-          <button type="button" id="bsHomeBtn" class="btn">Home</button>
+          <div class="bs-over-actions">
+            <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
+            <button type="button" id="bsHomeBtn" class="btn">Home</button>
+          </div>
         </div>
       </div>
     </div>
