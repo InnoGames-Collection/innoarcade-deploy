@@ -485,8 +485,11 @@ body[data-game='tile-connect'] .tc-wrap.tc-shake {
 
 /* ── Menu screen ── */
 body[data-game='tile-connect'] #menuOverlay.game-overlay {
-  align-items: flex-start;
-  padding: max(6px, env(safe-area-inset-top)) 10px 10px;
+  align-items: center;
+  justify-content: center;
+  padding: max(12px, env(safe-area-inset-top)) 10px max(12px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 body[data-game='tile-connect'] #menuOverlay .game-panel {
@@ -497,11 +500,12 @@ body[data-game='tile-connect'] #menuOverlay .game-panel {
   box-shadow: 0 20px 60px rgba(31, 74, 140, 0.12);
   max-width: 420px;
   width: min(100%, 400px);
-  max-height: none;
-  overflow: visible;
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow-y: auto;
   gap: 8px;
   padding: 32px 14px 14px;
-  margin: 0 auto;
+  margin: auto;
+  flex-shrink: 0;
 }
 
 body[data-game='tile-connect'] .tc-menu-hero {
