@@ -19,7 +19,7 @@ import {
   bumpStat,
   comboFeedback,
   efficiencyRating,
-  ensurePlayToolbar,
+  wireHudRow,
   ensureScorePop,
   formatElapsed,
   initBgParticles,
@@ -136,13 +136,10 @@ function wireShellMenu(): void {
     goHub();
   });
 
-  document.getElementById('fcPlayFrame')?.addEventListener('click', (e) => {
-    if ((e.target as HTMLElement).closest('#spSettingsPlayBtn')) openSettingsModal();
-  });
+  document.getElementById('spSettingsHudBtn')?.addEventListener('click', openSettingsModal);
 }
 
 function render(mountEl: HTMLElement): void {
-  ensurePlayToolbar();
 
   let levelIdx = 0;
   let totalScore = 0;
@@ -317,6 +314,7 @@ mountLQ('slide-puzzle', render, {
 
 initBgParticles();
 wireShellMenu();
+wireHudRow();
 
 void freeGameBestRemote(host.meta.id).then((best) => {
   serverBest = best;

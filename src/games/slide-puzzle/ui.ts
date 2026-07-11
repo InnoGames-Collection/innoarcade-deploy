@@ -80,19 +80,12 @@ export function initBgParticles(): void {
   }
 }
 
-export function ensurePlayToolbar(): void {
-  const frame = document.getElementById('fcPlayFrame');
-  if (!frame || frame.querySelector('#spSettingsPlayBtn')) return;
-  const bar = document.createElement('div');
-  bar.className = 'sp-toolbar';
-  bar.innerHTML = `
-    <button type="button" id="spSettingsPlayBtn" class="sp-icon-btn" aria-label="Settings">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-      Settings
-    </button>`;
-  const mount = frame.querySelector('#lq-mount');
-  if (mount) frame.insertBefore(bar, mount);
-  else frame.appendChild(bar);
+export function wireHudRow(): void {
+  const hudRow = document.getElementById('spHudRow');
+  const stats = document.getElementById('fpStats');
+  const btn = document.getElementById('spSettingsHudBtn');
+  if (!hudRow || !stats || !btn) return;
+  hudRow.insertBefore(stats, btn);
 }
 
 export function ensureScorePop(mount: HTMLElement): HTMLElement {
