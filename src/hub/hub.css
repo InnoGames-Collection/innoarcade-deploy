@@ -400,12 +400,20 @@ body {
   border-radius: 20px;
   overflow: hidden;
   box-shadow: var(--shadow-md);
+  background: linear-gradient(
+    125deg,
+    #061428 0%,
+    #0b2d5c 24%,
+    #145a12 58%,
+    #3a8f0f 82%,
+    #5cb022 100%
+  );
 }
 .promo-track {
   cursor: grab;
   touch-action: pan-y;
   user-select: none;
-  background: #fff;
+  background: transparent;
 }
 .promo-track:active { cursor: grabbing; }
 .promo-slide-stage {
@@ -414,6 +422,42 @@ body {
   aspect-ratio: 2.35 / 1;
   border-radius: 20px;
   overflow: hidden;
+  background: linear-gradient(
+    125deg,
+    #061428 0%,
+    #0b2d5c 24%,
+    #145a12 58%,
+    #3a8f0f 82%,
+    #5cb022 100%
+  );
+  isolation: isolate;
+}
+/* Light rays + sparkle wash — matches ad-banner-4 (50k ETB) aesthetic */
+.promo-slide-stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(148deg, rgba(120, 195, 255, 0.32) 0%, transparent 44%),
+    linear-gradient(128deg, transparent 38%, rgba(168, 240, 90, 0.22) 50%, transparent 64%),
+    radial-gradient(ellipse 75% 50% at 90% 8%, rgba(140, 210, 255, 0.38), transparent 58%);
+  mix-blend-mode: screen;
+}
+.promo-slide-stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    radial-gradient(circle at 82% 14%, rgba(255, 255, 255, 0.95) 0 1px, transparent 2px),
+    radial-gradient(circle at 71% 24%, rgba(255, 255, 255, 0.75) 0 1px, transparent 2px),
+    radial-gradient(circle at 94% 36%, rgba(255, 255, 255, 0.85) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.35) 0 8px, transparent 9px),
+    radial-gradient(circle at 58% 72%, rgba(255, 255, 255, 0.22) 0 12px, transparent 13px);
 }
 .promo-slide {
   display: block;
@@ -423,9 +467,10 @@ body {
   border-radius: 20px;
   overflow: hidden;
 }
-.promo-slide-img { padding: 0; line-height: 0; background: #fff; }
+.promo-slide-img { padding: 0; line-height: 0; background: transparent; }
 .promo-slide-media {
   position: relative;
+  z-index: 1;
   overflow: hidden;
   height: 100%;
   min-height: inherit;
@@ -436,24 +481,32 @@ body {
   min-height: inherit;
   display: block;
   object-fit: cover;
+  object-position: center;
   vertical-align: top;
-  background: #fff;
+  background: transparent;
   transition: transform 0.45s ease;
 }
 .promo-slide:hover .promo-banner-img { transform: scale(1.02); }
-/* Fruit Slice hero — preserve bubble artwork; lighter overlay */
+/* Fruit Slice — dark cinematic bg baked into asset; same cover treatment as other promos */
+.promo-slide--bright .promo-slide-media {
+  background: transparent;
+}
 .promo-slide--bright .promo-banner-img {
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
-  background: #fff;
+  background: transparent;
+  mix-blend-mode: normal;
+  filter: none;
 }
 .promo-slide--bright .promo-slide-overlay {
-  background: linear-gradient(180deg, transparent 48%, rgba(12, 28, 18, 0.38) 100%);
+  background: linear-gradient(180deg, transparent 50%, rgba(6, 20, 40, 0.5) 100%);
+  z-index: 2;
 }
 .promo-slide--bright .promo-slide-caption {
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
 }
 .promo-slide-overlay {
+  z-index: 2;
   position: absolute;
   inset: 0;
   display: flex;
