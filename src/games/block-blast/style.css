@@ -1,59 +1,96 @@
 .bb-wrap {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   padding: 4px 8px 16px;
+  width: 100%;
+}
+
+.bb-fx-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 10;
 }
 
 .bb-grid {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  gap: 3px;
-  padding: 8px;
-  border-radius: 12px;
-  max-width: 340px;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 20px;
+  max-width: min(340px, 92vw);
   width: 100%;
+  --bb-cell-size: clamp(28px, 9vw, 38px);
 }
 
 .bb-cell {
   aspect-ratio: 1;
-  border-radius: 5px;
+  border-radius: 7px;
+  transition: outline 0.1s ease, box-shadow 0.1s ease, transform 0.12s ease;
 }
 
 .bb-cell.filled { box-shadow: none; }
-.bb-cell.preview:not(.pgem--preview) { outline: 2px dashed var(--game-accent, #4f9e16); }
-.bb-cell.pgem--preview { outline: 2px dashed var(--game-accent, #4f9e16); }
+
+.bb-cell.preview:not(.pgem--preview) {
+  outline: 2px dashed rgba(108, 197, 47, 0.65);
+  background: rgba(79, 158, 22, 0.08);
+}
+
+.bb-cell.pgem--preview {
+  outline: 2px dashed rgba(108, 197, 47, 0.75);
+}
 
 .bb-tray {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   justify-content: center;
   flex-wrap: wrap;
-  min-height: 72px;
+  min-height: 80px;
+  width: 100%;
 }
 
 .bb-piece {
   display: grid;
-  gap: 2px;
-  padding: 6px;
-  background: #eef6e3;
-  border-radius: 8px;
-  cursor: pointer;
+  gap: 3px;
+  padding: 8px;
+  border-radius: 14px;
+  cursor: grab;
+  touch-action: none;
   border: 2px solid transparent;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.bb-piece--sel { border-color: var(--game-accent, #4f9e16); box-shadow: 0 0 0 2px color-mix(in srgb, var(--game-accent, #4f9e16) 30%, transparent); }
-.bb-piece--dead { opacity: 0.35; pointer-events: none; }
+.bb-piece--sel {
+  border-color: var(--game-accent, #4f9e16);
+}
+
+.bb-piece--used {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
 
 .bb-pcell {
-  width: 14px;
-  height: 14px;
+  width: var(--bb-cell-size, 14px);
+  height: var(--bb-cell-size, 14px);
+  border-radius: 7px;
 }
 
 .bb-hint {
-  font-size: 13px;
-  color: var(--lq-text-dim, #5f7262);
+  font-size: 0.78rem;
   text-align: center;
   margin: 0;
+}
+
+.bb-drag-ghost .bb-pcell {
+  width: var(--bb-cell-size, 32px);
+  height: var(--bb-cell-size, 32px);
 }

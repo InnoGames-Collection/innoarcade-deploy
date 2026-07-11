@@ -197,6 +197,19 @@ body[data-game='water-sort'] .lpour-victory-spark {
 }
 
 /* In-game toolbar buttons */
+body[data-game='water-sort'] .fc-playframe #lq-mount {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 4px 8px;
+}
+
+body[data-game='water-sort'] .ws-board {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 body[data-game='water-sort'] .btn.ws-hint-btn,
 body[data-game='water-sort'] .btn.ws-undo,
 body[data-game='water-sort'] .btn.ws-restart,
@@ -207,10 +220,10 @@ body[data-game='water-sort'] .btn.ws-mute {
   color: color-mix(in srgb, var(--ws-brand-green) 75%, #0f2a3a);
   border-radius: 16px;
   font-weight: 700;
-  font-size: 13px;
-  padding: 11px 18px;
-  min-height: 46px;
-  min-width: 46px;
+  font-size: 12px;
+  padding: 10px 8px;
+  min-height: 42px;
+  min-width: 0;
   box-shadow:
     0 4px 16px rgba(26, 100, 160, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.95);

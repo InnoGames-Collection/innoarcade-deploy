@@ -14,7 +14,8 @@
   -webkit-user-select: none;
   position: relative;
   border-radius: 22px;
-  overflow: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
   background:
     radial-gradient(ellipse 90% 55% at 50% 110%, color-mix(in srgb, var(--ws-brand-blue) 16%, transparent) 0%, transparent 65%),
     radial-gradient(ellipse 70% 45% at 12% 18%, color-mix(in srgb, var(--ws-brand-green) 12%, transparent) 0%, transparent 55%),
@@ -96,18 +97,27 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: clamp(10px, 2.8vw, 16px);
-  max-width: 460px;
+  align-content: flex-start;
+  width: 100%;
+  max-width: 100%;
+  padding: 0 4px;
+  box-sizing: border-box;
+  --tube-cols: 4;
+  --tube-rows: 1;
+  --tube-gap: clamp(6px, 1.6vw, 12px);
+  gap: var(--tube-gap);
   position: relative;
   overflow: visible;
 }
 
 /* ── Premium glass test tubes ─────────────────────────────────────────── */
 .ws-tube {
-  --tube-w: clamp(54px, 14.5vw, 66px);
+  --tube-w: min(66px, calc((100% - (var(--tube-cols) - 1) * var(--tube-gap)) / var(--tube-cols)));
   --tube-h: clamp(158px, 39vw, 188px);
   --tube-cap: 4;
+  flex: 0 0 var(--tube-w);
   width: var(--tube-w);
+  max-width: var(--tube-w);
   height: calc(var(--tube-h) * var(--tube-cap) / 4);
   border: 2px solid rgba(255, 255, 255, 0.72);
   border-radius: 0 0 50% 50% / 0 0 22% 22%;
@@ -362,12 +372,40 @@
   min-height: 1.2em;
 }
 
+.ws-tubes[data-rows="2"] .ws-tube {
+  --tube-h: clamp(118px, 28vw, 148px);
+}
+
+.ws-tubes[data-rows="3"] .ws-tube {
+  --tube-h: clamp(100px, 24vw, 128px);
+}
+
 .ws-toolbar {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  padding: 0 2px;
+  box-sizing: border-box;
+}
+
+.ws-hint-btn,
+.ws-undo,
+.ws-restart,
+.ws-pause,
+.ws-mute {
+  width: 100%;
+  min-width: 0;
   justify-content: center;
-  gap: 8px;
-  max-width: 460px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ws-mute {
+  grid-column: span 1;
 }
 
 .ws-board--paused .ws-tubes {

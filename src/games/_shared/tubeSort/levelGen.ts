@@ -18,9 +18,9 @@ import {
 
 export const LEVEL_COUNT = 8;
 const NARROW_CAPACITY = 3;
-const MAX_SOLVE_STATES = 4_000;
+const MAX_SOLVE_STATES = 8_000;
 const MAX_SOLVE_STATES_SINGLE = 12_000;
-const SOLVE_TIME_MS = 45;
+const SOLVE_TIME_MS = 120;
 const SOLVE_TIME_MS_SINGLE = 180;
 const MAX_GEN_ATTEMPTS = 24;
 
@@ -133,18 +133,33 @@ function minMixedTubes(levelIdx: number, numColors: number): number {
   return Math.min(2 + Math.floor(levelIdx / 2), Math.max(1, numColors - 1));
 }
 
+function scramblePour(
+  from: number[],
+  to: number[],
+  fromIdx: number,
+  toIdx: number,
+  tubes: Tubes,
+  mods: LevelModifiers,
+  pourStyle: PourStyle,
+): boolean {
+  if (pourStyle === 'single') {
+    return pourOneLayer(from, to, fromIdx, toIdx, tubes, mods);
+  }
+  return pour(from, to, fromIdx, toIdx, tubes, mods, pourStyle) > 0;
+}
+
 function scramble(
   numColors: number,
   shuffleMoves: number,
   mods: LevelModifiers,
   rnd: () => number,
   pourStyle: PourStyle,
+  levelIdx = 0,
 ): Tubes {
-  const maxTries = pourStyle === 'single' ? 10 : 1;
+  const minMixed = pourStyle === 'single' ? 1 : minMixedTubes(levelIdx, numColors);
+  const maxTries = pourStyle === 'single' ? 10 : 8;
   for (let tryIdx = 0; tryIdx < maxTries; tryIdx++) {
-    const state = pourStyle === 'single'
-      ? cloneTubes(solvedState(numColors, mods.emptyTubes))
-      : cloneTubes(mixedState(numColors, mods.emptyTubes, rnd));
+    const state = cloneTubes(solvedState(numColors, mods.emptyTubes));
     let lastFrom = -1;
     let lastTo = -1;
     const moves = shuffleMoves + tryIdx * 3;
@@ -156,8 +171,7 @@ function scramble(
         const targets = shuffled(indices.filter((i) => i !== from), rnd);
         for (const to of targets) {
           if (from === lastTo && to === lastFrom) continue;
-          // Single-layer scrambles preserve mixed stacks; gameplay uses pourStyle rules.
-          if (!pourOneLayer(state[from], state[to], from, to, state, mods)) continue;
+          if (!scramblePour(state[from], state[to], from, to, state, mods, pourStyle)) continue;
           lastFrom = from;
           lastTo = to;
           poured = true;
@@ -170,13 +184,9 @@ function scramble(
     if (isSolved(state, mods)) {
       ensurePlayable(state, mods, pourStyle);
     }
-    if (pourStyle === 'single') {
-      if (!isSolved(state, mods) && countMixedTubes(state) >= 1) return state;
-      continue;
-    }
-    return state;
+    if (!isSolved(state, mods) && countMixedTubes(state) >= minMixed) return state;
   }
-  const fallback = cloneTubes(mixedState(numColors, mods.emptyTubes, rnd));
+  const fallback = cloneTubes(solvedState(numColors, mods.emptyTubes));
   ensurePlayable(fallback, mods, pourStyle);
   return fallback;
 }
@@ -234,7 +244,7 @@ function applyModifiers(
   }
 }
 
-function hasOpeningMove(tubes: Tubes, mods: LevelModifiers): boolean {
+export function hasOpeningMove(tubes: Tubes, mods: LevelModifiers): boolean {
   for (let from = 0; from < tubes.length; from++) {
     if (tubes[from].length === 0 || isPourSourceLocked(mods, from, tubes)) continue;
     for (let to = 0; to < tubes.length; to++) {
@@ -292,8 +302,11 @@ function acceptLevel(
   if (isSolved(tubes, mods) || !hasOpeningMove(tubes, mods)) return false;
   if (pourStyle === 'run' && countMixedTubes(tubes) < minMixedTubes(levelIdx, numColors)) return false;
   if (pourStyle === 'single' && countMixedTubes(tubes) < 1) return false;
-  // Single-ball scrambles are valid pour sequences from solved — always solvable.
-  if (needsSolvabilityCheck(kinds)) return isSolvable(tubes, mods, pourStyle);
+  // Run-mode levels without modifiers are scrambled from solved — always winnable.
+  if (pourStyle === 'run' && kinds.length === 0) return true;
+  if (needsSolvabilityCheck(kinds) || kinds.length > 0) {
+    return isSolvable(tubes, mods, pourStyle);
+  }
   return true;
 }
 
@@ -309,15 +322,25 @@ function fallbackLevel(
   };
   for (let attempt = 0; attempt < 20; attempt++) {
     const tubes = pourStyle === 'single'
-      ? scramble(spec.colors, Math.max(10, spec.shuffle - 4) + attempt * 2, fallbackMods, rnd, pourStyle)
-      : mixedState(spec.colors, fallbackMods.emptyTubes, rnd);
+      ? scramble(spec.colors, Math.max(10, spec.shuffle - 4) + attempt * 2, fallbackMods, rnd, pourStyle, levelIdx)
+      : scramble(spec.colors, Math.max(10, spec.shuffle - 4) + attempt * 2, fallbackMods, rnd, pourStyle, levelIdx);
     ensurePlayable(tubes, fallbackMods, pourStyle);
     const mixedOk = pourStyle === 'single'
       ? countMixedTubes(tubes) >= 1
       : countMixedTubes(tubes) >= minMixedTubes(levelIdx, spec.colors);
     if (!isSolved(tubes, fallbackMods) && mixedOk && hasOpeningMove(tubes, fallbackMods)) {
-      return { tubes, mods: fallbackMods, spec: { ...spec, modifiers: [] } };
+      if (pourStyle === 'run' || isSolvable(tubes, fallbackMods, pourStyle)) {
+        return { tubes, mods: fallbackMods, spec: { ...spec, modifiers: [] } };
+      }
     }
+  }
+  if (spec.modifiers.length > 0) {
+    return generateFromSpec(
+      { ...spec, shuffle: Math.max(10, spec.shuffle - 8), modifiers: [] },
+      rnd,
+      pourStyle,
+      levelIdx,
+    );
   }
   const tubes = mixedState(spec.colors, fallbackMods.emptyTubes, rnd);
   ensurePlayable(tubes, fallbackMods, pourStyle);
@@ -338,7 +361,7 @@ function generateFromSpec(spec: LevelSpec, rnd: () => number, pourStyle: PourSty
       tubeMods: baseMods.tubeMods.map((m) => ({ ...m })),
     };
     const shuffleMoves = spec.shuffle + (attempt > 0 ? attempt * 3 : 0);
-    const tubes = scramble(spec.colors, shuffleMoves, mods, rnd, pourStyle);
+    const tubes = scramble(spec.colors, shuffleMoves, mods, rnd, pourStyle, levelIdx);
     while (mods.tubeMods.length < tubes.length) {
       mods.tubeMods.push(defaultTubeModifier());
     }

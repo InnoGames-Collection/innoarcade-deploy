@@ -144,6 +144,23 @@ function formatTimer(sec: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
+/** Columns per row so tubes always fit inside the playfield on mobile. */
+function tubeGridCols(count: number): number {
+  if (count <= 4) return count;
+  if (count <= 6) return 3;
+  if (count <= 8) return 4;
+  return 4;
+}
+
+function applyTubeGridLayout(row: HTMLElement, tubeCount: number): void {
+  const cols = tubeGridCols(tubeCount);
+  const rows = Math.ceil(tubeCount / cols);
+  row.style.setProperty('--tube-cols', String(cols));
+  row.style.setProperty('--tube-rows', String(rows));
+  row.dataset.cols = String(cols);
+  row.dataset.rows = String(rows);
+}
+
 function cx(theme: TubeSortTheme, base: string): string {
   return `${theme.classPrefix}-${base}`;
 }
@@ -406,6 +423,7 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
       function paint(): void {
         row.innerHTML = '';
         if (fluidManager) fluidManager.clear();
+        if (theme.gemVariant === 'liquid') applyTubeGridLayout(row, tubes.length);
         tubes.forEach((tube, idx) => {
           const cap = tubeCapacity(mods, idx);
           const tubeMod = mods.tubeMods[idx];

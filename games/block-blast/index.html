@@ -8,16 +8,53 @@
   </head>
   <body class="game-shell casual-shell brain-shell" data-game="block-blast">
     <div id="stage" class="fc-stage game-shell-stage">
-      <div id="fcBackdrop" class="fc-backdrop" aria-hidden="true"></div>
+      <div id="fcBackdrop" class="fc-backdrop" aria-hidden="true">
+        <div class="bb-bg-layer">
+          <div class="bb-bg-orb bb-bg-orb--1"></div>
+          <div class="bb-bg-orb bb-bg-orb--2"></div>
+          <div class="bb-bg-orb bb-bg-orb--3"></div>
+          <div class="bb-bg-shape bb-bg-shape--1"></div>
+          <div class="bb-bg-shape bb-bg-shape--2"></div>
+        </div>
+      </div>
       <div id="fcPlayFrame" class="fc-playframe hidden">
         <button id="closeBtn" class="gp-close gp-close-corner hidden" aria-label="Close">✕</button>
         <div id="lq-mount"></div>
       </div>
       <div id="menuOverlay" class="game-overlay">
-        <div class="game-panel panel-clean">
+        <div class="game-panel panel-clean bb-menu-panel">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close">✕</button>
+          <div class="bb-menu-hero">
+            <div class="bb-menu-icon" aria-hidden="true">🟦</div>
+            <div class="bb-menu-title">Block Blast</div>
+            <div class="bb-menu-sub">Fit blocks, clear lines, chase high scores</div>
+          </div>
+          <div class="bb-mode-grid" id="bbModeGrid">
+            <button type="button" class="bb-mode-card bb-mode-card--classic" data-bb-mode="classic">
+              <span class="bb-mode-card__icon" aria-hidden="true">🎯</span>
+              <span class="bb-mode-card__label">Classic</span>
+              <span class="bb-mode-card__desc">The original puzzle experience</span>
+            </button>
+            <button type="button" class="bb-mode-card bb-mode-card--endless" data-bb-mode="endless">
+              <span class="bb-mode-card__icon" aria-hidden="true">♾️</span>
+              <span class="bb-mode-card__label">Endless</span>
+              <span class="bb-mode-card__desc">Play until the board fills up</span>
+            </button>
+            <button type="button" class="bb-mode-card bb-mode-card--daily bb-mode-card--locked" data-bb-mode="daily" disabled>
+              <span class="bb-mode-card__icon" aria-hidden="true">📅</span>
+              <span class="bb-mode-card__label">Daily Challenge</span>
+              <span class="bb-mode-card__desc">A fresh board every day</span>
+              <span class="bb-mode-card__badge">Soon</span>
+            </button>
+            <button type="button" class="bb-mode-card bb-mode-card--tournament bb-mode-card--locked" data-bb-mode="tournament" disabled>
+              <span class="bb-mode-card__icon" aria-hidden="true">🏆</span>
+              <span class="bb-mode-card__label">Tournament</span>
+              <span class="bb-mode-card__desc">Compete nationwide</span>
+              <span class="bb-mode-card__badge">Soon</span>
+            </button>
+          </div>
           <div class="shell-free-menu" id="freeMenu"></div>
-          <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
+          <button id="startBtn" class="visually-hidden" data-i18n="hub.play">Play</button>
         </div>
       </div>
       <div id="overOverlay" class="game-overlay hidden" aria-hidden="true">
@@ -30,8 +67,16 @@
             <div class="shell-over-stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
             <div class="shell-over-stat"><span data-i18n="td.best">Best</span><strong id="finalBest">—</strong></div>
           </div>
+          <div class="bb-over-stats">
+            <div class="bb-over-stat"><span data-i18n="bb.lines">Lines</span><strong id="bbOverLines">0</strong></div>
+            <div class="bb-over-stat"><span>Best Combo</span><strong id="bbOverCombo">×0</strong></div>
+            <div class="bb-over-stat"><span data-i18n="shell.moves">Moves</span><strong id="bbOverMoves">0</strong></div>
+            <div class="bb-over-stat"><span>Result</span><strong id="bbOverResult">—</strong></div>
+          </div>
           <div class="shell-run-reward" id="runReward"></div>
           <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
+          <button type="button" id="bbLeaderBtn" class="btn">Leaderboard</button>
+          <button type="button" id="bbHomeBtn" class="btn">Home</button>
         </div>
       </div>
     </div>

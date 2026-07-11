@@ -1,0 +1,815 @@
+/* Block Blast — premium Ethio Telecom visual polish */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+body[data-game='block-blast'] {
+  --bb-green: #4f9e16;
+  --bb-green-light: #6cc52f;
+  --bb-blue: #1f74e0;
+  --bb-blue-light: #3d8ef0;
+  --bb-glass: rgba(255, 255, 255, 0.72);
+  --bb-glass-border: rgba(255, 255, 255, 0.55);
+  --bb-glow-green: rgba(79, 158, 22, 0.35);
+  --bb-glow-blue: rgba(31, 116, 224, 0.3);
+  --game-accent: var(--bb-blue);
+  --grad-brand: linear-gradient(135deg, var(--bb-green-light) 0%, var(--bb-green) 50%, #3a8a12 100%);
+  --grad-blue: linear-gradient(135deg, var(--bb-blue-light) 0%, var(--bb-blue) 100%);
+  --grad-hero: linear-gradient(145deg, var(--bb-blue-light) 0%, var(--bb-green) 100%);
+  --bb-cell-size: clamp(28px, 9vw, 38px);
+  font-family: 'Plus Jakarta Sans', 'Avenir Next', 'Segoe UI', Roboto, system-ui, sans-serif;
+}
+
+/* ── Ambient background ── */
+body[data-game='block-blast'] .fc-backdrop {
+  background:
+    radial-gradient(ellipse 90% 60% at 20% 10%, rgba(31, 116, 224, 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 85% 80%, rgba(79, 158, 22, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 50% 50%, rgba(108, 197, 47, 0.06) 0%, transparent 60%),
+    linear-gradient(165deg, #eef6ff 0%, #f0faf2 40%, #f5f8fc 100%);
+  overflow: hidden;
+}
+
+body[data-game='block-blast'] .bb-bg-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+body[data-game='block-blast'] .bb-bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.45;
+  animation: bb-orb-drift 12s ease-in-out infinite alternate;
+}
+
+body[data-game='block-blast'] .bb-bg-orb--1 {
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(31, 116, 224, 0.35), transparent 70%);
+  top: -40px;
+  left: -30px;
+}
+
+body[data-game='block-blast'] .bb-bg-orb--2 {
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle, rgba(79, 158, 22, 0.3), transparent 70%);
+  bottom: 10%;
+  right: -20px;
+  animation-delay: -4s;
+  animation-duration: 15s;
+}
+
+body[data-game='block-blast'] .bb-bg-orb--3 {
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(61, 142, 240, 0.25), transparent 70%);
+  top: 45%;
+  left: 60%;
+  animation-delay: -7s;
+  animation-duration: 10s;
+}
+
+@keyframes bb-orb-drift {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(18px, -12px) scale(1.08); }
+}
+
+body[data-game='block-blast'] .bb-bg-shape {
+  position: absolute;
+  border: 1.5px solid rgba(31, 116, 224, 0.08);
+  border-radius: 12px;
+  opacity: 0.5;
+  animation: bb-shape-float 18s ease-in-out infinite;
+}
+
+body[data-game='block-blast'] .bb-bg-shape--1 {
+  width: 48px;
+  height: 48px;
+  top: 18%;
+  right: 12%;
+  transform: rotate(25deg);
+  animation-delay: -3s;
+}
+
+body[data-game='block-blast'] .bb-bg-shape--2 {
+  width: 32px;
+  height: 32px;
+  bottom: 22%;
+  left: 8%;
+  border-radius: 50%;
+  border-color: rgba(79, 158, 22, 0.1);
+  animation-delay: -8s;
+}
+
+@keyframes bb-shape-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.4; }
+  50% { transform: translateY(-14px) rotate(12deg); opacity: 0.65; }
+}
+
+body[data-game='block-blast'] .bb-bg-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(79, 158, 22, 0.35);
+  animation: bb-particle-rise 8s linear infinite;
+}
+
+body[data-game='block-blast'] .bb-bg-particle:nth-child(odd) {
+  background: rgba(31, 116, 224, 0.3);
+}
+
+@keyframes bb-particle-rise {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  10% { opacity: 0.7; }
+  90% { opacity: 0.4; }
+  100% { transform: translateY(-120px) scale(0.4); opacity: 0; }
+}
+
+/* ── Play frame ── */
+body[data-game='block-blast'] .fc-playframe {
+  background:
+    radial-gradient(ellipse 100% 70% at 50% -5%, rgba(31, 116, 224, 0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 50% at 80% 90%, rgba(79, 158, 22, 0.06) 0%, transparent 50%),
+    linear-gradient(175deg, #f8fcff 0%, #f2f9f4 45%, #f6f8fc 100%);
+  border-color: rgba(31, 116, 224, 0.1);
+  box-shadow:
+    0 16px 48px rgba(31, 74, 140, 0.1),
+    0 4px 16px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+body[data-game='block-blast'] #lq-mount.fc-game-body {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+/* ── Premium HUD ── */
+body[data-game='block-blast'] .fp-stats {
+  background: var(--bb-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--bb-glass-border);
+  border-radius: 18px;
+  box-shadow:
+    0 4px 20px rgba(31, 74, 140, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.04);
+  gap: 0;
+}
+
+body[data-game='block-blast'] .fp-stat {
+  padding: 8px 6px;
+  border-right-color: rgba(31, 116, 224, 0.08);
+}
+
+body[data-game='block-blast'] .fp-stat-label {
+  font-size: 0.52rem;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+body[data-game='block-blast'] .fp-stat-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+body[data-game='block-blast'] .fp-stat-value.bb-stat-bump {
+  animation: bb-stat-bump 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes bb-stat-bump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.18); color: var(--bb-blue); }
+  100% { transform: scale(1); }
+}
+
+body[data-game='block-blast'] .fp-stat-score .fp-stat-value {
+  color: var(--bb-blue);
+}
+
+body[data-game='block-blast'] #fpStat-round {
+  color: var(--bb-green);
+}
+
+body[data-game='block-blast'] .fp-pause-btn {
+  padding: 0.55rem 1.4rem;
+  font-weight: 800;
+  background: var(--grad-brand);
+  box-shadow: 0 4px 14px var(--bb-glow-green);
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
+}
+
+body[data-game='block-blast'] .fp-pause-btn:active {
+  transform: scale(0.94);
+}
+
+/* ── Board glass frame ── */
+body[data-game='block-blast'] .bb-grid.pboard {
+  position: relative;
+  background:
+    linear-gradient(168deg, rgba(42, 53, 72, 0.98) 0%, rgba(30, 40, 56, 0.98) 45%, rgba(21, 29, 42, 0.98) 100%);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  box-shadow:
+    inset 0 4px 18px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 12px 36px rgba(31, 74, 140, 0.22),
+    0 0 0 1px rgba(31, 116, 224, 0.12);
+  padding: 10px;
+  gap: 4px;
+}
+
+body[data-game='block-blast'] .bb-grid.pboard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, transparent 40%, transparent 60%, rgba(31, 116, 224, 0.04) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+body[data-game='block-blast'] .bb-grid.bb-board-pulse {
+  animation: bb-board-pulse 0.42s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+@keyframes bb-board-pulse {
+  0%, 100% { transform: scale(1); box-shadow: inset 0 4px 18px rgba(0, 0, 0, 0.5), 0 12px 36px rgba(31, 74, 140, 0.22); }
+  50% { transform: scale(1.012); box-shadow: inset 0 4px 18px rgba(0, 0, 0, 0.5), 0 0 28px rgba(79, 158, 22, 0.35), 0 12px 36px rgba(31, 74, 140, 0.28); }
+}
+
+body[data-game='block-blast'] .bb-wrap.bb-shake {
+  animation: bb-shake 0.32s ease;
+}
+
+@keyframes bb-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-2px); }
+  40% { transform: translateX(2px); }
+  60% { transform: translateX(-1px); }
+  80% { transform: translateX(1px); }
+}
+
+body[data-game='block-blast'] .pboard-slot {
+  border-radius: 7px;
+  background: linear-gradient(145deg, rgba(52, 64, 85, 0.9) 0%, rgba(37, 47, 63, 0.9) 100%);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+body[data-game='block-blast'] .bb-cell--snap {
+  outline: 2px solid rgba(108, 197, 47, 0.85);
+  box-shadow: 0 0 12px rgba(79, 158, 22, 0.45);
+  z-index: 2;
+}
+
+body[data-game='block-blast'] .bb-cell--placed {
+  animation: bb-cell-place 0.38s cubic-bezier(0.34, 1.45, 0.64, 1);
+}
+
+@keyframes bb-cell-place {
+  0% { transform: scale(0.82); opacity: 0.7; }
+  55% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+body[data-game='block-blast'] .pgem--block {
+  border-radius: 8px;
+  box-shadow:
+    inset 0 -5px 0 color-mix(in srgb, var(--pgem-dark) 70%, #000),
+    inset 0 2px 0 rgba(255, 255, 255, 0.3),
+    0 4px 10px rgba(0, 0, 0, 0.28);
+}
+
+body[data-game='block-blast'] .pgem--preview {
+  opacity: 0.72;
+  filter: saturate(1.05) brightness(1.08);
+}
+
+/* ── Tray pieces ── */
+body[data-game='block-blast'] .bb-tray {
+  gap: 14px;
+  min-height: 80px;
+  padding: 4px 0;
+}
+
+body[data-game='block-blast'] .bb-piece {
+  padding: 8px;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.92) 0%, rgba(240, 248, 255, 0.85) 100%);
+  border: 2px solid rgba(31, 116, 224, 0.1);
+  border-radius: 14px;
+  box-shadow:
+    0 6px 18px rgba(31, 74, 140, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  cursor: grab;
+  touch-action: none;
+  transition:
+    transform 0.18s cubic-bezier(0.34, 1.3, 0.64, 1),
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+body[data-game='block-blast'] .bb-piece:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 10px 24px rgba(31, 74, 140, 0.14);
+}
+
+body[data-game='block-blast'] .bb-piece:active {
+  cursor: grabbing;
+  transform: scale(0.96);
+}
+
+body[data-game='block-blast'] .bb-piece--sel {
+  border-color: var(--bb-green);
+  box-shadow:
+    0 0 0 3px rgba(79, 158, 22, 0.25),
+    0 8px 22px rgba(79, 158, 22, 0.18);
+  transform: translateY(-2px) scale(1.04);
+}
+
+body[data-game='block-blast'] .bb-pcell {
+  width: var(--bb-cell-size);
+  height: var(--bb-cell-size);
+  border-radius: 7px;
+}
+
+body[data-game='block-blast'] .bb-hint {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #5a7080;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 12px;
+  border: 1px solid rgba(31, 116, 224, 0.08);
+}
+
+/* ── Drag ghost ── */
+.bb-drag-ghost {
+  position: fixed;
+  display: grid;
+  gap: 3px;
+  padding: 6px;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.28));
+  opacity: 0.95;
+  animation: bb-ghost-lift 0.12s ease forwards;
+}
+
+@keyframes bb-ghost-lift {
+  from { transform: translate(-50%, -50%) scale(0.9); opacity: 0.7; }
+  to { transform: translate(-50%, -50%) scale(1.05); opacity: 0.95; }
+}
+
+body.bb-dragging .bb-piece--sel {
+  opacity: 0.35;
+}
+
+/* ── FX layer ── */
+body[data-game='block-blast'] .bb-fx-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.bb-score-popup {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+  z-index: 20;
+  animation: bb-popup-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.bb-score-popup__pts {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--bb-blue);
+  text-shadow: 0 2px 8px rgba(31, 116, 224, 0.3);
+}
+
+.bb-score-popup__lbl {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  background: var(--grad-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  white-space: nowrap;
+}
+
+@keyframes bb-popup-rise {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+  20% { opacity: 1; transform: translate(-50%, -60%) scale(1.1); }
+  100% { opacity: 0; transform: translate(-50%, -120%) scale(0.95); }
+}
+
+.bb-particle {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--particle-color, #6cc52f);
+  pointer-events: none;
+  animation: bb-particle-burst 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes bb-particle-burst {
+  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--px), var(--py)) scale(0.2); }
+}
+
+.bb-sparkle {
+  position: absolute;
+  font-size: 14px;
+  pointer-events: none;
+  animation: bb-sparkle-burst 0.65s ease forwards;
+}
+
+@keyframes bb-sparkle-burst {
+  0% { opacity: 1; transform: translate(0, 0) scale(0.5) rotate(0deg); }
+  100% { opacity: 0; transform: translate(var(--px), var(--py)) scale(1.2) rotate(180deg); }
+}
+
+.bb-streak {
+  position: absolute;
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
+  transform: translate(-50%, -50%) rotate(-25deg);
+  pointer-events: none;
+  animation: bb-streak-flash 0.4s ease forwards;
+}
+
+@keyframes bb-streak-flash {
+  0% { opacity: 0; transform: translate(-50%, -50%) rotate(-25deg) scaleX(0.3); }
+  40% { opacity: 1; transform: translate(-50%, -50%) rotate(-25deg) scaleX(1.2); }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(-25deg) scaleX(1.5); }
+}
+
+.bb-confetti {
+  position: absolute;
+  top: -8px;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  pointer-events: none;
+  animation: bb-confetti-fall 1.4s ease-in forwards;
+}
+
+@keyframes bb-confetti-fall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(320px) rotate(540deg); opacity: 0; }
+}
+
+/* ── Menu screen ── */
+body[data-game='block-blast'] #menuOverlay .game-panel {
+  background: var(--bb-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--bb-glass-border);
+  box-shadow: 0 20px 60px rgba(31, 74, 140, 0.12);
+  max-width: 420px;
+}
+
+body[data-game='block-blast'] .bb-menu-hero {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+body[data-game='block-blast'] .bb-menu-icon {
+  font-size: 3rem;
+  line-height: 1;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 4px 12px rgba(79, 158, 22, 0.35));
+  animation: bb-icon-float 3s ease-in-out infinite;
+}
+
+@keyframes bb-icon-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+body[data-game='block-blast'] .bb-menu-title {
+  font-size: clamp(1.6rem, 6vw, 2rem);
+  font-weight: 800;
+  background: var(--grad-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+}
+
+body[data-game='block-blast'] .bb-menu-sub {
+  font-size: 0.82rem;
+  color: var(--shell-muted, #6a8090);
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+body[data-game='block-blast'] .shell-free-head {
+  display: none;
+}
+
+body[data-game='block-blast'] .bb-mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+body[data-game='block-blast'] .bb-mode-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 16px 14px;
+  border: none;
+  border-radius: 18px;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.92) 0%, rgba(240, 248, 255, 0.8) 100%);
+  box-shadow:
+    0 8px 24px rgba(31, 74, 140, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.3, 0.64, 1),
+    box-shadow 0.2s ease;
+}
+
+body[data-game='block-blast'] .bb-mode-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(31, 116, 224, 0.2), rgba(79, 158, 22, 0.15));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+body[data-game='block-blast'] .bb-mode-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(31, 74, 140, 0.14);
+}
+
+body[data-game='block-blast'] .bb-mode-card:active {
+  transform: scale(0.97);
+}
+
+body[data-game='block-blast'] .bb-mode-card--classic {
+  background: linear-gradient(165deg, rgba(240, 252, 244, 0.95) 0%, rgba(230, 245, 255, 0.85) 100%);
+}
+
+body[data-game='block-blast'] .bb-mode-card--endless {
+  background: linear-gradient(165deg, rgba(235, 245, 255, 0.95) 0%, rgba(225, 240, 252, 0.85) 100%);
+}
+
+body[data-game='block-blast'] .bb-mode-card--daily {
+  background: linear-gradient(165deg, rgba(255, 250, 235, 0.95) 0%, rgba(240, 248, 255, 0.85) 100%);
+}
+
+body[data-game='block-blast'] .bb-mode-card--tournament {
+  background: linear-gradient(165deg, rgba(245, 240, 255, 0.95) 0%, rgba(235, 245, 255, 0.85) 100%);
+}
+
+body[data-game='block-blast'] .bb-mode-card--locked {
+  opacity: 0.72;
+  cursor: not-allowed;
+  filter: saturate(0.85);
+}
+
+body[data-game='block-blast'] .bb-mode-card--locked:hover {
+  transform: none;
+  box-shadow: 0 8px 24px rgba(31, 74, 140, 0.1);
+}
+
+body[data-game='block-blast'] .bb-mode-card__icon {
+  font-size: 1.75rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(31, 116, 224, 0.2));
+}
+
+body[data-game='block-blast'] .bb-mode-card__label {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #1a3a5c;
+  letter-spacing: -0.01em;
+}
+
+body[data-game='block-blast'] .bb-mode-card__desc {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #6a8090;
+  line-height: 1.35;
+}
+
+body[data-game='block-blast'] .bb-mode-card__badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: rgba(31, 116, 224, 0.1);
+  color: var(--bb-blue);
+}
+
+body[data-game='block-blast'] .shell-free-menu {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(31, 116, 224, 0.1);
+  border-radius: 14px;
+  padding: 10px 14px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+body[data-game='block-blast'] #startBtn.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+/* ── Buttons ── */
+body[data-game='block-blast'] #againBtn,
+body[data-game='block-blast'] #bbHomeBtn {
+  width: 100%;
+  padding: 0.85rem 1.6rem;
+  font-size: 1.02rem;
+  font-weight: 800;
+  background: var(--grad-brand);
+  border: none;
+  color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px var(--bb-glow-green);
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
+}
+
+body[data-game='block-blast'] #againBtn:active,
+body[data-game='block-blast'] #bbHomeBtn:active {
+  transform: scale(0.96);
+}
+
+body[data-game='block-blast'] #bbLeaderBtn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 0.7rem 1.4rem;
+  font-weight: 700;
+  border-radius: 14px;
+  border: 2px solid rgba(31, 116, 224, 0.2);
+  color: var(--bb-blue);
+  background: rgba(255, 255, 255, 0.6);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+body[data-game='block-blast'] #bbLeaderBtn:active {
+  transform: scale(0.97);
+  background: rgba(31, 116, 224, 0.08);
+}
+
+/* ── Game over ── */
+body[data-game='block-blast'] #overOverlay .game-panel {
+  background: var(--bb-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--bb-glass-border);
+  box-shadow: 0 20px 60px rgba(31, 74, 140, 0.14);
+  position: relative;
+  overflow: hidden;
+}
+
+body[data-game='block-blast'] #overOverlay h2 {
+  font-size: clamp(1.4rem, 5vw, 1.75rem);
+  font-weight: 800;
+  background: var(--grad-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+body[data-game='block-blast'] .bb-over-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  margin: 12px 0;
+}
+
+body[data-game='block-blast'] .bb-over-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 8px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(31, 116, 224, 0.08);
+  border-radius: 14px;
+}
+
+body[data-game='block-blast'] .bb-over-stat span {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--shell-muted, #6a8090);
+}
+
+body[data-game='block-blast'] .bb-over-stat strong {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--bb-blue);
+}
+
+body[data-game='block-blast'] .shell-over-final {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
+  padding: 12px 20px;
+  border: 1px solid rgba(31, 116, 224, 0.08);
+}
+
+body[data-game='block-blast'] .shell-over-stat strong {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--bb-green);
+}
+
+body[data-game='block-blast'] .new-best {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05));
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 12px;
+  padding: 6px 14px;
+  font-weight: 800;
+  color: #c8960a;
+  animation: bb-new-best 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes bb-new-best {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+body[data-game='block-blast'] .gp-close-corner {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(31, 116, 224, 0.1);
+  transition: transform 0.15s ease;
+}
+
+body[data-game='block-blast'] .gp-close-corner:active {
+  transform: scale(0.9);
+}
+
+body[data-game='block-blast'] .pboard-clear-flash {
+  animation: bb-line-flash 0.45s ease;
+}
+
+@keyframes bb-line-flash {
+  0%, 100% { box-shadow: inset 0 4px 18px rgba(0, 0, 0, 0.5), 0 12px 36px rgba(31, 74, 140, 0.22); }
+  50% {
+    box-shadow:
+      inset 0 4px 18px rgba(0, 0, 0, 0.5),
+      0 0 32px rgba(79, 158, 22, 0.55),
+      0 0 48px rgba(31, 116, 224, 0.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-game='block-blast'] .bb-bg-orb,
+  body[data-game='block-blast'] .bb-bg-shape,
+  body[data-game='block-blast'] .bb-bg-particle,
+  body[data-game='block-blast'] .bb-menu-icon {
+    animation: none;
+  }
+  .bb-score-popup,
+  .bb-particle,
+  .bb-sparkle,
+  .bb-streak,
+  .bb-confetti {
+    animation-duration: 0.01ms !important;
+  }
+}
