@@ -9,7 +9,7 @@ All titles below are locked at their listed tag. **Do not edit game-specific fol
 | Game | ID | Tag | Mode |
 |------|-----|-----|------|
 | Ethiorunner | `temple-dash` | v3 | Free |
-| Ball Shooter | `orbit-blast` | v1 | Free |
+| Ball Shooter | `orbit-blast` | v2 | Free |
 | 2048 | `merge-2048` | v1 | Free |
 | Candy Saga | `candy-crunch` | v1 | Free (hidden) |
 | Brick Blitz | `brick-blitz` | v1 | Free |
@@ -17,7 +17,7 @@ All titles below are locked at their listed tag. **Do not edit game-specific fol
 | Crossy Road | `crossy-road` | v1 | Free |
 | Helix Jump | `helix-jump` | v1 | Free |
 | Sky Hopper | `sky-hopper` | v1 | Free |
-| Bubble Pop | `bubble-pop` | v1 | Free |
+| Bubble Pop (Bubble Shooter) | `bubble-pop` | v1 | Free |
 | Memory Match | `memory-match` | v1 | Tournament (monthly) |
 | Tap Game | `tap-game` | v1 | Free |
 | Lucky Boxes | `lucky-box` | v1 | Free |
@@ -157,6 +157,40 @@ All titles below are locked at their listed tag. **Do not edit game-specific fol
 
 ---
 
+## Ball Shooter (`orbit-blast`) — stable v2
+
+**Status:** Locked. Do not modify unless explicitly authorized by the user.
+
+**Scope (frozen):**
+
+- `src/games/orbit-blast/**`
+- `games/orbit-blast/**`
+
+**Includes:** 99-Balls-style aim-and-shoot gameplay (volley launch, wall ricochet, numbered blocks, descending rows), premium Ethio Telecom presentation (blue-green arcade background, glossy balls/blocks/shooter, particle effects, combo visuals, glass HUD, premium menus/game-over screen), `obAudio.ts` arcade SFX + generative music bed, animated score counters.
+
+**Gameplay frozen:** Ball shooting mechanics, ball physics, collision logic, level progression, difficulty, target spawning, game rules, backend, and tournament integration must not change without user authorization.
+
+**v2 changelog:** Premium commercial-quality visual/audio/UX polish pass; Ethio Telecom green/blue/white theme; visual combo system and floating score popups; redesigned start/pause/game-over screens and HUD.
+
+---
+
+## Bubble Pop (`bubble-pop`) — stable v1
+
+**Status:** Locked. Do not modify unless explicitly authorized by the user.
+
+**Scope (frozen):**
+
+- `src/games/bubble-pop/**`
+- `games/bubble-pop/**`
+
+**Includes:** Pointer-aim bubble shooter with match-3 clears, premium canvas rendering (`bpRender.ts`), effects (`bpEffects.ts`), arcade SFX (`bpAudio.ts`), hub-themed shell and HUD.
+
+**Gameplay frozen:** Bubble launch physics, matching/clearing logic, grid layout, scoring rules, level progression, and difficulty must not change without user authorization.
+
+**v1 changelog:** Premium bubble-shooter presentation with float text, combo banners, impact particles, and Ethio Telecom–aligned playfield chrome.
+
+---
+
 ## Brick Blitz (`brick-blitz`) — stable v1
 
 **Status:** Locked. Do not modify unless explicitly authorized by the user.
@@ -176,7 +210,7 @@ All titles below are locked at their listed tag. **Do not edit game-specific fol
 
 ## All other stable v1 games
 
-The remaining titles in the table above (`orbit-blast`, `candy-crunch`, `sky-hopper`, `bubble-pop`, `tap-game`, `lucky-box`, `spin-wheel`, `luckyslot`, `popblast`, `sudoku`, `vocab`, `rhyme`, `target24`, `crosssum`, `logic`, `sequence`) are locked at **v1** as of the Phase 1 expansion. Each game's scope is its `src/games/<id>/**` and `games/<id>/**` folders.
+The remaining titles in the table above (`candy-crunch`, `sky-hopper`, `tap-game`, `lucky-box`, `spin-wheel`, `luckyslot`, `popblast`, `sudoku`, `vocab`, `rhyme`, `target24`, `crosssum`, `logic`, `sequence`) are locked at **v1** as of the Phase 1 expansion. Each game's scope is its `src/games/<id>/**` and `games/<id>/**` folders.
 
 ---
 

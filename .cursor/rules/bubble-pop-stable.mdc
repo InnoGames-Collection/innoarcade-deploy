@@ -1,0 +1,33 @@
+---
+description: Bubble Pop (Bubble Shooter) is stable v1 — do not modify without explicit user authorization
+globs: src/games/bubble-pop/**,games/bubble-pop/**
+alwaysApply: false
+---
+
+# Bubble Pop (Bubble Shooter) — stable v1
+
+`bubble-pop` is tagged `stable: 'v1'` in `src/platform/catalog.ts`. See `STABLE.md`.
+
+## Do not change
+
+Unless the user **explicitly authorizes** changes to Bubble Pop:
+
+- Do not edit files under `src/games/bubble-pop/` or `games/bubble-pop/`
+- Do not change bubble launch physics, matching/clearing logic, grid layout, scoring, level progression, or difficulty
+- Do not change premium presentation (UI, graphics, audio, effects, HUD, menus) without authorization
+
+## Frozen scope
+
+- `src/games/bubble-pop/game.ts` — gameplay logic
+- `src/games/bubble-pop/main.ts` — bootstrap, HUD wiring
+- `src/games/bubble-pop/bpAudio.ts` — arcade SFX
+- `src/games/bubble-pop/bpRender.ts` — premium canvas rendering
+- `src/games/bubble-pop/bpEffects.ts` — float text, combos, particles
+- `src/games/bubble-pop/style.css` — theme and shell chrome
+- `games/bubble-pop/index.html` — menus, HUD, overlays
+
+## Instead
+
+- Copy Bubble Pop **patterns** into shared modules or other games
+- Fix platform/hub/backend issues without touching Bubble Pop game code
+- If a shared change affects Bubble Pop, **tell the user** which shared file changed and why

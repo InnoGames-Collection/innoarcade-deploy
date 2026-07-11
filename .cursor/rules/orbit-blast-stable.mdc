@@ -1,0 +1,32 @@
+---
+description: Ball Shooter is stable v2 — do not modify without explicit user authorization
+globs: src/games/orbit-blast/**,games/orbit-blast/**
+alwaysApply: false
+---
+
+# Ball Shooter — stable v2
+
+`orbit-blast` is tagged `stable: 'v2'` in `src/platform/catalog.ts`. See `STABLE.md`.
+
+## Do not change
+
+Unless the user **explicitly authorizes** changes to Ball Shooter:
+
+- Do not edit files under `src/games/orbit-blast/` or `games/orbit-blast/`
+- Do not change ball shooting mechanics, ball physics, collision logic, level progression, difficulty, target spawning, or game rules
+- Do not change backend or tournament integration
+- Do not change premium presentation (UI, graphics, audio, effects, HUD, menus) without authorization
+
+## Frozen scope
+
+- `src/games/orbit-blast/game.ts` — gameplay + canvas rendering
+- `src/games/orbit-blast/main.ts` — bootstrap, HUD wiring
+- `src/games/orbit-blast/obAudio.ts` — premium SFX and music
+- `src/games/orbit-blast/style.css` — Ethio Telecom premium theme
+- `games/orbit-blast/index.html` — menus, HUD, overlays
+
+## Instead
+
+- Copy Ball Shooter **patterns** into shared modules or other games
+- Fix platform/hub/backend issues without touching Ball Shooter game code
+- If a shared change affects Ball Shooter, **tell the user** which shared file changed and why

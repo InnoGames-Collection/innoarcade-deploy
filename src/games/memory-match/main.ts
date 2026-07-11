@@ -136,6 +136,7 @@ function computeScore(): number { return Math.max(0, timeGain() + pairGain() - m
 const SCORE_PLACEHOLDER = '—';
 function scoreDisplayText(): string {
   if (phase === 'over') return String(lastFinalScore);
+  if (phase === 'playing' || phase === 'paused') return String(computeScore());
   return SCORE_PLACEHOLDER;
 }
 

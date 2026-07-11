@@ -11,6 +11,8 @@ These games are **frozen** production releases. See `STABLE.md` for details.
 
 | Game | ID | Stable tag |
 |------|-----|------------|
+| Ball Shooter | `orbit-blast` | v2 |
+| Bubble Pop (Bubble Shooter) | `bubble-pop` | v1 |
 | Brick Blitz | `brick-blitz` | v1 |
 | Fruit Slice | `fruit-slice` | v1 |
 | Helix Jump | `helix-jump` | v1 |

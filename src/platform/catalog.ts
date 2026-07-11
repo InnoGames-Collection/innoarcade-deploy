@@ -69,6 +69,7 @@ const ALL_GAMES: GameMeta[] = [
     genreEn: 'Arcade · Skill',
     genreAm: 'አርኬድ · ክህሎት',
     mode: 'free',
+    stable: 'v2',
     icon: '🪐',
     accent: '#5b8cff',
     thumb: ['#1b2a6b', '#0a1130'],
@@ -139,7 +140,7 @@ const ALL_GAMES: GameMeta[] = [
     route: 'games/bubble-pop/',
     nameEn: 'Bubble Pop', nameAm: 'ባብል ፖፕ',
     genreEn: 'Shooter', genreAm: 'ተኳሽ',
-    mode: 'free', icon: '🫧', accent: '#7b6cf0', thumb: ['#3d2f8c', '#140d30'],
+    mode: 'free', stable: 'v1', icon: '🫧', accent: '#7b6cf0', thumb: ['#3d2f8c', '#140d30'],
     scoreEn: 'Score', scoreAm: 'ነጥብ',
   },
 
@@ -439,7 +440,7 @@ for (const g of CATALOG) {
 // All pre-existing titles are frozen; new games are added without touching these.
 const STABLE_VERSIONS: Record<string, string> = {
   'temple-dash': 'v3',
-  'orbit-blast': 'v1',
+  'orbit-blast': 'v2',
   'merge-2048': 'v1',
   'candy-crunch': 'v1',
   'brick-blitz': 'v1',
