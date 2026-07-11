@@ -96,78 +96,147 @@ body.game-shell.quiz-shell {
   cursor: pointer;
 }
 
-body.game-shell[data-game="orbit-blast"]{--game-accent:#5b8cff;--shell-accent:#5b8cff;}</style>  <script type="module" crossorigin src="../../assets/orbitBlast-DLt1cJTa.js"></script>
+body.game-shell[data-game="orbit-blast"]{--game-accent:#5b8cff;--shell-accent:#5b8cff;}</style>  <script type="module" crossorigin src="../../assets/orbitBlast-CjFVgQaR.js"></script>
   <link rel="modulepreload" crossorigin href="../../assets/index-CqBADFYS.js">
-  <link rel="modulepreload" crossorigin href="../../assets/tournaments-DS7wnk78.js">
-  <link rel="modulepreload" crossorigin href="../../assets/signInGate-CRSRui4V.js">
-  <link rel="modulepreload" crossorigin href="../../assets/freeShellNav-BmF3Ajbf.js">
+  <link rel="modulepreload" crossorigin href="../../assets/tournaments-DFMqXZob.js">
+  <link rel="modulepreload" crossorigin href="../../assets/signInGate-CeYb4Syz.js">
+  <link rel="modulepreload" crossorigin href="../../assets/freeShellNav-tjtaQCNj.js">
   <link rel="modulepreload" crossorigin href="../../assets/arcadeScore-BBUSCjn-.js">
   <link rel="modulepreload" crossorigin href="../../assets/gameEvents-DjYW9AWC.js">
   <link rel="modulepreload" crossorigin href="../../assets/firstRun-CU2OcUhx.js">
   <link rel="modulepreload" crossorigin href="../../assets/hubCanvas-BB9r93CM.js">
-  <link rel="modulepreload" crossorigin href="../../assets/freeGameShell-B_RFFt-e.js">
+  <link rel="modulepreload" crossorigin href="../../assets/freeGameShell-B6tVjAoe.js">
   <link rel="modulepreload" crossorigin href="../../assets/loop-BDek7L7e.js">
   <link rel="modulepreload" crossorigin href="../../assets/fx-ccUjo7Ds.js">
   <link rel="stylesheet" crossorigin href="../../assets/signInGate-CW9ugQCN.css">
   <link rel="stylesheet" crossorigin href="../../assets/freeShellNav-BcMOtWcT.css">
   <link rel="stylesheet" crossorigin href="../../assets/hubCanvas-D4DtGcuX.css">
-  <link rel="stylesheet" crossorigin href="../../assets/orbitBlast-tw4k4-KY.css">
+  <link rel="stylesheet" crossorigin href="../../assets/orbitBlast-B-qmaUQz.css">
   <link rel="stylesheet" crossorigin href="../../assets/style-DBNSxyca.css">
 </head>
-  <body class="game-shell arcade-shell" data-game="orbit-blast">
-    <div id="stage" class="fc-stage arcade-stage game-shell-stage">
-      <div id="fcBackdrop" class="fc-backdrop" aria-hidden="true"></div>
+  <body class="game-shell arcade-shell ob-shell" data-game="orbit-blast">
+    <div id="stage" class="fc-stage arcade-stage ob-stage game-shell-stage">
+      <div id="fcBackdrop" class="fc-backdrop ob-backdrop" aria-hidden="true">
+        <div class="ob-bg-rays"></div>
+        <div class="ob-bg-orbs">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div class="ob-bg-particles" aria-hidden="true"></div>
+      </div>
 
-      <div id="menuOverlay" class="game-overlay">
-        <div class="game-panel panel-clean">
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+      <div id="menuOverlay" class="game-overlay ob-overlay">
+        <div class="ob-menu-panel">
+          <button type="button" class="gp-close gp-close-corner ob-close" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <div class="ob-title-block">
+            <div class="ob-title-icon">🪐</div>
+            <h1 class="ob-title">Ball Shooter</h1>
+            <p class="ob-tagline" data-i18n="ob.tagline">Aim and unleash a volley of orbs. Smash every numbered block before the wall reaches the bottom.</p>
+          </div>
           <div class="shell-free-menu" id="freeMenu"></div>
-          <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
+          <div class="ob-menu-grid">
+            <button class="ob-menu-chip" disabled aria-disabled="true">
+              <span class="ob-chip-icon">🏆</span>
+              <span>Leaderboard</span>
+            </button>
+            <button class="ob-menu-chip" disabled aria-disabled="true">
+              <span class="ob-chip-icon">⚔️</span>
+              <span>Tournament</span>
+            </button>
+            <button class="ob-menu-chip" disabled aria-disabled="true">
+              <span class="ob-chip-icon">📅</span>
+              <span>Daily</span>
+            </button>
+            <button class="ob-menu-chip" disabled aria-disabled="true">
+              <span class="ob-chip-icon">🎁</span>
+              <span>Rewards</span>
+            </button>
+          </div>
+          <button id="startBtn" class="ob-play-btn" data-i18n="hub.play">
+            <span class="ob-play-glow"></span>
+            <span class="ob-play-label">Play</span>
+          </button>
         </div>
       </div>
 
-      <div id="arc-play-wrapper" class="arc-play-wrapper hidden">
-        <button id="closeBtn" type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-        <header id="hud" class="arc-hud">
-          <div class="fp-stats">
-            <div class="fp-stat fp-stat-score">
-              <span class="fp-stat-label" data-i18n="ob.score">Score</span>
-              <strong class="fp-stat-value" id="scoreVal">0</strong>
+      <div id="arc-play-wrapper" class="arc-play-wrapper ob-playframe hidden">
+        <button id="closeBtn" type="button" class="gp-close gp-close-corner ob-close" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+        <header id="hud" class="ob-hud">
+          <div class="ob-hud-cards">
+            <div class="ob-hud-card ob-hud-score" id="scoreCard">
+              <span class="ob-hud-label" data-i18n="ob.score">Score</span>
+              <strong class="ob-hud-value" id="scoreVal">0</strong>
             </div>
-            <div class="fp-stat">
-              <span class="fp-stat-label" data-i18n="ob.balls">Balls</span>
-              <strong class="fp-stat-value" id="ballsVal">×1</strong>
+            <div class="ob-hud-card ob-hud-best">
+              <span class="ob-hud-label" data-i18n="ob.best">Best</span>
+              <strong class="ob-hud-value" id="bestVal">0</strong>
+            </div>
+            <div class="ob-hud-card">
+              <span class="ob-hud-label" data-i18n="td.level">Level</span>
+              <strong class="ob-hud-value" id="levelVal">1</strong>
+            </div>
+            <div class="ob-hud-card">
+              <span class="ob-hud-label" data-i18n="ob.balls">Balls</span>
+              <strong class="ob-hud-value" id="ballsVal">×1</strong>
+            </div>
+            <div class="ob-hud-card ob-hud-combo" id="comboCard">
+              <span class="ob-hud-label">Combo</span>
+              <strong class="ob-hud-value" id="comboVal">—</strong>
             </div>
           </div>
-          <div class="arc-hud-actions">
-            <button id="muteBtn" type="button" aria-label="Sound">🔊</button>
+          <div class="ob-hud-actions">
+            <button id="muteBtn" type="button" class="ob-action-btn" aria-label="Sound">🔊</button>
+            <button id="pauseBtn" type="button" class="ob-action-btn" aria-label="Pause">⏸</button>
           </div>
         </header>
-        <div class="arc-canvas-wrap">
+        <div class="arc-canvas-wrap ob-canvas-wrap">
           <canvas id="game" width="480" height="640"></canvas>
         </div>
       </div>
 
-      <div id="pauseOverlay" class="game-overlay hidden">
-        <div class="game-panel">
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-          <h2 data-i18n="td.paused">Paused</h2>
-          <button id="resumeBtn" class="btn primary" data-i18n="td.resume">Resume</button>
-          <button id="restartBtn" class="btn" data-i18n="td.restart">Play again</button>
+      <div id="pauseOverlay" class="game-overlay ob-overlay hidden">
+        <div class="ob-panel">
+          <button type="button" class="gp-close gp-close-corner ob-close" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <div class="ob-panel-icon">⏸</div>
+          <h2 class="ob-panel-title" data-i18n="td.paused">Paused</h2>
+          <button id="resumeBtn" class="ob-play-btn ob-btn-sm" data-i18n="td.resume">Resume</button>
+          <button id="restartBtn" class="ob-secondary-btn" data-i18n="td.restart">Play again</button>
         </div>
       </div>
 
-      <div id="overOverlay" class="game-overlay hidden">
-        <div class="game-panel">
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-          <h2 data-i18n="ob.gameOver">Game over</h2>
-          <p id="newBest" class="new-best hidden" data-i18n="ob.newBest"></p>
-          <div class="shell-over-final">
-            <div class="shell-over-stat"><span data-i18n="ob.score">Score</span><strong id="finalScore">0</strong></div>
-            <div class="shell-over-stat"><span data-i18n="td.best">Best</span><strong id="finalBest">0</strong></div>
+      <div id="overOverlay" class="game-overlay ob-overlay hidden">
+        <div class="ob-panel ob-panel-over">
+          <button type="button" class="gp-close gp-close-corner ob-close" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <div class="ob-panel-icon">💫</div>
+          <h2 class="ob-panel-title" data-i18n="ob.gameOver">Game over</h2>
+          <p id="newBest" class="ob-new-best hidden" data-i18n="ob.newBest"></p>
+          <div class="ob-final-score-ring">
+            <span class="ob-final-label" data-i18n="ob.score">Score</span>
+            <strong class="ob-final-score" id="finalScore">0</strong>
+          </div>
+          <div class="ob-stats-grid">
+            <div class="ob-stat-item">
+              <span class="ob-stat-label">Best Combo</span>
+              <strong id="statCombo" class="ob-stat-value">0</strong>
+            </div>
+            <div class="ob-stat-item">
+              <span class="ob-stat-label">Accuracy</span>
+              <strong id="statAccuracy" class="ob-stat-value">100%</strong>
+            </div>
+            <div class="ob-stat-item">
+              <span class="ob-stat-label">Destroyed</span>
+              <strong id="statBlocks" class="ob-stat-value">0</strong>
+            </div>
+            <div class="ob-stat-item">
+              <span class="ob-stat-label" data-i18n="td.best">Best</span>
+              <strong id="finalBest" class="ob-stat-value">0</strong>
+            </div>
           </div>
           <div class="shell-run-reward" id="runReward"></div>
-          <button id="againBtn" class="btn primary" data-i18n="ob.restart">Play again</button>
+          <div class="ob-over-actions">
+            <button id="againBtn" class="ob-play-btn ob-btn-sm" data-i18n="ob.restart">Play again</button>
+            <button class="ob-secondary-btn ob-btn-sm" disabled aria-disabled="true">🏆 Leaderboard</button>
+            <button type="button" class="ob-secondary-btn ob-btn-sm ob-home-btn" onclick="if(history.length>1){history.back()}else{location.href='../../'}">🏠 Home</button>
+          </div>
         </div>
       </div>
     </div>

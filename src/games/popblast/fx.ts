@@ -5,8 +5,6 @@ const CELEBRATION_TEXTS = [
   'Outstanding', 'Mega Combo', 'Blast Master', 'Candy King',
 ] as const;
 
-const SCORE_LABELS = ['', '+10', '+20', '+30', '+50', '+75', '+100', '+150'] as const;
-
 let fxRoot: HTMLElement | null = null;
 let shakeTarget: HTMLElement | null = null;
 let shakeTimer = 0;
