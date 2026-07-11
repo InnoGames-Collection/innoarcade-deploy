@@ -381,8 +381,9 @@ body {
 /* --- footer --- */
 .hub-footer { background: var(--bg-2); }
 .hub-footer p { font-weight: 600; }
-.footer-brand { display: flex; align-items: center; justify-content: center; gap: 0.55rem; font-size: 0.82rem; color: var(--muted); }
+.footer-brand { display: flex; align-items: center; justify-content: center; gap: 0.55rem; font-size: 0.82rem; color: var(--muted); flex-wrap: wrap; max-width: 100%; }
 .footer-logo { height: 1.3rem; object-fit: contain; }
+.footer-logo-et { max-width: min(100%, 15rem); height: auto; width: auto; object-fit: contain; }
 
 /* ====================================================================== */
 /* Portal shell: bottom nav, browse toolbar, poster cards                 */
@@ -1561,7 +1562,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .cat-chip.on { background: var(--grad-brand); color: #fff; border-color: transparent; }
 .cat-chip-ico { font-size: 0.95rem; }
 
-.hscroll-wrap { margin: 0 -0.25rem; }
+.hscroll-wrap { margin: 0 -0.25rem; overflow-x: clip; max-width: 100%; }
 .hscroll-track {
   display: flex;
   gap: 1rem;
@@ -1813,7 +1814,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .cs-info { position: absolute; top: 0.35rem; right: 0.35rem; z-index: 2; }
 .cs-badge { position: absolute; top: 0.35rem; left: 0.35rem; font-size: 0.58rem; font-weight: 800; background: rgba(0,0,0,0.45); color: #fff; padding: 0.12rem 0.4rem; border-radius: 999px; }
 
-.hub-footer--full { text-align: left; background: linear-gradient(180deg, #1a4a0a 0%, #0f2d06 100%); color: rgba(255,255,255,0.85); padding: 2.5rem clamp(1rem, 4vw, 2.5rem) 1.5rem; }
+.hub-footer--full { text-align: left; background: linear-gradient(180deg, #1a4a0a 0%, #0f2d06 100%); color: rgba(255,255,255,0.85); padding: 2.5rem clamp(1rem, 4vw, 2.5rem) 1.5rem; overflow-x: clip; max-width: 100%; }
 .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1.5rem; max-width: 1280px; margin: 0 auto 1.5rem; }
 .footer-col h4 { font-size: 0.78rem; font-weight: 800; text-transform: uppercase; color: #a8e06a; margin: 0 0 0.65rem; }
 .footer-col a { display: block; color: rgba(255,255,255,0.78); text-decoration: none; font-size: 0.85rem; padding: 0.2rem 0; }
@@ -1936,23 +1937,38 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .dc-claimed { text-align: center; color: var(--accent); font-weight: 700; font-size: 0.85rem; margin: 0.35rem 0 0; }
 
 /* Phase 3 — activity ticker + notifications */
-.activity-ticker-host { border-bottom: 1px solid var(--line); background: #f6faf0; }
+.activity-ticker-host {
+  border-bottom: 1px solid var(--line);
+  background: #f6faf0;
+  overflow-x: clip;
+  max-width: 100%;
+}
 .activity-ticker-host--below {
   border-bottom: none;
   border-top: 1px solid var(--line);
   margin-top: 1rem;
   border-radius: 0 0 14px 14px;
+  overflow-x: clip;
+  max-width: 100%;
 }
 .activity-ticker {
   display: flex; align-items: center; gap: 0.65rem;
-  max-width: 1280px; margin: 0 auto; padding: 0.35rem clamp(0.75rem, 3vw, 1.5rem);
+  max-width: 100%; margin: 0 auto; padding: 0.35rem clamp(0.75rem, 3vw, 1.5rem);
   font-size: 0.78rem; overflow: hidden;
+  min-width: 0;
 }
 .activity-ticker-label {
   flex: 0 0 auto; font-weight: 800; color: #c0392b;
   text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.68rem;
 }
-.activity-ticker-viewport { flex: 1; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+.activity-ticker-viewport {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
 .activity-ticker-track {
   display: inline-flex; align-items: center; gap: 0.75rem; white-space: nowrap;
   /* Fallback duration — overridden in JS from track width for readable speed */
