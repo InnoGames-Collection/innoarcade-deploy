@@ -11,6 +11,7 @@ These games are **frozen** production releases. See `STABLE.md` for details.
 
 | Game | ID | Stable tag |
 |------|-----|------------|
+| Brick Blitz | `brick-blitz` | v1 |
 | Fruit Slice | `fruit-slice` | v1 |
 | Helix Jump | `helix-jump` | v1 |
 | Crossy Road | `crossy-road` | v1 |

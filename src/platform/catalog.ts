@@ -114,7 +114,7 @@ const ALL_GAMES: GameMeta[] = [
     route: 'games/brick-blitz/',
     nameEn: 'Brick Blitz', nameAm: 'ብሪክ ብሊትዝ',
     genreEn: 'Arcade', genreAm: 'አርኬድ',
-    mode: 'free', icon: '🧱', accent: '#f0a832', thumb: ['#9c5a14', '#331904'],
+    mode: 'free', stable: 'v1', icon: '🧱', accent: '#f0a832', thumb: ['#9c5a14', '#331904'],
     scoreEn: 'Score', scoreAm: 'ነጥብ',
   },
   {

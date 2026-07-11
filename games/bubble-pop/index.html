@@ -6,57 +6,130 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🫧</text></svg>" />
     <title>Bubble Pop — GoPlay</title>
   </head>
-  <body class="game-shell arcade-shell" data-game="bubble-pop">
-    <div id="stage" class="fc-stage arcade-stage game-shell-stage">
-      <div id="fcBackdrop" class="fc-backdrop" aria-hidden="true"></div>
-
-      <div id="menuOverlay" class="game-overlay">
-        <div class="game-panel panel-clean">
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-          <div class="shell-free-menu" id="freeMenu"></div>
-          <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
+  <body class="game-shell arcade-shell bp-shell" data-game="bubble-pop">
+    <div id="stage" class="fc-stage arcade-stage bp-stage game-shell-stage">
+      <div id="fcBackdrop" class="fc-backdrop bp-backdrop" aria-hidden="true">
+        <div class="bp-bg-rays"></div>
+        <div class="bp-bg-orbs">
+          <span></span><span></span><span></span><span></span>
         </div>
       </div>
 
-      <div id="arc-play-wrapper" class="arc-play-wrapper hidden">
-        <button id="closeBtn" type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-        <header id="hud" class="arc-hud">
-          <div class="fp-stats">
-            <div class="fp-stat fp-stat-score">
-              <span class="fp-stat-label" data-i18n="td.score">Score</span>
-              <strong class="fp-stat-value" id="scoreVal">0</strong>
+      <div id="menuOverlay" class="game-overlay bp-overlay">
+        <div class="bp-menu-panel">
+          <button type="button" class="gp-close gp-close-corner bp-close" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <div class="bp-title-block">
+            <div class="bp-title-bubbles">
+              <span class="bp-bubble bp-b1">🫧</span>
+              <span class="bp-bubble bp-b2">🫧</span>
+              <span class="bp-bubble bp-b3">🫧</span>
+            </div>
+            <h1 class="bp-title">Bubble Pop</h1>
+            <p class="bp-tagline">Aim, match &amp; clear the board</p>
+          </div>
+          <div class="shell-free-menu" id="freeMenu"></div>
+          <div class="bp-menu-grid">
+            <button class="bp-menu-chip" disabled aria-disabled="true">
+              <span class="bp-chip-icon">🏆</span>
+              <span>Leaderboard</span>
+            </button>
+            <button class="bp-menu-chip" disabled aria-disabled="true">
+              <span class="bp-chip-icon">⚔️</span>
+              <span>Tournament</span>
+            </button>
+            <button class="bp-menu-chip" disabled aria-disabled="true">
+              <span class="bp-chip-icon">📅</span>
+              <span>Daily</span>
+            </button>
+            <button class="bp-menu-chip" disabled aria-disabled="true">
+              <span class="bp-chip-icon">🎁</span>
+              <span>Rewards</span>
+            </button>
+          </div>
+          <button id="startBtn" class="bp-play-btn" data-i18n="hub.play">
+            <span class="bp-play-glow"></span>
+            <span class="bp-play-label">Play</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="arc-play-wrapper" class="arc-play-wrapper bp-playframe hidden">
+        <button id="closeBtn" type="button" class="gp-close gp-close-corner bp-close" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+        <header id="hud" class="bp-hud">
+          <div class="bp-hud-cards">
+            <div class="bp-hud-card bp-hud-score">
+              <span class="bp-hud-label" data-i18n="td.score">Score</span>
+              <strong class="bp-hud-value" id="scoreVal">0</strong>
+            </div>
+            <div class="bp-hud-card">
+              <span class="bp-hud-label" data-i18n="shell.puzzle">Level</span>
+              <strong class="bp-hud-value" id="levelVal">1</strong>
+            </div>
+            <div class="bp-hud-card bp-hud-combo" id="comboCard">
+              <span class="bp-hud-label">Combo</span>
+              <strong class="bp-hud-value" id="comboVal">—</strong>
+            </div>
+            <div class="bp-hud-card bp-hud-best">
+              <span class="bp-hud-label" data-i18n="td.best">Best</span>
+              <strong class="bp-hud-value" id="bestVal">0</strong>
             </div>
           </div>
-          <div class="arc-hud-actions">
-            <button id="muteBtn" type="button" aria-label="Sound">🔊</button>
-            <button id="pauseBtn" type="button" aria-label="Pause">⏸</button>
+          <div class="bp-hud-actions">
+            <button id="muteBtn" type="button" class="bp-action-btn" aria-label="Sound">🔊</button>
+            <button id="pauseBtn" type="button" class="bp-action-btn" aria-label="Pause">⏸</button>
           </div>
         </header>
-        <div class="arc-canvas-wrap">
+        <div class="arc-canvas-wrap bp-canvas-wrap">
           <canvas id="game" width="480" height="720"></canvas>
         </div>
       </div>
 
-      <div id="pauseOverlay" class="game-overlay hidden">
-        <div class="game-panel">
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-          <h2 data-i18n="td.paused">Paused</h2>
-          <button id="resumeBtn" class="btn primary" data-i18n="td.resume">Resume</button>
-          <button id="restartBtn" class="btn" data-i18n="td.restart">Play again</button>
+      <div id="pauseOverlay" class="game-overlay bp-overlay hidden">
+        <div class="bp-panel">
+          <button type="button" class="gp-close gp-close-corner bp-close" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <div class="bp-panel-icon">⏸</div>
+          <h2 class="bp-panel-title" data-i18n="td.paused">Paused</h2>
+          <button id="resumeBtn" class="bp-play-btn bp-btn-sm" data-i18n="td.resume">Resume</button>
+          <button id="restartBtn" class="bp-secondary-btn" data-i18n="td.restart">Play again</button>
         </div>
       </div>
 
-      <div id="overOverlay" class="game-overlay hidden">
-        <div class="game-panel">
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
-          <h2 data-i18n="td.gameOver">Game over</h2>
-          <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>
-          <div class="shell-over-final">
-            <div class="shell-over-stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
-            <div class="shell-over-stat"><span data-i18n="td.best">Best</span><strong id="finalBest">0</strong></div>
+      <div id="overOverlay" class="game-overlay bp-overlay hidden">
+        <div class="bp-panel bp-panel-over">
+          <button type="button" class="gp-close gp-close-corner bp-close" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          <div class="bp-panel-icon">💫</div>
+          <h2 class="bp-panel-title" data-i18n="td.gameOver">Game over</h2>
+          <p id="newBest" class="bp-new-best hidden" data-i18n="td.newBest"></p>
+          <div class="bp-final-score-ring">
+            <span class="bp-final-label" data-i18n="td.score">Score</span>
+            <strong class="bp-final-score" id="finalScore">0</strong>
+          </div>
+          <div class="bp-stats-grid">
+            <div class="bp-stat-item">
+              <span class="bp-stat-label">Best Combo</span>
+              <strong id="statCombo" class="bp-stat-value">0</strong>
+            </div>
+            <div class="bp-stat-item">
+              <span class="bp-stat-label">Accuracy</span>
+              <strong id="statAccuracy" class="bp-stat-value">100%</strong>
+            </div>
+            <div class="bp-stat-item">
+              <span class="bp-stat-label">Cleared</span>
+              <strong id="statCleared" class="bp-stat-value">0</strong>
+            </div>
+            <div class="bp-stat-item">
+              <span class="bp-stat-label" data-i18n="td.best">Best</span>
+              <strong id="finalBest" class="bp-stat-value">0</strong>
+            </div>
           </div>
           <div class="shell-run-reward" id="runReward"></div>
-          <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
+          <div class="bp-over-actions">
+            <button id="againBtn" class="bp-play-btn bp-btn-sm" data-i18n="td.restart">Play again</button>
+            <div class="bp-over-secondary">
+              <button class="bp-secondary-btn bp-btn-compact" disabled>Leaderboard</button>
+              <button class="bp-secondary-btn bp-btn-compact" onclick="if(history.length>1){history.back()}else{location.href='../../'}">Home</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

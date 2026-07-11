@@ -1,0 +1,31 @@
+---
+description: Brick Blitz is stable v1 — do not modify without explicit user authorization
+globs: src/games/brick-blitz/**,games/brick-blitz/**
+alwaysApply: false
+---
+
+# Brick Blitz — stable v1
+
+`brick-blitz` is tagged `stable: 'v1'` in `src/platform/catalog.ts`. See `STABLE.md`.
+
+## Do not change
+
+Unless the user **explicitly authorizes** changes to Brick Blitz:
+
+- Do not edit files under `src/games/brick-blitz/` or `games/brick-blitz/`
+- Do not change ball physics, paddle movement, collision logic, brick breaking, power-ups, levels, or difficulty
+- Do not change premium presentation (UI, graphics, audio, effects, HUD, menus) without authorization
+
+## Frozen scope
+
+- `src/games/brick-blitz/game.ts` — gameplay + canvas rendering
+- `src/games/brick-blitz/main.ts` — bootstrap, HUD wiring
+- `src/games/brick-blitz/bbAudio.ts` — premium SFX
+- `src/games/brick-blitz/style.css` — Ethio Telecom premium theme
+- `games/brick-blitz/index.html` — menus, HUD, overlays
+
+## Instead
+
+- Copy Brick Blitz **patterns** into shared modules or other games
+- Fix platform/hub/backend issues without touching Brick Blitz game code
+- If a shared change affects Brick Blitz, **tell the user** which shared file changed and why

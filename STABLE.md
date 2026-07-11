@@ -157,9 +157,26 @@ All titles below are locked at their listed tag. **Do not edit game-specific fol
 
 ---
 
+## Brick Blitz (`brick-blitz`) — stable v1
+
+**Status:** Locked. Do not modify unless explicitly authorized by the user.
+
+**Scope (frozen):**
+
+- `src/games/brick-blitz/**`
+- `games/brick-blitz/**`
+
+**Includes:** Breakout gameplay (paddle physics, ball dynamics, brick HP, power-ups, 5-level progression), premium Ethio Telecom presentation (glossy ball/paddle/bricks, particle effects, combo visuals, glass HUD, premium menus/game-over screen), `bbAudio.ts` arcade SFX, animated score counters.
+
+**Gameplay frozen:** Ball physics, paddle movement, collision logic, brick breaking logic, power-up logic, game progression, levels, and difficulty must not change without user authorization.
+
+**v1 changelog:** Premium commercial-quality visual/audio polish pass; Ethio Telecom green/blue/white theme; combo system (visual only); floating score popups; redesigned start/pause/game-over screens.
+
+---
+
 ## All other stable v1 games
 
-The remaining titles in the table above (`orbit-blast`, `candy-crunch`, `brick-blitz`, `sky-hopper`, `bubble-pop`, `tap-game`, `lucky-box`, `spin-wheel`, `luckyslot`, `popblast`, `sudoku`, `vocab`, `rhyme`, `target24`, `crosssum`, `logic`, `sequence`) are locked at **v1** as of the Phase 1 expansion. Each game's scope is its `src/games/<id>/**` and `games/<id>/**` folders.
+The remaining titles in the table above (`orbit-blast`, `candy-crunch`, `sky-hopper`, `bubble-pop`, `tap-game`, `lucky-box`, `spin-wheel`, `luckyslot`, `popblast`, `sudoku`, `vocab`, `rhyme`, `target24`, `crosssum`, `logic`, `sequence`) are locked at **v1** as of the Phase 1 expansion. Each game's scope is its `src/games/<id>/**` and `games/<id>/**` folders.
 
 ---
 

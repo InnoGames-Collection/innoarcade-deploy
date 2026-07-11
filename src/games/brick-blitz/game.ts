@@ -10,21 +10,23 @@ import type { Action } from '../../engine/input';
 export const W = 480;
 export const H = 720;
 
-const PADDLE_W = 70;
-const PADDLE_H = 12;
-const PADDLE_Y = H - 32;
-const PADDLE_SPEED = 400;
+const PADDLE_W = 92;
+const PADDLE_H = 18;
+const PADDLE_Y = H - 40;
+const PADDLE_SPEED = 420;
 
-const BALL_RADIUS = 5;
-const BALL_VISUAL_RADIUS = BALL_RADIUS * 1.3;
-const BALL_SPEED = 280;
-const MAX_BALL_SPEED = 420;
+const BALL_RADIUS = 7;
+const BALL_VISUAL_RADIUS = 9;
+const BALL_SPEED = 310;
+const MAX_BALL_SPEED = 500;
+const BALL_ATTACH_GAP = 10;
 
-const BRICK_W = 50;
-const BRICK_H = 16;
-const BRICK_ROWS = 4;
-const BRICKS_PER_ROW = 8;
-const BRICK_GAP = 2;
+const BRICK_W = 56;
+const BRICK_H = 22;
+const BRICK_ROWS_BASE = 4;
+const BRICKS_PER_ROW = 7;
+const BRICK_GAP = 3;
+const BRICK_START_Y = 36;
 
 const BRICK_PALETTE = [
   { top: '#ff6b8a', mid: '#ff3d6a', bot: '#c41e52', glow: '#ff8fab', shine: '#ffc4d4' },
@@ -109,6 +111,35 @@ export class BrickBlitz {
   onStateChange: (s: GameState) => void = () => {};
   onGameOver: (score: number, levelReached: number, record: boolean) => void = () => {};
 
+  private get ballAttachY(): number {
+    return PADDLE_Y - PADDLE_H / 2 - BALL_RADIUS - BALL_ATTACH_GAP;
+  }
+
+  private get levelBallSpeed(): number {
+    return BALL_SPEED * (1 + (this.levelNumber - 1) * 0.1);
+  }
+
+  private get levelMaxBallSpeed(): number {
+    return MAX_BALL_SPEED * (1 + (this.levelNumber - 1) * 0.07);
+  }
+
+  private levelRows(): number {
+    return Math.min(6, BRICK_ROWS_BASE + Math.floor((this.levelNumber - 1) / 2));
+  }
+
+  private brickHp(row: number): number {
+    const tier = 1 + Math.floor((this.levelNumber - 1) / 2);
+    const topRowBonus = this.levelNumber >= 4 && row === 0 ? 1 : 0;
+    return Math.min(4, tier + topRowBonus);
+  }
+
+  private shouldPlaceBrick(row: number, col: number): boolean {
+    if (this.levelNumber <= 2) return true;
+    if (this.levelNumber === 3) return (row * 3 + col) % 7 !== 0;
+    if (this.levelNumber === 4) return (row * 2 + col) % 5 !== 0;
+    return (row + col) % 3 !== 0;
+  }
+
   setPaddleX(canvasX: number): void {
     this.paddleX = Math.max(4, Math.min(W - 4 - this.paddleW, canvasX - this.paddleW / 2));
   }
@@ -117,8 +148,9 @@ export class BrickBlitz {
     const ball = this.balls.find((b) => b.attached);
     if (!ball || this.state !== 'playing') return;
     ball.attached = false;
-    ball.vx = -120 + Math.random() * 240;
-    ball.vy = -BALL_SPEED;
+    const speed = this.levelBallSpeed;
+    ball.vx = -140 + Math.random() * 280;
+    ball.vy = -speed;
     bbSfx.launch();
   }
 
@@ -162,7 +194,7 @@ export class BrickBlitz {
     this.paddleX = W / 2 - PADDLE_W / 2;
     this.paddleW = PADDLE_W;
     this.paddleSquash = 0;
-    this.balls = [{ x: W / 2, y: PADDLE_Y - 20, vx: 0, vy: 0, attached: true, trail: [], impactFlash: 0 }];
+    this.balls = [{ x: W / 2, y: this.ballAttachY, vx: 0, vy: 0, attached: true, trail: [], impactFlash: 0 }];
     this.bricks = [];
     this.powerUps = [];
     this.scorePopups = [];
@@ -189,8 +221,9 @@ export class BrickBlitz {
     else if (a === 'right') this.paddleDir = 1;
     else if (a === 'tap' && this.balls[0]?.attached) {
       this.balls[0].attached = false;
-      this.balls[0].vx = -150 + Math.random() * 300;
-      this.balls[0].vy = -BALL_SPEED;
+      const speed = this.levelBallSpeed;
+      this.balls[0].vx = -170 + Math.random() * 340;
+      this.balls[0].vy = -speed;
       bbSfx.launch();
     } else if (a === 'pause') {
       if (this.state === 'playing') this.pause();
@@ -240,7 +273,7 @@ export class BrickBlitz {
 
       if (ball.attached) {
         ball.x = this.paddleX + this.paddleW / 2;
-        ball.y = PADDLE_Y - 20;
+        ball.y = this.ballAttachY;
         ball.trail = [];
         continue;
       }
@@ -277,8 +310,11 @@ export class BrickBlitz {
       ) {
         ball.y = PADDLE_Y - BALL_RADIUS;
         const hitPos = (ball.x - this.paddleX) / this.paddleW - 0.5;
-        ball.vx = hitPos * 400;
-        ball.vy = -Math.sqrt(BALL_SPEED * BALL_SPEED - ball.vx * ball.vx);
+        const targetSpeed = this.levelBallSpeed;
+        ball.vx = hitPos * 420;
+        const vxClamped = Math.min(Math.abs(ball.vx), targetSpeed * 0.85);
+        ball.vx = Math.sign(ball.vx || hitPos) * vxClamped;
+        ball.vy = -Math.sqrt(Math.max(targetSpeed * targetSpeed - ball.vx * ball.vx, 1));
         bbSfx.paddleHit();
         this.paddleSquash = 1;
         this.paddleHits++;
@@ -298,7 +334,7 @@ export class BrickBlitz {
             return;
           }
           bbSfx.lifeLost();
-          this.balls = [{ x: W / 2, y: PADDLE_Y - 20, vx: 0, vy: 0, attached: true, trail: [], impactFlash: 0 }];
+          this.balls = [{ x: W / 2, y: this.ballAttachY, vx: 0, vy: 0, attached: true, trail: [], impactFlash: 0 }];
         }
         continue;
       }
@@ -383,9 +419,10 @@ export class BrickBlitz {
       }
 
       const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
-      if (speed > MAX_BALL_SPEED) {
-        ball.vx = (ball.vx / speed) * MAX_BALL_SPEED;
-        ball.vy = (ball.vy / speed) * MAX_BALL_SPEED;
+      const cap = this.levelMaxBallSpeed;
+      if (speed > cap) {
+        ball.vx = (ball.vx / speed) * cap;
+        ball.vy = (ball.vy / speed) * cap;
       }
     }
 
@@ -400,10 +437,10 @@ export class BrickBlitz {
         continue;
       }
 
-      if (p.y + 8 > PADDLE_Y && p.x > this.paddleX && p.x < this.paddleX + this.paddleW) {
+      if (p.y + 14 > PADDLE_Y && p.x > this.paddleX && p.x < this.paddleX + this.paddleW) {
         this.powerUps.splice(i, 1);
         if (p.type === 'paddle') {
-          this.paddleW = Math.min(PADDLE_W * 1.5, this.paddleW + 20);
+          this.paddleW = Math.min(PADDLE_W * 1.55, this.paddleW + 24);
         } else if (p.type === 'slow') {
           for (const b of this.balls) {
             b.vx *= 0.7;
@@ -412,8 +449,8 @@ export class BrickBlitz {
         } else if (p.type === 'multi') {
           if (this.balls.length < 3) {
             const b = this.balls[0];
-            this.balls.push({ x: b.x - 20, y: b.y, vx: b.vx - 80, vy: b.vy, attached: false, trail: [], impactFlash: 0 });
-            this.balls.push({ x: b.x + 20, y: b.y, vx: b.vx + 80, vy: b.vy, attached: false, trail: [], impactFlash: 0 });
+            this.balls.push({ x: b.x - 24, y: b.y, vx: b.vx - 90, vy: b.vy, attached: false, trail: [], impactFlash: 0 });
+            this.balls.push({ x: b.x + 24, y: b.y, vx: b.vx + 90, vy: b.vy, attached: false, trail: [], impactFlash: 0 });
           }
         }
         bbSfx.powerUp();
@@ -437,7 +474,7 @@ export class BrickBlitz {
         } else {
           this.generateLevel();
           this.setState('playing');
-          this.balls = [{ x: W / 2, y: PADDLE_Y - 20, vx: 0, vy: 0, attached: true, trail: [], impactFlash: 0 }];
+          this.balls = [{ x: W / 2, y: this.ballAttachY, vx: 0, vy: 0, attached: true, trail: [], impactFlash: 0 }];
         }
       }, 800);
     }
@@ -446,15 +483,19 @@ export class BrickBlitz {
   private generateLevel(): void {
     this.bricks = [];
     const colors = [0, 1, 2, 3, 4, 5];
-    const startY = 40;
+    const rows = this.levelRows();
+    const totalWidth = BRICKS_PER_ROW * BRICK_W + (BRICKS_PER_ROW - 1) * BRICK_GAP;
+    const startX = (W - totalWidth) / 2;
 
-    for (let r = 0; r < BRICK_ROWS; r++) {
+    for (let r = 0; r < rows; r++) {
       for (let c = 0; c < BRICKS_PER_ROW; c++) {
-        const x = 8 + c * (BRICK_W + BRICK_GAP);
-        const y = startY + r * (BRICK_H + BRICK_GAP);
+        if (!this.shouldPlaceBrick(r, c)) continue;
+        const x = startX + c * (BRICK_W + BRICK_GAP);
+        const y = BRICK_START_Y + r * (BRICK_H + BRICK_GAP);
         this.bricks.push({
-          x, y,
-          hp: 1 + (this.levelNumber > 2 ? 1 : 0) + (this.levelNumber > 4 ? 1 : 0),
+          x,
+          y,
+          hp: this.brickHp(r),
           color: colors[(r + c) % colors.length],
           breaking: false,
           breakAnim: 0,
@@ -509,7 +550,7 @@ export class BrickBlitz {
       ctx.textAlign = 'center';
       ctx.shadowColor = 'rgba(79,158,22,0.6)';
       ctx.shadowBlur = 8;
-      ctx.fillText('Tap to launch', W / 2, PADDLE_Y - 40);
+      ctx.fillText('Tap to launch', W / 2, this.ballAttachY - 18);
       ctx.restore();
     }
   }
@@ -618,7 +659,7 @@ export class BrickBlitz {
 
       if (brick.hp > 1 && !brick.breaking) {
         ctx.fillStyle = 'rgba(255,255,255,0.95)';
-        ctx.font = 'bold 11px system-ui, sans-serif';
+        ctx.font = 'bold 13px system-ui, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.shadowColor = 'rgba(0,0,0,0.4)';
