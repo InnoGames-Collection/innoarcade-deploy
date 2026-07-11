@@ -1,12 +1,12 @@
 ---
-description: Candy Blast is stable v1 — do not modify without explicit user authorization
+description: Candy Blast is stable v2 — do not modify without explicit user authorization
 globs: src/games/popblast/**,games/popblast/**
 alwaysApply: false
 ---
 
-# Candy Blast — stable v1
+# Candy Blast — stable v2
 
-`popblast` is tagged `stable: 'v1'` in `src/platform/catalog.ts`. See `STABLE.md`.
+`popblast` is tagged `stable: 'v2'` in `src/platform/catalog.ts`. See `STABLE.md`.
 
 ## Do not change
 

@@ -23,7 +23,7 @@ All titles below are locked at their listed tag. **Do not edit game-specific fol
 | Lucky Boxes | `lucky-box` | v1 | Free |
 | Spin Wheel | `spin-wheel` | v1 | Free |
 | Lucky Slot | `luckyslot` | v1 | Free |
-| Candy Blast | `popblast` | v1 | Free |
+| Candy Blast | `popblast` | v2 | Free |
 | Ethiopian Quiz | `ethiopian-quiz` | v1 | Free |
 | Sudoku | `sudoku` | v1 | Free |
 | Spell Trivia | `spell` | v1 | Free |
@@ -208,7 +208,7 @@ All titles below are locked at their listed tag. **Do not edit game-specific fol
 
 ---
 
-## Candy Blast (`popblast`) — stable v1
+## Candy Blast (`popblast`) — stable v2
 
 **Status:** Locked. Do not modify unless explicitly authorized by the user.
 
@@ -217,9 +217,11 @@ All titles below are locked at their listed tag. **Do not edit game-specific fol
 - `src/games/popblast/**`
 - `games/popblast/**`
 
-**Includes:** 8×8 DOM match-3 with hub casual shell, premium Ethio Telecom presentation (blue-green gradient background, light rays, sparkles, floating bubbles, glossy candy tiles, elevated board frame), glass HUD (`hud.ts`) with animated score/target/moves/level/best counters, floating score popups and combo celebrations (`fx.ts`), particle effects, screen shake, victory/game-over screens with stars and fireworks, premium synthesized audio (`audio.ts`), start menu with hub navigation links.
+**Includes:** 8×8 DOM match-3 with hub casual shell, premium Ethio Telecom presentation (blue-green gradient background, light rays, sparkles, floating bubbles, bold saturated glossy candy tiles, elevated board frame), glass HUD (`hud.ts`) with animated score/target/moves/level/best counters, floating score popups and combo celebrations (`fx.ts`), particle effects, screen shake, victory/game-over screens with stars and fireworks, premium synthesized audio (`audio.ts`), start menu with hub navigation links.
 
 **Gameplay frozen:** Match detection, candy movement, physics, game logic, level progression, difficulty, power-up mechanics, backend, and tournament integration must not change without user authorization.
+
+**v2 changelog:** Bold saturated candy tiles with crisp specular highlights and color-matched shadows; deeper board contrast for candy pop.
 
 **v1 changelog:** Premium commercial-quality visual/audio/UX polish pass; Ethio Telecom green/blue/white theme; combo celebration system (visual only); floating score feedback; redesigned start/pause/victory/game-over screens and HUD.
 
