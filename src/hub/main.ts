@@ -26,6 +26,7 @@ import {
   dailyMissionsHtml, nextRewardHtml, newsFeedHtml, sidebarNewsHtml,
   lbPreviewRow, hScrollShelf, comingSoonShelfHtml, continuePlayingHtml,
   activityTickerHtml, notificationsPanelHtml, shelfSkeletonHtml, lbSkeletonHtml,
+  gridSkeletonHtml, cpSkeletonHtml, bannerSkeletonHtml,
 } from './portalSections';
 import { getHowToGuide } from './howToGuides';
 import {
@@ -795,6 +796,11 @@ function renderContinuePlaying(): void {
     })
     .filter((x): x is NonNullable<typeof x> => !!x);
   if (!rows.length) {
+    if (hubHydrating) {
+      section.hidden = false;
+      if (!host.querySelector('.cp-skel-list')) host.innerHTML = cpSkeletonHtml(2);
+      return;
+    }
     section.hidden = true;
     host.innerHTML = '';
     return;
@@ -815,6 +821,9 @@ function renderComingSoon(): void {
   if (!host) return;
   host.innerHTML = comingSoonShelfHtml(lang());
 }
+
+/** True while the initial server bootstrap is in flight — drives skeleton placeholders. */
+let hubHydrating = isConfigured();
 
 function renderFeaturedTournaments(): void {
   const host = document.querySelector('#featuredTournamentsHost');
@@ -837,6 +846,11 @@ function renderFeaturedTournaments(): void {
     }));
   }
   if (!cards.length) {
+    if (hubHydrating) {
+      section.hidden = false;
+      if (!host.querySelector('.skel-banner-grid')) host.innerHTML = bannerSkeletonHtml(2);
+      return;
+    }
     section.hidden = true;
     host.innerHTML = '';
     return;
@@ -979,12 +993,29 @@ function renderPortalSections(): void {
 
 /** First paint placeholders before bootstrap returns. */
 function paintSkeletons(): void {
+  const grid = document.querySelector('#gameGrid');
+  if (grid && !grid.innerHTML.trim()) grid.innerHTML = gridSkeletonHtml(8);
+
   const trending = document.querySelector('#trendingShelf');
   if (trending && !trending.innerHTML.trim()) trending.innerHTML = shelfSkeletonHtml(4);
   const recent = document.querySelector('#recentShelf');
   if (recent && !recent.innerHTML.trim()) recent.innerHTML = shelfSkeletonHtml(4);
   const lb = document.querySelector('#lbPreviewBoard');
   if (lb && !lb.innerHTML.trim()) lb.innerHTML = lbSkeletonHtml(3);
+
+  const continueSection = document.querySelector<HTMLElement>('#continuePlaying');
+  const continueHost = document.querySelector('#continueShelf');
+  if (continueHost && !continueHost.innerHTML.trim()) {
+    continueHost.innerHTML = cpSkeletonHtml(2);
+    if (continueSection) continueSection.hidden = false;
+  }
+
+  const featuredHost = document.querySelector('#featuredTournamentsHost');
+  const featuredSection = document.querySelector<HTMLElement>('#featuredTournaments');
+  if (featuredHost && !featuredHost.innerHTML.trim()) {
+    featuredHost.innerHTML = bannerSkeletonHtml(2);
+    if (featuredSection) featuredSection.hidden = false;
+  }
 }
 
 // Winners tab: weekly / monthly ETB prizes for the latest tournament window.
@@ -1066,13 +1097,13 @@ function tickCountdowns(): void {
 }
 
 // --- Render all + language --------------------------------------------------
-function renderAll(): void {
+function renderAll(opts?: { skipGames?: boolean }): void {
   renderPromo();
   renderFeaturedTournaments();
   renderMyStats();
   renderGamesToolbar();
   wireEntryCtas();
-  renderGames();
+  if (!opts?.skipGames) renderGames();
   renderPortalSections();
   renderLiveBoard({ fetch: liveBoardSeen });
   renderWinners({ fetch: winnersSeen });
@@ -1387,7 +1418,8 @@ if (localStorage.getItem('innoarcade.reset.v4') !== '1') {
 document.documentElement.lang = getLang();
 syncLangButtons();
 paintSkeletons();
-renderAll();
+renderAll({ skipGames: true });
+requestAnimationFrame(() => renderGames());
 scheduleBrowseViewportRestore();
 // Keep the top balances strip live as coins/points/gold change.
 onWalletChange(() => { renderMyStats(); renderSidebar(); });
@@ -1440,23 +1472,31 @@ function hydratePointsAfterBootstrap(boot: HubBootstrapResult): void {
 }
 
 async function runBackendHydration(): Promise<void> {
-  await mountWallet({ skipHydrate: true });
-  const boot = await bootstrapHubData();
-  if (!boot.ok) {
-    await loadConfig();
-    await balance();
-    await Promise.all([loadTournaments(), loadMyEntries()]);
+  try {
+    await mountWallet({ skipHydrate: true });
+    const boot = await bootstrapHubData();
+    if (!boot.ok) {
+      await loadConfig();
+      await balance();
+      await Promise.all([loadTournaments(), loadMyEntries()]);
+    }
+    await refreshPlayerRp();
+    hubHydrating = false;
+    wireEntryCtas();
+    renderGames();
+    renderFeaturedTournaments();
+    renderContinuePlaying();
+    renderLiveBoard({ fetch: liveBoardSeen });
+    hydratePointsAfterBootstrap(boot);
+  } finally {
+    hubHydrating = false;
   }
-  await refreshPlayerRp();
-  wireEntryCtas();
-  renderGames();
-  renderLiveBoard({ fetch: liveBoardSeen });
-  hydratePointsAfterBootstrap(boot);
 }
 
 /** Paint the hub first, then load the Supabase SDK chunk and hydrate server data. */
 function startBackendHydration(): void {
   if (!isConfigured()) {
+    hubHydrating = false;
     void runBackendHydration();
     return;
   }

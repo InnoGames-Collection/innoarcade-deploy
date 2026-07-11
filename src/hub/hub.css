@@ -1873,19 +1873,76 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .reward-level-hint { font-size: 0.68rem; color: var(--muted); margin: 0.35rem 0 0; text-align: center; }
 .dash-level { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem; font-size: 0.82rem; }
 
-/* Phase 4 — skeletons */
-.skel-card, .skel-row {
+/* Phase 8 — animated skeleton placeholders */
+.skel-shimmer {
   background: linear-gradient(90deg, #eef2e8 25%, #f7faf3 50%, #eef2e8 75%);
   background-size: 200% 100%;
-  animation: skel-shine 1.2s ease-in-out infinite;
+  animation: skel-shine 1.4s ease-in-out infinite;
+}
+.skel-card, .skel-row,
+.skel-poster-thumb, .skel-line,
+.skel-thumb-block, .skel-banner {
+  background: linear-gradient(90deg, #eef2e8 25%, #f7faf3 50%, #eef2e8 75%);
+  background-size: 200% 100%;
+  animation: skel-shine 1.4s ease-in-out infinite;
+}
+.skel-card { aspect-ratio: 3/4; width: 100%; border-radius: 20px; }
+.skel-row { height: 2.4rem; margin-bottom: 0.4rem; border-radius: 12px; }
+
+.skel-poster {
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid #e8efe0;
+  background: #fff;
+}
+.skel-poster--compact { min-height: 248px; width: 100%; }
+.skel-poster-thumb {
+  aspect-ratio: 4 / 3;
+  animation: skel-shine 1.4s ease-in-out infinite;
+}
+.skel-poster-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.8rem 0.85rem 0.9rem;
+  flex: 1;
+}
+.skel-line {
+  height: 0.62rem;
+  border-radius: 999px;
+}
+.skel-line--title { width: 72%; height: 0.78rem; }
+.skel-line--sub { width: 48%; }
+.skel-line--meta { width: 100%; height: 2.4rem; border-radius: 12px; }
+.skel-line--bar { width: 100%; height: 0.45rem; }
+.skel-line--btn { width: 100%; height: 2rem; margin-top: auto; border-radius: 999px; }
+.skel-poster--compact .skel-poster-body { padding: 0.55rem 0.6rem 0.65rem; gap: 0.35rem; }
+.skel-poster--compact .skel-line--btn { height: 1.65rem; }
+
+.skel-grid { pointer-events: none; }
+.cp-card--skel {
+  pointer-events: none;
+  box-shadow: var(--shadow-sm);
+}
+.skel-thumb-block {
+  width: 3.5rem;
+  height: 3.5rem;
   border-radius: 14px;
 }
-.skel-card { aspect-ratio: 3/4; width: 100%; }
-.skel-row { height: 2.4rem; margin-bottom: 0.4rem; border-radius: 12px; }
+.skel-banner {
+  min-height: 168px;
+  border-radius: 22px;
+}
+.skel-banner-grid { pointer-events: none; }
+
 @keyframes skel-shine {
   0% { background-position: 100% 0; }
   100% { background-position: -100% 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .skel-card, .skel-row { animation: none; }
+  .skel-card, .skel-row, .skel-poster-thumb, .skel-line,
+  .skel-thumb-block, .skel-banner { animation: none; }
 }

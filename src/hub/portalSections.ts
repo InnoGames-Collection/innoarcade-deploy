@@ -400,8 +400,47 @@ export function activityTickerHtml(
 /** Placeholder cards while shelves hydrate. */
 export function shelfSkeletonHtml(count = 4): string {
   return `<div class="hscroll-track">${Array.from({ length: count }, () =>
-    `<div class="hscroll-item"><div class="skel-card" aria-hidden="true"></div></div>`,
+    `<div class="hscroll-item"><div class="skel-poster skel-poster--compact" aria-hidden="true">
+      <div class="skel-poster-thumb"></div>
+      <div class="skel-poster-body"><div class="skel-line skel-line--title"></div><div class="skel-line skel-line--btn"></div></div>
+    </div></div>`,
   ).join('')}</div>`;
+}
+
+export function gridSkeletonHtml(count = 8): string {
+  const cards = Array.from({ length: count }, () =>
+    `<div class="skel-poster" aria-hidden="true">
+      <div class="skel-poster-thumb"></div>
+      <div class="skel-poster-body">
+        <div class="skel-line skel-line--title"></div>
+        <div class="skel-line skel-line--sub"></div>
+        <div class="skel-line skel-line--meta"></div>
+        <div class="skel-line skel-line--btn"></div>
+      </div>
+    </div>`,
+  ).join('');
+  return `<div class="cat-shelf skel-grid">${cards}</div>`;
+}
+
+export function cpSkeletonHtml(count = 2): string {
+  const cards = Array.from({ length: count }, () =>
+    `<article class="cp-card cp-card--skel" aria-hidden="true">
+      <div class="skel-thumb-block"></div>
+      <div class="cp-body">
+        <div class="skel-line skel-line--title"></div>
+        <div class="skel-line skel-line--bar"></div>
+        <div class="skel-line skel-line--btn"></div>
+      </div>
+    </article>`,
+  ).join('');
+  return `<div class="cp-list cp-skel-list">${cards}</div>`;
+}
+
+export function bannerSkeletonHtml(count = 2): string {
+  const banners = Array.from({ length: count }, () =>
+    `<div class="skel-banner" aria-hidden="true"></div>`,
+  ).join('');
+  return `<div class="featured-tournaments-grid skel-banner-grid">${banners}</div>`;
 }
 
 export function lbSkeletonHtml(count = 3): string {
