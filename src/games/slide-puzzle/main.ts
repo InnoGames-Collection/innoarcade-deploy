@@ -4,11 +4,10 @@ import '../../styles/game-shell.css';
 import '../_casual/style.css';
 import '../_lq/lq.css';
 import './style.css';
-import { el, finishLQRound, mulberry32, sound, mountLQ, setLQHeader, toast } from '../_lq/lq';
+import { el, finishLQRound, mulberry32, sound, mountLQ, setLQHeader } from '../_lq/lq';
 import { puzzleCompletionScore } from '../_lq/scoring';
 import { createHost } from '../../platform/gameHost';
 import { slidePuzzleScramble, slidePuzzleSolved } from '../_lq/solvable';
-import { showFirstRunHint } from '../_shared/firstRun';
 import { gemClassesByIndex } from '../_shared/premiumGems';
 
 const SIZE = 4;
@@ -30,9 +29,6 @@ function render(mountEl: HTMLElement): void {
     moves = 0;
     locked = false;
     levelStart = Date.now();
-    if (levelIdx === 0) {
-      showFirstRunHint('slide-puzzle', toast);
-    }
     setLQHeader({
       round: `${levelIdx + 1}/${LEVELS}`,
       moves: String(moves),

@@ -2,7 +2,7 @@
 // Used by Vocabulary, Spell Check and Logic Riddles. A finished run reports to
 // the GoPlay GameHost via recordResultAsync (server-only XP; no local store).
 
-import { el, modal, shuffled, sound, recordResultAsync, formatResultBody, showRunReward } from './lq';
+import { el, shuffled, sound, recordResultAsync, formatResultBody, showRunReward } from './lq';
 
 export interface Choice { label: string; correct: boolean; }
 export interface McqOpts<T> {
@@ -15,7 +15,6 @@ export interface McqOpts<T> {
   resultTitle: (score: number, total: number) => string;
   resultBody?: (score: number, total: number) => string;
   choiceCols?: number;
-  help?: string;
 }
 
 export function mcqQuiz<T>(opts: McqOpts<T>): (mount: HTMLElement) => void {
@@ -33,7 +32,6 @@ export function mcqQuiz<T>(opts: McqOpts<T>): (mount: HTMLElement) => void {
       const scoreline = el('div', { class: 'scoreline' });
       const wrap = el('div', { class: 'quiz-wrap' }, progress, qCard, scoreline);
       mount.appendChild(el('div', { class: 'game-toolbar' },
-        opts.help ? el('button', { class: 'btn', text: 'How to play', onclick: () => modal({ title: 'How to play', body: opts.help! }) }) : null,
         el('button', { class: 'btn', text: 'Restart', onclick: newRun })));
       mount.appendChild(wrap);
 

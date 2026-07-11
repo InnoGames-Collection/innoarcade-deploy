@@ -42,7 +42,6 @@ let runStats: RunStats = createRunStats();
 
 const area = $('#tg-area');
 const message = $('#tg-message');
-const hint = $('#tg-hint');
 const scoreHud = () => document.getElementById('fpStat-score');
 
 function targetSize(): number {
@@ -154,7 +153,6 @@ function resetPlayfield(): void {
   resetStreak();
   message.textContent = '';
   message.classList.remove('tg-go-msg');
-  hint.style.display = '';
   document.querySelectorAll('.tg-target-btn').forEach((el) => el.remove());
   updateHud();
 }
@@ -192,7 +190,6 @@ async function startGame(): Promise<void> {
   runStart = Date.now();
   message.textContent = '🔥 ' + t('tg.go');
   message.classList.add('tg-go-msg');
-  hint.style.display = 'none';
   updateHud();
 
   spawnTarget('regular');

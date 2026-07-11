@@ -8,14 +8,12 @@ import { sfx } from '../../engine/audio';
 import { createHost } from '../../platform/gameHost';
 import { wireFreeCasualShell } from '../../platform/freeGameShell';
 import { finalizeArcadeScore, scaleArcadeScore } from '../../platform/arcadeScore';
-import { showFirstRunHint } from '../_shared/firstRun';
 
 const host = createHost('reflex-tap');
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector<T>(sel)!;
 
 const ROUND_MS = 60_000;
 const area = $('#rt-area');
-const hint = $('#rt-hint');
 
 let score = 0;
 let hits = 0;
@@ -47,7 +45,6 @@ function clearTarget(): void {
 function spawnTarget(): void {
   if (!playing) return;
   clearTarget();
-  hint.style.display = 'none';
   const rect = area.getBoundingClientRect();
   const wave = currentWave();
   const size = (44 + Math.random() * 28) / wave;
@@ -110,7 +107,6 @@ function resetGame(): void {
   window.clearTimeout(spawnId);
   window.clearInterval(timerId);
   clearTarget();
-  hint.style.display = '';
 }
 
 const shell = wireFreeCasualShell(host, beginPlay, {
@@ -126,7 +122,6 @@ async function beginPlay(): Promise<void> {
   resetGame();
   playing = true;
   runStart = Date.now();
-  showFirstRunHint('reflex-tap', shell.toast);
   endAt = runStart + ROUND_MS;
   updateHud();
   timerId = window.setInterval(updateHud, 250);

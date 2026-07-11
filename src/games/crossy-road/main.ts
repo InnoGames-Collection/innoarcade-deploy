@@ -119,7 +119,7 @@ const shell = wireFreeEngineMain({
   getDurationMs: () => Date.now() - run.getRunStart(),
 });
 
-const syncChrome = bindHubCanvasChrome({ playWrapper, backdrop: $('#fcBackdrop'), shell, gameId: GAME_ID, skipFirstRun: true });
+const syncChrome = bindHubCanvasChrome({ playWrapper, backdrop: $('#fcBackdrop'), shell, gameId: GAME_ID });
 
 game.onStateChange = (state) => {
   run.onStateChange(state);

@@ -4,7 +4,6 @@ import { el, finishLQRound, mulberry32, sound, setLQHeader, toast, emitLQLevelCo
 import { puzzleCompletionScore } from '../../_lq/scoring';
 import { createHost } from '../../../platform/gameHost';
 import { emitGameEvent } from '../../../platform/gameEvents';
-import { showFirstRunHint } from '../firstRun';
 import { gemClassesByIndex, gemIdFromIndex } from '../premiumGems';
 import {
   animatePour,
@@ -24,7 +23,6 @@ import { sfx } from '../../../engine/audio';
 import {
   canPour,
   cloneTubes,
-  findHintMove,
   isLayerRevealed,
   isPourSourceLocked,
   isSolved,
@@ -73,9 +71,7 @@ export interface TubeSortTheme {
   gemVariant: 'liquid' | 'sphere';
   pourTheme: PourTheme;
   pourStyle: PourStyle;
-  firstRunKey: string;
   ariaLabel: string;
-  hintText: string;
   emptyToast: string;
   invalidToast: string;
   scoreBase: number;
@@ -92,9 +88,7 @@ export const WATER_SORT_THEME: TubeSortTheme = {
   gemVariant: 'liquid',
   pourTheme: LIQUID_POUR_THEME,
   pourStyle: 'run',
-  firstRunKey: 'water-sort',
   ariaLabel: 'Water tubes',
-  hintText: 'Tap a tube, then tap another to pour.',
   emptyToast: 'Pick a tube with liquid',
   invalidToast: 'Can only pour onto matching color or empty tube',
   scoreBase: 80,
@@ -106,9 +100,7 @@ export const BALL_SORT_THEME: TubeSortTheme = {
   gemVariant: 'sphere',
   pourTheme: SPHERE_POUR_THEME,
   pourStyle: 'single',
-  firstRunKey: 'ball-sort',
   ariaLabel: 'Ball tubes',
-  hintText: 'Move one ball at a time onto matching color or empty tube.',
   emptyToast: 'Pick a tube with balls',
   invalidToast: 'Only onto matching color or empty tube',
   scoreBase: 85,
@@ -225,35 +217,23 @@ export function runTubeSortGame(
       let selected: number | null = null;
       let locked = false;
       let paused = false;
-      let hintsLeft = 1;
-      let hintFlash: { from: number; to: number } | null = null;
       const levelStart = Date.now();
       let timerSec = 0;
       let timerHandle: ReturnType<typeof setInterval> | null = null;
       const completedTubes = new Set<number>();
 
       const p = theme.classPrefix;
-      const hint = isWater || isBall
-        ? null
-        : el('p', { class: cx(theme, 'hint'), text: theme.hintText });
       const modeBadge = modeLabel
         ? el('p', { class: `ts-mode-badge ts-mode-badge--${mode}`, text: modeLabel })
         : null;
       const modBadge = modLabel ? el('p', { class: cx(theme, 'mod-badge'), text: modLabel }) : null;
       const toolbar = el('div', { class: cx(theme, 'toolbar') });
-      const hintBtn = el('button', {
-        type: 'button',
-        class: `btn ${cx(theme, 'hint-btn')}`,
-        text: `💡 ${t('ws.hint.btn')}`,
-        onclick: () => useHint(),
-      });
       const undoBtn = el('button', {
         type: 'button',
         class: `btn ${cx(theme, 'undo')}`,
         text: '↩ Undo',
         onclick: () => void undo(),
       });
-      if (!isBall) toolbar.appendChild(hintBtn);
       toolbar.appendChild(undoBtn);
 
       let restartBtn: HTMLButtonElement | null = null;
@@ -313,7 +293,6 @@ export function runTubeSortGame(
         role: 'group',
         'aria-label': theme.ariaLabel,
       });
-      if (hint) board.appendChild(hint);
       if (modeBadge) board.appendChild(modeBadge);
       if (modBadge) board.appendChild(modBadge);
       board.appendChild(toolbar);
@@ -321,8 +300,6 @@ export function runTubeSortGame(
       mount.appendChild(board);
       if (pauseOverlay) board.appendChild(pauseOverlay);
       const removeBubbles = isWater ? mountWaterBubbles(board) : null;
-
-      if (levelIdx === 0 && !isWater && !isBall) showFirstRunHint(theme.firstRunKey, toast);
 
       setLQHeader({
         round: roundLabel(levelIdx, mode),
@@ -363,8 +340,6 @@ export function runTubeSortGame(
         undoStack.length = 0;
         moves = 0;
         selected = null;
-        hintsLeft = 1;
-        hintFlash = null;
         completedTubes.clear();
         timerSec = 0;
         setLQHeader({ moves: '0', time: '0:00' });
@@ -449,7 +424,6 @@ export function runTubeSortGame(
               + (previewAmt > 0 ? ` ${p}-tube--target` : '')
               + (isLocked ? ` ${p}-tube--locked` : '')
               + (isNarrow ? ` ${p}-tube--narrow` : '')
-              + (hintFlash && (hintFlash.from === idx || hintFlash.to === idx) ? ` ${p}-tube--hint` : '')
               + (isTubeComplete(tube, cap) ? ` ${p}-tube--done` : ''),
             role: 'button',
             style: isNarrow ? `--tube-cap: ${cap}` : '',
@@ -492,24 +466,6 @@ export function runTubeSortGame(
         if (isBall) bumpBallStat('fpStat-moves');
         else if (isWater) bumpWaterStat('fpStat-moves');
         undoBtn.toggleAttribute('disabled', undoStack.length === 0);
-        if (!isBall) hintBtn.toggleAttribute('disabled', hintsLeft <= 0 || locked);
-      }
-
-      function useHint(): void {
-        if (locked || hintsLeft <= 0) return;
-        const move = findHintMove(tubes, mods, theme.pourStyle);
-        if (!move) {
-          toast(t('ws.hint.none'));
-          return;
-        }
-        hintsLeft--;
-        hintFlash = move;
-        playSound('click');
-        paint();
-        window.setTimeout(() => {
-          hintFlash = null;
-          paint();
-        }, 2200);
       }
 
       function pushUndo(): void {

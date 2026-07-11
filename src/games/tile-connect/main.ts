@@ -8,9 +8,8 @@ import './polish.css';
 import { el, finishLQRound, mulberry32, mountLQ, setLQHeader, toast } from '../_lq/lq';
 import { puzzleCompletionScore } from '../_lq/scoring';
 import { createHost } from '../../platform/gameHost';
-import { tileConnectCanConnect, tileConnectFindHint } from '../_lq/solvable';
+import { tileConnectCanConnect } from '../_lq/solvable';
 import { buildSolvableTileBoard } from '../_lq/levelGen';
-import { showFirstRunHint } from '../_shared/firstRun';
 import { sfx } from '../../engine/audio';
 import { tcSfx } from './sounds';
 import {
@@ -37,7 +36,6 @@ const ICON_COLORS = ['#6cc52f', '#3d8ef0', '#f39c12', '#9b59b6', '#e74c3c', '#1a
 const LEVELS = 5;
 const host = createHost('tile-connect');
 
-let pauseHintFn: (() => void) | null = null;
 let boardResizeHandler: (() => void) | null = null;
 
 function remaining(board: (string | null)[][]): number {
@@ -106,7 +104,6 @@ function render(mount: HTMLElement): void {
     const initialTiles = pairs * 2;
     const board: (string | null)[][] = buildSolvableTileBoard(ROWS, COLS, ICONS, pairs, rnd);
     let sel: [number, number] | null = null;
-    let hintPair: [number, number, number, number] | null = null;
     let matching: [number, number, number, number] | null = null;
     let animating = false;
     let moves = 0;
@@ -138,30 +135,12 @@ function render(mount: HTMLElement): void {
     wrap.appendChild(fxLayer);
     mount.appendChild(wrap);
 
-    if (levelIdx === 0) {
-      showFirstRunHint('tile-connect', toast);
-    }
-
     setLQHeader({
       round: `${levelIdx + 1}/${LEVELS}`,
       score: String(totalScore),
       moves: '0',
       time: formatTime(Date.now() - sessionStart),
     });
-
-    function showHint(): void {
-      if (animating) return;
-      hintPair = tileConnectFindHint(board);
-      if (!hintPair) {
-        toast('No moves left');
-        return;
-      }
-      tcSfx.hint();
-      paint();
-      toast('Highlighted pair can connect');
-    }
-
-    pauseHintFn = showHint;
 
     function applyBoardScale(): void {
       const layout = boardClusterLayout(board, ROWS, COLS, remaining(board), initialTiles);
@@ -187,15 +166,12 @@ function render(mount: HTMLElement): void {
         for (let c = 0; c < COLS; c++) {
           const v = board[r][c];
           const isSel = sel && sel[0] === r && sel[1] === c;
-          const isHint = hintPair
-            && ((hintPair[0] === r && hintPair[1] === c) || (hintPair[2] === r && hintPair[3] === c));
           const isMatch = matching
             && ((matching[0] === r && matching[1] === c) || (matching[2] === r && matching[3] === c));
           const tile = el('div', {
             class: 'tc-tile'
               + (!v ? ' tc-empty' : iconClass(v))
               + (isSel ? ' tc-tile--sel' : '')
-              + (isHint ? ' tc-tile--hint' : '')
               + (isMatch ? ' tc-tile--match' : ''),
             onclick: () => onTap(r, c),
           });
@@ -224,7 +200,6 @@ function render(mount: HTMLElement): void {
 
     function onTap(r: number, c: number): void {
       if (animating || !board[r][c]) return;
-      hintPair = null;
       if (!sel) {
         sel = [r, c];
         totalAttempts++;
@@ -366,13 +341,6 @@ function wireSettings(): void {
   });
 }
 
-function wirePauseHint(): void {
-  document.getElementById('tcPauseHintBtn')?.addEventListener('click', () => {
-    pauseHintFn?.();
-    document.getElementById('resumeBtn')?.click();
-  });
-}
-
 mountLQ('tile-connect', render, {
   pauseable: true,
   headerSlots: [
@@ -387,4 +355,3 @@ initBgParticles();
 wireMenu();
 wireHudRow();
 wireSettings();
-wirePauseHint();

@@ -10,7 +10,6 @@ import { applyTranslations, getLang } from '../../i18n';
 import { createHost } from '../../platform/gameHost';
 import { wireFreeCasualShell } from '../../platform/freeGameShell';
 import { finalizeArcadeScore, match3Score, scaleArcadeScore } from '../../platform/arcadeScore';
-import { showFirstRunHint } from '../_shared/firstRun';
 import { jmSfx } from './audio';
 import {
   initFx,
@@ -390,7 +389,6 @@ async function beginPlay(): Promise<void> {
   runStart = Date.now();
   resetGame();
   jmSfx.startMusic();
-  showFirstRunHint('jewel-match', shell.toast);
 }
 
 function initBackground(): void {

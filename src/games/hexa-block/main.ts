@@ -7,7 +7,6 @@ import './style.css';
 import './polish.css';
 import { el, finishLQRound, mulberry32, mountLQ, setLQHeader, toast } from '../_lq/lq';
 import { createHost } from '../../platform/gameHost';
-import { showFirstRunHint } from '../_shared/firstRun';
 import { gemClasses } from '../_shared/premiumGems';
 import { sfx } from '../../engine/audio';
 import { hbSfx } from './sounds';
@@ -160,16 +159,12 @@ function render(mount: HTMLElement): void {
 
   const wrap = el('div', { class: 'hb-wrap' });
   const fxLayer = el('div', { class: 'hb-fx-layer' });
-  const hint = el('p', { class: 'hb-hint', text: 'Drag a hex piece onto the board, or tap to select then place.' });
   const boardEl = el('div', { class: 'hb-board pboard' });
   const tray = el('div', { class: 'hb-tray' });
-  wrap.appendChild(hint);
   wrap.appendChild(boardEl);
   wrap.appendChild(tray);
   wrap.appendChild(fxLayer);
   mount.appendChild(wrap);
-
-  showFirstRunHint('hexa-block', toast);
 
   function updateHeader(): void {
     setLQHeader({

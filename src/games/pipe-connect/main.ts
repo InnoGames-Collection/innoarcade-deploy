@@ -4,11 +4,10 @@ import '../../styles/game-shell.css';
 import '../_casual/style.css';
 import '../_lq/lq.css';
 import './style.css';
-import { el, finishLQRound, sound, mountLQ, setLQHeader, toast } from '../_lq/lq';
+import { el, finishLQRound, sound, mountLQ, setLQHeader } from '../_lq/lq';
 import { puzzleCompletionScore } from '../_lq/scoring';
 import { createHost } from '../../platform/gameHost';
 import { pipeGridConnected, type PipeCell, type PipeRot } from '../_lq/solvable';
-import { showFirstRunHint } from '../_shared/firstRun';
 
 const LEVELS = 5;
 const host = createHost('pipe-connect');
@@ -114,9 +113,6 @@ function render(mountEl: HTMLElement): void {
     locked = false;
     waterFill = false;
     levelStart = Date.now();
-    if (levelIdx === 0) {
-      showFirstRunHint('pipe-connect', toast);
-    }
     setLQHeader({
       round: `${levelIdx + 1}/${LEVELS}`,
       moves: String(rotations),

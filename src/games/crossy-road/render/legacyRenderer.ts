@@ -79,23 +79,4 @@ export function renderLegacy(ctx: CanvasRenderingContext2D, s: WorldSnapshot): v
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('🐔', drawPx * CELL + CELL / 2, py + CELL / 2 - hopBounce);
-
-  drawHudHints(ctx, s);
-}
-
-function drawHudHints(ctx: CanvasRenderingContext2D, s: WorldSnapshot): void {
-  if (s.state !== 'playing') return;
-
-  if (s.tutorialT > 0) {
-    ctx.fillStyle = 'rgba(0,0,0,0.55)';
-    ctx.fillRect(0, H - 56, W, 56);
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 14px system-ui,sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('Swipe or tap arrows to hop forward', W / 2, H - 28);
-  } else if (s.idleT > 10) {
-    ctx.fillStyle = 'rgba(231,76,60,0.85)';
-    ctx.font = 'bold 14px system-ui,sans-serif';
-    ctx.fillText('Hop soon!', W / 2, 28);
-  }
 }

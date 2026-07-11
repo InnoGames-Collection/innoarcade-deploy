@@ -63,7 +63,6 @@ export interface WorldSnapshot {
   fromPz: number;
   hopT: number;
   idleT: number;
-  tutorialT: number;
   camZ: number;
   camIsoX: number;
   camIsoY: number;

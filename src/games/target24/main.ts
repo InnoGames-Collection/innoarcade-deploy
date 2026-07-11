@@ -1,12 +1,10 @@
 // Make 24 — combine four numbers with + − × ÷ to reach exactly 24. Native GoPlay game.
 import '../../styles/base.css';
 import '../_lq/lq.css';
-import { el, toast, finishLQRound, mulberry32, randInt, sound, mountLQ, setLQHeader, modal } from '../_lq/lq';
-import { lqHelp } from '../_lq/help';
+import { el, toast, finishLQRound, mulberry32, randInt, sound, mountLQ, setLQHeader } from '../_lq/lq';
 import { multiPuzzleScore } from '../_lq/scoring';
 import { escalateTier, scalingPenalty, tierLerp } from '../../platform/freeDifficulty';
 import { createHost } from '../../platform/gameHost';
-import { t } from '../../i18n';
 
 const TARGET = 24, ROUNDS = 5, EPS = 1e-9;
 const host = createHost('target24');
@@ -180,6 +178,3 @@ mountLQ('target24', render, {
   ],
 });
 
-document.getElementById('helpBtn')?.addEventListener('click', () => {
-  modal({ title: t('td.howto'), body: lqHelp('target24') });
-});

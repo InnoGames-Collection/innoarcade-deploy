@@ -7,7 +7,6 @@ import { puzzleCompletionScore } from '../_lq/scoring';
 import { escalateTier } from '../../platform/freeDifficulty';
 import { createHost } from '../../platform/gameHost';
 import { sfx } from '../../engine/audio';
-import { t } from '../../i18n';
 import { sudokuSound } from './audio';
 import {
   animateCountUp,
@@ -129,15 +128,6 @@ function openSettingsModal(): void {
   });
 }
 
-function openHowToModal(): void {
-  sudokuSound('menu');
-  modal({
-    title: 'How to Play',
-    body: t('lq.help.sudoku'),
-    actions: [{ label: 'Got it', primary: true }],
-  });
-}
-
 function openLeaderboardNotice(): void {
   sudokuSound('menu');
   modal({
@@ -183,7 +173,6 @@ function wireShellMenu(): void {
     });
   });
 
-  document.getElementById('sdkHowBtn')?.addEventListener('click', openHowToModal);
   document.getElementById('sdkSettingsBtn')?.addEventListener('click', openSettingsModal);
   document.getElementById('sdkLeaderMenuBtn')?.addEventListener('click', openLeaderboardNotice);
   document.getElementById('sdkLeaderBtn')?.addEventListener('click', openLeaderboardNotice);

@@ -24,7 +24,6 @@ export class RopeRescue {
   score = 0;
   level = 1;
   best = 0;
-  hint = '';
 
   onStateChange: (s: GameState) => void = () => {};
   onGameOver: (score: number, record: boolean) => void = () => {};
@@ -43,7 +42,6 @@ export class RopeRescue {
   start(): void {
     this.score = 0;
     this.level = 1;
-    this.hint = '';
     this.resetLevel();
     this.setState('playing');
   }
@@ -61,7 +59,6 @@ export class RopeRescue {
     this.rope = [];
     this.drawing = false;
     this.swingWon = false;
-    this.hint = 'Draw from the person to the green zone, then tap SWING';
     this.person = { x: 70, y: 150 + this.level * 15 };
     this.safe = { x: 320 - this.level * 10, y: 510, w: 100, h: 55 };
     this.spikes = [
@@ -84,7 +81,6 @@ export class RopeRescue {
       ? { ...this.person }
       : { x, y };
     this.rope = [start];
-    this.hint = 'Draw to the green safe zone…';
   }
 
   pointerMove(x: number, y: number): void {
@@ -100,7 +96,6 @@ export class RopeRescue {
   tapSwing(): void {
     if (this.state !== 'playing' || this.phase !== 'draw') return;
     if (this.rope.length < 3) {
-      this.hint = 'Draw a longer rope first';
       sfx.slide();
       return;
     }
@@ -108,18 +103,15 @@ export class RopeRescue {
     const nearSafe = end.x >= this.safe.x - 30 && end.x <= this.safe.x + this.safe.w + 30
       && end.y >= this.safe.y - 40 && end.y <= this.safe.y + this.safe.h + 40;
     if (!nearSafe) {
-      this.hint = 'End your rope in the green safe zone';
       sfx.slide();
       return;
     }
     if (this.ropeHitsSpike()) {
-      this.hint = 'Rope crosses spikes — try a different path';
       sfx.slide();
       return;
     }
     this.phase = 'swing';
     this.swingT = 0;
-    this.hint = '';
     sfx.click();
   }
 
@@ -184,7 +176,6 @@ export class RopeRescue {
           this.score += 80 + this.level * 20;
           sfx.coin();
         } else {
-          this.hint = 'Missed the safe zone!';
           sfx.slide();
           this.endSession(false);
         }
@@ -265,13 +256,6 @@ export class RopeRescue {
       ctx.font = 'bold 16px system-ui';
       ctx.textAlign = 'center';
       ctx.fillText('SWING', W / 2, SWING_BTN.y + 28);
-    }
-
-    if (this.hint) {
-      ctx.fillStyle = 'rgba(255,255,255,0.9)';
-      ctx.font = '14px system-ui';
-      ctx.textAlign = 'center';
-      ctx.fillText(this.hint, W / 2, H - 90);
     }
   }
 }

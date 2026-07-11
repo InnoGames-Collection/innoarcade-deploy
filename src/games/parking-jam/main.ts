@@ -7,7 +7,6 @@ import './style.css';
 import { el, finishLQRound, sound, mountLQ, setLQHeader, toast } from '../_lq/lq';
 import { puzzleCompletionScore } from '../_lq/scoring';
 import { createHost } from '../../platform/gameHost';
-import { showFirstRunHint } from '../_shared/firstRun';
 
 const LEVELS = 8;
 const CELL = 42;
@@ -194,7 +193,6 @@ function render(mount: HTMLElement): void {
     let locked = false;
     const levelStart = Date.now();
 
-    const hint = el('p', { class: 'pj-hint', text: 'Free the red car through the exit →' });
     const wrap = el('div', { class: 'pj-board-wrap' });
     const lot = el('div', { class: 'pj-lot' });
     const gridW = def.w * CELL + (def.w - 1) * GAP;
@@ -221,14 +219,9 @@ function render(mount: HTMLElement): void {
     ctrl.appendChild(btnBack);
     ctrl.appendChild(btnFwd);
 
-    wrap.appendChild(hint);
     wrap.appendChild(lot);
     wrap.appendChild(ctrl);
     mount.appendChild(wrap);
-
-    if (levelIdx === 0) {
-      showFirstRunHint('parking-jam', toast);
-    }
 
     setLQHeader({ round: `${levelIdx + 1}/${LEVELS}`, score: String(totalScore), moves: '0' });
 

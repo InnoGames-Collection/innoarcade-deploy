@@ -146,15 +146,6 @@ function wireMenuCards(): void {
     }
   }
 
-  $('#eqCardHowTo')?.addEventListener('click', () => {
-    eqSfx.menuClick();
-    $('#eqHowToPanel')?.classList.remove('hidden');
-  });
-  $('#eqHowToClose')?.addEventListener('click', () => {
-    eqSfx.menuClick();
-    $('#eqHowToPanel')?.classList.add('hidden');
-  });
-
   $('#eqCardSettings')?.addEventListener('click', () => {
     eqSfx.menuClick();
     $('#eqSettingsPanel')?.classList.toggle('hidden');
@@ -212,7 +203,6 @@ export function createEthiopianQuizPresentation(questionSec: number): FreeQuizPr
       }
       if (phase === 'menu') {
         $('#eqSettingsPanel')?.classList.add('hidden');
-        $('#eqHowToPanel')?.classList.add('hidden');
       }
     },
 

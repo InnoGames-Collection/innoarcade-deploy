@@ -2,7 +2,6 @@
 
 import { finalizeArcadeScore, scaleArcadeScore } from '../../platform/arcadeScore';
 import { emitGameEvent } from '../../platform/gameEvents';
-import { showFirstRunHint } from '../_shared/firstRun';
 
 const DEFAULT_IN_ROUND = [
   'playing', 'paused', 'ready', 'firing', 'levelClear', 'over', 'gameOver',
@@ -13,27 +12,14 @@ export function bindHubCanvasChrome(opts: {
   backdrop?: HTMLElement | null;
   shell: { showForState: (state: string) => void; toast?: (msg: string) => void };
   inRoundStates?: string[];
-  /** Show one-time `lq.help.*` toast when the run starts. */
   gameId?: string;
-  skipFirstRun?: boolean;
 }): (state: string) => void {
   const inRound = new Set(opts.inRoundStates ?? DEFAULT_IN_ROUND);
-  let firstRunShown = false;
   return (state: string) => {
     opts.shell.showForState(state);
     const active = inRound.has(state);
     opts.playWrapper.classList.toggle('hidden', !active);
     opts.backdrop?.classList.toggle('hidden', active);
-    if (
-      opts.gameId
-      && opts.shell.toast
-      && !opts.skipFirstRun
-      && state === 'playing'
-      && !firstRunShown
-    ) {
-      firstRunShown = true;
-      showFirstRunHint(opts.gameId, opts.shell.toast);
-    }
   };
 }
 

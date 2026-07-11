@@ -7,7 +7,6 @@ import './style.css';
 import './polish.css';
 import { el, finishLQRound, mulberry32, mountLQ, setLQHeader, toast } from '../_lq/lq';
 import { createHost } from '../../platform/gameHost';
-import { showFirstRunHint } from '../_shared/firstRun';
 import { gemClasses } from '../_shared/premiumGems';
 import { bbSfx } from './sounds';
 import { wireDrag } from './drag';
@@ -125,16 +124,12 @@ function render(mount: HTMLElement): void {
 
   const wrap = el('div', { class: 'bb-wrap' });
   const fxLayer = el('div', { class: 'bb-fx-layer' });
-  const hint = el('p', { class: 'bb-hint', text: 'Drag a block onto the board, or tap to select then place.' });
   const gridEl = el('div', { class: 'bb-grid pboard' });
   const tray = el('div', { class: 'bb-tray' });
-  wrap.appendChild(hint);
   wrap.appendChild(gridEl);
   wrap.appendChild(tray);
   wrap.appendChild(fxLayer);
   mount.appendChild(wrap);
-
-  showFirstRunHint('block-blast', toast);
 
   function updateHeader(): void {
     setLQHeader({

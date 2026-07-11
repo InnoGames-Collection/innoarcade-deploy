@@ -8,7 +8,6 @@ import { applyTranslations, getLang } from '../../i18n';
 import { sfx } from '../../engine/audio';
 import { createHost } from '../../platform/gameHost';
 import { wireFreeCasualShell } from '../../platform/freeGameShell';
-import { showFirstRunHint } from '../_shared/firstRun';
 import { gemClassesByIndex } from '../_shared/premiumGems';
 
 const COLS = 4;
@@ -188,10 +187,6 @@ async function startGame(): Promise<void> {
   playing = true;
   runStart = Date.now();
   lastTs = performance.now();
-  showFirstRunHint('piano-tiles', (m) => {
-    message.textContent = m;
-    window.setTimeout(() => { if (playing) message.textContent = 'Tap the black tiles!'; }, 5000);
-  });
   if (!message.textContent) message.textContent = 'Tap the black tiles!';
   updateHud();
   rafId = requestAnimationFrame(tick);

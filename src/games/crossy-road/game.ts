@@ -61,7 +61,6 @@ export class CrossyRoad {
   private campT = 0;
   private eagleT = 0;
   private lastHopDz = 0;
-  private tutorialT = 6;
   private animT = 0;
   private juice = new Juice();
 
@@ -83,7 +82,6 @@ export class CrossyRoad {
     this.campT = 0;
     this.eagleT = 0;
     this.lastHopDz = 0;
-    this.tutorialT = 6;
     this.animT = 0;
     this.juice = new Juice();
     resetQualityTier();
@@ -197,8 +195,6 @@ export class CrossyRoad {
       if (this.idleT > IDLE_LIMIT) this.die();
     }
 
-    if (this.tutorialT > 0) this.tutorialT -= dt;
-
     for (const c of this.cars) {
       c.x += c.speed * dt;
       if (c.x < -120) c.x = W + 60;
@@ -311,7 +307,6 @@ export class CrossyRoad {
       fromPz: this.fromPz,
       hopT: this.hopT,
       idleT: this.idleT,
-      tutorialT: this.tutorialT,
       camZ: this.camZ,
       camIsoX: 0,
       camIsoY: 0,

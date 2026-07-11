@@ -4,11 +4,9 @@ import '../../styles/game-shell.css';
 import '../_casual/style.css';
 import '../_lq/lq.css';
 import './style.css';
-import { el, finishLQRound, sound, mountLQ, setLQHeader, toast } from '../_lq/lq';
-import { lqHelp } from '../_lq/help';
+import { el, finishLQRound, sound, mountLQ, setLQHeader } from '../_lq/lq';
 import { puzzleCompletionScore } from '../_lq/scoring';
 import { createHost } from '../../platform/gameHost';
-import { showFirstRunHint } from '../_shared/firstRun';
 
 const LEVELS = 5;
 const host = createHost('laser-puzzle');
@@ -164,7 +162,6 @@ function render(mount: HTMLElement): void {
     const targets = targetCount(grid);
 
     const wrap = el('div', { class: 'lp-wrap' });
-    const hint = el('p', { class: 'lp-hint', text: lqHelp('laser-puzzle') });
     const status = el('p', { class: 'lp-status', text: `0/${targets} targets` });
     const boardWrap = el('div', { style: 'position:relative' });
     const board = el('div', {
@@ -172,14 +169,9 @@ function render(mount: HTMLElement): void {
       style: `grid-template-columns:repeat(${def.w},1fr)`,
     });
     boardWrap.appendChild(board);
-    wrap.appendChild(hint);
     wrap.appendChild(status);
     wrap.appendChild(boardWrap);
     mount.appendChild(wrap);
-
-    if (levelIdx === 0) {
-      showFirstRunHint('laser-puzzle', toast);
-    }
 
     setLQHeader({ round: `${levelIdx + 1}/${LEVELS}`, score: String(totalScore), moves: '0' });
 
