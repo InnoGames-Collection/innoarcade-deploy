@@ -822,6 +822,8 @@ body[data-game='tile-connect'] .pboard-clear-flash {
     padding: 28px 12px 12px;
     gap: 6px;
   }
+}
+
 @media (prefers-reduced-motion: reduce) {
   body[data-game='tile-connect'] .tc-bg-orb,
   body[data-game='tile-connect'] .tc-bg-diamond,
