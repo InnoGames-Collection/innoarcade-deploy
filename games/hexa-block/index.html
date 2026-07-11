@@ -8,16 +8,58 @@
   </head>
   <body class="game-shell casual-shell brain-shell" data-game="hexa-block">
     <div id="stage" class="fc-stage game-shell-stage">
-      <div id="fcBackdrop" class="fc-backdrop" aria-hidden="true"></div>
+      <div id="fcBackdrop" class="fc-backdrop" aria-hidden="true">
+        <div class="hb-bg-layer">
+          <div class="hb-bg-ray"></div>
+          <div class="hb-bg-orb hb-bg-orb--1"></div>
+          <div class="hb-bg-orb hb-bg-orb--2"></div>
+          <div class="hb-bg-orb hb-bg-orb--3"></div>
+          <div class="hb-bg-hex hb-bg-hex--1"></div>
+          <div class="hb-bg-hex hb-bg-hex--2"></div>
+          <div class="hb-bg-hex hb-bg-hex--3"></div>
+        </div>
+      </div>
       <div id="fcPlayFrame" class="fc-playframe hidden">
         <button id="closeBtn" class="gp-close gp-close-corner hidden" aria-label="Close">✕</button>
+        <div class="hb-hud-actions">
+          <button type="button" id="hbSettingsBtn" class="hb-settings-btn" aria-label="Sound">🔊</button>
+        </div>
         <div id="lq-mount"></div>
       </div>
       <div id="menuOverlay" class="game-overlay">
-        <div class="game-panel panel-clean">
+        <div class="game-panel panel-clean hb-menu-panel">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close">✕</button>
+          <div class="hb-menu-hero">
+            <div class="hb-menu-icon" aria-hidden="true">⬡</div>
+            <div class="hb-menu-title">Hexa Block</div>
+            <div class="hb-menu-sub">Fit hex clusters, clear rows, master the honeycomb</div>
+          </div>
+          <div class="hb-mode-grid" id="hbModeGrid">
+            <button type="button" class="hb-mode-card hb-mode-card--classic" data-hb-mode="classic">
+              <span class="hb-mode-card__icon" aria-hidden="true">🎯</span>
+              <span class="hb-mode-card__label">Classic</span>
+              <span class="hb-mode-card__desc">The original honeycomb puzzle</span>
+            </button>
+            <button type="button" class="hb-mode-card hb-mode-card--endless" data-hb-mode="endless">
+              <span class="hb-mode-card__icon" aria-hidden="true">♾️</span>
+              <span class="hb-mode-card__label">Endless</span>
+              <span class="hb-mode-card__desc">Play until no moves remain</span>
+            </button>
+            <button type="button" class="hb-mode-card hb-mode-card--daily hb-mode-card--locked" data-hb-mode="daily" disabled>
+              <span class="hb-mode-card__icon" aria-hidden="true">📅</span>
+              <span class="hb-mode-card__label">Daily Challenge</span>
+              <span class="hb-mode-card__desc">A fresh board every day</span>
+              <span class="hb-mode-card__badge">Soon</span>
+            </button>
+            <button type="button" class="hb-mode-card hb-mode-card--tournament hb-mode-card--locked" data-hb-mode="tournament" disabled>
+              <span class="hb-mode-card__icon" aria-hidden="true">🏆</span>
+              <span class="hb-mode-card__label">Tournament</span>
+              <span class="hb-mode-card__desc">Compete nationwide</span>
+              <span class="hb-mode-card__badge">Soon</span>
+            </button>
+          </div>
           <div class="shell-free-menu" id="freeMenu"></div>
-          <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
+          <button id="startBtn" class="visually-hidden" data-i18n="hub.play">Play</button>
         </div>
       </div>
       <div id="overOverlay" class="game-overlay hidden" aria-hidden="true">
@@ -30,8 +72,15 @@
             <div class="shell-over-stat"><span data-i18n="td.score">Score</span><strong id="finalScore">0</strong></div>
             <div class="shell-over-stat"><span data-i18n="td.best">Best</span><strong id="finalBest">—</strong></div>
           </div>
+          <div class="hb-over-stats">
+            <div class="hb-over-stat"><span data-i18n="hb.rows">Rows</span><strong id="hbOverLines">0</strong></div>
+            <div class="hb-over-stat"><span>Best Combo</span><strong id="hbOverCombo">×0</strong></div>
+            <div class="hb-over-stat"><span>Result</span><strong id="hbOverResult">—</strong></div>
+          </div>
           <div class="shell-run-reward" id="runReward"></div>
           <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
+          <button type="button" id="hbLeaderBtn" class="btn">Leaderboard</button>
+          <button type="button" id="hbHomeBtn" class="btn">Home</button>
         </div>
       </div>
     </div>

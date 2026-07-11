@@ -9,6 +9,7 @@ import {
   clearStreamCanvas,
   drawLiquidStream,
   drawSplashParticles,
+  drawLandingRipple,
   easeInOutCubic,
   easeOutBack,
   easeOutCubic,
@@ -256,16 +257,25 @@ function samplePourDrain(elapsed: number, tl: PourTimeline, amount: number): num
   if (elapsed < tl.tiltInEnd) return 0;
   if (elapsed >= tl.pourEnd) return amount;
   const pourRaw = (elapsed - tl.tiltInEnd) / tl.pourMs;
-  if (pourRaw < 0.03) return 0;
-  return amount * Math.min(1, (pourRaw - 0.03) / 0.97);
+  if (pourRaw < 0.02) return 0;
+  const eased = pourRaw < 0.5
+    ? 2 * pourRaw * pourRaw
+    : 1 - ((-2 * pourRaw + 2) ** 2) / 2;
+  return amount * Math.min(1, eased);
 }
 
 function sampleStreamAlpha(elapsed: number, tl: PourTimeline): number {
-  if (elapsed < tl.tiltInEnd) return 0;
-  if (elapsed >= tl.pourEnd) return 0;
-  const pourRaw = (elapsed - tl.tiltInEnd) / tl.pourMs;
-  if (pourRaw < 0.02) return 0;
-  return Math.min(1, pourRaw / 0.08);
+  if (elapsed < tl.tiltInEnd - 40) return 0;
+  if (elapsed >= tl.pourEnd + 60) return 0;
+  if (elapsed < tl.tiltInEnd) {
+    const t = (elapsed - (tl.tiltInEnd - 40)) / 40;
+    return t * t;
+  }
+  if (elapsed >= tl.pourEnd) {
+    const t = 1 - (elapsed - tl.pourEnd) / 60;
+    return t * t;
+  }
+  return 1;
 }
 
 function resetTubePourStyles(tube: HTMLElement): void {
@@ -304,6 +314,7 @@ async function animateWaterPour(opts: PourAnimOptions): Promise<void> {
   let segmentsApplied = 0;
   let pourSoundPlayed = false;
   let lastSplashAt = 0;
+  let lastDropletAt = 0;
   splashPool.clear();
 
   await rafPour(tl.total, (_raw, elapsed) => {
@@ -315,7 +326,7 @@ async function animateWaterPour(opts: PourAnimOptions): Promise<void> {
     const drained = samplePourDrain(elapsed, tl, amount);
     const streamAlpha = sampleStreamAlpha(elapsed, tl);
 
-    if (streamAlpha > 0.45 && !pourSoundPlayed) {
+    if (streamAlpha > 0.35 && !pourSoundPlayed) {
       playPourSound('start');
       pourSoundPlayed = true;
     }
@@ -324,10 +335,16 @@ async function animateWaterPour(opts: PourAnimOptions): Promise<void> {
     while (segmentsApplied < applied) {
       onSegment?.();
       segmentsApplied++;
-      fluidManager.triggerRipple(toIdx);
+      fluidManager.triggerRipple(toIdx, 720);
       const toMouth = tubeMouthOnBoard(board, toTube);
-      splashPool.spawn(toMouth.x, toMouth.y + 4, colorId);
+      splashPool.spawn(toMouth.x, toMouth.y + 4, colorId, 4);
       lastSplashAt = elapsed;
+    }
+
+    if (streamAlpha > 0.5 && elapsed - lastDropletAt > 55) {
+      const toMouth = tubeMouthOnBoard(board, toTube);
+      splashPool.spawn(toMouth.x, toMouth.y + 2, colorId, 2);
+      lastDropletAt = elapsed;
     }
 
     fluidManager.render(fromIdx, fromData, {
@@ -336,14 +353,16 @@ async function animateWaterPour(opts: PourAnimOptions): Promise<void> {
       drainTop: drained,
       drainColor: colorId,
       wobble: fluidManager.wobbleStrength(fromIdx),
+      animPhase: elapsed * 0.0014,
     });
     fluidManager.render(toIdx, toData, {
       capacity: toCap,
       hiddenBottom: toHidden,
       pourColor: colorId,
       pourUnits: drained,
-      ripple: fluidManager.rippleStrength(toIdx),
+      ripple: Math.max(fluidManager.rippleStrength(toIdx), streamAlpha * 0.6),
       wobble: fluidManager.wobbleStrength(toIdx),
+      animPhase: elapsed * 0.0014,
     });
 
     if (streamCtx) {
@@ -356,7 +375,16 @@ async function animateWaterPour(opts: PourAnimOptions): Promise<void> {
       if (streamAlpha > 0) {
         const fromMouth = tubeMouthOnBoard(board, fromTube);
         const toMouth = tubeMouthOnBoard(board, toTube);
-        drawLiquidStream(streamCtx, fromMouth, toMouth, colorId, 11, elapsed * 0.006, streamAlpha);
+        const pourProgress = amount > 0 ? drained / amount : 1;
+        const streamW = Math.max(10, Math.min(16, fromTube.getBoundingClientRect().width * 0.22));
+        drawLiquidStream(
+          streamCtx, fromMouth, toMouth, colorId, streamW, elapsed * 0.005,
+          streamAlpha, { progress: pourProgress, phase: elapsed * 0.005 },
+        );
+        drawLandingRipple(
+          streamCtx, toMouth.x, toMouth.y, streamW, colorId,
+          streamAlpha * pourProgress * 0.7, elapsed * 0.005,
+        );
       }
       if (splashPool.particles.length) {
         drawSplashParticles(streamCtx, splashPool.particles);
@@ -383,9 +411,9 @@ async function animateWaterPour(opts: PourAnimOptions): Promise<void> {
     fromTube.classList.remove('lpour-tube-landing');
   }
 
-  fluidManager.triggerRipple(toIdx);
-  fluidManager.triggerWobble(fromIdx);
-  fluidManager.triggerWobble(toIdx);
+  fluidManager.triggerRipple(toIdx, 820);
+  fluidManager.triggerWobble(fromIdx, 950);
+  fluidManager.triggerWobble(toIdx, 950);
   fluidManager.render(fromIdx, tubes[fromIdx], { capacity: fromCap, hiddenBottom: fromHidden });
   fluidManager.render(toIdx, tubes[toIdx], { capacity: toCap, hiddenBottom: toHidden });
   playPourSound('land');

@@ -224,6 +224,8 @@ export function emitLQLevelComplete(level: number, score?: number): void {
 
 export interface MountLQOptions {
   headerSlots?: FreePlayHeaderSlot[];
+  /** Show pause button and pause overlay during play. */
+  pauseable?: boolean;
 }
 
 /** Boot a native LexiQuest brain game inside the free hub shell. */
@@ -243,6 +245,7 @@ export function mountLQ(
       { id: 'round', labelKey: 'eq.question', icon: 'question' },
       { id: 'score', labelKey: 'td.score', icon: 'score', score: true },
     ],
+    pauseable: opts?.pauseable,
   });
   lqFinish = (score, isWin, summary, durationMs) => {
     shell.finishPlay(score, isWin, summary ?? '', durationMs);

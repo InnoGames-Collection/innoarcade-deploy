@@ -8,16 +8,52 @@
   </head>
   <body class="game-shell casual-shell brain-shell" data-game="ball-sort">
     <div id="stage" class="fc-stage game-shell-stage">
-      <div id="fcBackdrop" class="fc-backdrop" aria-hidden="true"></div>
+      <div id="fcBackdrop" class="fc-backdrop" aria-hidden="true">
+        <div class="bb-bg-layer">
+          <div class="bb-bg-orb bb-bg-orb--1"></div>
+          <div class="bb-bg-orb bb-bg-orb--2"></div>
+          <div class="bb-bg-orb bb-bg-orb--3"></div>
+          <div class="bb-bg-shape bb-bg-shape--1"></div>
+          <div class="bb-bg-shape bb-bg-shape--2"></div>
+        </div>
+      </div>
       <div id="fcPlayFrame" class="fc-playframe hidden">
         <button id="closeBtn" class="gp-close gp-close-corner hidden" aria-label="Close">✕</button>
         <div id="lq-mount"></div>
       </div>
       <div id="menuOverlay" class="game-overlay">
-        <div class="game-panel panel-clean">
+        <div class="game-panel panel-clean bb-menu-panel">
           <button type="button" class="gp-close gp-close-corner" aria-label="Close">✕</button>
+          <div class="bb-menu-hero">
+            <div class="bb-menu-icon" aria-hidden="true">⚪</div>
+            <div class="bb-menu-title">Ball Sort</div>
+            <div class="bb-menu-sub">Sort colored balls into matching tubes</div>
+          </div>
+          <div class="bb-mode-grid" id="bsModeGrid">
+            <button type="button" class="bb-mode-card bb-mode-card--classic" data-bs-mode="classic">
+              <span class="bb-mode-card__icon" aria-hidden="true">🎯</span>
+              <span class="bb-mode-card__label">Classic</span>
+              <span class="bb-mode-card__desc">8 levels — learn and master</span>
+            </button>
+            <button type="button" class="bb-mode-card bb-mode-card--endless" data-bs-mode="endless">
+              <span class="bb-mode-card__icon" aria-hidden="true">♾️</span>
+              <span class="bb-mode-card__label">Endless</span>
+              <span class="bb-mode-card__desc">Keep going — difficulty climbs</span>
+            </button>
+            <button type="button" class="bb-mode-card bb-mode-card--daily" data-bs-mode="daily">
+              <span class="bb-mode-card__icon" aria-hidden="true">📅</span>
+              <span class="bb-mode-card__label">Daily Challenge</span>
+              <span class="bb-mode-card__desc">Same puzzles for everyone today</span>
+            </button>
+            <button type="button" class="bb-mode-card bb-mode-card--tournament bb-mode-card--locked" data-bs-mode="tournament" disabled>
+              <span class="bb-mode-card__icon" aria-hidden="true">🏆</span>
+              <span class="bb-mode-card__label">Tournament</span>
+              <span class="bb-mode-card__desc">Compete nationwide</span>
+              <span class="bb-mode-card__badge">Soon</span>
+            </button>
+          </div>
           <div class="shell-free-menu" id="freeMenu"></div>
-          <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
+          <button id="startBtn" class="visually-hidden" data-i18n="hub.play">Play</button>
         </div>
       </div>
       <div id="overOverlay" class="game-overlay hidden" aria-hidden="true">
@@ -32,6 +68,7 @@
           </div>
           <div class="shell-run-reward" id="runReward"></div>
           <button id="againBtn" class="btn primary" data-i18n="td.restart">Play again</button>
+          <button type="button" id="bsHomeBtn" class="btn">Home</button>
         </div>
       </div>
     </div>

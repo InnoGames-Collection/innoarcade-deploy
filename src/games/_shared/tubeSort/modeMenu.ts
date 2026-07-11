@@ -49,7 +49,13 @@ export function renderModeMenu(
       class: `ts-mode-card ts-mode-card--${m.id}`,
       onclick: () => onStart(m.id),
     });
-    if (usePremiumCards) {
+    if (usePremiumCards && isBallSort) {
+      btn.appendChild(el('span', { class: 'ts-mode-card__icon', text: modeIcons[m.id] ?? '⚪' }));
+      const body = el('div', { class: 'ts-mode-card__body' });
+      body.appendChild(el('span', { class: 'ts-mode-card__label', text: m.label }));
+      body.appendChild(el('span', { class: 'ts-mode-card__desc', text: m.desc }));
+      btn.appendChild(body);
+    } else if (usePremiumCards) {
       btn.appendChild(el('span', { class: 'ts-mode-card__icon', text: modeIcons[m.id] ?? '⚪' }));
       const body = el('div', { class: 'ts-mode-card__body' });
       body.appendChild(el('span', { class: 'ts-mode-card__label', text: m.label }));
@@ -73,10 +79,10 @@ export function renderModeMenu(
     tBody.appendChild(el('span', { class: 'ts-mode-card__label', text: 'Tournament' }));
     tBody.appendChild(el('span', {
       class: 'ts-mode-card__desc',
-      text: 'Compete with players nationwide. Coming soon.',
+      text: isBallSort ? 'Compete nationwide' : 'Compete with players nationwide. Coming soon.',
     }));
     tourney.appendChild(tBody);
-    tourney.appendChild(el('span', { class: 'ts-mode-card__badge', text: 'Locked' }));
+    tourney.appendChild(el('span', { class: 'ts-mode-card__badge', text: 'Soon' }));
     grid.appendChild(tourney);
   }
 

@@ -57,7 +57,6 @@ import { renderModeMenu } from './modeMenu';
 import { t } from '../../../i18n';
 import {
   bumpStat as bumpBallStat,
-  mountBoardBubbles as mountBallBubbles,
   showLevelCompleteCelebration as showBallLevelComplete,
 } from '../../ball-sort/levelComplete';
 import { ballSortSound } from '../../ball-sort/audio';
@@ -308,11 +307,7 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
       board.appendChild(row);
       mount.appendChild(board);
       if (pauseOverlay) board.appendChild(pauseOverlay);
-      let removeBubbles: (() => void) | null = isBall
-        ? mountBallBubbles(board)
-        : isWater
-          ? mountWaterBubbles(board)
-          : null;
+      const removeBubbles = isWater ? mountWaterBubbles(board) : null;
 
       if (levelIdx === 0) showFirstRunHint(theme.firstRunKey, toast);
 
@@ -687,7 +682,6 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
         stopTimer();
         stopFluidAnim();
         removeBubbles?.();
-        removeBubbles = null;
       };
     }
 

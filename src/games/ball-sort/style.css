@@ -1,92 +1,28 @@
-/* Ball Sort — premium glass laboratory aesthetic */
+/* Ball Sort — gameplay visuals (Block Blast design language) */
 
-/* ── Playfield background ─────────────────────────────────────────────── */
+/* ── Playfield ────────────────────────────────────────────────────────── */
 .bs-board {
-  --bs-brand-green: #4f9e16;
-  --bs-brand-blue: #1f74e0;
-  --bs-glass: rgba(255, 255, 255, 0.72);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  padding: 8px 10px 16px;
+  gap: 12px;
+  padding: 6px 8px 14px;
   user-select: none;
   position: relative;
   border-radius: 20px;
-  overflow: hidden;
   background:
-    radial-gradient(ellipse 90% 55% at 50% 110%, color-mix(in srgb, var(--bs-brand-blue) 14%, transparent) 0%, transparent 65%),
-    radial-gradient(ellipse 70% 45% at 15% 20%, color-mix(in srgb, var(--bs-brand-green) 10%, transparent) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 40% at 85% 25%, color-mix(in srgb, var(--bs-brand-blue) 8%, transparent) 0%, transparent 50%),
-    linear-gradient(168deg, #eef6fb 0%, #e8f4ec 42%, #edf3fa 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(31, 116, 224, 0.06) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 40% at 20% 15%, rgba(79, 158, 22, 0.05) 0%, transparent 55%),
+    linear-gradient(168deg, rgba(255, 255, 255, 0.45) 0%, rgba(240, 248, 255, 0.25) 100%);
+  border: 1px solid rgba(31, 116, 224, 0.08);
+  box-shadow:
+    0 8px 28px rgba(31, 74, 140, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
-.bs-board::before,
-.bs-board::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.bs-board::before {
-  width: 120px;
-  height: 120px;
-  top: 8%;
-  left: -20px;
-  background: radial-gradient(circle, rgba(31, 116, 224, 0.12) 0%, transparent 70%);
-  animation: bs-float-a 9s ease-in-out infinite;
-}
-
-.bs-board::after {
-  width: 90px;
-  height: 90px;
-  bottom: 12%;
-  right: -10px;
-  background: radial-gradient(circle, rgba(79, 158, 22, 0.14) 0%, transparent 70%);
-  animation: bs-float-b 11s ease-in-out infinite;
-}
-
-@keyframes bs-float-a {
-  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.7; }
-  50% { transform: translate(12px, -10px) scale(1.08); opacity: 1; }
-}
-
-@keyframes bs-float-b {
-  0%, 100% { transform: translate(0, 0); opacity: 0.65; }
-  50% { transform: translate(-10px, 8px); opacity: 0.95; }
-}
-
-.bs-board > *:not(.bs-bubbles):not(.bs-level-complete):not(.lpour-layer):not(.lpour-victory) {
+.bs-board > *:not(.bs-level-complete):not(.lpour-layer):not(.lpour-victory) {
   position: relative;
   z-index: 1;
-}
-
-.bs-bubbles {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-}
-
-.bs-bubble {
-  position: absolute;
-  border-radius: 50%;
-  background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.15) 45%, rgba(31, 116, 224, 0.06) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  animation: bs-bubble-rise var(--dur, 12s) ease-in-out infinite;
-  animation-delay: var(--delay, 0s);
-  opacity: 0.55;
-}
-
-@keyframes bs-bubble-rise {
-  0% { transform: translateY(0) scale(1); opacity: 0; }
-  8% { opacity: 0.55; }
-  92% { opacity: 0.4; }
-  100% { transform: translateY(-120%) scale(1.1); opacity: 0; }
 }
 
 /* ── Tube grid ────────────────────────────────────────────────────────── */
@@ -195,10 +131,10 @@
 
 .bs-ball.pgem--sphere {
   box-shadow:
-    inset -4px -6px 10px rgba(0, 0, 0, 0.35),
-    inset 3px 3px 8px rgba(255, 255, 255, 0.48),
-    0 4px 10px rgba(0, 0, 0, 0.2),
-    0 0 8px color-mix(in srgb, var(--pgem-mid, #5b8cff) 18%, transparent);
+    inset -4px -6px 10px rgba(0, 0, 0, 0.32),
+    inset 3px 3px 10px rgba(255, 255, 255, 0.52),
+    0 4px 10px rgba(0, 0, 0, 0.18),
+    0 0 10px color-mix(in srgb, var(--pgem-mid, #5b8cff) 14%, transparent);
 }
 
 /* ── Tube interaction states ──────────────────────────────────────────── */
@@ -222,10 +158,10 @@
 }
 
 .bs-tube--sel {
-  border-color: color-mix(in srgb, var(--bs-brand-green) 55%, rgba(255, 255, 255, 0.8));
+  border-color: color-mix(in srgb, var(--bb-green, #4f9e16) 55%, rgba(255, 255, 255, 0.8));
   box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--bs-brand-green) 38%, transparent),
-    0 0 22px color-mix(in srgb, var(--bs-brand-green) 28%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--bb-green, #4f9e16) 38%, transparent),
+    0 0 22px var(--bb-glow-green, rgba(79, 158, 22, 0.28)),
     inset 0 4px 16px rgba(255, 255, 255, 0.38),
     0 10px 24px rgba(31, 74, 140, 0.14);
 }
@@ -246,7 +182,7 @@
 }
 
 .bs-tube--target {
-  border-color: color-mix(in srgb, var(--bs-brand-blue) 65%, rgba(255, 255, 255, 0.7));
+  border-color: color-mix(in srgb, var(--bb-blue, #1f74e0) 65%, rgba(255, 255, 255, 0.7));
   animation: bs-target-pulse 1.2s ease-in-out infinite;
 }
 
@@ -254,14 +190,14 @@
   0%, 100% {
     box-shadow:
       inset 0 4px 16px rgba(255, 255, 255, 0.32),
-      0 0 0 2px color-mix(in srgb, var(--bs-brand-blue) 28%, transparent),
+      0 0 0 2px color-mix(in srgb, var(--bb-blue, #1f74e0) 28%, transparent),
       0 4px 14px rgba(31, 74, 140, 0.1);
   }
   50% {
     box-shadow:
       inset 0 4px 16px rgba(255, 255, 255, 0.38),
-      0 0 0 4px color-mix(in srgb, var(--bs-brand-blue) 42%, transparent),
-      0 0 18px color-mix(in srgb, var(--bs-brand-blue) 22%, transparent);
+      0 0 0 4px color-mix(in srgb, var(--bb-blue, #1f74e0) 42%, transparent),
+      0 0 18px var(--bb-glow-blue, rgba(31, 116, 224, 0.22));
   }
 }
 
@@ -370,28 +306,29 @@
   transition: transform 0.18s cubic-bezier(0.34, 1.2, 0.64, 1);
 }
 
-/* ── HUD / toolbar ───────────────────────────────────────────────────── */
+/* ── HUD / toolbar (Block Blast hint pill) ────────────────────────────── */
 .bs-hint {
   text-align: center;
-  font-size: 13px;
-  font-weight: 500;
-  color: color-mix(in srgb, var(--bs-brand-blue) 35%, #4a5f6e);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #5a7080;
   margin: 0;
-  letter-spacing: 0.01em;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 12px;
+  border: 1px solid rgba(31, 116, 224, 0.08);
 }
 
 .bs-mod-badge {
   text-align: center;
-  font-size: 11px;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.03em;
-  color: color-mix(in srgb, var(--bs-brand-blue) 70%, #333);
+  color: #5a7080;
   margin: 0;
   padding: 5px 14px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(31, 116, 224, 0.12);
-  box-shadow: 0 2px 8px rgba(31, 74, 140, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(31, 116, 224, 0.08);
 }
 
 .bs-toolbar {
@@ -401,41 +338,6 @@
   flex-wrap: wrap;
 }
 
-.bs-hint-btn,
-.bs-undo {
-  font-size: 13px;
-  font-weight: 700;
-  padding: 10px 20px;
-  border-radius: 14px;
-  border: none;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.78) 100%);
-  color: color-mix(in srgb, var(--bs-brand-green) 75%, #1a3a10);
-  box-shadow:
-    0 4px 14px rgba(31, 74, 140, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  cursor: pointer;
-  transition: transform 0.15s cubic-bezier(0.34, 1.2, 0.64, 1), box-shadow 0.15s ease;
-  min-height: 44px;
-}
-
-.bs-hint-btn:hover:not([disabled]),
-.bs-undo:hover:not([disabled]) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(31, 74, 140, 0.14);
-}
-
-.bs-hint-btn:active:not([disabled]),
-.bs-undo:active:not([disabled]) {
-  transform: scale(0.96);
-}
-
-.bs-hint-btn[disabled],
-.bs-undo[disabled] {
-  opacity: 0.42;
-  cursor: default;
-  box-shadow: none;
-}
-
 /* ── Victory ──────────────────────────────────────────────────────────── */
 .bs-win-flash {
   animation: bs-victory-glow 0.85s ease;
@@ -443,7 +345,7 @@
 
 @keyframes bs-victory-glow {
   0%, 100% { box-shadow: none; }
-  40% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--bs-brand-green) 22%, transparent); }
+  40% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--bb-green, #4f9e16) 22%, transparent); }
 }
 
 .bs-win-flash .bs-tube {
@@ -468,16 +370,10 @@
 
 .bs-score-pop {
   display: inline-block;
-  animation: bs-score-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: bb-stat-bump 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes bs-score-pop {
-  0% { transform: scale(1); }
-  35% { transform: scale(1.26); color: var(--bs-brand-blue); }
-  100% { transform: scale(1); }
-}
-
-/* ── Level complete overlay ───────────────────────────────────────────── */
+/* ── Level complete overlay (Block Blast glass card) ──────────────────── */
 .bs-level-complete {
   position: absolute;
   inset: 0;
@@ -485,9 +381,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(238, 246, 251, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(238, 246, 251, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   animation: bs-lc-fade-in 0.35s ease forwards;
   pointer-events: none;
 }
@@ -503,13 +399,15 @@
   align-items: center;
   gap: 10px;
   padding: 24px 28px;
-  border-radius: 22px;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.82) 100%);
-  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  background: var(--bb-glass, rgba(255, 255, 255, 0.72));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--bb-glass-border, rgba(255, 255, 255, 0.55));
   box-shadow:
-    0 16px 48px rgba(31, 74, 140, 0.16),
-    0 4px 12px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 1);
+    0 16px 48px rgba(31, 74, 140, 0.14),
+    0 4px 12px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
   animation: bs-lc-pop 0.5s cubic-bezier(0.34, 1.45, 0.64, 1) forwards;
   transform: scale(0.85);
   opacity: 0;
@@ -523,10 +421,10 @@
   margin: 0;
   font-size: 1.35rem;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--bs-brand-green) 0%, var(--bs-brand-blue) 100%);
+  background: var(--grad-hero, linear-gradient(145deg, #3d8ef0 0%, #4f9e16 100%));
   -webkit-background-clip: text;
   background-clip: text;
-  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 .bs-level-complete__stars {
@@ -543,7 +441,7 @@
 .bs-level-complete__score {
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--bs-brand-blue);
+  color: var(--bb-blue, #1f74e0);
   font-variant-numeric: tabular-nums;
 }
 
@@ -581,9 +479,6 @@
   .bs-tube--sparkle,
   .bs-tube--tap,
   .bs-tube--shake,
-  .bs-tube--invalid,
-  .bs-bubble,
-  .bs-board::before,
-  .bs-board::after { animation: none; }
+  .bs-tube--invalid { animation: none; }
   .bs-ball--held { transform: translateY(-10px) scale(1.04); }
 }

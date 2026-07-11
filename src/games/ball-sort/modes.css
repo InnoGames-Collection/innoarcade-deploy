@@ -1,49 +1,65 @@
-/* Ball Sort — premium mode selection screen */
+/* Ball Sort — in-game mode picker (Block Blast card parity) */
 
 body[data-game='ball-sort'] .ts-modes {
-  gap: 18px;
-  padding: 16px 12px 24px;
-  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 10px 20px;
+  max-width: 420px;
+  margin: 0 auto;
 }
 
 body[data-game='ball-sort'] .ts-modes-title {
-  font-size: clamp(1.4rem, 5vw, 1.75rem);
+  font-size: clamp(1.6rem, 6vw, 2rem);
   font-weight: 800;
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #3d8010 0%, #1f74e0 100%);
+  background: var(--grad-hero);
   -webkit-background-clip: text;
   background-clip: text;
-  color: transparent;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+  text-align: center;
+  margin: 0;
 }
 
 body[data-game='ball-sort'] .ts-modes-sub {
-  font-size: 14px;
-  line-height: 1.5;
-  max-width: 340px;
-  color: #5a6f7e;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--shell-muted, #6a8090);
+  text-align: center;
+  line-height: 1.45;
+  margin: 0;
+  max-width: 320px;
 }
 
 body[data-game='ball-sort'] .ts-modes-grid {
-  gap: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
 }
 
+/* Mirror bb-mode-card exactly */
 body[data-game='ball-sort'] .ts-mode-card {
   position: relative;
-  flex-direction: row;
-  align-items: center;
-  gap: 14px;
-  padding: 18px 18px 18px 16px;
-  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 16px 14px;
   border: none;
-  overflow: hidden;
+  border-radius: 18px;
   text-align: left;
-  transition:
-    transform 0.2s cubic-bezier(0.34, 1.2, 0.64, 1),
-    box-shadow 0.2s ease;
+  cursor: pointer;
+  overflow: hidden;
+  font: inherit;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.92) 0%, rgba(240, 248, 255, 0.8) 100%);
   box-shadow:
-    0 6px 24px rgba(31, 74, 140, 0.1),
-    0 2px 6px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    0 8px 24px rgba(31, 74, 140, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.3, 0.64, 1),
+    box-shadow 0.2s ease;
 }
 
 body[data-game='ball-sort'] .ts-mode-card::before {
@@ -52,7 +68,7 @@ body[data-game='ball-sort'] .ts-mode-card::before {
   inset: 0;
   border-radius: inherit;
   padding: 1.5px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.2) 100%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(31, 116, 224, 0.2), rgba(79, 158, 22, 0.15));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -60,133 +76,103 @@ body[data-game='ball-sort'] .ts-mode-card::before {
   pointer-events: none;
 }
 
-body[data-game='ball-sort'] .ts-mode-card--classic {
-  background: linear-gradient(145deg, #f0faf0 0%, #e4f2e8 50%, #eef6fb 100%);
-}
-
-body[data-game='ball-sort'] .ts-mode-card--daily {
-  background: linear-gradient(145deg, #fff8ed 0%, #fef3dc 50%, #f5f0ff 100%);
-}
-
-body[data-game='ball-sort'] .ts-mode-card--endless {
-  background: linear-gradient(145deg, #eef0ff 0%, #e8ecfc 50%, #edf6fa 100%);
-}
-
-body[data-game='ball-sort'] .ts-mode-card--tournament {
-  background: linear-gradient(145deg, #f4f6f8 0%, #eceff3 100%);
-  cursor: not-allowed;
-  opacity: 0.72;
-}
-
 body[data-game='ball-sort'] .ts-mode-card:not(.ts-mode-card--locked):hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow:
-    0 14px 36px rgba(31, 74, 140, 0.14),
-    0 4px 10px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(31, 74, 140, 0.14);
 }
 
 body[data-game='ball-sort'] .ts-mode-card:not(.ts-mode-card--locked):active {
-  transform: scale(0.98);
-  transition-duration: 0.08s;
+  transform: scale(0.97);
+}
+
+body[data-game='ball-sort'] .ts-mode-card--classic {
+  background: linear-gradient(165deg, rgba(240, 252, 244, 0.95) 0%, rgba(230, 245, 255, 0.85) 100%);
+}
+
+body[data-game='ball-sort'] .ts-mode-card--daily {
+  background: linear-gradient(165deg, rgba(255, 250, 235, 0.95) 0%, rgba(240, 248, 255, 0.85) 100%);
+}
+
+body[data-game='ball-sort'] .ts-mode-card--endless {
+  background: linear-gradient(165deg, rgba(235, 245, 255, 0.95) 0%, rgba(225, 240, 252, 0.85) 100%);
+}
+
+body[data-game='ball-sort'] .ts-mode-card--tournament {
+  background: linear-gradient(165deg, rgba(245, 240, 255, 0.95) 0%, rgba(235, 245, 255, 0.85) 100%);
 }
 
 body[data-game='ball-sort'] .ts-mode-card--locked {
+  opacity: 0.72;
   cursor: not-allowed;
+  filter: saturate(0.85);
+}
+
+body[data-game='ball-sort'] .ts-mode-card--locked:hover {
+  transform: none;
+  box-shadow: 0 8px 24px rgba(31, 74, 140, 0.1);
 }
 
 body[data-game='ball-sort'] .ts-mode-card__icon {
-  flex-shrink: 0;
-  width: 52px;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.75);
-  box-shadow:
-    0 4px 12px rgba(31, 74, 140, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
-}
-
-body[data-game='ball-sort'] .ts-mode-card--classic .ts-mode-card__icon {
-  background: linear-gradient(145deg, rgba(79, 158, 22, 0.15) 0%, rgba(255, 255, 255, 0.85) 100%);
-}
-
-body[data-game='ball-sort'] .ts-mode-card--daily .ts-mode-card__icon {
-  background: linear-gradient(145deg, rgba(245, 166, 35, 0.18) 0%, rgba(255, 255, 255, 0.85) 100%);
-}
-
-body[data-game='ball-sort'] .ts-mode-card--endless .ts-mode-card__icon {
-  background: linear-gradient(145deg, rgba(31, 116, 224, 0.14) 0%, rgba(255, 255, 255, 0.85) 100%);
-}
-
-body[data-game='ball-sort'] .ts-mode-card--tournament .ts-mode-card__icon {
-  background: linear-gradient(145deg, rgba(100, 110, 130, 0.12) 0%, rgba(255, 255, 255, 0.7) 100%);
-  filter: grayscale(0.4);
+  font-size: 1.75rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(31, 116, 224, 0.2));
 }
 
 body[data-game='ball-sort'] .ts-mode-card__body {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  flex: 1;
-  min-width: 0;
+  gap: 2px;
 }
 
 body[data-game='ball-sort'] .ts-mode-card__label {
-  font-size: 17px;
+  font-size: 0.92rem;
   font-weight: 800;
+  color: #1a3a5c;
   letter-spacing: -0.01em;
-  color: #14271a;
 }
 
 body[data-game='ball-sort'] .ts-mode-card__desc {
-  font-size: 12.5px;
-  line-height: 1.4;
-  color: #5a6f7e;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #6a8090;
+  line-height: 1.35;
 }
 
 body[data-game='ball-sort'] .ts-mode-card__badge {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  font-size: 9px;
+  top: 10px;
+  right: 10px;
+  font-size: 0.58rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
   padding: 3px 8px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.06);
-  color: #7a8490;
+  border-radius: 8px;
+  background: rgba(31, 116, 224, 0.1);
+  color: var(--bb-blue);
 }
 
 body[data-game='ball-sort'] .ts-mode-card__arrow {
-  flex-shrink: 0;
-  font-size: 18px;
-  color: color-mix(in srgb, #1f74e0 60%, #4f9e16);
-  opacity: 0.5;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-body[data-game='ball-sort'] .ts-mode-card:not(.ts-mode-card--locked):hover .ts-mode-card__arrow {
-  transform: translateX(3px);
-  opacity: 0.85;
+  display: none;
 }
 
 body[data-game='ball-sort'] .ts-gem-catalog {
+  width: 100%;
+  padding: 14px;
   border-radius: 18px;
-  padding: 16px;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.92) 0%, rgba(238, 246, 251, 0.85) 100%);
-  border: 1px solid rgba(31, 116, 224, 0.1);
-  box-shadow: 0 4px 16px rgba(31, 74, 140, 0.08);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(31, 116, 224, 0.08);
+  box-shadow: 0 4px 16px rgba(31, 74, 140, 0.06);
 }
 
 body[data-game='ball-sort'] .ts-gem-catalog-title {
-  font-size: 13px;
+  font-size: 0.72rem;
   font-weight: 700;
-  color: #5a6f7e;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--shell-muted, #6a8090);
+  text-align: center;
+  margin: 0 0 10px;
 }
 
 body[data-game='ball-sort'] .ts-gem-cell {

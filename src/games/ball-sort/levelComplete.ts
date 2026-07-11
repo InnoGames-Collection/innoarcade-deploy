@@ -76,36 +76,12 @@ export function showLevelCompleteCelebration(
   };
 }
 
-/** Floating bubble particles for the playfield background. */
-export function mountBoardBubbles(board: HTMLElement): () => void {
-  const layer = document.createElement('div');
-  layer.className = 'bs-bubbles';
-  layer.setAttribute('aria-hidden', 'true');
-
-  const sizes = [14, 18, 22, 10, 16, 12, 20];
-  for (let i = 0; i < 7; i++) {
-    const b = document.createElement('span');
-    b.className = 'bs-bubble';
-    const size = sizes[i % sizes.length];
-    b.style.width = `${size}px`;
-    b.style.height = `${size}px`;
-    b.style.left = `${8 + (i * 13) % 82}%`;
-    b.style.bottom = `${-5 - (i % 3) * 8}%`;
-    b.style.setProperty('--dur', `${10 + i * 1.8}s`);
-    b.style.setProperty('--delay', `${i * 1.4}s`);
-    layer.appendChild(b);
-  }
-
-  board.prepend(layer);
-  return () => layer.remove();
-}
-
 /** Bump HUD stat values on change. */
 export function bumpStat(id: 'fpStat-moves' | 'fpStat-score' | 'fpStat-round'): void {
   const el = document.getElementById(id);
   if (!el) return;
-  el.classList.remove('bs-stat-bump');
+  el.classList.remove('bb-stat-bump');
   void el.offsetWidth;
-  el.classList.add('bs-stat-bump');
-  window.setTimeout(() => el.classList.remove('bs-stat-bump'), 500);
+  el.classList.add('bb-stat-bump');
+  window.setTimeout(() => el.classList.remove('bb-stat-bump'), 500);
 }
