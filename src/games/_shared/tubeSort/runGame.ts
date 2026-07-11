@@ -233,7 +233,7 @@ export function runTubeSortGame(
       const completedTubes = new Set<number>();
 
       const p = theme.classPrefix;
-      const hint = isWater
+      const hint = isWater || isBall
         ? null
         : el('p', { class: cx(theme, 'hint'), text: theme.hintText });
       const modeBadge = modeLabel
@@ -253,7 +253,7 @@ export function runTubeSortGame(
         text: '↩ Undo',
         onclick: () => void undo(),
       });
-      toolbar.appendChild(hintBtn);
+      if (!isBall) toolbar.appendChild(hintBtn);
       toolbar.appendChild(undoBtn);
 
       let restartBtn: HTMLButtonElement | null = null;
@@ -322,7 +322,7 @@ export function runTubeSortGame(
       if (pauseOverlay) board.appendChild(pauseOverlay);
       const removeBubbles = isWater ? mountWaterBubbles(board) : null;
 
-      if (levelIdx === 0 && !isWater) showFirstRunHint(theme.firstRunKey, toast);
+      if (levelIdx === 0 && !isWater && !isBall) showFirstRunHint(theme.firstRunKey, toast);
 
       setLQHeader({
         round: roundLabel(levelIdx, mode),
@@ -492,7 +492,7 @@ export function runTubeSortGame(
         if (isBall) bumpBallStat('fpStat-moves');
         else if (isWater) bumpWaterStat('fpStat-moves');
         undoBtn.toggleAttribute('disabled', undoStack.length === 0);
-        hintBtn.toggleAttribute('disabled', hintsLeft <= 0 || locked);
+        if (!isBall) hintBtn.toggleAttribute('disabled', hintsLeft <= 0 || locked);
       }
 
       function useHint(): void {
