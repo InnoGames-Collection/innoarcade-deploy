@@ -95,7 +95,12 @@ function paintFruitImage(
   const [w, h] = imageSize(img, radius, type);
 
   ctx.drawImage(img, -w / 2, -h / 2, w, h);
+
+  // Gloss & AO only on fruit pixels, not transparent areas
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-atop';
   applyPremiumFinish(ctx, radius, type);
+  ctx.restore();
 }
 
 export function drawFruit(
