@@ -183,6 +183,7 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
   }
 
   function startSession(mode: SessionMode, seed: number): void {
+    document.body.classList.remove('ws-at-mode-menu');
     const rnd = mulberry32(seed);
     let levelIdx = 0;
     let totalScore = 0;
@@ -222,7 +223,9 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
       const completedTubes = new Set<number>();
 
       const p = theme.classPrefix;
-      const hint = el('p', { class: cx(theme, 'hint'), text: theme.hintText });
+      const hint = isWater
+        ? null
+        : el('p', { class: cx(theme, 'hint'), text: theme.hintText });
       const modeBadge = modeLabel
         ? el('p', { class: `ts-mode-badge ts-mode-badge--${mode}`, text: modeLabel })
         : null;
@@ -300,7 +303,7 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
         role: 'group',
         'aria-label': theme.ariaLabel,
       });
-      board.appendChild(hint);
+      if (hint) board.appendChild(hint);
       if (modeBadge) board.appendChild(modeBadge);
       if (modBadge) board.appendChild(modBadge);
       board.appendChild(toolbar);
@@ -309,7 +312,7 @@ export function runTubeSortGame(mount: HTMLElement, theme: TubeSortTheme): void 
       if (pauseOverlay) board.appendChild(pauseOverlay);
       const removeBubbles = isWater ? mountWaterBubbles(board) : null;
 
-      if (levelIdx === 0) showFirstRunHint(theme.firstRunKey, toast);
+      if (levelIdx === 0 && !isWater) showFirstRunHint(theme.firstRunKey, toast);
 
       setLQHeader({
         round: roundLabel(levelIdx, mode),

@@ -15,6 +15,7 @@ import {
   easeOutCubic,
   ensureStreamCanvas,
   SplashPool,
+  tubeLiquidSurfaceOnBoard,
   tubeMouthOnBoard,
   type WaterBottleManager,
 } from './tubeSort/waterFluid';
@@ -337,7 +338,7 @@ async function animateWaterPour(opts: PourAnimOptions): Promise<void> {
       segmentsApplied++;
       fluidManager.triggerRipple(toIdx, 720);
       const toMouth = tubeMouthOnBoard(board, toTube);
-      splashPool.spawn(toMouth.x, toMouth.y + 4, colorId, 4);
+      splashPool.spawn(toMouth.x, toMouth.y + 4, colorId, 6);
       lastSplashAt = elapsed;
     }
 
@@ -375,15 +376,23 @@ async function animateWaterPour(opts: PourAnimOptions): Promise<void> {
       if (streamAlpha > 0) {
         const fromMouth = tubeMouthOnBoard(board, fromTube);
         const toMouth = tubeMouthOnBoard(board, toTube);
+        const fromFill = Math.max(0, fromData.length - fromHidden - drained);
+        const toFill = toData.length - toHidden + drained;
+        const fromSurface = tubeLiquidSurfaceOnBoard(board, fromTube, fromFill, fromCap);
+        const fromPoint = {
+          x: fromMouth.x,
+          y: Math.min(fromSurface.y, fromMouth.y + 6),
+        };
         const pourProgress = amount > 0 ? drained / amount : 1;
-        const streamW = Math.max(10, Math.min(16, fromTube.getBoundingClientRect().width * 0.22));
+        const streamW = Math.max(12, Math.min(20, fromTube.getBoundingClientRect().width * 0.28));
         drawLiquidStream(
-          streamCtx, fromMouth, toMouth, colorId, streamW, elapsed * 0.005,
-          streamAlpha, { progress: pourProgress, phase: elapsed * 0.005 },
+          streamCtx, fromPoint, toMouth, colorId, streamW, elapsed * 0.005,
+          Math.min(1, streamAlpha * 1.15), { progress: pourProgress, phase: elapsed * 0.005 },
         );
+        const destSurface = tubeLiquidSurfaceOnBoard(board, toTube, toFill, toCap);
         drawLandingRipple(
-          streamCtx, toMouth.x, toMouth.y, streamW, colorId,
-          streamAlpha * pourProgress * 0.7, elapsed * 0.005,
+          streamCtx, toMouth.x, Math.min(toMouth.y, destSurface.y + 2), streamW, colorId,
+          streamAlpha * pourProgress * 0.85, elapsed * 0.005,
         );
       }
       if (splashPool.particles.length) {

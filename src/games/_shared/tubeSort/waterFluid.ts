@@ -29,14 +29,14 @@ interface LiquidPalette {
 }
 
 const PALETTE: Record<GemId, LiquidPalette> = {
-  sapphire: { light: 'rgba(180,215,255,0.92)', mid: 'rgba(55,120,255,0.82)', dark: 'rgba(20,50,140,0.88)', glow: 'rgba(61,122,255,0.4)', shine: 'rgba(220,240,255,0.7)' },
-  emerald: { light: 'rgba(150,245,195,0.9)', mid: 'rgba(30,190,90,0.8)', dark: 'rgba(10,90,45,0.88)', glow: 'rgba(34,197,94,0.38)', shine: 'rgba(200,255,230,0.65)' },
-  amber: { light: 'rgba(255,235,140,0.92)', mid: 'rgba(245,165,35,0.82)', dark: 'rgba(140,85,5,0.88)', glow: 'rgba(245,166,35,0.35)', shine: 'rgba(255,250,200,0.7)' },
-  ruby: { light: 'rgba(255,185,195,0.92)', mid: 'rgba(235,55,55,0.82)', dark: 'rgba(120,15,15,0.88)', glow: 'rgba(239,68,68,0.38)', shine: 'rgba(255,220,225,0.68)' },
-  amethyst: { light: 'rgba(225,195,255,0.92)', mid: 'rgba(160,75,240,0.8)', dark: 'rgba(70,20,110,0.88)', glow: 'rgba(168,85,247,0.36)', shine: 'rgba(240,220,255,0.68)' },
-  aquamarine: { light: 'rgba(155,250,235,0.9)', mid: 'rgba(15,185,165,0.8)', dark: 'rgba(5,85,75,0.88)', glow: 'rgba(20,184,166,0.36)', shine: 'rgba(190,255,245,0.65)' },
-  coral: { light: 'rgba(255,210,170,0.92)', mid: 'rgba(245,110,25,0.82)', dark: 'rgba(130,55,5,0.88)', glow: 'rgba(249,115,22,0.36)', shine: 'rgba(255,230,200,0.68)' },
-  violet: { light: 'rgba(215,200,255,0.92)', mid: 'rgba(115,55,235,0.8)', dark: 'rgba(45,15,120,0.88)', glow: 'rgba(124,58,237,0.36)', shine: 'rgba(230,215,255,0.68)' },
+  sapphire: { light: 'rgba(120,200,255,0.94)', mid: 'rgba(35,130,255,0.86)', dark: 'rgba(8,55,150,0.9)', glow: 'rgba(55,150,255,0.48)', shine: 'rgba(210,240,255,0.82)' },
+  emerald: { light: 'rgba(110,255,175,0.92)', mid: 'rgba(20,210,95,0.84)', dark: 'rgba(5,100,50,0.9)', glow: 'rgba(34,220,110,0.45)', shine: 'rgba(200,255,225,0.75)' },
+  amber: { light: 'rgba(255,240,120,0.94)', mid: 'rgba(255,185,30,0.86)', dark: 'rgba(150,90,0,0.9)', glow: 'rgba(255,200,50,0.42)', shine: 'rgba(255,252,200,0.78)' },
+  ruby: { light: 'rgba(255,150,165,0.94)', mid: 'rgba(245,45,55,0.86)', dark: 'rgba(130,10,20,0.9)', glow: 'rgba(255,60,70,0.45)', shine: 'rgba(255,210,220,0.75)' },
+  amethyst: { light: 'rgba(230,180,255,0.94)', mid: 'rgba(175,70,255,0.84)', dark: 'rgba(75,15,130,0.9)', glow: 'rgba(190,90,255,0.42)', shine: 'rgba(245,220,255,0.75)' },
+  aquamarine: { light: 'rgba(120,255,240,0.92)', mid: 'rgba(10,200,185,0.84)', dark: 'rgba(0,95,85,0.9)', glow: 'rgba(20,210,190,0.44)', shine: 'rgba(180,255,248,0.72)' },
+  coral: { light: 'rgba(255,195,140,0.94)', mid: 'rgba(255,115,25,0.86)', dark: 'rgba(145,50,0,0.9)', glow: 'rgba(255,130,40,0.44)', shine: 'rgba(255,225,185,0.75)' },
+  violet: { light: 'rgba(200,175,255,0.94)', mid: 'rgba(130,60,255,0.84)', dark: 'rgba(50,10,140,0.9)', glow: 'rgba(140,80,255,0.42)', shine: 'rgba(225,210,255,0.75)' },
 };
 
 const MYSTERY: LiquidPalette = {
@@ -156,10 +156,11 @@ function bottleClip(ctx: CanvasRenderingContext2D, w: number, h: number): void {
 
 function meniscusWave(x: number, w: number, phase: number, wobble: number, ripple: number): number {
   const cx = x + w / 2;
-  const edge = Math.sin(phase * 2.8) * wobble * 1.8;
-  const rippleW = Math.sin(phase * 5.5 + x * 0.08) * ripple * 1.2;
-  const bowl = -w * 0.06 * (1 - Math.abs((cx - (x + w / 2)) / (w / 2)));
-  return edge + rippleW + bowl;
+  const edge = Math.sin(phase * 2.8) * wobble * 2.2;
+  const rippleW = Math.sin(phase * 5.5 + x * 0.08) * ripple * 1.5;
+  const bowl = -w * 0.085 * (1 - Math.abs((cx - (x + w / 2)) / (w / 2)));
+  const settle = Math.sin(phase * 1.4) * wobble * 0.6 * Math.exp(-wobble * 0.3);
+  return edge + rippleW + bowl + settle;
 }
 
 /** Build a smooth liquid segment path — no rectangular blocks. */
@@ -259,18 +260,34 @@ function fillLiquidSegment(
 
   if (opts.isTop) {
     const wv = meniscusWave(x, w, opts.phase, opts.wobble, opts.ripple);
-    const hl = ctx.createRadialGradient(x + w * 0.38, topY + wv, 0, x + w * 0.5, topY + wv + 4, w * 0.62);
+    const hl = ctx.createRadialGradient(x + w * 0.38, topY + wv, 0, x + w * 0.5, topY + wv + 4, w * 0.68);
     hl.addColorStop(0, colors.shine);
-    hl.addColorStop(0.45, 'rgba(255,255,255,0.18)');
+    hl.addColorStop(0.35, 'rgba(255,255,255,0.28)');
+    hl.addColorStop(0.65, 'rgba(255,255,255,0.08)');
     hl.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = hl;
-    ctx.fillRect(x, topY - 2, w, Math.min(h, 22));
+    ctx.fillRect(x, topY - 3, w, Math.min(h, 26));
 
-    ctx.strokeStyle = 'rgba(255,255,255,0.42)';
-    ctx.lineWidth = 1.1;
+    const reflect = ctx.createLinearGradient(x, topY + wv, x + w, topY + wv + 6);
+    reflect.addColorStop(0, 'rgba(255,255,255,0)');
+    reflect.addColorStop(0.35, 'rgba(255,255,255,0.22)');
+    reflect.addColorStop(0.65, 'rgba(255,255,255,0.08)');
+    reflect.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = reflect;
+    ctx.fillRect(x, topY + wv - 1, w, 8);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.52)';
+    ctx.lineWidth = 1.25;
     ctx.beginPath();
     ctx.moveTo(x + 1, topY + 2.5);
-    ctx.bezierCurveTo(x + w * 0.3, topY + wv, x + w * 0.7, topY + wv + 1, x + w - 1, topY + 2.5);
+    ctx.bezierCurveTo(x + w * 0.28, topY + wv - 0.5, x + w * 0.72, topY + wv + 0.5, x + w - 1, topY + 2.5);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(x + w * 0.15, topY + wv + 2.5);
+    ctx.quadraticCurveTo(x + w * 0.5, topY + wv + 4, x + w * 0.85, topY + wv + 2.5);
     ctx.stroke();
   }
 
@@ -541,20 +558,20 @@ function streamCurvePoints(
   from: StreamPoint,
   to: StreamPoint,
   phase: number,
-  segments = 24,
+  segments = 32,
 ): StreamPoint[] {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
-  const cx = (from.x + to.x) / 2 + dx * 0.04;
-  const cy = Math.max(from.y, to.y) + dist * 0.35 + Math.abs(dx) * 0.18 + Math.sin(phase * 1.8) * 2;
+  const cx = (from.x + to.x) / 2 + dx * 0.02;
+  const cy = Math.max(from.y, to.y) + dist * 0.42 + Math.abs(dx) * 0.22 + Math.sin(phase * 1.8) * 2.5;
   const points: StreamPoint[] = [];
   for (let i = 0; i <= segments; i++) {
     const t = i / segments;
     const ease = t * t * (3 - 2 * t);
     const px = (1 - ease) * (1 - ease) * from.x + 2 * (1 - ease) * ease * cx + ease * ease * to.x;
     const py = (1 - ease) * (1 - ease) * from.y + 2 * (1 - ease) * ease * cy + ease * ease * to.y;
-    const wobble = Math.sin(phase * 5 + t * 10) * (1.2 - t * 0.8);
+    const wobble = Math.sin(phase * 5 + t * 12) * (1.4 - t * 0.9);
     points.push({ x: px + wobble, y: py });
   }
   return points;
@@ -584,7 +601,7 @@ export function drawLiquidStream(
   const right: StreamPoint[] = [];
   for (let i = 0; i < n; i++) {
     const t = i / (n - 1);
-    const taper = (1 - t * 0.55) * (0.55 + progress * 0.45);
+    const taper = (1 - t * 0.62) * (0.6 + progress * 0.4);
     const w = baseWidth * taper;
     const p = points[i];
     const prev = points[Math.max(0, i - 1)];
@@ -609,48 +626,64 @@ export function drawLiquidStream(
   streamGrad.addColorStop(0.35, colors.mid);
   streamGrad.addColorStop(0.85, colors.dark);
   ctx.fillStyle = streamGrad;
-  ctx.globalAlpha = alpha * 0.88;
+  ctx.globalAlpha = alpha * 0.94;
   ctx.fill();
 
   ctx.beginPath();
   ctx.moveTo(left[0].x, left[0].y);
   for (let i = 1; i < n; i++) ctx.lineTo(left[i].x, left[i].y);
-  ctx.strokeStyle = colors.shine;
-  ctx.lineWidth = baseWidth * 0.18;
-  ctx.globalAlpha = alpha * 0.55;
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = baseWidth * 0.12;
+  ctx.globalAlpha = alpha * 0.7;
   ctx.stroke();
 
-  const sourceBulge = baseWidth * 0.72;
+  ctx.beginPath();
+  ctx.moveTo(left[0].x, left[0].y);
+  for (let i = 1; i < n; i++) ctx.lineTo(left[i].x, left[i].y);
+  ctx.strokeStyle = colors.shine;
+  ctx.lineWidth = baseWidth * 0.22;
+  ctx.globalAlpha = alpha * 0.62;
+  ctx.stroke();
+
+  const sourceBulge = baseWidth * 0.85;
   const srcGrad = ctx.createRadialGradient(from.x, from.y, 0, from.x, from.y, sourceBulge);
   srcGrad.addColorStop(0, colors.mid);
-  srcGrad.addColorStop(0.6, colors.light);
+  srcGrad.addColorStop(0.45, colors.light);
   srcGrad.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.globalAlpha = alpha * 0.75;
+  ctx.globalAlpha = alpha * 0.88;
   ctx.fillStyle = srcGrad;
   ctx.beginPath();
-  ctx.ellipse(from.x, from.y + 2, sourceBulge * 0.55, sourceBulge * 0.7, 0, 0, Math.PI * 2);
+  ctx.ellipse(from.x, from.y + 1, sourceBulge * 0.6, sourceBulge * 0.75, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.globalAlpha = alpha * 0.35;
+  ctx.globalAlpha = alpha * 0.45;
   ctx.fillStyle = colors.glow;
   ctx.beginPath();
-  ctx.ellipse(to.x, to.y + 3, baseWidth * 0.65, 4, 0, 0, Math.PI * 2);
+  ctx.ellipse(to.x, to.y + 3, baseWidth * 0.75, 5, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.globalAlpha = alpha * 0.65;
+  ctx.globalAlpha = alpha * 0.72;
   ctx.fillStyle = colors.mid;
-  const droplets = 8;
+  const droplets = 10;
   for (let i = 0; i < droplets; i++) {
-    const t = ((phase * 2.5 + i / droplets) % 1) * progress;
+    const t = ((phase * 2.8 + i / droplets) % 1) * progress;
     const idx = Math.min(n - 2, Math.floor(t * (n - 1)));
     const frac = t * (n - 1) - idx;
     const px = points[idx].x + (points[idx + 1].x - points[idx].x) * frac;
     const py = points[idx].y + (points[idx + 1].y - points[idx].y) * frac;
-    const dr = baseWidth * (0.08 + 0.05 * Math.sin(phase * 3 + i));
+    const dr = baseWidth * (0.09 + 0.06 * Math.sin(phase * 3 + i));
     ctx.beginPath();
-    ctx.ellipse(px, py, dr, dr * 1.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(px, py, dr, dr * 1.6, 0, 0, Math.PI * 2);
     ctx.fill();
   }
+
+  ctx.globalAlpha = alpha * 0.5;
+  ctx.strokeStyle = colors.dark;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(right[0].x, right[0].y);
+  for (let i = 1; i < n; i++) ctx.lineTo(right[i].x, right[i].y);
+  ctx.stroke();
 
   ctx.restore();
 }
@@ -691,15 +724,21 @@ export function drawLandingRipple(
   if (strength <= 0) return;
   const colors = liquidColors(colorId);
   ctx.save();
-  ctx.globalAlpha = strength * 0.35;
+  ctx.globalAlpha = strength * 0.42;
   ctx.strokeStyle = colors.shine;
-  ctx.lineWidth = 1.2;
-  for (let i = 0; i < 2; i++) {
-    const spread = 1 + i * 0.4 + Math.sin(phase * 3) * 0.15;
+  ctx.lineWidth = 1.4;
+  for (let i = 0; i < 3; i++) {
+    const spread = 1 + i * 0.35 + Math.sin(phase * 3.5 + i) * 0.18;
+    const wobble = Math.sin(phase * 5 + i * 1.2) * strength * 1.2;
     ctx.beginPath();
-    ctx.ellipse(x, y + 2, width * 0.5 * spread, 3.5 * spread, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + 2 + wobble, width * 0.55 * spread, 4 + i * 1.2, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
+  ctx.globalAlpha = strength * 0.25;
+  ctx.fillStyle = colors.light;
+  ctx.beginPath();
+  ctx.ellipse(x, y + 3, width * 0.35, 2.5, 0, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 }
 
@@ -712,15 +751,15 @@ export class SplashPool {
       const p = this.pool.pop() ?? {
         x: 0, y: 0, vx: 0, vy: 0, life: 1, colorId: 1, size: 2,
       };
-      const angle = -Math.PI * 0.9 + Math.random() * Math.PI * 0.8;
-      const speed = 0.8 + Math.random() * 2.2;
-      p.x = x + (Math.random() - 0.5) * 6;
-      p.y = y;
+      const angle = -Math.PI * 0.95 + Math.random() * Math.PI * 0.9;
+      const speed = 1 + Math.random() * 2.8;
+      p.x = x + (Math.random() - 0.5) * 8;
+      p.y = y + (Math.random() - 0.5) * 2;
       p.vx = Math.cos(angle) * speed;
-      p.vy = Math.sin(angle) * speed - 1.2;
+      p.vy = Math.sin(angle) * speed - 1.4;
       p.life = 1;
       p.colorId = colorId;
-      p.size = 1.5 + Math.random() * 2;
+      p.size = 1.2 + Math.random() * 2.5;
       this.active.push(p);
     }
   }
@@ -886,6 +925,31 @@ export function tubeMouthOnBoard(board: HTMLElement, tubeEl: HTMLElement): Strea
   return {
     x: r.left - b.left + r.width / 2,
     y: r.top - b.top + (anchor ? r.height * 0.5 : 10),
+  };
+}
+
+/** Visual liquid surface — board coordinates for pour stream origin. */
+export function tubeLiquidSurfaceOnBoard(
+  board: HTMLElement,
+  tubeEl: HTMLElement,
+  fillUnits: number,
+  capacity: number,
+): StreamPoint {
+  const mouth = tubeMouthOnBoard(board, tubeEl);
+  const canvas = tubeEl.querySelector('.ws-fluid-canvas') as HTMLElement | null;
+  if (!canvas || capacity <= 0) return mouth;
+
+  const boardRect = board.getBoundingClientRect();
+  const canvasRect = canvas.getBoundingClientRect();
+  const fillRatio = Math.max(0, Math.min(1, fillUnits / capacity));
+  const padTop = canvasRect.height * 0.05;
+  const padBot = canvasRect.height * 0.042;
+  const innerH = canvasRect.height - padTop - padBot;
+  const surfaceY = canvasRect.bottom - padBot - innerH * fillRatio;
+
+  return {
+    x: mouth.x,
+    y: surfaceY - boardRect.top,
   };
 }
 
