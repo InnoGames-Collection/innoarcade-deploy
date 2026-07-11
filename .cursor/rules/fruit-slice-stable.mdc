@@ -1,0 +1,22 @@
+---
+description: Fruit Slice is stable v1 — do not modify without explicit user request
+globs: src/games/fruit-slice/**,games/fruit-slice/**
+alwaysApply: false
+---
+
+# Fruit Slice — stable v1
+
+`fruit-slice` is tagged `stable: 'v1'` in `src/platform/catalog.ts`. See `STABLE.md`.
+
+## Do not change
+
+Unless the user **explicitly** asks to modify Fruit Slice:
+
+- Do not edit files under `src/games/fruit-slice/` or `games/fruit-slice/`
+- Do not change slice physics, scoring, bomb logic, tournament UX, or rendering in game-specific files
+
+## Instead
+
+- Copy Fruit Slice **patterns** into shared modules or other games
+- Fix platform/hub/backend issues without touching Fruit Slice game code
+- If a shared change affects Fruit Slice, **tell the user** which shared file changed and why

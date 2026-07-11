@@ -1,6 +1,6 @@
 ---
 description: Memory Match is stable v1 — do not modify without explicit user request
-globs: src/games/memory-match/**,games/memory-match/**
+globs: src/games/memory-match/**,games/memory-match/**,assets/memory-match/**,scripts/*memory-match*
 alwaysApply: false
 ---
 
@@ -12,11 +12,12 @@ alwaysApply: false
 
 Unless the user **explicitly** asks to modify Memory Match:
 
-- Do not edit files under `src/games/memory-match/` or `games/memory-match/`
-- Do not change scoring formula, card grid, tournament UX, or hub-themed styling
+- Do not edit files under `src/games/memory-match/`, `games/memory-match/`, or `assets/memory-match/`
+- Do not edit `scripts/*memory-match*` icon/process scripts
+- Do not change scoring formula, card grid, tournament UX, icons, or game-specific UI
 
 ## Instead
 
-- Copy Memory Match **patterns** into shared modules or other games (e.g. `fruit-slice`)
+- Copy Memory Match **patterns** into shared modules or other games
 - Fix platform/hub/backend issues without touching Memory Match game code
 - If a shared change affects Memory Match, **tell the user** which shared file changed and why

@@ -7,13 +7,25 @@ alwaysApply: true
 
 These games are **frozen** production releases. See `STABLE.md` for details.
 
+## Priority stable titles (user-authorized changes only)
+
+| Game | ID | Stable tag |
+|------|-----|------------|
+| Fruit Slice | `fruit-slice` | v1 |
+| Helix Jump | `helix-jump` | v1 |
+| Crossy Road | `crossy-road` | v1 |
+| Memory Match | `memory-match` | v1 |
+
+## Other stable titles
+
 | Game | ID | Stable tag |
 |------|-----|------------|
 | Ethiorunner | `temple-dash` | v3 |
-| Memory Match | `memory-match` | v1 |
 | Ethiopian Quiz | `ethiopian-quiz` | v1 |
 | Spell Trivia | `spell` | v1 |
 | 2048 | `merge-2048` | v1 |
+
+(Full list in `STABLE.md`.)
 
 ## Rules
 

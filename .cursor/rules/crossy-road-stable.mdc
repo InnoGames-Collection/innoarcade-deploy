@@ -1,0 +1,22 @@
+---
+description: Crossy Road is stable v1 — do not modify without explicit user request
+globs: src/games/crossy-road/**,games/crossy-road/**
+alwaysApply: false
+---
+
+# Crossy Road — stable v1
+
+`crossy-road` is tagged `stable: 'v1'` in `src/platform/catalog.ts`. See `STABLE.md`.
+
+## Do not change
+
+Unless the user **explicitly** asks to modify Crossy Road:
+
+- Do not edit files under `src/games/crossy-road/` or `games/crossy-road/`
+- Do not change movement, collision, scoring, renderer modes, or game-specific UI
+
+## Instead
+
+- Copy Crossy Road **patterns** into shared modules or other games
+- Fix platform/hub/backend issues without touching Crossy Road game code
+- If a shared change affects Crossy Road, **tell the user** which shared file changed and why

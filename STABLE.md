@@ -14,6 +14,8 @@ All titles below are locked at their listed tag. **Do not edit game-specific fol
 | Candy Saga | `candy-crunch` | v1 | Free (hidden) |
 | Brick Blitz | `brick-blitz` | v1 | Free |
 | Fruit Slice | `fruit-slice` | v1 | Tournament (weekly) |
+| Crossy Road | `crossy-road` | v1 | Free |
+| Helix Jump | `helix-jump` | v1 | Free |
 | Sky Hopper | `sky-hopper` | v1 | Free |
 | Bubble Pop | `bubble-pop` | v1 | Free |
 | Memory Match | `memory-match` | v1 | Tournament (monthly) |
@@ -54,6 +56,45 @@ All titles below are locked at their listed tag. **Do not edit game-specific fol
 
 ---
 
+## Fruit Slice (`fruit-slice`) — stable v1
+
+**Status:** Locked. Do not modify unless explicitly requested.
+
+**Scope (frozen):**
+
+- `src/games/fruit-slice/**`
+- `games/fruit-slice/**`
+
+**Includes:** Slice physics, bomb avoidance, score/combo, tournament weekly flow, canvas rendering (fruits, bombs, particles, lighting).
+
+---
+
+## Crossy Road (`crossy-road`) — stable v1
+
+**Status:** Locked. Do not modify unless explicitly requested.
+
+**Scope (frozen):**
+
+- `src/games/crossy-road/**`
+- `games/crossy-road/**`
+
+**Includes:** Isometric runner, lane crossing, collision, distance scoring, premium/legacy renderer modes, audio.
+
+---
+
+## Helix Jump (`helix-jump`) — stable v1
+
+**Status:** Locked. Do not modify unless explicitly requested.
+
+**Scope (frozen):**
+
+- `src/games/helix-jump/**`
+- `games/helix-jump/**`
+
+**Includes:** Tower generation, ball physics, rotation controls, depth scoring, skins, effects, audio.
+
+---
+
 ## Memory Match (`memory-match`) — stable v1
 
 **Status:** Locked. Do not modify unless explicitly requested.
@@ -62,10 +103,12 @@ All titles below are locked at their listed tag. **Do not edit game-specific fol
 
 - `src/games/memory-match/**`
 - `games/memory-match/**`
+- `assets/memory-match/**`
+- `scripts/*memory-match*`
 
-**Includes:** Hub-themed playfield (green cards, blue stats), light tournament menu shell, entry/attempt flow, timed scoring formula, game-over leaderboard, play-again card blink, compact mobile layout, close-button clearance.
+**Includes:** Hub-themed playfield (blue card backs, green stage backdrop), tournament menu shell, entry/attempt flow, timed scoring formula, game-over overlay (time, rank, best, attempts, rewards, leaderboard), play-again/home actions, compact mobile layout, premium card icons, SFX/VFX hooks.
 
-**v1 changelog:** Tournament UX aligned with EthioRunner patterns; hub visual theme; bottom whitespace trimmed.
+**v1 changelog:** Tournament UX aligned with EthioRunner patterns; hub visual theme; game-over overlay restored; attempts sync with tournament panel.
 
 ---
 
@@ -116,7 +159,7 @@ All titles below are locked at their listed tag. **Do not edit game-specific fol
 
 ## All other stable v1 games
 
-The remaining titles in the table above (`orbit-blast`, `candy-crunch`, `brick-blitz`, `fruit-slice`, `sky-hopper`, `bubble-pop`, `tap-game`, `lucky-box`, `spin-wheel`, `luckyslot`, `popblast`, `sudoku`, `vocab`, `rhyme`, `target24`, `crosssum`, `logic`, `sequence`) are locked at **v1** as of the Phase 1 expansion. Each game's scope is its `src/games/<id>/**` and `games/<id>/**` folders.
+The remaining titles in the table above (`orbit-blast`, `candy-crunch`, `brick-blitz`, `sky-hopper`, `bubble-pop`, `tap-game`, `lucky-box`, `spin-wheel`, `luckyslot`, `popblast`, `sudoku`, `vocab`, `rhyme`, `target24`, `crosssum`, `logic`, `sequence`) are locked at **v1** as of the Phase 1 expansion. Each game's scope is its `src/games/<id>/**` and `games/<id>/**` folders.
 
 ---
 

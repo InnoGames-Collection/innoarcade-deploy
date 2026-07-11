@@ -1,0 +1,22 @@
+---
+description: Helix Jump is stable v1 — do not modify without explicit user request
+globs: src/games/helix-jump/**,games/helix-jump/**
+alwaysApply: false
+---
+
+# Helix Jump — stable v1
+
+`helix-jump` is tagged `stable: 'v1'` in `src/platform/catalog.ts`. See `STABLE.md`.
+
+## Do not change
+
+Unless the user **explicitly** asks to modify Helix Jump:
+
+- Do not edit files under `src/games/helix-jump/` or `games/helix-jump/`
+- Do not change tower generation, physics, scoring, skins, or game-specific UI
+
+## Instead
+
+- Copy Helix Jump **patterns** into shared modules or other games
+- Fix platform/hub/backend issues without touching Helix Jump game code
+- If a shared change affects Helix Jump, **tell the user** which shared file changed and why

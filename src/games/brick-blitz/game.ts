@@ -1,8 +1,10 @@
 // Brick Blitz — enterprise-grade breakout with paddle physics, ball dynamics,
 // power-ups, and progressive brick patterns. Classic arcade with modern polish.
 
-import { sfx } from '../../engine/audio';
 import { getHighScore, setHighScore } from '../../engine/storage';
+import { Particles } from '../../engine/particles';
+import { ScreenFx } from '../../engine/fx';
+import { bbSfx } from './bbAudio';
 import type { Action } from '../../engine/input';
 
 export const W = 480;
@@ -14,6 +16,7 @@ const PADDLE_Y = H - 32;
 const PADDLE_SPEED = 400;
 
 const BALL_RADIUS = 5;
+const BALL_VISUAL_RADIUS = BALL_RADIUS * 1.3;
 const BALL_SPEED = 280;
 const MAX_BALL_SPEED = 420;
 
@@ -23,12 +26,24 @@ const BRICK_ROWS = 4;
 const BRICKS_PER_ROW = 8;
 const BRICK_GAP = 2;
 
+const BRICK_PALETTE = [
+  { top: '#ff6b8a', mid: '#ff3d6a', bot: '#c41e52', glow: '#ff8fab', shine: '#ffc4d4' },
+  { top: '#ffb84d', mid: '#ff9500', bot: '#cc7700', glow: '#ffd080', shine: '#ffe8b0' },
+  { top: '#4dc8ff', mid: '#00a8e8', bot: '#0077b6', glow: '#80d8ff', shine: '#b8ecff' },
+  { top: '#5ee89a', mid: '#00c853', bot: '#009624', glow: '#88f0b8', shine: '#c0f8d8' },
+  { top: '#b388ff', mid: '#7c4dff', bot: '#5e35b1', glow: '#d0b0ff', shine: '#e8d4ff' },
+  { top: '#ff80ab', mid: '#f50057', bot: '#c51162', glow: '#ffb0cc', shine: '#ffd6e8' },
+];
+
+const COMBO_WINDOW = 0.85;
+
 interface Brick {
   x: number;
   y: number;
   hp: number;
   color: number;
   breaking: boolean;
+  breakAnim: number;
 }
 
 interface PowerUp {
@@ -37,6 +52,8 @@ interface PowerUp {
   type: 'paddle' | 'slow' | 'multi';
   vx: number;
   vy: number;
+  rot: number;
+  pulse: number;
 }
 
 interface Ball {
@@ -45,17 +62,28 @@ interface Ball {
   vx: number;
   vy: number;
   attached: boolean;
+  trail: Array<{ x: number; y: number; life: number }>;
+  impactFlash: number;
 }
 
-interface Particle {
+interface ScorePopup {
+  x: number;
+  y: number;
+  text: string;
+  life: number;
+  maxLife: number;
+  color: string;
+  scale: number;
+}
+
+interface BgParticle {
   x: number;
   y: number;
   vx: number;
   vy: number;
-  life: number;
-  maxLife: number;
   size: number;
-  color: string;
+  alpha: number;
+  phase: number;
 }
 
 export type GameState = 'menu' | 'playing' | 'paused' | 'levelClear' | 'gameOver';
@@ -64,14 +92,23 @@ export class BrickBlitz {
   state: GameState = 'menu';
   score = 0;
   best = getHighScore('brick-blitz');
+  combo = 0;
+  highestCombo = 0;
+  bricksDestroyed = 0;
+  paddleHits = 0;
+  brickHits = 0;
 
   get displayLevel(): number { return this.levelNumber; }
   get displayLives(): number { return this.lives; }
+  get displayCombo(): number { return this.combo; }
+  get accuracy(): number {
+    const total = this.paddleHits + this.brickHits;
+    return total > 0 ? Math.round((this.brickHits / total) * 100) : 100;
+  }
 
   onStateChange: (s: GameState) => void = () => {};
   onGameOver: (score: number, levelReached: number, record: boolean) => void = () => {};
 
-  /** Move paddle to canvas x (centered). */
   setPaddleX(canvasX: number): void {
     this.paddleX = Math.max(4, Math.min(W - 4 - this.paddleW, canvasX - this.paddleW / 2));
   }
@@ -82,7 +119,7 @@ export class BrickBlitz {
     ball.attached = false;
     ball.vx = -120 + Math.random() * 240;
     ball.vy = -BALL_SPEED;
-    sfx.jump();
+    bbSfx.launch();
   }
 
   releasePaddle(): void {
@@ -93,11 +130,18 @@ export class BrickBlitz {
   private levelNumber = 1;
   private paddleX = W / 2 - PADDLE_W / 2;
   private paddleDir = 0;
+  private paddleSquash = 0;
   private balls: Ball[] = [];
   private bricks: Brick[] = [];
   private powerUps: PowerUp[] = [];
-  private particles: Particle[] = [];
-  private screenShake = 0;
+  private scorePopups: ScorePopup[] = [];
+  private bgParticles: BgParticle[] = [];
+  private particles = new Particles(500);
+  private fx = new ScreenFx();
+  private comboTimer = 0;
+  private comboFlash = 0;
+  private comboBanner = '';
+  private comboBannerT = 0;
   private paddleW = PADDLE_W;
   private lives = 3;
 
@@ -106,19 +150,34 @@ export class BrickBlitz {
     this.score = 0;
     this.time = 0;
     this.lives = 3;
+    this.combo = 0;
+    this.highestCombo = 0;
+    this.bricksDestroyed = 0;
+    this.paddleHits = 0;
+    this.brickHits = 0;
+    this.comboTimer = 0;
+    this.comboFlash = 0;
+    this.comboBanner = '';
+    this.comboBannerT = 0;
     this.paddleX = W / 2 - PADDLE_W / 2;
     this.paddleW = PADDLE_W;
-    this.balls = [{ x: W / 2, y: PADDLE_Y - 20, vx: 0, vy: 0, attached: true }];
+    this.paddleSquash = 0;
+    this.balls = [{ x: W / 2, y: PADDLE_Y - 20, vx: 0, vy: 0, attached: true, trail: [], impactFlash: 0 }];
     this.bricks = [];
     this.powerUps = [];
-    this.particles = [];
-    this.screenShake = 0;
+    this.scorePopups = [];
+    this.particles.clear();
+    this.fx.reset();
+    this.initBgParticles();
     this.generateLevel();
     this.setState('playing');
   }
 
   pause(): void {
-    if (this.state === 'playing') this.setState('paused');
+    if (this.state === 'playing') {
+      bbSfx.pause();
+      this.setState('paused');
+    }
   }
 
   resume(): void {
@@ -132,7 +191,7 @@ export class BrickBlitz {
       this.balls[0].attached = false;
       this.balls[0].vx = -150 + Math.random() * 300;
       this.balls[0].vy = -BALL_SPEED;
-      sfx.jump();
+      bbSfx.launch();
     } else if (a === 'pause') {
       if (this.state === 'playing') this.pause();
       else if (this.state === 'paused') this.resume();
@@ -143,39 +202,72 @@ export class BrickBlitz {
     this.time += dt;
     if (this.state !== 'playing') return;
 
-    this.screenShake = Math.max(0, this.screenShake - dt * 8);
+    this.fx.update(dt);
+    this.particles.update(dt);
+    this.paddleSquash = Math.max(0, this.paddleSquash - dt * 6);
+    this.comboFlash = Math.max(0, this.comboFlash - dt * 2.5);
+    this.comboBannerT = Math.max(0, this.comboBannerT - dt);
+
+    this.comboTimer = Math.max(0, this.comboTimer - dt);
+    if (this.comboTimer <= 0 && this.combo > 0) this.combo = 0;
+
+    for (const p of this.bgParticles) {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.phase += dt * 0.8;
+      if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W; }
+      if (p.x < -10) p.x = W + 10;
+      if (p.x > W + 10) p.x = -10;
+    }
+
+    for (let i = this.scorePopups.length - 1; i >= 0; i--) {
+      const sp = this.scorePopups[i];
+      sp.life -= dt;
+      sp.y -= 55 * dt;
+      if (sp.life <= 0) this.scorePopups.splice(i, 1);
+    }
+
+    for (const brick of this.bricks) {
+      if (brick.breaking) brick.breakAnim -= dt;
+    }
+    this.bricks = this.bricks.filter((b) => !b.breaking || b.breakAnim > 0);
 
     this.paddleX += this.paddleDir * PADDLE_SPEED * dt;
     this.paddleX = Math.max(4, Math.min(W - 4 - this.paddleW, this.paddleX));
 
     for (const ball of this.balls) {
+      if (ball.impactFlash > 0) ball.impactFlash -= dt * 4;
+
       if (ball.attached) {
         ball.x = this.paddleX + this.paddleW / 2;
         ball.y = PADDLE_Y - 20;
+        ball.trail = [];
         continue;
       }
 
       ball.x += ball.vx * dt;
       ball.y += ball.vy * dt;
 
-      // Walls
+      ball.trail.push({ x: ball.x, y: ball.y, life: 0.18 });
+      if (ball.trail.length > 12) ball.trail.shift();
+      for (const t of ball.trail) t.life -= dt;
+
       if (ball.x - BALL_RADIUS < 0) {
         ball.x = BALL_RADIUS;
         ball.vx = Math.abs(ball.vx);
-        sfx.click();
+        bbSfx.wallBounce();
       }
       if (ball.x + BALL_RADIUS > W) {
         ball.x = W - BALL_RADIUS;
         ball.vx = -Math.abs(ball.vx);
-        sfx.click();
+        bbSfx.wallBounce();
       }
       if (ball.y - BALL_RADIUS < 0) {
         ball.y = BALL_RADIUS;
         ball.vy = Math.abs(ball.vy);
-        sfx.click();
+        bbSfx.wallBounce();
       }
 
-      // Paddle
       if (
         ball.vy > 0 &&
         ball.y + BALL_RADIUS > PADDLE_Y &&
@@ -187,56 +279,97 @@ export class BrickBlitz {
         const hitPos = (ball.x - this.paddleX) / this.paddleW - 0.5;
         ball.vx = hitPos * 400;
         ball.vy = -Math.sqrt(BALL_SPEED * BALL_SPEED - ball.vx * ball.vx);
-        sfx.jump();
-        this.screenShake = 0.15;
+        bbSfx.paddleHit();
+        this.paddleSquash = 1;
+        this.paddleHits++;
+        this.fx.shake(3, 0.12);
+        this.particles.burst(ball.x, ball.y, 6, ['#80d8ff', '#ffffff', '#4fc3f7'], { speed: 90, life: 0.25, size: 2.5, glow: true });
       }
 
-      // Lost
       if (ball.y > H) {
         this.balls = this.balls.filter((b) => b !== ball);
         if (this.balls.length === 0) {
           this.lives--;
           if (this.lives <= 0) {
-            sfx.crash();
+            bbSfx.gameOver();
             this.setState('gameOver');
             setHighScore('brick-blitz', this.score);
             this.onGameOver(this.score, this.levelNumber, false);
             return;
           }
-          this.balls = [{ x: W / 2, y: PADDLE_Y - 20, vx: 0, vy: 0, attached: true }];
+          bbSfx.lifeLost();
+          this.balls = [{ x: W / 2, y: PADDLE_Y - 20, vx: 0, vy: 0, attached: true, trail: [], impactFlash: 0 }];
         }
         continue;
       }
 
-      // Bricks
       for (const brick of this.bricks) {
         if (brick.breaking) continue;
         const dx = ball.x - Math.max(brick.x, Math.min(ball.x, brick.x + BRICK_W));
         const dy = ball.y - Math.max(brick.y, Math.min(ball.y, brick.y + BRICK_H));
         if (dx * dx + dy * dy < BALL_RADIUS * BALL_RADIUS) {
           brick.hp--;
+          ball.impactFlash = 1;
+          this.brickHits++;
+
           if (brick.hp <= 0) {
             brick.breaking = true;
-            for (let i = 0; i < 6; i++) this.spawnParticle(brick.x + BRICK_W / 2, brick.y + BRICK_H / 2, brick.color);
-            sfx.coin();
+            brick.breakAnim = 0.4;
+            const cx = brick.x + BRICK_W / 2;
+            const cy = brick.y + BRICK_H / 2;
+            const pal = BRICK_PALETTE[brick.color % BRICK_PALETTE.length];
+
+            this.combo++;
+            this.comboTimer = COMBO_WINDOW;
+            if (this.combo > this.highestCombo) this.highestCombo = this.combo;
+            this.bricksDestroyed++;
+
+            if (this.combo >= 2) {
+              this.comboFlash = 0.6;
+              this.comboBanner = `Combo ×${this.combo}`;
+              this.comboBannerT = 1.2;
+              if (this.combo >= 10) {
+                this.fx.flash('#ffd700', 0.35);
+                this.fx.shake(6, 0.2);
+                bbSfx.comboHit(10);
+              } else if (this.combo >= 5) {
+                this.fx.flash('#ff9500', 0.25);
+                this.fx.shake(4, 0.15);
+                bbSfx.comboHit(5);
+              } else {
+                this.fx.flash('#ffffff', 0.12);
+                bbSfx.comboHit(this.combo);
+              }
+              this.particles.burst(cx, cy, 12 + this.combo * 2, [pal.glow, '#ffffff', pal.top], { speed: 160, life: 0.5, size: 4, glow: true });
+            }
+
+            this.particles.burst(cx, cy, 14, [pal.top, pal.mid, pal.bot, '#ffffff'], { speed: 200, life: 0.55, size: 5, gravity: 320 });
+            this.particles.burst(cx, cy, 8, [pal.glow, '#ffffff'], { speed: 120, life: 0.35, size: 3, glow: true });
+
+            bbSfx.brickBreak(this.combo);
             this.score += 10;
+
+            let label = '+10';
+            let popColor = '#ffffff';
+            if (this.combo >= 10) { label = 'Excellent!'; popColor = '#ffd700'; }
+            else if (this.combo >= 5) { label = `Combo ×${this.combo}`; popColor = '#ff9500'; }
+            else if (this.combo >= 3) { label = `Combo ×${this.combo}`; popColor = '#ffb84d'; }
+            else if (this.combo >= 2) { label = '+20'; popColor = '#80d8ff'; }
+            this.spawnScorePopup(cx, cy, label, popColor);
+
             if (Math.random() < 0.15) {
               this.powerUps.push({
-                x: brick.x + BRICK_W / 2,
-                y: brick.y + BRICK_H / 2,
+                x: cx, y: cy,
                 type: ['paddle', 'slow', 'multi'][Math.floor(Math.random() * 3)] as 'paddle' | 'slow' | 'multi',
-                vx: 0,
-                vy: 100,
+                vx: 0, vy: 100, rot: Math.random() * Math.PI * 2, pulse: Math.random() * Math.PI * 2,
               });
             }
           }
 
-          // Bounce
           const overlapLeft = ball.x + BALL_RADIUS - brick.x;
           const overlapRight = brick.x + BRICK_W - (ball.x - BALL_RADIUS);
           const overlapTop = ball.y + BALL_RADIUS - brick.y;
           const overlapBottom = brick.y + BRICK_H - (ball.y - BALL_RADIUS);
-
           const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
 
           if (minOverlap === overlapLeft || minOverlap === overlapRight) {
@@ -244,7 +377,7 @@ export class BrickBlitz {
           } else {
             ball.vy *= -1;
           }
-          this.screenShake = 0.2;
+          this.fx.shake(2.5, 0.1);
           break;
         }
       }
@@ -259,6 +392,8 @@ export class BrickBlitz {
     for (let i = this.powerUps.length - 1; i >= 0; i--) {
       const p = this.powerUps[i];
       p.y += p.vy * dt;
+      p.rot += dt * 1.8;
+      p.pulse += dt * 4;
 
       if (p.y > H) {
         this.powerUps.splice(i, 1);
@@ -277,38 +412,32 @@ export class BrickBlitz {
         } else if (p.type === 'multi') {
           if (this.balls.length < 3) {
             const b = this.balls[0];
-            this.balls.push({ x: b.x - 20, y: b.y, vx: b.vx - 80, vy: b.vy, attached: false });
-            this.balls.push({ x: b.x + 20, y: b.y, vx: b.vx + 80, vy: b.vy, attached: false });
+            this.balls.push({ x: b.x - 20, y: b.y, vx: b.vx - 80, vy: b.vy, attached: false, trail: [], impactFlash: 0 });
+            this.balls.push({ x: b.x + 20, y: b.y, vx: b.vx + 80, vy: b.vy, attached: false, trail: [], impactFlash: 0 });
           }
         }
-        sfx.coin();
-        this.screenShake = 0.25;
+        bbSfx.powerUp();
+        this.fx.shake(4, 0.15);
+        this.fx.flash('#80d8ff', 0.15);
+        this.particles.burst(p.x, p.y, 16, ['#4fc3f7', '#ffffff', '#00c853'], { speed: 140, life: 0.45, size: 4, glow: true });
       }
     }
 
-    for (let i = this.particles.length - 1; i >= 0; i--) {
-      const p = this.particles[i];
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      p.vy += 280 * dt;
-      p.life -= dt;
-      if (p.life <= 0) this.particles.splice(i, 1);
-    }
-
-    this.bricks = this.bricks.filter((b) => !b.breaking);
-    if (this.bricks.length === 0) {
-      sfx.coin();
+    if (this.bricks.filter((b) => !b.breaking).length === 0) {
+      bbSfx.levelClear();
       this.levelNumber++;
       this.score += 100 * this.levelNumber;
       this.setState('levelClear');
       this.onGameOver(this.score, this.levelNumber, setHighScore('brick-blitz', this.score));
+      this.particles.burst(W / 2, H / 3, 40, ['#ffd700', '#ffffff', '#4fc3f7', '#00c853'], { speed: 220, life: 0.8, size: 5, glow: true });
+      this.fx.flash('#ffffff', 0.3);
       setTimeout(() => {
         if (this.levelNumber > 5) {
           this.setState('gameOver');
         } else {
           this.generateLevel();
           this.setState('playing');
-          this.balls = [{ x: W / 2, y: PADDLE_Y - 20, vx: 0, vy: 0, attached: true }];
+          this.balls = [{ x: W / 2, y: PADDLE_Y - 20, vx: 0, vy: 0, attached: true, trail: [], impactFlash: 0 }];
         }
       }, 800);
     }
@@ -316,7 +445,7 @@ export class BrickBlitz {
 
   private generateLevel(): void {
     this.bricks = [];
-    const colors = [0, 1, 2, 3];
+    const colors = [0, 1, 2, 3, 4, 5];
     const startY = 40;
 
     for (let r = 0; r < BRICK_ROWS; r++) {
@@ -324,30 +453,33 @@ export class BrickBlitz {
         const x = 8 + c * (BRICK_W + BRICK_GAP);
         const y = startY + r * (BRICK_H + BRICK_GAP);
         this.bricks.push({
-          x,
-          y,
+          x, y,
           hp: 1 + (this.levelNumber > 2 ? 1 : 0) + (this.levelNumber > 4 ? 1 : 0),
-          color: colors[r % colors.length],
+          color: colors[(r + c) % colors.length],
           breaking: false,
+          breakAnim: 0,
         });
       }
     }
   }
 
-  private spawnParticle(x: number, y: number, color: number): void {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = 100 + Math.random() * 120;
-    const colors = ['#ff6b6b', '#ffa502', '#00d4ff', '#00ff88'];
-    this.particles.push({
-      x,
-      y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 80,
-      life: 0.5 + Math.random() * 0.25,
-      maxLife: 0.5 + Math.random() * 0.25,
-      size: 3 + Math.random() * 3,
-      color: colors[color],
-    });
+  private spawnScorePopup(x: number, y: number, text: string, color: string): void {
+    this.scorePopups.push({ x, y, text, life: 0.9, maxLife: 0.9, color, scale: 1 });
+  }
+
+  private initBgParticles(): void {
+    this.bgParticles = [];
+    for (let i = 0; i < 24; i++) {
+      this.bgParticles.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 12,
+        vy: -8 - Math.random() * 18,
+        size: 1.5 + Math.random() * 2.5,
+        alpha: 0.08 + Math.random() * 0.12,
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
   }
 
   private setState(s: GameState): void {
@@ -356,107 +488,345 @@ export class BrickBlitz {
   }
 
   render(ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = '#eef6e3';
-    ctx.fillRect(0, 0, W, H);
+    this.drawBackground(ctx);
 
-    const glow = ctx.createRadialGradient(W / 2, 120, 20, W / 2, 120, 280);
-    glow.addColorStop(0, 'rgba(79, 158, 22, 0.12)');
-    glow.addColorStop(1, 'rgba(79, 158, 22, 0)');
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, W, H);
-
+    this.fx.preRender(ctx);
     this.drawBricks(ctx);
     this.drawPowerUps(ctx);
     this.drawPaddle(ctx);
     this.drawBalls(ctx);
-    this.drawParticles(ctx);
+    this.particles.render(ctx);
+    this.drawScorePopups(ctx);
+    this.drawComboBanner(ctx);
+    this.fx.postRender(ctx, W, H);
 
     if (this.balls.some((b) => b.attached) && this.state === 'playing') {
-      ctx.fillStyle = 'rgba(61, 128, 16, 0.85)';
-      ctx.font = '600 14px system-ui';
+      const pulse = 0.7 + Math.sin(this.time * 4) * 0.3;
+      ctx.save();
+      ctx.globalAlpha = pulse;
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.font = '600 15px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('Tap to launch', W / 2, PADDLE_Y - 36);
+      ctx.shadowColor = 'rgba(79,158,22,0.6)';
+      ctx.shadowBlur = 8;
+      ctx.fillText('Tap to launch', W / 2, PADDLE_Y - 40);
+      ctx.restore();
     }
+  }
 
-    if (this.screenShake > 0) {
-      ctx.fillStyle = `rgba(255, 100, 100, ${this.screenShake * 0.1})`;
-      ctx.fillRect(0, 0, W, H);
+  private drawBackground(ctx: CanvasRenderingContext2D): void {
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#0a1628');
+    bg.addColorStop(0.4, '#122240');
+    bg.addColorStop(0.7, '#1a3060');
+    bg.addColorStop(1, '#0d1f3c');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.save();
+    ctx.globalAlpha = 0.04;
+    const hexSize = 28;
+    for (let row = -1; row < H / hexSize + 2; row++) {
+      for (let col = -1; col < W / hexSize + 2; col++) {
+        const ox = col * hexSize * 1.75 + (row % 2) * hexSize * 0.875;
+        const oy = row * hexSize * 1.5;
+        ctx.strokeStyle = '#4fc3f7';
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const a = (Math.PI / 3) * i - Math.PI / 6;
+          const px = ox + Math.cos(a) * hexSize * 0.5;
+          const py = oy + Math.sin(a) * hexSize * 0.5;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+
+    const ray = ctx.createRadialGradient(W * 0.5, 0, 0, W * 0.5, 0, H * 0.7);
+    ray.addColorStop(0, 'rgba(79,158,22,0.12)');
+    ray.addColorStop(0.5, 'rgba(31,116,224,0.06)');
+    ray.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = ray;
+    ctx.fillRect(0, 0, W, H);
+
+    const ray2 = ctx.createRadialGradient(W * 0.8, H * 0.3, 0, W * 0.8, H * 0.3, 200);
+    ray2.addColorStop(0, 'rgba(124,77,255,0.08)');
+    ray2.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = ray2;
+    ctx.fillRect(0, 0, W, H);
+
+    for (const p of this.bgParticles) {
+      const a = p.alpha * (0.6 + Math.sin(p.phase) * 0.4);
+      ctx.fillStyle = `rgba(180,220,255,${a})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
   private drawBricks(ctx: CanvasRenderingContext2D): void {
-    const palette = [
-      { top: '#ff6b6b', mid: '#e03535', bot: '#b82020' },
-      { top: '#ffb347', mid: '#f59e0b', bot: '#d97706' },
-      { top: '#38bdf8', mid: '#0ea5e9', bot: '#0284c7' },
-      { top: '#4ade80', mid: '#22c55e', bot: '#16a34a' },
-    ];
     for (const brick of this.bricks) {
-      const p = palette[brick.color % palette.length];
-      const g = ctx.createLinearGradient(brick.x, brick.y, brick.x, brick.y + BRICK_H);
-      g.addColorStop(0, p.top);
-      g.addColorStop(0.5, p.mid);
-      g.addColorStop(1, p.bot);
+      const pal = BRICK_PALETTE[brick.color % BRICK_PALETTE.length];
+      const breakT = brick.breaking ? 1 - brick.breakAnim / 0.4 : 0;
+      const scale = brick.breaking ? 1 + breakT * 0.3 : 1;
+      const alpha = brick.breaking ? 1 - breakT : 1;
+      const cx = brick.x + BRICK_W / 2;
+      const cy = brick.y + BRICK_H / 2;
+      const w = BRICK_W * scale;
+      const h = BRICK_H * scale;
+      const bx = cx - w / 2;
+      const by = cy - h / 2;
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+
+      ctx.shadowColor = pal.bot;
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetY = 3;
+
+      const g = ctx.createLinearGradient(bx, by, bx, by + h);
+      g.addColorStop(0, pal.top);
+      g.addColorStop(0.45, pal.mid);
+      g.addColorStop(1, pal.bot);
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.roundRect(brick.x, brick.y, BRICK_W, BRICK_H, 4);
+      ctx.roundRect(bx, by, w, h, 5);
       ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.35)';
-      ctx.fillRect(brick.x + 3, brick.y + 2, BRICK_W - 6, 3);
-      if (brick.hp > 1) {
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 10px system-ui';
+
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      const shine = ctx.createLinearGradient(bx, by, bx, by + h * 0.45);
+      shine.addColorStop(0, 'rgba(255,255,255,0.55)');
+      shine.addColorStop(0.5, 'rgba(255,255,255,0.15)');
+      shine.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = shine;
+      ctx.beginPath();
+      ctx.roundRect(bx + 2, by + 1, w - 4, h * 0.42, 4);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.roundRect(bx + 0.5, by + 0.5, w - 1, h - 1, 5);
+      ctx.stroke();
+
+      if (brick.hp > 1 && !brick.breaking) {
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        ctx.font = 'bold 11px system-ui, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(String(brick.hp), brick.x + BRICK_W / 2, brick.y + BRICK_H / 2);
+        ctx.shadowColor = 'rgba(0,0,0,0.4)';
+        ctx.shadowBlur = 3;
+        ctx.fillText(String(brick.hp), cx, cy);
       }
+
+      ctx.restore();
     }
   }
 
   private drawPowerUps(ctx: CanvasRenderingContext2D): void {
+    const configs = {
+      paddle: { colors: ['#4fc3f7', '#1f74e0'], label: 'W', icon: '▬' },
+      slow: { colors: ['#b388ff', '#7c4dff'], label: 'S', icon: '◷' },
+      multi: { colors: ['#ffd54f', '#ff9500'], label: 'M', icon: '●' },
+    };
+
     for (const p of this.powerUps) {
-      const icon = p.type === 'paddle' ? '⬜' : p.type === 'slow' ? '🐢' : '⚡';
-      ctx.font = '16px system-ui';
+      const cfg = configs[p.type];
+      const pulse = 1 + Math.sin(p.pulse) * 0.12;
+      const r = 14 * pulse;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+
+      ctx.shadowColor = cfg.colors[0];
+      ctx.shadowBlur = 16;
+      const g = ctx.createRadialGradient(-r * 0.3, -r * 0.3, 0, 0, 0, r);
+      g.addColorStop(0, cfg.colors[0]);
+      g.addColorStop(0.6, cfg.colors[1]);
+      g.addColorStop(1, cfg.colors[1] + 'cc');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.beginPath();
+      ctx.arc(-r * 0.25, -r * 0.25, r * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold ${Math.round(11 * pulse)}px system-ui`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(icon, p.x, p.y);
+      ctx.fillText(cfg.icon, 0, 1);
+
+      ctx.restore();
     }
   }
 
   private drawPaddle(ctx: CanvasRenderingContext2D): void {
-    const g = ctx.createLinearGradient(this.paddleX, PADDLE_Y, this.paddleX, PADDLE_Y + PADDLE_H);
-    g.addColorStop(0, '#6ec8ff');
-    g.addColorStop(1, '#1f74e0');
+    const squashY = this.paddleSquash * 3;
+    const squashW = this.paddleSquash * 4;
+    const px = this.paddleX - squashW / 2;
+    const py = PADDLE_Y + squashY;
+    const pw = this.paddleW + squashW;
+    const ph = PADDLE_H - squashY * 0.6;
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(31,116,224,0.5)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 4;
+
+    const g = ctx.createLinearGradient(px, py, px, py + ph);
+    g.addColorStop(0, '#5ee89a');
+    g.addColorStop(0.35, '#00c853');
+    g.addColorStop(0.7, '#1f74e0');
+    g.addColorStop(1, '#0d47a1');
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.roundRect(this.paddleX, PADDLE_Y, this.paddleW, PADDLE_H, 6);
+    ctx.roundRect(px, py, pw, ph, ph / 2);
     ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.fillRect(this.paddleX + 4, PADDLE_Y + 2, this.paddleW - 8, 3);
+
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    const shine = ctx.createLinearGradient(px, py, px, py + ph * 0.5);
+    shine.addColorStop(0, 'rgba(255,255,255,0.6)');
+    shine.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = shine;
+    ctx.beginPath();
+    ctx.roundRect(px + 3, py + 2, pw - 6, ph * 0.45, ph / 3);
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(px + 0.5, py + 0.5, pw - 1, ph - 1, ph / 2);
+    ctx.stroke();
+
+    const glow = ctx.createRadialGradient(px + pw / 2, py + ph, 0, px + pw / 2, py + ph, pw * 0.6);
+    glow.addColorStop(0, 'rgba(0,200,83,0.25)');
+    glow.addColorStop(1, 'rgba(0,200,83,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(px - pw * 0.1, py, pw * 1.2, ph + 8);
+
+    ctx.restore();
   }
 
   private drawBalls(ctx: CanvasRenderingContext2D): void {
     for (const ball of this.balls) {
-      const g = ctx.createRadialGradient(ball.x - 2, ball.y - 2, 0, ball.x, ball.y, BALL_RADIUS + 2);
-      g.addColorStop(0, '#fff');
-      g.addColorStop(0.4, '#4f9e16');
-      g.addColorStop(1, '#3d8010');
+      for (const t of ball.trail) {
+        if (t.life <= 0) continue;
+        const a = (t.life / 0.18) * 0.35;
+        ctx.fillStyle = `rgba(94,232,154,${a})`;
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, BALL_VISUAL_RADIUS * 0.7 * (t.life / 0.18), 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.35)';
+      ctx.shadowBlur = 6;
+      ctx.shadowOffsetY = 3;
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      ctx.beginPath();
+      ctx.ellipse(ball.x, ball.y + BALL_VISUAL_RADIUS + 2, BALL_VISUAL_RADIUS * 0.8, BALL_VISUAL_RADIUS * 0.25, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      const glowR = BALL_VISUAL_RADIUS + 6;
+      const outerGlow = ctx.createRadialGradient(ball.x, ball.y, BALL_VISUAL_RADIUS * 0.5, ball.x, ball.y, glowR);
+      outerGlow.addColorStop(0, 'rgba(94,232,154,0.35)');
+      outerGlow.addColorStop(1, 'rgba(94,232,154,0)');
+      ctx.fillStyle = outerGlow;
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, glowR, 0, Math.PI * 2);
+      ctx.fill();
+
+      const g = ctx.createRadialGradient(
+        ball.x - BALL_VISUAL_RADIUS * 0.35, ball.y - BALL_VISUAL_RADIUS * 0.35, 0,
+        ball.x, ball.y, BALL_VISUAL_RADIUS,
+      );
+      g.addColorStop(0, '#ffffff');
+      g.addColorStop(0.25, '#b8f0d0');
+      g.addColorStop(0.55, '#5ee89a');
+      g.addColorStop(0.85, '#00c853');
+      g.addColorStop(1, '#007a33');
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(ball.x, ball.y, BALL_RADIUS + 1, 0, Math.PI * 2);
+      ctx.arc(ball.x, ball.y, BALL_VISUAL_RADIUS, 0, Math.PI * 2);
       ctx.fill();
+
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
+      ctx.beginPath();
+      ctx.ellipse(ball.x - BALL_VISUAL_RADIUS * 0.28, ball.y - BALL_VISUAL_RADIUS * 0.32, BALL_VISUAL_RADIUS * 0.22, BALL_VISUAL_RADIUS * 0.14, -0.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (ball.impactFlash > 0) {
+        ctx.globalAlpha = ball.impactFlash * 0.6;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, BALL_VISUAL_RADIUS + 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
     }
   }
 
-  private drawParticles(ctx: CanvasRenderingContext2D): void {
-    for (const p of this.particles) {
-      const progress = 1 - p.life / p.maxLife;
-      ctx.fillStyle = p.color;
-      ctx.globalAlpha = 1 - progress * progress;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * (1 - progress), 0, Math.PI * 2);
-      ctx.fill();
+  private drawScorePopups(ctx: CanvasRenderingContext2D): void {
+    for (const sp of this.scorePopups) {
+      const t = 1 - sp.life / sp.maxLife;
+      const alpha = t < 0.7 ? 1 : 1 - (t - 0.7) / 0.3;
+      const scale = 1 + Math.sin(t * Math.PI) * 0.2;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(sp.x, sp.y);
+      ctx.scale(scale, scale);
+      ctx.font = 'bold 16px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowBlur = 4;
+      ctx.fillStyle = sp.color;
+      ctx.fillText(sp.text, 0, 0);
+      ctx.restore();
     }
-    ctx.globalAlpha = 1;
+  }
+
+  private drawComboBanner(ctx: CanvasRenderingContext2D): void {
+    if (this.comboBannerT <= 0 || this.combo < 2) return;
+    const a = Math.min(1, this.comboBannerT * 2);
+    const pulse = 1 + Math.sin(this.time * 12) * 0.06;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.translate(W / 2, H * 0.28);
+    ctx.scale(pulse, pulse);
+
+    const fontSize = this.combo >= 10 ? 32 : this.combo >= 5 ? 26 : 22;
+    ctx.font = `800 ${fontSize}px system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    ctx.shadowColor = this.combo >= 10 ? '#ffd700' : this.combo >= 5 ? '#ff9500' : '#4fc3f7';
+    ctx.shadowBlur = 20;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(this.comboBanner, 0, 0);
+
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = this.combo >= 10 ? '#ffd700' : '#4fc3f7';
+    ctx.lineWidth = 1.5;
+    ctx.strokeText(this.comboBanner, 0, 0);
+    ctx.restore();
   }
 }

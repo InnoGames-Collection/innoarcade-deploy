@@ -1,7 +1,105 @@
-/* Brick Blitz — hub arcade layout */
+/* Brick Blitz — premium Ethio Telecom arcade polish */
 
-body.game-shell[data-game="brick-blitz"] .arc-canvas-wrap {
-  background: #eef6e3;
+/* ── Brand tokens ─────────────────────────────────────────────── */
+body.game-shell[data-game="brick-blitz"] {
+  --bb-green: #00c853;
+  --bb-green-light: #5ee89a;
+  --bb-blue: #1f74e0;
+  --bb-blue-dark: #0d47a1;
+  --bb-purple: #7c4dff;
+  --bb-gold: #ffd54f;
+  --bb-glass: rgba(255, 255, 255, 0.12);
+  --bb-glass-border: rgba(255, 255, 255, 0.22);
+  --bb-shadow: 0 8px 32px rgba(0, 20, 60, 0.35);
+  --game-accent: #5ee89a;
+}
+
+/* ── Stage & backdrop ───────────────────────────────────────── */
+body.game-shell.bb-shell {
+  background: linear-gradient(160deg, #0a1628 0%, #122240 50%, #1a3060 100%);
+}
+
+.bb-stage {
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow:
+    0 16px 48px rgba(0, 20, 60, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.bb-backdrop {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 200, 83, 0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(31, 116, 224, 0.12) 0%, transparent 55%),
+    linear-gradient(180deg, #0a1628 0%, #122240 40%, #1a3060 100%) !important;
+}
+
+.bb-bg-rays {
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(
+    from 200deg at 50% 0%,
+    transparent 0deg,
+    rgba(94, 232, 154, 0.06) 30deg,
+    transparent 60deg,
+    rgba(31, 116, 224, 0.05) 120deg,
+    transparent 150deg
+  );
+  animation: bb-rays 12s linear infinite;
+}
+
+@keyframes bb-rays {
+  to { transform: rotate(360deg); }
+}
+
+.bb-bg-orbs span {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  animation: bb-float 8s ease-in-out infinite;
+}
+
+.bb-bg-orbs span:nth-child(1) {
+  width: 120px; height: 120px;
+  background: rgba(0, 200, 83, 0.15);
+  top: 10%; left: 15%;
+}
+
+.bb-bg-orbs span:nth-child(2) {
+  width: 80px; height: 80px;
+  background: rgba(31, 116, 224, 0.18);
+  top: 60%; right: 10%;
+  animation-delay: -3s;
+}
+
+.bb-bg-orbs span:nth-child(3) {
+  width: 60px; height: 60px;
+  background: rgba(124, 77, 255, 0.12);
+  bottom: 20%; left: 40%;
+  animation-delay: -5s;
+}
+
+@keyframes bb-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-18px) scale(1.08); }
+}
+
+/* ── Play frame ─────────────────────────────────────────────── */
+body.game-shell[data-game="brick-blitz"] .bb-playframe {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1.5px solid var(--bb-glass-border);
+  border-radius: 22px;
+  box-shadow: var(--bb-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+body.game-shell[data-game="brick-blitz"] .bb-canvas-wrap {
+  background: #0a1628;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.4);
 }
 
 body.game-shell[data-game="brick-blitz"] #hud {
@@ -18,9 +116,442 @@ body.game-shell[data-game="brick-blitz"] #game {
   touch-action: none;
 }
 
-.level-score {
-  color: var(--game-accent);
-  font-size: 1.1rem;
+/* ── HUD ─────────────────────────────────────────────────────── */
+.bb-hud {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.bb-hud-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+.bb-hud-card {
+  flex: 1 1 auto;
+  min-width: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 6px 8px 5px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.06) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--bb-glass-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+}
+
+.bb-hud-card.bb-pop {
+  transform: scale(1.08);
+  box-shadow: 0 4px 16px rgba(94, 232, 154, 0.3);
+}
+
+.bb-hud-label {
+  font-size: 0.62rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.bb-hud-value {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  transition: color 0.2s;
+}
+
+.bb-hud-score .bb-hud-value {
+  color: var(--bb-gold);
+  text-shadow: 0 0 12px rgba(255, 213, 79, 0.4);
+}
+
+.bb-lives {
+  color: #ff6b8a;
+}
+
+.bb-hud-combo .bb-hud-value {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.bb-hud-combo.bb-combo-hot .bb-hud-value {
+  color: #ffb84d;
+  text-shadow: 0 0 10px rgba(255, 184, 77, 0.5);
+}
+
+.bb-hud-combo.bb-combo-fire .bb-hud-value {
+  color: #ff9500;
+  text-shadow: 0 0 14px rgba(255, 149, 0, 0.6);
+  animation: bb-combo-pulse 0.5s ease infinite;
+}
+
+.bb-hud-combo.bb-combo-gold .bb-hud-value {
+  color: #ffd700;
+  text-shadow: 0 0 18px rgba(255, 215, 0, 0.7);
+  animation: bb-combo-pulse 0.35s ease infinite;
+}
+
+@keyframes bb-combo-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+
+.bb-hud-best .bb-hud-value {
+  color: var(--bb-green-light);
+  font-size: 0.9rem;
+}
+
+.bb-hud-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.bb-action-btn {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 12px;
+  border: 1px solid var(--bb-glass-border);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.06) 100%);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.bb-action-btn:active {
+  transform: scale(0.92);
+}
+
+/* ── Menu ────────────────────────────────────────────────────── */
+.bb-overlay {
+  background: rgba(5, 12, 30, 0.72) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.bb-menu-panel,
+.bb-panel {
+  position: relative;
+  width: min(100%, 340px);
+  padding: 28px 22px 24px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  border: 1.5px solid var(--bb-glass-border);
+  border-radius: 24px;
+  box-shadow: var(--bb-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  animation: bb-panel-in 0.45s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+@keyframes bb-panel-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.bb-title-block {
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.bb-title-icon {
+  font-size: 3rem;
+  animation: bb-title-bounce 2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 12px rgba(0, 200, 83, 0.4));
+}
+
+@keyframes bb-title-bounce {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-8px) rotate(3deg); }
+}
+
+.bb-title {
+  margin: 6px 0 4px;
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #ffffff 0%, var(--bb-green-light) 50%, var(--bb-blue) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 8px rgba(0, 200, 83, 0.3));
+}
+
+.bb-tagline {
   margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.4;
+}
+
+body.game-shell[data-game="brick-blitz"] .shell-free-menu {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--bb-glass-border);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+body.game-shell[data-game="brick-blitz"] .shell-free-best {
+  color: var(--bb-gold);
+}
+
+.bb-menu-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.bb-menu-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--bb-glass-border);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.bb-chip-icon {
+  font-size: 1rem;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.bb-play-btn {
+  position: relative;
+  width: 100%;
+  padding: 16px 24px;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--bb-green-light) 0%, var(--bb-green) 40%, var(--bb-blue) 100%);
+  box-shadow:
+    0 6px 24px rgba(0, 200, 83, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+}
+
+.bb-play-btn:hover {
+  box-shadow:
+    0 8px 32px rgba(0, 200, 83, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.bb-play-btn:active {
+  transform: scale(0.96);
+}
+
+.bb-play-glow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transform: translateX(-100%);
+  animation: bb-shimmer 2.5s ease-in-out infinite;
+}
+
+@keyframes bb-shimmer {
+  0% { transform: translateX(-100%); }
+  60%, 100% { transform: translateX(100%); }
+}
+
+.bb-play-label {
+  position: relative;
+  z-index: 1;
+}
+
+.bb-btn-sm {
+  padding: 13px 20px;
+  font-size: 1rem;
+}
+
+.bb-secondary-btn {
+  width: 100%;
+  padding: 12px 20px;
+  border-radius: 14px;
+  border: 1px solid var(--bb-glass-border);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.bb-secondary-btn:active {
+  transform: scale(0.97);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.bb-secondary-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.bb-btn-compact {
+  padding: 10px 14px;
+  font-size: 0.82rem;
+}
+
+.bb-close {
+  color: rgba(255, 255, 255, 0.7) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: var(--bb-glass-border) !important;
+}
+
+/* ── Panels ──────────────────────────────────────────────────── */
+.bb-panel-icon {
+  font-size: 2.5rem;
+  filter: drop-shadow(0 4px 12px rgba(94, 232, 154, 0.4));
+}
+
+.bb-icon-win {
+  animation: bb-icon-spin 1s ease-in-out infinite alternate;
+}
+
+@keyframes bb-icon-spin {
+  from { transform: rotate(-8deg) scale(1); }
+  to { transform: rotate(8deg) scale(1.1); }
+}
+
+.bb-panel-title {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-align: center;
+}
+
+.bb-level-score {
+  color: var(--bb-gold);
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 0 0 16px rgba(255, 213, 79, 0.4);
+}
+
+.bb-panel-celebrate {
+  animation: bb-panel-in 0.45s cubic-bezier(0.34, 1.2, 0.64, 1), bb-celebrate 0.6s ease 0.2s;
+}
+
+@keyframes bb-celebrate {
+  0%, 100% { box-shadow: var(--bb-shadow); }
+  50% { box-shadow: var(--bb-shadow), 0 0 40px rgba(255, 213, 79, 0.25); }
+}
+
+/* ── Game over ───────────────────────────────────────────────── */
+.bb-new-best {
+  color: var(--bb-gold);
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin: 0;
+  animation: bb-combo-pulse 0.6s ease infinite;
+}
+
+.bb-final-score-ring {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 32px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(255, 213, 79, 0.12) 0%, rgba(0, 200, 83, 0.08) 100%);
+  border: 1px solid rgba(255, 213, 79, 0.25);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.bb-final-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.bb-final-score {
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: var(--bb-gold);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 20px rgba(255, 213, 79, 0.5);
+  line-height: 1;
+}
+
+.bb-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.bb-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 8px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--bb-glass-border);
+}
+
+.bb-stat-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.bb-stat-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.bb-over-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bb-over-secondary {
+  display: flex;
+  gap: 8px;
+}
+
+.bb-over-secondary .bb-secondary-btn {
+  flex: 1;
+}
+
+body.game-shell[data-game="brick-blitz"] .shell-run-reward {
+  color: var(--bb-green-light);
 }
