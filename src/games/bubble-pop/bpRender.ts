@@ -122,6 +122,21 @@ export function getPlayfieldBounds(
   };
 }
 
+export function getPlayfieldWalls(
+  canvasW: number,
+  topY: number,
+  bottomY: number,
+  bubbleR: number,
+): { left: number; right: number; top: number; bottom: number } {
+  const b = getPlayfieldBounds(canvasW, topY, bottomY);
+  return {
+    left: b.x + bubbleR,
+    right: b.x + b.w - bubbleR,
+    top: b.y + bubbleR,
+    bottom: b.y + b.h - bubbleR,
+  };
+}
+
 export function applyPlayfieldClip(
   ctx: CanvasRenderingContext2D,
   canvasW: number,
@@ -410,8 +425,7 @@ export function drawAimGuide(
   cx: number,
   cy: number,
   angle: number,
-  physicsR: number,
-  w: number,
+  walls: { left: number; right: number; top: number },
   time: number,
 ): void {
   let x = cx;
@@ -426,9 +440,9 @@ export function drawAimGuide(
   for (let i = 0; i < 32; i++) {
     x += vx * 16;
     y += vy * 16;
-    if (x < physicsR) { x = physicsR; vx = Math.abs(vx); }
-    if (x > w - physicsR) { x = w - physicsR; vx = -Math.abs(vx); }
-    if (y < 36) break;
+    if (x < walls.left) { x = walls.left; vx = Math.abs(vx); }
+    if (x > walls.right) { x = walls.right; vx = -Math.abs(vx); }
+    if (y < walls.top) break;
 
     const dash = (time * 6 + i * 0.4) % 1;
     const dotR = 2.5 + dash * 1.5;
@@ -458,10 +472,10 @@ export function drawAimGuide(
   for (let i = 0; i < 32; i++) {
     x += vx * 16;
     y += vy * 16;
-    if (x < physicsR) { x = physicsR; vx = Math.abs(vx); }
-    if (x > w - physicsR) { x = w - physicsR; vx = -Math.abs(vx); }
+    if (x < walls.left) { x = walls.left; vx = Math.abs(vx); }
+    if (x > walls.right) { x = walls.right; vx = -Math.abs(vx); }
     ctx.lineTo(x, y);
-    if (y < 36) break;
+    if (y < walls.top) break;
   }
   ctx.stroke();
   ctx.setLineDash([]);

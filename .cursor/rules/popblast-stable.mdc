@@ -1,0 +1,32 @@
+---
+description: Candy Blast is stable v1 — do not modify without explicit user authorization
+globs: src/games/popblast/**,games/popblast/**
+alwaysApply: false
+---
+
+# Candy Blast — stable v1
+
+`popblast` is tagged `stable: 'v1'` in `src/platform/catalog.ts`. See `STABLE.md`.
+
+## Do not change
+
+Unless the user **explicitly authorizes** changes to Candy Blast:
+
+- Do not edit files under `src/games/popblast/` or `games/popblast/`
+- Do not change match detection, candy movement, physics, game logic, level progression, difficulty, power-up mechanics, backend, or tournament integration
+- Do not change premium presentation (UI, graphics, audio, effects, HUD, menus, animations) without authorization
+
+## Frozen scope
+
+- `src/games/popblast/main.ts` — match-3 gameplay + presentation hooks
+- `src/games/popblast/audio.ts` — premium synthesized SFX + music bed
+- `src/games/popblast/fx.ts` — particles, score popups, celebrations, screen shake
+- `src/games/popblast/hud.ts` — glass HUD with animated counters
+- `src/games/popblast/style.css` — Ethio Telecom premium theme
+- `games/popblast/index.html` — menus, HUD, victory/game-over screens
+
+## Instead
+
+- Copy Candy Blast **patterns** into shared modules or other games
+- Fix platform/hub/backend issues without touching Candy Blast game code
+- If a shared change affects Candy Blast, **tell the user** which shared file changed and why

@@ -13,6 +13,8 @@ import {
   type BgParticle, type CannonState,
   initBgParticles, updateBgParticles,
   drawPremiumBackground, drawPlayfieldFrame, drawPlayfieldInterior, applyPlayfieldClip,
+  getPlayfieldWalls,
+  VISUAL_SCALE,
   drawPremiumBubble, drawPremiumCannon, drawAimGuide,
 } from './bpRender';
 
@@ -26,6 +28,9 @@ const CANNON_Y = H - 72;
 const DANGER_Y = CANNON_Y - 36;
 const PLAYFIELD_TOP = 60;
 const PLAYFIELD_BOTTOM = CANNON_Y + 20;
+const PLAYFIELD_WALLS = getPlayfieldWalls(
+  W, PLAYFIELD_TOP, PLAYFIELD_BOTTOM, BUBBLE_R * VISUAL_SCALE,
+);
 
 const COLORS = ['#ff6b6b', '#4ecdc4', '#ffd93d', '#95e1d3', '#c084fc'] as const;
 type BubbleColor = typeof COLORS[number];
@@ -179,22 +184,22 @@ export class BubblePop {
         const prevY = f.y;
         f.x += f.vx * sdt;
         f.y += f.vy * sdt;
-        if (f.x < BUBBLE_R) {
-          f.x = BUBBLE_R;
+        if (f.x < PLAYFIELD_WALLS.left) {
+          f.x = PLAYFIELD_WALLS.left;
           f.vx = Math.abs(f.vx);
           spawnImpact(this.impacts, f.x, f.y, f.color);
           spawnImpactBurst(this.fxParticles, f.x, f.y, f.color);
           bpSfx.wallBounce();
         }
-        if (f.x > W - BUBBLE_R) {
-          f.x = W - BUBBLE_R;
+        if (f.x > PLAYFIELD_WALLS.right) {
+          f.x = PLAYFIELD_WALLS.right;
           f.vx = -Math.abs(f.vx);
           spawnImpact(this.impacts, f.x, f.y, f.color);
           spawnImpactBurst(this.fxParticles, f.x, f.y, f.color);
           bpSfx.wallBounce();
         }
-        if (f.y < BUBBLE_R) {
-          this.stickBubble(f.x, BUBBLE_R, f.color);
+        if (f.y < PLAYFIELD_WALLS.top) {
+          this.stickBubble(f.x, PLAYFIELD_WALLS.top, f.color);
           spawnImpact(this.impacts, f.x, f.y, f.color);
           this.flight = null;
           break;
@@ -253,7 +258,7 @@ export class BubblePop {
     }
 
     if (this.aimActive && !this.flight) {
-      drawAimGuide(ctx, CANNON_X, CANNON_Y, this.aimAngle, BUBBLE_R, W, this.time);
+      drawAimGuide(ctx, CANNON_X, CANNON_Y, this.aimAngle, PLAYFIELD_WALLS, this.time);
     }
 
     drawImpacts(ctx, this.impacts);

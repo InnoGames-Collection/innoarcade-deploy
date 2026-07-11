@@ -196,7 +196,7 @@ const ALL_GAMES: GameMeta[] = [
     route: 'games/popblast/',
     nameEn: 'Candy Blast', nameAm: 'ካንዲ ብላስት',
     genreEn: 'Match-3 · Casual', genreAm: 'ሦስት-አዛምድ · ቀላል',
-    mode: 'free', icon: '🍬', accent: '#e85b9c', thumb: ['#8c2b5c', '#2e0c1e'],
+    mode: 'free', stable: 'v1', icon: '🍬', accent: '#e85b9c', thumb: ['#8c2b5c', '#2e0c1e'],
     scoreEn: 'Score', scoreAm: 'ነጥብ',
     play: { winPoints: 150, winRate: 50 },
   },

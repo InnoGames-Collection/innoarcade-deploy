@@ -208,9 +208,26 @@ All titles below are locked at their listed tag. **Do not edit game-specific fol
 
 ---
 
+## Candy Blast (`popblast`) — stable v1
+
+**Status:** Locked. Do not modify unless explicitly authorized by the user.
+
+**Scope (frozen):**
+
+- `src/games/popblast/**`
+- `games/popblast/**`
+
+**Includes:** 8×8 DOM match-3 with hub casual shell, premium Ethio Telecom presentation (blue-green gradient background, light rays, sparkles, floating bubbles, glossy candy tiles, elevated board frame), glass HUD (`hud.ts`) with animated score/target/moves/level/best counters, floating score popups and combo celebrations (`fx.ts`), particle effects, screen shake, victory/game-over screens with stars and fireworks, premium synthesized audio (`audio.ts`), start menu with hub navigation links.
+
+**Gameplay frozen:** Match detection, candy movement, physics, game logic, level progression, difficulty, power-up mechanics, backend, and tournament integration must not change without user authorization.
+
+**v1 changelog:** Premium commercial-quality visual/audio/UX polish pass; Ethio Telecom green/blue/white theme; combo celebration system (visual only); floating score feedback; redesigned start/pause/victory/game-over screens and HUD.
+
+---
+
 ## All other stable v1 games
 
-The remaining titles in the table above (`candy-crunch`, `sky-hopper`, `tap-game`, `lucky-box`, `spin-wheel`, `luckyslot`, `popblast`, `sudoku`, `vocab`, `rhyme`, `target24`, `crosssum`, `logic`, `sequence`) are locked at **v1** as of the Phase 1 expansion. Each game's scope is its `src/games/<id>/**` and `games/<id>/**` folders.
+The remaining titles in the table above (`candy-crunch`, `sky-hopper`, `tap-game`, `lucky-box`, `spin-wheel`, `luckyslot`, `sudoku`, `vocab`, `rhyme`, `target24`, `crosssum`, `logic`, `sequence`) are locked at **v1** as of the Phase 1 expansion. Each game's scope is its `src/games/<id>/**` and `games/<id>/**` folders.
 
 ---
 
