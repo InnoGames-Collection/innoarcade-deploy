@@ -110,29 +110,29 @@
   overflow: visible;
 }
 
-/* ── Premium glass test tubes ─────────────────────────────────────────── */
+/* ── Premium laboratory glass tubes ───────────────────────────────────── */
 .ws-tube {
   --tube-w: min(66px, calc((100% - (var(--tube-cols) - 1) * var(--tube-gap)) / var(--tube-cols)));
   --tube-h: clamp(158px, 39vw, 188px);
   --tube-cap: 4;
-  --glass-rim: rgba(255, 255, 255, 0.82);
-  --glass-edge: rgba(200, 230, 250, 0.45);
+  --glass-rim: rgba(255, 255, 255, 0.9);
+  --glass-edge: rgba(190, 225, 245, 0.55);
   flex: 0 0 var(--tube-w);
   width: var(--tube-w);
   max-width: var(--tube-w);
   height: calc(var(--tube-h) * var(--tube-cap) / 4);
-  border: 2.5px solid var(--glass-edge);
-  border-radius: 0 0 50% 50% / 0 0 24% 24%;
+  border: 3px solid var(--glass-edge);
+  border-radius: 0 0 50% 50% / 0 0 26% 26%;
   background:
-    linear-gradient(155deg, rgba(255, 255, 255, 0.65) 0%, transparent 35%),
-    linear-gradient(200deg, transparent 40%, rgba(42, 169, 214, 0.04) 70%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.06) 60%, rgba(0, 0, 0, 0.03) 100%);
-  backdrop-filter: blur(12px) saturate(1.35);
-  -webkit-backdrop-filter: blur(12px) saturate(1.35);
+    linear-gradient(155deg, rgba(255, 255, 255, 0.72) 0%, transparent 32%),
+    linear-gradient(225deg, transparent 35%, rgba(42, 169, 214, 0.06) 65%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.08) 55%, rgba(0, 0, 0, 0.04) 100%);
+  backdrop-filter: blur(14px) saturate(1.45);
+  -webkit-backdrop-filter: blur(14px) saturate(1.45);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 7px 5px 6px;
+  padding: 8px 6px 7px;
   cursor: pointer;
   transition:
     transform 0.22s cubic-bezier(0.34, 1.2, 0.64, 1),
@@ -140,13 +140,13 @@
     border-color 0.2s ease,
     filter 0.2s ease;
   box-shadow:
-    inset 0 6px 20px rgba(255, 255, 255, 0.42),
-    inset 0 -10px 18px rgba(42, 169, 214, 0.08),
-    inset 4px 0 12px rgba(255, 255, 255, 0.18),
-    inset -4px 0 12px rgba(0, 0, 0, 0.06),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.25),
-    0 10px 28px rgba(26, 100, 160, 0.16),
-    0 4px 10px rgba(0, 0, 0, 0.07);
+    inset 0 8px 24px rgba(255, 255, 255, 0.48),
+    inset 0 -12px 22px rgba(42, 169, 214, 0.1),
+    inset 5px 0 14px rgba(255, 255, 255, 0.22),
+    inset -5px 0 14px rgba(0, 0, 0, 0.07),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.32),
+    0 12px 32px rgba(26, 100, 160, 0.18),
+    0 5px 12px rgba(0, 0, 0, 0.08);
   position: relative;
   overflow: visible;
 }
@@ -154,42 +154,42 @@
 .ws-tube::before {
   content: '';
   position: absolute;
-  top: -10px;
-  left: -3px;
-  right: -3px;
-  height: 16px;
-  border: 2.5px solid var(--glass-rim);
-  border-bottom: 1.5px solid rgba(255, 255, 255, 0.35);
-  border-radius: 16px 16px 6px 6px;
+  top: -11px;
+  left: -4px;
+  right: -4px;
+  height: 18px;
+  border: 3px solid var(--glass-rim);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 18px 18px 8px 8px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.35) 55%, rgba(255, 255, 255, 0.08) 100%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.42) 50%, rgba(255, 255, 255, 0.1) 100%);
   pointer-events: none;
   z-index: 5;
   box-shadow:
-    0 2px 4px rgba(255, 255, 255, 0.5),
-    inset 0 3px 6px rgba(255, 255, 255, 0.5),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.04);
+    0 3px 6px rgba(255, 255, 255, 0.55),
+    inset 0 4px 8px rgba(255, 255, 255, 0.55),
+    inset 0 -3px 5px rgba(0, 0, 0, 0.05);
 }
 
 .ws-tube::after {
   content: '';
   position: absolute;
-  top: 10%;
-  left: 8%;
-  width: 30%;
-  height: 62%;
+  top: 8%;
+  left: 7%;
+  width: 32%;
+  height: 65%;
   border-radius: 50%;
   background: linear-gradient(
     175deg,
-    rgba(255, 255, 255, 0.58) 0%,
-    rgba(255, 255, 255, 0.15) 45%,
-    transparent 80%
+    rgba(255, 255, 255, 0.65) 0%,
+    rgba(255, 255, 255, 0.2) 40%,
+    transparent 78%
   );
   pointer-events: none;
   z-index: 4;
-  opacity: 0.8;
+  opacity: 0.88;
   transition: opacity 0.25s ease;
-  filter: blur(0.3px);
+  filter: blur(0.2px);
 }
 
 .ws-fluid-canvas {

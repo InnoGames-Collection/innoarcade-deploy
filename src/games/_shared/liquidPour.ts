@@ -342,9 +342,9 @@ async function animateWaterPour(opts: PourAnimOptions): Promise<void> {
       lastSplashAt = elapsed;
     }
 
-    if (streamAlpha > 0.5 && elapsed - lastDropletAt > 55) {
+    if (streamAlpha > 0.5 && elapsed - lastDropletAt > 42) {
       const toMouth = tubeMouthOnBoard(board, toTube);
-      splashPool.spawn(toMouth.x, toMouth.y + 2, colorId, 2);
+      splashPool.spawn(toMouth.x, toMouth.y + 2, colorId, 3);
       lastDropletAt = elapsed;
     }
 
@@ -421,6 +421,8 @@ async function animateWaterPour(opts: PourAnimOptions): Promise<void> {
   }
 
   fluidManager.triggerRipple(toIdx, 820);
+  fluidManager.triggerWobble(toIdx, 1100);
+  fluidManager.triggerWobble(fromIdx, 680);
   fluidManager.triggerWobble(fromIdx, 950);
   fluidManager.triggerWobble(toIdx, 950);
   fluidManager.render(fromIdx, tubes[fromIdx], { capacity: fromCap, hiddenBottom: fromHidden });
