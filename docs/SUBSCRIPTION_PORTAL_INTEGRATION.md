@@ -306,6 +306,8 @@ Items **closed by OpenAPI** are marked in §9. Remaining asks (send as a short c
 Register **subscription notification URL** = subscription webhook.  
 Pass **MT `callbackUrl`** = sms-dlr URL on every send (or env default).
 
+**GET vs POST:** Opening a webhook URL in a browser issues **GET** and only returns a health JSON (`status: ready`, `accepts: ["POST"]`). Real notify / MT callbacks must **POST** `application/json`.
+
 ### 7.2 Secrets / config
 
 ```bash

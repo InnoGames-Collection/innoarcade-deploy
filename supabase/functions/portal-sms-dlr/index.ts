@@ -20,6 +20,7 @@ import {
   pickInt,
   normalizeMsisdn,
   recordPortalEvent,
+  portalHealth,
 } from '../_shared/portal.ts';
 
 function mapResult(raw: string): 'success' | 'failed' | null {
@@ -33,6 +34,9 @@ function mapResult(raw: string): 'success' | 'failed' | null {
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: portalCors });
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    return portalHealth('portal-sms-dlr', ['POST']);
+  }
   if (req.method !== 'POST') return portalJson({ error: 'method_not_allowed' }, 405);
 
   const raw = await req.text();

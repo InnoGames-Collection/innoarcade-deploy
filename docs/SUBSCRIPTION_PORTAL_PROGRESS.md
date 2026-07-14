@@ -4,7 +4,7 @@
 **Supabase:** `https://kuoxbflcxruwtgbjclet.supabase.co`  
 **Source plan:** [`SUBSCRIPTION_PORTAL_INTEGRATION.md`](./SUBSCRIPTION_PORTAL_INTEGRATION.md)  
 **OpenAPI:** [`partner-mt-and-webhooks.openapi.yaml`](../partner-mt-and-webhooks.openapi.yaml)  
-**Last updated:** 2026-07-15 (Phase 3 deployed + `PORTAL_ENABLED=true` on staging)
+**Last updated:** 2026-07-15 (GET health probes + staged E2E login-gate allow)
 
 Track scaffolding A→G was deployed; **Phases 1–2 code aligned to OpenAPI**. Phase 3 (subscribe-gated OTP login) and live credentials remain.
 
@@ -207,7 +207,11 @@ supabase functions deploy send-sms subscribe portal-login-gate \
 - [x] Deploy migration + functions to staging (`kuoxbflcxruwtgbjclet`) — Phases 1–2
 - [x] Implement Phase 3 subscribe-gated OTP (code)
 - [x] Deploy Phase 3 migration + `portal-login-gate` (+ `PORTAL_ENABLED=true`)
-- [ ] Smoke: portal subscription webhook → login allowed → OTP
+- [x] GET health probes on webhook URLs (browser-safe)
+- [x] Smoke: pending entitlement → login gate `allowed:true` (MSISDN `+251911000099`)
+- [x] Working-session test phone `+251923026799` seeded + `PORTAL_LOGIN_ALLOWLIST`
+- [ ] Live portal POST notify with HMAC (needs webhook secret)
+- [ ] Live OTP via `SMS_MODE=portal` (needs API key + serviceIds)
 - [ ] Admin UI for `portal_events` / `sms_messages`
 - [ ] Load-test webhook acks + retry behaviour
 - [ ] Register **prod** notification URL when cutting over

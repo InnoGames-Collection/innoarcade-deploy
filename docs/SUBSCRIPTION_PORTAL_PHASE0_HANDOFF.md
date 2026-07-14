@@ -17,6 +17,14 @@ Staging callback base:
 
 Ack shape: `{ "ok": true }` (HTTP 2xx after durable write).
 
+**Opening these URLs in a browser is a GET.** Partners must **POST** JSON for real events. A browser click now returns a health probe:
+
+```json
+{ "ok": true, "endpoint": "…", "status": "ready", "accepts": ["POST"], "note": "…" }
+```
+
+`method_not_allowed` before 2026-07-15 redeploy was expected for GET — not a broken webhook.
+
 Full working plan: [`SUBSCRIPTION_PORTAL_INTEGRATION.md`](./SUBSCRIPTION_PORTAL_INTEGRATION.md).
 
 ---
@@ -95,6 +103,60 @@ Full working plan: [`SUBSCRIPTION_PORTAL_INTEGRATION.md`](./SUBSCRIPTION_PORTAL_
 >
 > Our MT `callbackUrl` will be:  
 > `https://kuoxbflcxruwtgbjclet.supabase.co/functions/v1/portal-sms-dlr`
+
+---
+
+## Working session — finalize integration (prep)
+
+**Primary test MSISDN (ours):** `251923026799` / `+251923026799`  
+Staging project: `kuoxbflcxruwtgbjclet` · Phases 1–3 deployed · `PORTAL_ENABLED=true`
+
+### What we bring / do before the call
+
+| Ready | Item |
+|---|---|
+| Yes | Staging notification URL + MT callback URL (POST; GET = health only) |
+| Yes | Login gate + subscription mirror live |
+| Yes | Test phone entitled in staging (pending seed + allowlist) |
+| Bring | Laptop with Supabase Dashboard + function logs open |
+| Bring | Curl snippets for POST notify / MT (signed once secret arrives) |
+| Bring | Hub URL + ability to sign in with `251923026799` |
+| Bring | Draft pricing: daily 3 / weekly 15 / monthly 35 ETB |
+| Do | Confirm Auth Send SMS hook points at `send-sms` (if flipping `SMS_MODE=portal` live) |
+| Do | Legal/hub URLs if they ask for partner profile |
+
+### What portal owners must bring / do in the session
+
+| Must have | Why |
+|---|---|
+| `X-API-Key` (sandbox or prod they want to use) | Live `/api/v1/mt/send` |
+| Webhook HMAC shared secret | Signed `subscription` / `unsubscription` POSTs |
+| `serviceId` map (daily / weekly / monthly) + shortcode(s) | Plan mapping + OK/STOP keywords |
+| Notification URL registered to our staging webhook | They POST to us on OK/STOP |
+| Ability to trigger test subscribe on `251923026799` | End-to-end: OK → notify → OTP → play |
+| Sandbox/base URL confirmation | Prefer HTTPS hostname over bare IP |
+| Answers: grace = `unsubscription`? promo sender? multi-service? MT callback signed? | Close open product gaps |
+
+### Suggested session agenda (~60–90 min)
+
+1. **Credentials exchange** (5–10 min) — key, secret, serviceIds, shortcodes → we set Supabase secrets live  
+2. **Register URLs** (5 min) — paste staging notification URL; show GET health = ready  
+3. **Subscribe path** (15 min) — text OK from `251923026799` → we confirm webhook in logs + entitlement → login gate allows  
+4. **OTP / MT** (15 min) — set `SMS_MODE=portal` → request OTP → SMS arrives → verify + play  
+5. **Unsubscribe** (10 min) — STOP → `unsubscription` → gate denies OTP  
+6. **Close outs** (10 min) — grace, promo, retries, go-live checklist / prod URLs  
+
+### Success criteria for the session
+
+- [ ] Live signed `subscription` received for our test MSISDN  
+- [ ] Login works only when subscribed  
+- [ ] OTP delivered via portal MT (`type=otp`)  
+- [ ] `unsubscription` / STOP deactivates us  
+- [ ] Secrets + `serviceId`s stored; `PORTAL_WEBHOOK_SKIP_VERIFY=false` if signing works  
+
+### After session → Phase 4 (hardening / prod)
+
+Not a blocker for tomorrow’s sandbox finalize. Phase 4 = turn verify hard-on, prod project URLs, observability, idempotency soak, runbook, optional admin audit views. Payments webhook stays deferred (not in OpenAPI).
 
 ---
 

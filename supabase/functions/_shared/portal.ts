@@ -39,6 +39,20 @@ export const portalJson = (body: unknown, status = 200) =>
     headers: { ...portalCors, 'content-type': 'application/json' },
   });
 
+/**
+ * Browser-friendly probe for partners who open webhook URLs in a tab (GET).
+ * Real traffic must POST. Does not process events.
+ */
+export function portalHealth(endpoint: string, accepts: string[] = ['POST']) {
+  return portalJson({
+    ok: true,
+    endpoint,
+    status: 'ready',
+    accepts,
+    note: 'This URL is an HTTPS callback. Send application/json via POST (browsers use GET and only hit this health probe).',
+  });
+}
+
 export function adminClient(): AdminClient {
   return createClient(
     Deno.env.get('SUPABASE_URL')!,

@@ -22,10 +22,14 @@ import {
   pickString,
   resolveLoginEntitlement,
   shortcodeHint,
+  portalHealth,
 } from '../_shared/portal.ts';
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: portalCors });
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    return portalHealth('portal-login-gate', ['POST']);
+  }
   if (req.method !== 'POST') return portalJson({ error: 'method_not_allowed' }, 405);
 
   let body: Record<string, unknown> = {};

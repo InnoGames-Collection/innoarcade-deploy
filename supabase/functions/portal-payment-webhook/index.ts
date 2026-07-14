@@ -15,7 +15,7 @@
 
 import {
   adminClient, portalCors, portalJson, verifyPortalWebhook, pickString,
-  normalizeMsisdn, mapPeriod, recordPortalEvent,
+  normalizeMsisdn, mapPeriod, recordPortalEvent, portalHealth,
 } from '../_shared/portal.ts';
 
 const SUCCESS = new Set(['success', 'paid', 'renewed', 'renew', 'settled', 'ok']);
@@ -23,7 +23,10 @@ const FAIL = new Set(['failed', 'fail', 'declined', 'cancelled', 'error']);
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: portalCors });
-  if (req.method !== 'POST') return portalJson({ error: 'method not allowed' }, 405);
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    return portalHealth('portal-payment-webhook', ['POST']);
+  }
+  if (req.method !== 'POST') return portalJson({ error: 'method_not_allowed' }, 405);
 
   // Dormant until a payment OpenAPI exists. Reuses subscription notify HMAC if enabled.
   const raw = await req.text();
