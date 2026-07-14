@@ -454,3 +454,17 @@ verify_jwt = true
 
 [functions.runner-submit]
 verify_jwt = true
+
+# Middleware subscription portal webhooks — portal → game, no user JWT.
+[functions.portal-subscription-webhook]
+verify_jwt = false
+
+[functions.portal-sms-dlr]
+verify_jwt = false
+
+[functions.portal-payment-webhook]
+verify_jwt = false
+
+# Pre-OTP entitlement probe — called before Auth signInWithOtp (no user yet).
+[functions.portal-login-gate]
+verify_jwt = false

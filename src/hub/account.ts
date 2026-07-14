@@ -8,7 +8,8 @@ import { getLang } from '../i18n';
 import { currentUser, signOut, type AuthUser } from '../platform/auth';
 import { openSignIn } from './signin';
 import {
-  SUB_PLANS, currentSub, trialAvailable, subscribe, cancelSub, loadSubscription,
+  SUB_PLANS, currentSub, trialAvailable, subscribe, loadSubscription,
+  isSubscribePending,
   type SubPeriod,
 } from '../platform/subscription';
 import { paymentMethodsEnabled } from '../platform/config';
@@ -380,8 +381,8 @@ function wireReferral(): void {
 function wireAccount(user: AuthUser | null): void {
   document.querySelector('#aSignIn')?.addEventListener('click', () => openSignIn());
   document.querySelector('#aSignOut')?.addEventListener('click', async () => { await signOut(); void openAccount(); });
+  // In-app subscribe plans remain for demo / shortcode CTA; cancel is portal-only (STOP / grace).
   document.querySelector('#aSubscribe')?.addEventListener('click', () => openPlans());
-  document.querySelector('#aCancel')?.addEventListener('click', () => { void cancelSub().then(() => openAccount()); });
   document.querySelector('#aFeedback')?.addEventListener('click', () => openFeedback());
   document.querySelector('#aTerms')?.addEventListener('click', () => openInfo('terms'));
   document.querySelector('#aFaq')?.addEventListener('click', () => openInfo('faq'));
@@ -443,15 +444,26 @@ function openSubPay(period: SubPeriod): void {
   payBtn.addEventListener('click', async () => {
     payBtn.disabled = true;
     try {
-      await subscribe(period, chosen);
+      const result = await subscribe(period, chosen);
+      if (isSubscribePending(result)) {
+        const pendingEn = result.message
+          ?? 'Text OK to the service shortcode to activate. Your plan starts after confirmation.';
+        const pendingAm = 'ወደ አገልግሎቱ አጭር ኮድ OK በመላክ ይመዝገቡ። ከማረጋገጫ በኋላ ዕቅድዎ ይጀምራል።';
+        m.querySelector('.acct-stack')!.innerHTML = `
+          <div class="acct-success"><div class="as-burst">⏳</div>
+          <h2 class="acct-title">${getLang() === 'am' ? 'በመጠባበቅ ላይ' : 'Text OK to subscribe'}</h2>
+          <p class="acct-muted">${getLang() === 'am' ? pendingAm : pendingEn}</p>
+          <button class="acct-primary" id="subDone">${t('close')}</button></div>`;
+      } else {
+        m.querySelector('.acct-stack')!.innerHTML = `
+          <div class="acct-success"><div class="as-burst">🎉</div><h2 class="acct-title">${t('subbed')}</h2>
+          <button class="acct-primary" id="subDone">${t('close')}</button></div>`;
+      }
     } catch {
       payBtn.disabled = false;
       payBtn.textContent = t('failed');
       return;
     }
-    m.querySelector('.acct-stack')!.innerHTML = `
-      <div class="acct-success"><div class="as-burst">🎉</div><h2 class="acct-title">${t('subbed')}</h2>
-      <button class="acct-primary" id="subDone">${t('close')}</button></div>`;
     m.querySelector('#subDone')!.addEventListener('click', () => { m.remove(); void openAccount(); });
   });
 }

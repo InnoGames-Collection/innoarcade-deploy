@@ -1,27 +1,29 @@
-// @ts-nocheck — Deno Edge Function; not part of the Node/Vite app build. The
-// ts-nocheck stops the Node TypeScript server from flagging Deno globals and URL
-// imports it can't resolve. Runs fine on Supabase's Deno runtime.
+// @ts-nocheck — Deno Edge Function; not part of the Node/Vite app build.
 //
 // Edge Function: send-sms — Supabase Auth "Send SMS Hook".
 //
-// Instead of paying a provider like Twilio, Supabase calls THIS function with the
-// generated OTP and lets us deliver it however we want. Three modes, switched by
-// the SMS_MODE env var (set in the function's secrets):
+// SMS_MODE:
+//   mock     (default) — logs OTP (and optional DEV_OTP_ECHO → dev_otps).
+//   gateway  — POST to TELECOM_SMS_URL / TELECOM_SMS_TOKEN.
+//   portal   — Partner MT API: POST /api/v1/mt/send type=otp
 //
-//   mock     (default) — just logs the OTP to the function logs. Free; read the
-//                        code from Dashboard → Edge Functions → send-sms → Logs
-//                        to complete a sign-in while testing.
-//   gateway  — POST to a self-hosted open-source Android SMS gateway, or the
-//              TELECOM's SMS gateway, using TELECOM_SMS_URL / TELECOM_SMS_TOKEN.
-//
-// This is the single seam the national telecom plugs into: flip SMS_MODE=gateway
-// and point TELECOM_SMS_URL at their endpoint. No app changes.
+// When PORTAL_ENABLED=true, entitlement is enforced for every mode (Phase 3):
+// deny OTP SMS unless subscription / pending / admin / allowlist.
 //
 // Configure: Dashboard → Authentication → Hooks → "Send SMS" → Edge Function:
 //   send-sms, and copy the generated hook secret into SEND_SMS_HOOK_SECRET.
 
 import { createHmac } from 'node:crypto';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import {
+  portalSendMt,
+  normalizeMsisdn,
+  resolveServiceIdForMsisdn,
+  resolveLoginEntitlement,
+  adminClient,
+  defaultServiceId,
+  portalEnabled,
+} from '../_shared/portal.ts';
 
 interface HookPayload {
   user: { phone?: string };
@@ -29,8 +31,6 @@ interface HookPayload {
 }
 
 function verifySignature(secret: string, id: string, ts: string, body: string, sigHeader: string): boolean {
-  // Standard Webhooks: secret is "v1,whsec_…"; sign "{id}.{ts}.{body}" with the
-  // base64-decoded key and compare against the v1, signature in the header.
   try {
     const key = secret.replace(/^v1,whsec_/, '');
     const raw = Uint8Array.from(atob(key), (c) => c.charCodeAt(0));
@@ -44,7 +44,6 @@ function verifySignature(secret: string, id: string, ts: string, body: string, s
 Deno.serve(async (req: Request) => {
   const body = await req.text();
 
-  // Verify the hook came from Supabase Auth (when a secret is configured).
   const secret = Deno.env.get('SEND_SMS_HOOK_SECRET');
   if (secret) {
     const id = req.headers.get('webhook-id') ?? '';
@@ -60,10 +59,58 @@ Deno.serve(async (req: Request) => {
   const otp = payload.sms?.otp ?? '';
   const message = `Your InnoArcade code is ${otp}`;
   const mode = Deno.env.get('SMS_MODE') ?? 'mock';
+  const msisdn = normalizeMsisdn(phone);
+  const admin = adminClient();
 
-  if (mode === 'gateway') {
-    // --- TELECOM / self-hosted SMS gateway (production) ---------------------
-    // Replace the body shape below to match the carrier's API contract.
+  // Phase 3 hard gate — even mock/gateway must not deliver OTP to unsubscribed MSISDNs.
+  if (portalEnabled()) {
+    const login = await resolveLoginEntitlement(admin, msisdn);
+    if (!login.entitled) {
+      console.warn('[send-sms] portal login denied', { msisdn, reason: login.reason });
+      return new Response(JSON.stringify({
+        error: 'not_subscribed',
+        message: 'MSISDN is not entitled to OTP; subscribe via SMS first',
+      }), { status: 403 });
+    }
+  }
+
+  if (mode === 'portal') {
+    const resolved = await resolveServiceIdForMsisdn(admin, msisdn);
+    const serviceId = resolved?.serviceId ?? defaultServiceId();
+
+    if (serviceId == null) {
+      console.error('[send-sms:portal] no serviceId for MSISDN', msisdn);
+      return new Response(JSON.stringify({
+        error: 'no_portal_service',
+        message: 'MSISDN has no portal service mapping; subscribe via SMS first',
+      }), { status: 502 });
+    }
+
+    const res = await portalSendMt({
+      serviceId,
+      msisdn,
+      type: 'otp',
+      message,
+    });
+
+    if (!res.ok) {
+      console.error('[send-sms:portal] MT failed', res.errorCode ?? res.error, {
+        serviceId,
+        source: resolved?.source,
+      });
+      return new Response(JSON.stringify({
+        error: res.errorCode ?? res.error ?? 'portal_sms_failed',
+      }), { status: 502 });
+    }
+
+    console.log('[send-sms:portal] MT accepted', {
+      transactionId: res.transactionId,
+      extTransactionId: res.extTransactionId,
+      serviceId,
+      source: resolved?.source,
+      stub: res.stub ?? false,
+    });
+  } else if (mode === 'gateway') {
     const url = Deno.env.get('TELECOM_SMS_URL')!;
     const token = Deno.env.get('TELECOM_SMS_TOKEN') ?? '';
     const res = await fetch(url, {
@@ -76,21 +123,14 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: 'sms send failed' }), { status: 502 });
     }
   } else {
-    // --- MOCK (free dev) ----------------------------------------------------
-    // The OTP appears in this function's logs so you can complete sign-in.
     console.log(`[send-sms:mock] → ${phone}: ${message}`);
-    // Optional LOCAL-dev convenience: with the DEV_OTP_ECHO secret set, also write
-    // the code to the public `dev_otps` table so the sign-in screen can show it
-    // (see supabase/dev.sql). OFF by default — the deployed demo uses Supabase
-    // "Test phone numbers" instead and drops that table. Best-effort: never let
-    // this break the auth hook.
     if (Deno.env.get('DEV_OTP_ECHO') === 'true') {
       try {
         const url = Deno.env.get('SUPABASE_URL');
         const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
         if (url && service && phone) {
-          const admin = createClient(url, service);
-          await admin.from('dev_otps').upsert({ phone, code: otp, created_at: new Date().toISOString() });
+          const sb = createClient(url, service);
+          await sb.from('dev_otps').upsert({ phone, code: otp, created_at: new Date().toISOString() });
         }
       } catch (e) {
         console.error('[send-sms:mock] dev_otps write skipped', e);
@@ -98,6 +138,5 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  // Empty 200 tells Supabase Auth the SMS was handled.
   return new Response('{}', { headers: { 'content-type': 'application/json' } });
 });

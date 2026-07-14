@@ -1,0 +1,474 @@
+openapi: 3.1.0
+info:
+  title: Partner Messaging & Notification API
+  version: 1.0.0
+  summary: Send MT messages and receive subscription / delivery webhooks
+  description: |
+    Integration guide for partners:
+
+    1. **Send MT** — submit an SMS message (`optin`, `optout`, `business`, or `otp`).
+    2. **Subscription notifications** — receive webhooks when a subscriber joins or leaves your service.
+    3. **Delivery callbacks** — optionally receive status when an MT you sent reaches a final outcome.
+
+    For (2) and (3), you host the HTTPS endpoints; we POST to the URLs you provide.
+
+servers:
+  - url: http://168.119.53.26:8484
+    description: Production API
+
+tags:
+  - name: MT Send
+    description: Submit an outbound SMS message
+  - name: Subscription Notifications
+    description: Webhooks you receive for subscribe / unsubscribe events
+  - name: Delivery Callbacks
+    description: Webhooks you receive for MT final status (when callbackUrl is set)
+
+paths:
+  /api/v1/mt/send:
+    post:
+      tags:
+        - MT Send
+      operationId: sendPartnerMt
+      summary: Send an MT message
+      description: |
+        Sends an SMS to a subscribed MSISDN for one of your services.
+
+        Requirements:
+        - Valid API key
+        - `serviceId` belongs to your partner account and is active
+        - MSISDN has an active subscription for that service
+        - `message` is non-empty
+
+        Optional `callbackUrl` and `extTransactionId` enable delivery-status callbacks
+        (see Delivery Callbacks).
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MtPartnerSendRequest'
+            examples:
+              otp:
+                summary: OTP
+                value:
+                  serviceId: 4
+                  msisdn: '251911000000'
+                  type: otp
+                  message: 'Your code is 123456'
+                  extTransactionId: partner-tx-99
+                  callbackUrl: https://partner.example/mt/callback
+              optin:
+                summary: Opt-in
+                value:
+                  serviceId: 4
+                  msisdn: '251911000000'
+                  type: optin
+                  message: Welcome to the service
+              business:
+                summary: Business
+                value:
+                  serviceId: 4
+                  msisdn: '251911000000'
+                  type: business
+                  message: Your content for today
+                  extTransactionId: biz-1001
+      responses:
+        '200':
+          description: Message accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MtSendSuccessResponse'
+              example:
+                success: true
+                message: MT published
+                data:
+                  type: otp
+                  transactionId: 550e8400-e29b-41d4-a716-446655440000
+                  serviceId: 4
+                  msisdn: '251911000000'
+                  extTransactionId: partner-tx-99
+                timestamp: '2026-07-14 19:00:00'
+                status: SUCCESS
+        '400':
+          description: Invalid request or business rule failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                noActiveSub:
+                  summary: No active subscription
+                  value:
+                    success: false
+                    message: MSISDN has no active subscription for this service
+                    errorCode: MT_NO_ACTIVE_SUBSCRIPTION
+                    details:
+                      type: otp
+                      msisdn: '251911000000'
+                      serviceId: 4
+                    timestamp: '2026-07-14 19:00:00'
+                    status: ERROR
+                validation:
+                  summary: Validation error
+                  value:
+                    success: false
+                    message: Validation failed
+                    errorCode: VAL_001
+                    details:
+                      msisdn: must not be blank
+                    timestamp: '2026-07-14 19:00:00'
+                    status: ERROR
+        '401':
+          description: Missing or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+              examples:
+                missing:
+                  value:
+                    success: false
+                    message: Missing X-API-Key header
+                    status: UNAUTHORIZED
+                invalid:
+                  value:
+                    success: false
+                    message: Invalid API key
+                    status: UNAUTHORIZED
+        '404':
+          description: Service or partner not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                serviceNotFound:
+                  value:
+                    success: false
+                    message: Service not found
+                    errorCode: NF_003
+                    details:
+                      type: otp
+                      serviceId: 999
+                    timestamp: '2026-07-14 19:00:00'
+                    status: ERROR
+
+webhooks:
+  partnerNotification:
+    post:
+      tags:
+        - Subscription Notifications
+      operationId: partnerNotificationWebhook
+      summary: Subscription or unsubscription event
+      description: |
+        i POST this payload to your configured notification URL when a subscriber
+        joins or leaves your service (when notifications are enabled for that service).
+
+        **Verify authenticity:**
+        1. Read `X-Timestamp` and the raw JSON body.
+        2. Compute HMAC-SHA256 of `"{timestamp}.{body}"` using your shared secret (UTF-8).
+        3. Hex-encode the digest and compare to `X-Signature` after the `sha256=` prefix
+           (use a constant-time comparison).
+
+        Events:
+        - `subscription` 
+        - `unsubscription`
+      parameters:
+        - name: X-Timestamp
+          in: header
+          required: true
+          description: Unix epoch seconds (string)
+          schema:
+            type: string
+            example: '1720983600'
+        - name: X-Signature
+          in: header
+          required: true
+          description: 'HMAC-SHA256 hex digest prefixed with `sha256=`'
+          schema:
+            type: string
+            example: sha256=a1b2c3d4e5f6...
+        - name: X-Request-Id
+          in: header
+          required: true
+          description: Same value as body `request_id`
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartnerNotifPayload'
+            examples:
+              subscription:
+                summary: Subscription
+                value:
+                  event: subscription
+                  request_id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+                  service_id: 4
+                  msisdn: '251911000000'
+                  time: '2026-07-14T19:00:00.123Z'
+              unsubscription:
+                summary: Unsubscription
+                value:
+                  event: unsubscription
+                  request_id: 8d0e7780-8536-51ef-a55c-f18gd2g01bf8
+                  service_id: 4
+                  msisdn: '251911000000'
+                  time: '2026-07-14T19:05:00.456Z'
+      responses:
+        '2XX':
+          description: Acknowledge with any 2xx response
+
+  partnerMtDeliveryCallback:
+    post:
+      tags:
+        - Delivery Callbacks
+      operationId: partnerMtDeliveryCallback
+      summary: MT delivery final status
+      description: |
+        When you provide `callbackUrl` on `/api/v1/mt/send`, i POST final delivery
+        status to that URL (success or permanent failure). Intermediate retries are
+        not reported.
+
+        Protect your callback URL (HTTPS and a non-guessable path recommended).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartnerMtCallbackRequest'
+            examples:
+              success:
+                summary: Success
+                value:
+                  service_id: 4
+                  msisdn: '251911000000'
+                  ext_transaction_id: partner-tx-99
+                  result: success
+                  time: '2026-07-14T19:03:00.123Z'
+              failed:
+                summary: Failed
+                value:
+                  service_id: 4
+                  msisdn: '251911000000'
+                  ext_transaction_id: partner-tx-99
+                  result: failed
+                  time: '2026-07-14T19:03:00.123Z'
+                  reason: Delivery failed
+      responses:
+        '2XX':
+          description: Acknowledge with any 2xx response
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Your partner API key
+
+  schemas:
+    MtSendType:
+      type: string
+      enum:
+        - optin
+        - optout
+        - business
+        - otp
+      description: Message category (case-insensitive)
+
+    MtPartnerSendRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - serviceId
+        - msisdn
+        - type
+        - message
+      properties:
+        serviceId:
+          type: integer
+          format: int64
+          description: Your service identifier
+          example: 4
+        msisdn:
+          type: string
+          minLength: 1
+          description: Destination MSISDN
+          example: '251911000000'
+        type:
+          $ref: '#/components/schemas/MtSendType'
+        message:
+          type: string
+          minLength: 1
+          description: SMS text
+          example: Your code is 123456
+        extTransactionId:
+          type: string
+          description: Optional id for your own correlation; returned in responses and delivery callbacks
+          example: partner-tx-99
+        callbackUrl:
+          type: string
+          format: uri
+          description: Optional HTTPS URL to receive final delivery status
+          example: https://partner.example/mt/callback
+
+    MtSendSuccessData:
+      type: object
+      required:
+        - type
+        - transactionId
+        - serviceId
+        - msisdn
+      properties:
+        type:
+          $ref: '#/components/schemas/MtSendType'
+        transactionId:
+          type: string
+          format: uuid
+          description: Platform transaction id
+        serviceId:
+          type: integer
+          format: int64
+        msisdn:
+          type: string
+        extTransactionId:
+          type: string
+          description: Echoed when provided on the request
+
+    MtSendSuccessResponse:
+      type: object
+      required:
+        - success
+        - message
+        - data
+        - timestamp
+        - status
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: MT published
+        data:
+          $ref: '#/components/schemas/MtSendSuccessData'
+        timestamp:
+          type: string
+          description: 'Format: yyyy-MM-dd HH:mm:ss'
+          example: '2026-07-14 19:00:00'
+        status:
+          type: string
+          const: SUCCESS
+
+    ApiErrorResponse:
+      type: object
+      required:
+        - success
+        - message
+        - errorCode
+        - timestamp
+        - status
+      properties:
+        success:
+          type: boolean
+          const: false
+        message:
+          type: string
+        errorCode:
+          type: string
+          description: Machine-readable error code (e.g. `MT_NO_ACTIVE_SUBSCRIPTION`, `VAL_001`, `NF_003`)
+          example: MT_NO_ACTIVE_SUBSCRIPTION
+        details:
+          description: Optional extra context
+          type: object
+          additionalProperties: true
+        timestamp:
+          type: string
+          example: '2026-07-14 19:00:00'
+        status:
+          type: string
+          const: ERROR
+
+    UnauthorizedResponse:
+      type: object
+      required:
+        - success
+        - message
+        - status
+      properties:
+        success:
+          type: boolean
+          const: false
+        message:
+          type: string
+        status:
+          type: string
+          const: UNAUTHORIZED
+
+    PartnerNotifPayload:
+      type: object
+      additionalProperties: false
+      required:
+        - event
+        - request_id
+        - service_id
+        - msisdn
+        - time
+      properties:
+        event:
+          type: string
+          enum:
+            - subscription
+            - unsubscription
+        request_id:
+          type: string
+          format: uuid
+        service_id:
+          type: integer
+          format: int64
+          description: Your service identifier
+        msisdn:
+          type: string
+        time:
+          type: string
+          format: date-time
+          description: Event time (ISO-8601)
+
+    PartnerMtCallbackRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - service_id
+        - msisdn
+        - result
+        - time
+      properties:
+        service_id:
+          type: integer
+          format: int64
+          description: Your service identifier
+        msisdn:
+          type: string
+        ext_transaction_id:
+          type: string
+          description: Your correlation id when provided on send
+        result:
+          type: string
+          enum:
+            - success
+            - failed
+        time:
+          type: string
+          format: date-time
+          description: Status time
+        reason:
+          type: string
+          description: Failure detail when `result` is `failed`

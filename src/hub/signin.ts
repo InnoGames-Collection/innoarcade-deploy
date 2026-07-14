@@ -5,7 +5,8 @@
 
 import {
   authAvailable, requestOtp, verifyOtp, currentUser, signOut, setDisplayName,
-  onAuthChange, devOtpEcho, fetchDevOtp, AuthTimeoutError, normalizePhone, type AuthUser,
+  onAuthChange, devOtpEcho, fetchDevOtp, AuthTimeoutError, PortalNotEntitledError,
+  normalizePhone, type AuthUser,
 } from '../platform/auth';
 import { maskPhone } from '../platform/phone';
 import { getLang } from '../i18n';
@@ -20,6 +21,7 @@ const STR = {
     errSend: "Couldn't send the code. Check the number and try again.",
     errTimeout: 'Network is slow or unreachable. Check your connection and try again.',
     errVerify: 'Wrong or expired code.', close: 'Close',
+    errNotSubscribed: 'Text OK to the service shortcode to subscribe, then try again.',
     demoCode: 'Demo mode — your code is',
     otp: 'Code', terms: 'Terms & Conditions',
   },
@@ -32,6 +34,7 @@ const STR = {
     errSend: 'ኮዱን መላክ አልተቻለም። ቁጥሩን አረጋግጠው እንደገና ይሞክሩ።',
     errTimeout: 'አውታረ መረቡ ቀርፋፋ ወይም አይገኝም። ግንኙነትዎን አረጋግጠው እንደገና ይሞክሩ።',
     errVerify: 'የተሳሳተ ወይም ጊዜው ያለፈበት ኮድ።', close: 'ዝጋ',
+    errNotSubscribed: 'ወደ አገልግሎቱ አጭር ኮድ OK በመላክ ይመዝገቡ፣ ከዚያ እንደገና ይሞክሩ።',
     demoCode: 'የማሳያ ሁነታ — ኮድዎ',
     otp: 'ኮድ', terms: 'ደንብ እና ሁኔታዎች',
   },
@@ -121,7 +124,12 @@ function openModal(): void {
       await requestOtp(phone);
       openCode();
     } catch (e) {
-      m.querySelector('#err')!.textContent = t(e instanceof AuthTimeoutError ? 'errTimeout' : 'errSend');
+      const errEl = m.querySelector('#err')!;
+      if (e instanceof PortalNotEntitledError) {
+        errEl.textContent = e.hint || t('errNotSubscribed');
+      } else {
+        errEl.textContent = t(e instanceof AuthTimeoutError ? 'errTimeout' : 'errSend');
+      }
       go.disabled = false; go.textContent = t('send');
     }
   });
@@ -184,7 +192,17 @@ function openCode(): void {
   });
   resend.addEventListener('click', () => {
     if (resend.disabled) return;
-    void requestOtp(phone).then(() => { void showDemoCode(m, input); startCountdown(); });
+    void requestOtp(phone).then(() => {
+      void showDemoCode(m, input);
+      startCountdown();
+    }).catch((e) => {
+      const errEl = m.querySelector('#err')!;
+      if (e instanceof PortalNotEntitledError) {
+        errEl.textContent = e.hint || t('errNotSubscribed');
+      } else {
+        errEl.textContent = t(e instanceof AuthTimeoutError ? 'errTimeout' : 'errSend');
+      }
+    });
   });
 }
 

@@ -94,6 +94,19 @@ export function normalizePhone(input: string): string {
 export class AuthTimeoutError extends Error {
   constructor() { super('auth request timed out'); this.name = 'AuthTimeoutError'; }
 }
+
+/** Thrown when PORTAL_ENABLED and the MSISDN is not subscribed / pending. */
+export class PortalNotEntitledError extends Error {
+  readonly reason: string;
+  readonly hint: string;
+  constructor(reason = 'not_subscribed', hint = '') {
+    super(hint || 'Subscribe via SMS before signing in');
+    this.name = 'PortalNotEntitledError';
+    this.reason = reason;
+    this.hint = hint;
+  }
+}
+
 function withTimeout<T>(p: Promise<T>, ms = 15_000): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const id = setTimeout(() => reject(new AuthTimeoutError()), ms);
@@ -102,7 +115,41 @@ function withTimeout<T>(p: Promise<T>, ms = 15_000): Promise<T> {
   });
 }
 
+type LoginGateResponse = {
+  allowed?: boolean;
+  gated?: boolean;
+  reason?: string;
+  hint?: string;
+};
+
+/** Phase 3: ask portal-login-gate before Auth SMS. No-ops when function missing / ungated. */
+async function assertPortalLoginAllowed(phone: string): Promise<void> {
+  const sb = await getSupabase();
+  const { data, error } = await withTimeout(
+    sb.functions.invoke('portal-login-gate', {
+      body: { msisdn: normalizePhone(phone) },
+    }),
+  );
+  if (error) {
+    // Fail open only if the gate function is unavailable (not yet deployed).
+    const msg = String((error as { message?: string }).message ?? error);
+    if (/not found|404|Failed to send|FunctionsRelayError/i.test(msg)) {
+      console.warn('[auth] portal-login-gate unavailable; skipping pre-OTP check', msg);
+      return;
+    }
+    throw error;
+  }
+  const body = (data ?? {}) as LoginGateResponse;
+  if (body.allowed === false) {
+    throw new PortalNotEntitledError(
+      body.reason ?? 'not_subscribed',
+      body.hint ?? 'Text OK to the service shortcode to subscribe, then try again.',
+    );
+  }
+}
+
 export async function requestOtp(phone: string): Promise<void> {
+  await assertPortalLoginAllowed(phone);
   const sb = await getSupabase();
   const { error } = await withTimeout(
     sb.auth.signInWithOtp({ phone: normalizePhone(phone) }));

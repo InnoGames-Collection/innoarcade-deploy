@@ -5,7 +5,8 @@
 import '../styles/sign-in-gate.css';
 import {
   authAvailable, currentUser, onAuthChange,
-  requestOtp, verifyOtp, AuthTimeoutError, normalizePhone, setDisplayName,
+  requestOtp, verifyOtp, AuthTimeoutError, PortalNotEntitledError,
+  normalizePhone, setDisplayName,
   devOtpEcho, fetchDevOtp,
 } from './auth';
 import { notifySignIn } from '../hub/signin';
@@ -85,7 +86,11 @@ function wireGateAuth(g: HTMLElement): void {
       startResendTimer();
       void showGateDemoCode(g, codeInput, phone);
     } catch (e) {
-      errEl.textContent = t(e instanceof AuthTimeoutError ? 'gate.errTimeout' : 'gate.errSend');
+      if (e instanceof PortalNotEntitledError) {
+        errEl.textContent = e.hint || t('gate.errNotSubscribed');
+      } else {
+        errEl.textContent = t(e instanceof AuthTimeoutError ? 'gate.errTimeout' : 'gate.errSend');
+      }
       goBtn.disabled = false; goBtn.textContent = t('gate.getCode');
     }
   });

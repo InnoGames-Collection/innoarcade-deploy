@@ -3,9 +3,9 @@
 // Monthly plan; first-time subscribers get a 1-day free trial.
 //
 // 100% server-authoritative: the active subscription lives in the `subscriptions`
-// table and is created/cancelled through the `subscribe` Edge Function (which
-// computes the expiry and enforces the one-time trial). The client keeps an
-// in-memory cache (NO localStorage) hydrated by loadSubscription().
+// table. With PORTAL_ENABLED on the backend, Activate returns `pending` and the
+// entitlement is created by `portal-subscription-webhook` (source of truth).
+// The client keeps an in-memory cache (NO localStorage) hydrated by loadSubscription().
 
 import { isConfigured, getSupabase } from './supabase';
 import { userId } from './auth';
@@ -28,11 +28,25 @@ export const SUB_PLANS: SubPlan[] = [
 
 export interface Subscription {
   period: SubPeriod;
-  method: PayMethod;
+  method: PayMethod | 'portal';
   startedAt: number;
   expiresAt: number;
   /** Whether a free trial day was applied at activation. */
   trial: boolean;
+  source?: 'app' | 'portal';
+}
+
+/** Returned when backend is in portal mode and entitlement is awaited from webhook. */
+export interface SubscribePending {
+  pending: true;
+  period: SubPeriod;
+  message?: string;
+}
+
+export type SubscribeResult = Subscription | SubscribePending;
+
+export function isSubscribePending(r: SubscribeResult): r is SubscribePending {
+  return (r as SubscribePending).pending === true;
 }
 
 // In-memory cache only — hydrated by loadSubscription() from the server.
@@ -61,10 +75,11 @@ export function planByPeriod(p: SubPeriod): SubPlan {
 function mapRow(r: Record<string, unknown>): Subscription {
   return {
     period: r.period as SubPeriod,
-    method: r.method as PayMethod,
+    method: r.method as PayMethod | 'portal',
     startedAt: new Date(r.started_at as string).getTime(),
     expiresAt: new Date(r.expires_at as string).getTime(),
     trial: Boolean(r.trial),
+    source: (r.source as 'app' | 'portal' | undefined) ?? 'app',
   };
 }
 
@@ -78,7 +93,7 @@ export async function loadSubscription(): Promise<Subscription | null> {
     if (!me) { cache = null; trialUsed = false; emit(); return null; }
     const { data } = await sb
       .from('subscriptions')
-      .select('period, method, started_at, expires_at, trial')
+      .select('period, method, started_at, expires_at, trial, source')
       .eq('user_id', me)
       .order('expires_at', { ascending: false })
       .limit(1);
@@ -93,24 +108,30 @@ export async function loadSubscription(): Promise<Subscription | null> {
   return currentSub();
 }
 
-// Activate a plan via the server (computes expiry + applies the one-time trial).
-export async function subscribe(period: SubPeriod, method: PayMethod): Promise<Subscription> {
+// Activate a plan via the server. Portal mode may return { pending: true }.
+export async function subscribe(period: SubPeriod, method: PayMethod): Promise<SubscribeResult> {
   const { data, error } = await (await getSupabase()).functions.invoke('subscribe', {
     body: { period, method },
   });
   if (error) throw error;
+  if (data?.pending) {
+    emit();
+    return {
+      pending: true,
+      period: (data.period as SubPeriod) ?? period,
+      message: typeof data.message === 'string' ? data.message : undefined,
+    };
+  }
   cache = mapRow(data.subscription as Record<string, unknown>);
   if (cache.trial) trialUsed = true;
   emit();
   return cache;
 }
 
-// Cancel the active subscription (server marks it expired).
+// Cancel is not offered in-app. Unsubscribe = SMS STOP to shortcode or portal grace_expiry.
+// Kept as a no-op error so old clients get a clear failure instead of silently expiring.
 export async function cancelSub(): Promise<void> {
-  const { error } = await (await getSupabase()).functions.invoke('subscribe', { body: { cancel: true } });
-  if (error) throw error;
-  cache = null;
-  emit();
+  throw new Error('Unsubscribe by texting STOP to the service shortcode');
 }
 
 export function onSubChange(fn: () => void): () => void {
