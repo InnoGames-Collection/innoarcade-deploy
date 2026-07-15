@@ -210,8 +210,10 @@ supabase functions deploy send-sms subscribe portal-login-gate \
 - [x] GET health probes on webhook URLs (browser-safe)
 - [x] Smoke: pending entitlement → login gate `allowed:true` (MSISDN `+251911000099`)
 - [x] Working-session test phone `+251923026799` seeded + `PORTAL_LOGIN_ALLOWLIST`
-- [ ] Live portal POST notify with HMAC (needs webhook secret)
-- [ ] Live OTP via `SMS_MODE=portal` (needs API key + serviceIds)
+- [x] Portal credentials applied on staging (API key, HMAC secret, serviceIds 2/3/4)
+- [x] Signed notify smoke OK (`subscription` → pending for `251923026799`)
+- [ ] Portal-side active sub on test MSISDN (MT returned `MT_NO_ACTIVE_SUBSCRIPTION`)
+- [ ] Live OTP via `SMS_MODE=portal` after portal activates MSISDN
 - [ ] Admin UI for `portal_events` / `sms_messages`
 - [ ] Load-test webhook acks + retry behaviour
 - [ ] Register **prod** notification URL when cutting over

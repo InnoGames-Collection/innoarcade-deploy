@@ -3,7 +3,7 @@
 **Project:** `innoarcade-deploy` · Supabase ref `kuoxbflcxruwtgbjclet`  
 **Backend decision:** Hosted Supabase (not self-hosted Postgres)  
 **OpenAPI:** [`partner-mt-and-webhooks.openapi.yaml`](../partner-mt-and-webhooks.openapi.yaml) (received 2026-07-14)  
-**Status:** Contract schemas largely locked — blocked on **credentials + serviceIds + sandbox**
+**Status:** Credentials received 2026-07-15 — API key, HMAC secret, serviceIds set on staging (`PORTAL_WEBHOOK_SKIP_VERIFY=false`)
 
 Staging callback base:
 
@@ -42,11 +42,11 @@ Full working plan: [`SUBSCRIPTION_PORTAL_INTEGRATION.md`](./SUBSCRIPTION_PORTAL_
 | Template codes | Portal | **N/A** | Free-text `message`; no templates |
 | Generate-message / old path | Portal | **N/A** | Replaced by `/mt/send` |
 | Service provider account | Portal | Not started | |
-| Sandbox / UAT **base URL** | Portal | **Needed** | OpenAPI lists only `http://168.119.53.26:8484` |
-| Production base URL confirmation | Portal | Partial | IP:8484 in OpenAPI — prefer HTTPS hostname |
-| API key (staging + prod) | Portal | **Needed** | → `PORTAL_API_KEY` |
-| Webhook HMAC shared secret | Portal | **Needed** | → `PORTAL_WEBHOOK_SECRET` |
-| `serviceId` for daily / weekly / monthly | Portal | **Needed** | → `PORTAL_SERVICE_*` |
+| Sandbox / UAT **base URL** | Portal | Using OpenAPI | `http://168.119.53.26:8484` (confirm HTTPS later) |
+| Production base URL confirmation | Portal | Partial | Prefer HTTPS hostname |
+| API key (staging + prod) | Portal | **Done** | Set as `PORTAL_API_KEY` on staging (value not stored in docs) |
+| Webhook HMAC shared secret | Portal | **Done** | Set as `PORTAL_WEBHOOK_SECRET` on staging |
+| `serviceId` for daily / weekly / monthly | Portal | **Done** | daily=`2`, weekly=`3`, monthly=`4` → `PORTAL_SERVICE_*` |
 | Shortcode / keyword map (`OK`/`STOP`/…) | Portal | Not started | Map keyword → serviceId |
 | Grace expiry as `unsubscription`? | Portal | **Ask** | No distinct event in OpenAPI |
 | MT callback signed? | Portal | **Ask** | Not in OpenAPI |
