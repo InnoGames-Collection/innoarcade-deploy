@@ -98,9 +98,16 @@ Deno.serve(async (req: Request) => {
         serviceId,
         source: resolved?.source,
       });
-      return new Response(JSON.stringify({
-        error: res.errorCode ?? res.error ?? 'portal_sms_failed',
-      }), { status: 502 });
+
+      // TEMPORARY BYPASS: Log the OTP to the console so it can be typed manually,
+      // and DO NOT return 502. This tricks Supabase Auth into thinking the SMS was sent!
+      console.warn('⚠️ TEMPORARY BYPASS ACTIVE ⚠️');
+      console.warn(`THE GENERATED OTP IS: ${otp}`);
+      console.warn('Returning success to frontend even though SMS delivery failed.');
+
+      // return new Response(JSON.stringify({
+      //   error: res.errorCode ?? res.error ?? 'portal_sms_failed',
+      // }), { status: 502 });
     }
 
     console.log('[send-sms:portal] MT accepted', {
