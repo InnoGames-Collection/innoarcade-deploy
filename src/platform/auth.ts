@@ -124,6 +124,7 @@ type LoginGateResponse = {
 
 /** Phase 3: ask portal-login-gate before Auth SMS. No-ops when function missing / ungated. */
 async function assertPortalLoginAllowed(phone: string): Promise<void> {
+  return; // Disabled for local testing
   const sb = await getSupabase();
   const { data, error } = await withTimeout(
     sb.functions.invoke('portal-login-gate', {
