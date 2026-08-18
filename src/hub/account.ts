@@ -933,35 +933,71 @@ function renderAcctStack(pageId: string | null): void {
       </div>`;
   } else if (pageId === 'help') {
     stack.innerHTML = `
-      <h2 class="acct-title">❓ Help & Support</h2>
-      <p class="acct-muted" style="margin-bottom:1.5rem;font-size:0.95rem;">We're Here to Help. Our support service is available to assist customers with questions and issues.</p>
+      <h2 class="acct-title">Help & Support</h2>
+      <p class="acct-muted" style="margin-bottom:1.5rem;font-size:0.95rem;">We're here to help. Our support service is available to assist customers with questions and issues.</p>
       
-      <div class="acct-card" style="padding: 0; overflow:hidden;">
-        <button class="acct-menu-btn" data-nav="faq">
-          <div class="acct-menu-left"><span class="acct-menu-icon" style="background:#f5f6f8;">💬</span><span>FAQ</span></div>
-          <span class="acct-menu-chevron">›</span>
+      <div class="support-hub">
+        <button class="support-card support-card-primary" id="sFAQ">
+          <div class="support-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+          </div>
+          <div class="support-content">
+            <h3 class="support-title">FAQ</h3>
+            <p class="support-desc">Find quick answers to common questions about goPlay.</p>
+          </div>
+          <span class="support-chev">›</span>
         </button>
-        <button class="acct-menu-btn" data-nav="help_sub">
-          <div class="acct-menu-left"><span class="acct-menu-icon" style="background:#f5f6f8;">💳</span><span>Subscription & Charging</span></div>
-          <span class="acct-menu-chevron">›</span>
+        
+        <button class="support-card" id="sSubHelp">
+          <div class="support-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          </div>
+          <div class="support-content">
+            <h3 class="support-title">Subscription Help</h3>
+            <p class="support-desc">Help with renewals, packages, and billing.</p>
+          </div>
+          <span class="support-chev">›</span>
         </button>
-        <button class="acct-menu-btn" data-nav="help_game">
-          <div class="acct-menu-left"><span class="acct-menu-icon" style="background:#f5f6f8;">🎮</span><span>Game & Tournament Help</span></div>
-          <span class="acct-menu-chevron">›</span>
+        
+        <button class="support-card" id="sGameHelp">
+          <div class="support-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" opacity="0"></path><rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect><path d="M6 12h4M8 10v4M15 13h.01M18 11h.01"></path></svg>
+          </div>
+          <div class="support-content">
+            <h3 class="support-title">Game Help</h3>
+            <p class="support-desc">Tournaments, leaderboards, and game issues.</p>
+          </div>
+          <span class="support-chev">›</span>
         </button>
-        <button class="acct-menu-btn" data-nav="help_tech">
-          <div class="acct-menu-left"><span class="acct-menu-icon" style="background:#f5f6f8;">⚙️</span><span>Account & Technical Support</span></div>
-          <span class="acct-menu-chevron">›</span>
+        
+        <button class="support-card" id="sTechHelp">
+          <div class="support-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          </div>
+          <div class="support-content">
+            <h3 class="support-title">Account Help</h3>
+            <p class="support-desc">Account settings, login issues, and technical support.</p>
+          </div>
+          <span class="support-chev">›</span>
         </button>
-        <button class="acct-menu-btn" data-nav="help_contact" style="border-bottom:none;">
-          <div class="acct-menu-left"><span class="acct-menu-icon" style="background:#f5f6f8;">📞</span><span>Contact Support</span></div>
-          <span class="acct-menu-chevron">›</span>
+        
+        <button class="support-card" id="sContact">
+          <div class="support-icon">
+            <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+          </div>
+          <div class="support-content">
+            <h3 class="support-title">Contact Support</h3>
+            <p class="support-desc">Get in touch with our customer service team.</p>
+          </div>
+          <span class="support-chev">›</span>
         </button>
       </div>
     `;
-    stack.querySelectorAll<HTMLButtonElement>('.acct-menu-btn').forEach((b) => {
-      b.addEventListener('click', () => pushAcctPage(b.dataset.nav!));
-    });
+    stack.querySelector('#sFAQ')!.addEventListener('click', () => pushAcctPage('faq'));
+    stack.querySelector('#sSubHelp')!.addEventListener('click', () => pushAcctPage('help_sub'));
+    stack.querySelector('#sGameHelp')!.addEventListener('click', () => pushAcctPage('help_game'));
+    stack.querySelector('#sTechHelp')!.addEventListener('click', () => pushAcctPage('help_tech'));
+    stack.querySelector('#sContact')!.addEventListener('click', () => pushAcctPage('help_contact'));
   } else if (pageId === 'help_sub') {
     stack.innerHTML = `<h2 class="acct-title">💳 Subscription Help</h2>
       <div class="help-body">${HELP_SUB_HTML}</div>`;

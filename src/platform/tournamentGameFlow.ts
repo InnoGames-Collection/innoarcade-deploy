@@ -187,7 +187,7 @@ export async function startTournamentRound(
     await host.startRound();
     return true;
   } catch {
-    if (!(await promptIfSessionExpired(showToast))) showToast(t('td.submitFailed'));
+    if (!(await promptIfSessionExpired(showToast))) showToast(t('td.startFailed'));
     return false;
   }
 }

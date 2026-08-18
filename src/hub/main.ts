@@ -909,6 +909,9 @@ function renderSidebar(): void {
         renderMyStats();
       });
     });
+    challengeHost.querySelector('#dcPlayNowBtn')?.addEventListener('click', () => {
+      document.querySelector('#games')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   const dash = document.querySelector('#sidebarDashboard');
