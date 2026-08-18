@@ -32,6 +32,7 @@ const STR = {
     copy: 'Copy', copied: 'Copied!', share: 'Share', haveCode: 'Have a friend’s code?',
     enterCode: 'Enter code', redeem: 'Redeem', refOk: '🎉 +10 coins! Your friend got 20.',
     refAlready: 'You’ve already redeemed a code.', refInvalid: 'That code isn’t valid.', refSelf: 'You can’t use your own code.',
+    rewards: 'My Rewards / Awards', achievements: 'Achievements', notifs: 'Notifications', help: 'Help & Support', settings: 'Settings', legal: 'Terms & Privacy', profile: 'Profile',
   },
   am: {
     account: 'መለያ', back: 'ዝጋ', signedOut: 'አልገቡም', signIn: 'ግባ', signOut: 'ውጣ',
@@ -47,6 +48,7 @@ const STR = {
     copy: 'ቅዳ', copied: 'ተቀድቷል!', share: 'አጋራ', haveCode: 'የጓደኛ ኮድ አለዎት?',
     enterCode: 'ኮድ ያስገቡ', redeem: 'ይቤዡ', refOk: '🎉 +10 ሳንቲም! ጓደኛዎ 20 አግኝቷል።',
     refAlready: 'ኮድ አስቀድመው ተቀብለዋል።', refInvalid: 'ይህ ኮድ ትክክል አይደለም።', refSelf: 'የራስዎን ኮድ መጠቀም አይችሉም።',
+    rewards: 'የእኔ ሽልማቶች', achievements: 'ስኬቶች', notifs: 'ማሳወቂያዎች', help: 'እገዛ እና ድጋፍ', settings: 'ቅንብሮች', legal: 'ውሎች እና ግላዊነት', profile: 'መገለጫ',
   },
 };
 
@@ -286,6 +288,14 @@ function shell(inner: string): HTMLElement {
   return m;
 }
 
+function accountRowHtml(id: string, icon: string, label: string, isDanger: boolean = false, isAction: boolean = false): string {
+  return `<button class="acct-menu-row ${isDanger ? 'danger' : ''}" id="${id}">
+    <span class="acct-menu-ico">${icon}</span>
+    <span class="acct-menu-lbl">${label}</span>
+    ${!isAction && id !== 'aSignOut' && id !== 'aSignIn' ? `<svg class="acct-menu-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>` : ''}
+  </button>`;
+}
+
 export async function openAccount(): Promise<void> {
   injectStyles();
   const user = await currentUser();
@@ -293,27 +303,40 @@ export async function openAccount(): Promise<void> {
   const sub = currentSub();
   const ref = user ? await fetchReferral() : null;
   void sub;
+  
   shell(`
-    ${accountCardHtml(user)}
-    ${referralHtml(ref)}
-    <nav class="acct-nav">
-      <div class="acct-nav-sec">SUPPORT &amp; LEGAL</div>
-      <button class="acct-nav-row" id="aTerms"><span class="acct-nav-ico">📋</span><span class="acct-nav-label">${t('terms')}</span></button>
-      <button class="acct-nav-row" id="aFaq"><span class="acct-nav-ico">❓</span><span class="acct-nav-label">FAQ</span></button>
-      <button class="acct-nav-row" id="aFeedback"><span class="acct-nav-ico">💬</span><span class="acct-nav-label">${t('feedback')}</span></button>
+    <nav class="acct-menu-list">
+      <div class="acct-nav-sec">IDENTITY</div>
+      ${user ? accountRowHtml('aProfile', '👤', esc(user.name || user.phone)) : accountRowHtml('aSignIn', '👤', t('signIn'), false, true)}
+      <div id="profileExpand" class="acct-expand" style="display:none;">${user ? accountCardHtml(user) : ''}</div>
+      
+      <div class="acct-nav-sec">ENGAGEMENT</div>
+      ${accountRowHtml('aRewards', '🎁', t('rewards'))}
+      ${accountRowHtml('aAchievements', '🏆', t('achievements'))}
+      ${user ? accountRowHtml('aInvite', '💌', t('invite')) : ''}
+      <div id="inviteExpand" class="acct-expand" style="display:none;">${referralHtml(ref)}</div>
+
+      <div class="acct-nav-sec">SERVICE</div>
+      ${accountRowHtml('aNotifs', '🔔', t('notifs'))}
+      ${accountRowHtml('aHelp', '❓', t('help'))}
+
+      <div class="acct-nav-sec">PREFERENCES</div>
+      ${accountRowHtml('aSettings', '⚙️', t('settings'))}
+      ${accountRowHtml('aLegal', '📄', t('legal'))}
+
+      ${user ? `<div class="acct-nav-sec acct-nav-sec-exit"></div>` + accountRowHtml('aSignOut', '🚪', t('signOut'), true) : ''}
     </nav>`);
   wireAccount(user);
 }
 
 function accountCardHtml(user: AuthUser | null): string {
-  if (!user) {
-    return `<div class="acct-card">
-      <div class="acct-row"><span class="acct-muted">${t('signedOut')}</span>
-      <button class="acct-btn" id="aSignIn">${t('signIn')}</button></div></div>`;
-  }
-  return `<div class="acct-card">
-    <div class="acct-row"><span class="acct-user">👤 ${esc(user.name || user.phone)}</span>
-    <button class="acct-btn ghost" id="aSignOut">${t('signOut')}</button></div></div>`;
+  if (!user) return '';
+  return `<div class="acct-card profile-details">
+    <div class="acct-row" style="flex-direction:column; align-items:flex-start; gap:0.2rem;">
+      <span class="acct-user" style="font-weight:600; font-size:1.1rem;">${esc(user.name || user.phone)}</span>
+      <span class="acct-muted" style="font-size:0.85rem;">Status: Active Player</span>
+    </div>
+  </div>`;
 }
 
 // Invite-friends card: the player's own shareable code + (if not yet redeemed)
@@ -381,18 +404,34 @@ function wireReferral(): void {
 function wireAccount(user: AuthUser | null): void {
   document.querySelector('#aSignIn')?.addEventListener('click', () => openSignIn());
   document.querySelector('#aSignOut')?.addEventListener('click', async () => { await signOut(); void openAccount(); });
-  // In-app subscribe plans remain for demo / shortcode CTA; cancel is portal-only (STOP / grace).
-  document.querySelector('#aSubscribe')?.addEventListener('click', () => openPlans());
-  document.querySelector('#aFeedback')?.addEventListener('click', () => openFeedback());
-  document.querySelector('#aTerms')?.addEventListener('click', () => openInfo('terms'));
-  document.querySelector('#aFaq')?.addEventListener('click', () => openInfo('faq'));
+  
+  document.querySelector('#aProfile')?.addEventListener('click', () => {
+    const ex = document.querySelector<HTMLElement>('#profileExpand');
+    if (ex) ex.style.display = ex.style.display === 'none' ? 'block' : 'none';
+  });
+  document.querySelector('#aInvite')?.addEventListener('click', () => {
+    const ex = document.querySelector<HTMLElement>('#inviteExpand');
+    if (ex) ex.style.display = ex.style.display === 'none' ? 'block' : 'none';
+  });
+  
+  // Non-implemented placeholders
+  document.querySelector('#aRewards')?.addEventListener('click', () => {});
+  document.querySelector('#aAchievements')?.addEventListener('click', () => {});
+  document.querySelector('#aNotifs')?.addEventListener('click', () => {});
+  
+  document.querySelector('#aSettings')?.addEventListener('click', () => { 
+    const btn = document.querySelector<HTMLButtonElement>('#settingsBtn');
+    if (btn) btn.click();
+  });
+  document.querySelector('#aHelp')?.addEventListener('click', () => openInfo('faq'));
+  document.querySelector('#aLegal')?.addEventListener('click', () => openInfo('terms'));
   wireReferral();
   void user;
 }
 
 const SUB_KEY: Record<SubPeriod, keyof typeof STR.en> = { daily: 'perDay', weekly: 'perWeek', monthly: 'perMonth' };
 
-function openPlans(): void {
+export function openPlans(): void {
   let chosen: SubPeriod = 'daily';
   const m = shell(`
     <h2 class="acct-title">${t('choosePlan')}</h2>
@@ -468,7 +507,7 @@ function openSubPay(period: SubPeriod): void {
   });
 }
 
-function openFeedback(): void {
+export function openFeedback(): void {
   let rating = 0;
   const m = shell(`
     <h2 class="acct-title">${t('feedback')}</h2>
@@ -530,18 +569,28 @@ function injectStyles(): void {
     .sub-cta { display: block; font-size: 1.05rem; color: var(--accent); }
     .sub-on .sub-badge { display: inline-block; background: var(--gold); color: #5a3d00; font-weight: 900; font-size: .8rem; padding: .12rem .6rem; border-radius: 999px; margin-bottom: 4px; }
     .acct-sec { color: rgba(255,255,255,.92); font-weight: 800; font-size: .82rem; text-transform: uppercase; letter-spacing: .08em; margin-top: 4px; }
-    .acct-nav { background: #fff; border-radius: 16px; border: 1px solid #e8eaed; box-shadow: 0 2px 8px rgba(0,0,0,.08);
-      overflow: hidden; margin-top: 0.6rem; }
-    .acct-nav-sec { padding: 0.7rem 1rem 0.35rem; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em;
-      text-transform: uppercase; color: #5f6368; }
-    .acct-nav-row { display: flex; align-items: center; gap: 0.7rem; width: 100%; padding: 0.75rem 1rem;
-      border: none; background: none; font: inherit; font-size: 0.95rem; color: var(--text, #14271a);
-      cursor: pointer; text-align: left; border-top: 1px solid #f0f1f3; }
-    .acct-nav-row:first-of-type { border-top: none; }
-    .acct-nav-row:hover { background: #f8f9fa; }
-    .acct-nav-row:active { background: #f0f1f3; }
-    .acct-nav-ico { font-size: 1.1rem; flex-shrink: 0; width: 1.4rem; text-align: center; }
-    .acct-nav-label { font-weight: 600; }
+    .acct-menu-list { background: #fff; border-radius: 16px; border: 1px solid #e8eaed; box-shadow: 0 2px 8px rgba(0,0,0,.08); overflow: hidden; margin-top: 0.6rem; width: 100%; display: flex; flex-direction: column; }
+    
+    .acct-menu-row { display: flex; align-items: center; gap: 0.8rem; width: 100%; padding: 0.9rem 1.1rem; border: none; background: #fff; font: inherit; font-size: 0.98rem; color: var(--text, #14271a); cursor: pointer; text-align: left; border-top: 1px solid #f0f1f3; position: relative; overflow: hidden; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1); -webkit-tap-highlight-color: transparent; }
+    .acct-menu-row:first-of-type, .acct-nav-sec + .acct-menu-row { border-top: none; }
+    
+    .acct-menu-row::after { content: ""; position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; padding-top: 100%; background: rgba(0, 0, 0, 0.08); border-radius: 50%; transform: translate(-50%, -50%) scale(0); opacity: 0; transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease; pointer-events: none; }
+    .acct-menu-row:active { transform: scale(0.97); transition-duration: 0.1s; }
+    .acct-menu-row:active::after { transform: translate(-50%, -50%) scale(1.5); opacity: 1; transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.1s ease; }
+    
+    .acct-menu-row.danger { color: #d64545; }
+    .acct-menu-row.danger .acct-menu-ico { color: #d64545; }
+    
+    .acct-menu-ico { font-size: 1.25rem; flex-shrink: 0; width: 1.6rem; text-align: center; }
+    .acct-menu-lbl { font-weight: 600; flex: 1; }
+    .acct-menu-chev { flex-shrink: 0; color: #a1a5ab; }
+    
+    .acct-nav-sec { padding: 1.2rem 1.1rem 0.4rem; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #8e949a; background: #f5f6f8; border-top: 1px solid #e8eaed; }
+    .acct-menu-list .acct-nav-sec:first-child { border-top: none; }
+    .acct-nav-sec.acct-nav-sec-exit { padding: 0.6rem; border-top: none; }
+    
+    .acct-expand { width: 100%; background: #f8f9fa; border-top: 1px solid #f0f1f3; padding: 0; }
+    .acct-expand .acct-card { margin: 0; border: none; box-shadow: none; border-radius: 0; background: transparent; }
     .acct-primary { background: var(--accent, #4f9e16); color: #fff; border: none; border-radius: 12px; padding: .85rem; font: inherit; font-weight: 800; cursor: pointer; width: 100%; margin-top: 0.5rem; }
     .plan-list { display: flex; flex-direction: column; gap: 10px; }
     .plan { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; background: #fff; border: 2px solid var(--line);
