@@ -19,7 +19,7 @@ import { balance } from '../platform/wallet';
 
 const STR = {
   en: {
-    account: 'Account', back: 'Back', signedOut: 'Not signed in', signIn: 'Sign in', signOut: 'Sign out',
+    account: 'Account', back: 'Back', signedOut: 'Not signed in', signIn: 'Sign in', signOut: 'Log Out',
     premium: 'Premium', expiresIn: 'Renews in', daysLeft: 'days left', notSub: "You're not subscribed yet",
     subscribeNow: 'Subscribe now', choosePlan: 'Choose your plan', daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly',
     perDay: 'Charged once a day', perWeek: 'Charged once a week', perMonth: 'Charged once a month',
@@ -641,6 +641,181 @@ const SUB_INFO_HTML = `
   </div>
 `;
 
+const HELP_SUB_HTML = `
+  <h3 class="acct-title" style="font-size:1.15rem; margin-top:0.5rem;">Subscription Support</h3>
+  <div class="acct-card info-body tc-body">
+    <h4>I subscribed but cannot access goPlay</h4>
+    <p>Please check that:</p>
+    <ul>
+      <li>Your subscription was successfully completed.</li>
+      <li>You are accessing goPlay using the mobile number associated with your subscription.</li>
+      <li>Your subscription has not been cancelled.</li>
+      <li>Your internet connection is working.</li>
+      <li>The service is currently available.</li>
+    </ul>
+    <p>If the problem continues, contact support.</p>
+    
+    <h4 style="margin-top:1.5rem;">I want to unsubscribe</h4>
+    <p>Use the applicable SMS command:</p>
+    <ul>
+      <li>goPlay Daily: Send <strong>STOP 1</strong> to <strong>9402</strong></li>
+      <li>goPlay Weekly: Send <strong>STOP 2</strong> to <strong>9402</strong></li>
+      <li>goPlay Monthly: Send <strong>STOP 3</strong> to <strong>9402</strong></li>
+    </ul>
+  </div>
+
+  <h3 class="acct-title" style="font-size:1.15rem; margin-top:1.5rem;">Charging Support</h3>
+  <div class="acct-card info-body tc-body">
+    <h4>I was charged unexpectedly</h4>
+    <p>If you believe that you were charged incorrectly, contact support and provide:</p>
+    <ul>
+      <li>Your mobile number</li>
+      <li>Subscription package</li>
+      <li>Date and approximate time of the charge</li>
+      <li>Charged amount</li>
+      <li>Any available SMS confirmation</li>
+      <li>Description of the issue</li>
+    </ul>
+    <p>The transaction and subscription information can then be reviewed through the applicable support process.</p>
+    
+    <h4 style="margin-top:1.5rem;">My subscription did not renew</h4>
+    <p>Please check whether sufficient balance was available at the time of renewal.</p>
+    <p>If sufficient balance was available but the subscription was not renewed correctly, contact support for investigation.</p>
+  </div>
+`;
+
+const HELP_GAME_HTML = `
+  <h3 class="acct-title" style="font-size:1.15rem; margin-top:0.5rem;">Game Support</h3>
+  <div class="acct-card info-body tc-body">
+    <h4>The game is not loading</h4>
+    <p>Please try the following:</p>
+    <ul>
+      <li>Check your mobile internet connection.</li>
+      <li>Refresh the goPlay page.</li>
+      <li>Close and reopen the browser.</li>
+      <li>Try again after a short period.</li>
+      <li>If the issue continues, contact support.</li>
+    </ul>
+
+    <h4 style="margin-top:1.5rem;">My game stopped during play</h4>
+    <p>If a game stops unexpectedly, record the approximate time, game name and any available error message or screenshot.</p>
+    <p>Contact support with these details so the issue can be investigated.</p>
+
+    <h4 style="margin-top:1.5rem;">My score is incorrect</h4>
+    <p>If you believe that your score has been incorrectly recorded:</p>
+    <ul>
+      <li>Note the game name.</li>
+      <li>Note the approximate time you played.</li>
+      <li>Keep any screenshot available.</li>
+      <li>Provide your mobile number.</li>
+      <li>Contact support.</li>
+    </ul>
+    <p>The applicable system records will be reviewed according to the service process.</p>
+  </div>
+
+  <h3 class="acct-title" style="font-size:1.15rem; margin-top:1.5rem;">Tournament & Prize Support</h3>
+  <div class="acct-card info-body tc-body">
+    <h4>I participated in the tournament but my score is not showing</h4>
+    <p>Please provide:</p>
+    <ul>
+      <li>Mobile number</li>
+      <li>Tournament game</li>
+      <li>Approximate gameplay time</li>
+      <li>Screenshot of the score, if available</li>
+      <li>Any relevant error message</li>
+    </ul>
+    <p>Support will review the issue through the applicable tournament and system records.</p>
+
+    <h4 style="margin-top:1.5rem;">I believe the leaderboard is incorrect</h4>
+    <p>The official tournament ranking is based on validated system records.</p>
+    <p>If you believe there is an error, contact support with your mobile number, game name, score and relevant evidence.</p>
+
+    <h4 style="margin-top:1.5rem;">I believe I won a prize</h4>
+    <p>Prize winners may be subject to eligibility and identity verification before the prize is delivered.</p>
+    <p>If you believe you are an eligible winner but have not received the relevant communication, contact support.</p>
+
+    <h4 style="margin-top:1.5rem;">What information should I provide for prize support?</h4>
+    <p>Please provide:</p>
+    <ul>
+      <li>Mobile number used for goPlay</li>
+      <li>Game or tournament name</li>
+      <li>Date of participation</li>
+      <li>Approximate time of participation</li>
+      <li>Rank or score, if available</li>
+      <li>Any winner notification received</li>
+    </ul>
+    <p><strong>Note:</strong> Do not share passwords, PINs or other confidential security credentials with anyone claiming to provide goPlay support.</p>
+  </div>
+`;
+
+const HELP_TECH_HTML = `
+  <h3 class="acct-title" style="font-size:1.15rem; margin-top:0.5rem;">Technical Support</h3>
+  <div class="acct-card info-body tc-body">
+    <p>If you experience a technical problem, please provide as much information as possible:</p>
+    <ul>
+      <li>Mobile number</li>
+      <li>Device type</li>
+      <li>Browser used</li>
+      <li>Game name</li>
+      <li>Date and time of the problem</li>
+      <li>Description of the issue</li>
+      <li>Screenshot, if available</li>
+      <li>Error message, if displayed</li>
+    </ul>
+    <p>Providing complete information helps the support team investigate the issue more efficiently.</p>
+  </div>
+
+  <h3 class="acct-title" style="font-size:1.15rem; margin-top:1.5rem;">Account and Security</h3>
+  <div class="acct-card info-body tc-body">
+    <p>Customers should keep their mobile number and account access secure.</p>
+    <p>Do not share:</p>
+    <ul>
+      <li>Account passwords</li>
+      <li>One-time passwords (OTP)</li>
+      <li>PINs</li>
+      <li>Authentication codes</li>
+      <li>Other confidential security information</li>
+    </ul>
+    <p>Official support personnel will not require customers to disclose confidential authentication credentials unnecessarily.</p>
+  </div>
+
+  <h3 class="acct-title" style="font-size:1.15rem; margin-top:1.5rem;">Service Issues</h3>
+  <div class="acct-card info-body tc-body">
+    <p>Some problems may be caused by temporary network interruptions, scheduled maintenance, system updates or circumstances outside the direct control of the service provider.</p>
+    <p>Where a technical interruption occurs, reasonable efforts will be made to restore service as soon as practicable.</p>
+  </div>
+`;
+
+const HELP_CONTACT_HTML = `
+  <h3 class="acct-title" style="font-size:1.15rem; margin-top:0.5rem;">Contact Support</h3>
+  <div class="acct-card info-body tc-body" style="text-align:center;">
+    <p style="font-size:1.1rem; color:#14271a; margin-bottom:1rem;">For goPlay assistance, please use the official customer-support channel:</p>
+    <div style="background:#f5f6f8; border-radius:8px; padding:1.5rem; margin-bottom:1rem;">
+      <span style="display:block; font-size:0.9rem; color:#5f6368; text-transform:uppercase; font-weight:800; letter-spacing:0.05em; margin-bottom:0.5rem;">Customer Support</span>
+      <strong style="font-size:2.5rem; color:var(--accent);">9090</strong>
+    </div>
+    <p style="font-size:0.9rem; color:#5f6368;">When contacting support, please provide accurate information so your request can be identified and investigated.</p>
+  </div>
+
+  <h3 class="acct-title" style="font-size:1.15rem; margin-top:1.5rem;">Before Contacting Support</h3>
+  <div class="acct-card info-body tc-body">
+    <p>To help resolve your issue quickly, please have the following information ready:</p>
+    <ol>
+      <li>Your mobile number</li>
+      <li>Your goPlay package</li>
+      <li>Game name</li>
+      <li>Date and approximate time of the issue</li>
+      <li>Description of the problem</li>
+      <li>Screenshot or error message, if available</li>
+    </ol>
+  </div>
+
+  <h3 class="acct-title" style="font-size:1.15rem; margin-top:1.5rem;">Important Security Notice</h3>
+  <div class="acct-card info-body tc-body" style="border-left:4px solid #ea4335;">
+    <p><strong>Never provide your password, OTP, PIN or other confidential authentication information to another person.</strong></p>
+    <p>If you receive a suspicious message or communication claiming to be from goPlay or Ethio Telecom, do not share confidential information and report the matter through the official customer-support channel.</p>
+  </div>
+`;
 
 // FAQ entries (EN/AM). Rendered as question/answer blocks.
 const FAQ: Array<{ q: string; a: string }> = [
@@ -722,6 +897,11 @@ function renderAcctStack(pageId: string | null): void {
       <nav class="acct-menu-list">
         ${accountRowHtml('aSettings', '⚙️', t('settings'))}
       </nav>
+      ${acctUser ? `
+      <div class="acct-nav-sec">SESSION</div>
+      <nav class="acct-menu-list">
+        ${accountRowHtml('aLogout', '🚪', t('signOut'), true, true)}
+      </nav>` : ''}
     `;
     wireAccount();
   } else if (pageId === 'identity') {
@@ -739,7 +919,7 @@ function renderAcctStack(pageId: string | null): void {
         </nav>`}
     `;
     stack.querySelector('#subIdSignIn')?.addEventListener('click', () => { acctModal?.remove(); acctModal = null; openSignIn(); });
-    stack.querySelector('#subIdSignOut')?.addEventListener('click', async () => { await signOut(); history.back(); setTimeout(() => openAccount(), 500); });
+    stack.querySelector('#subIdSignOut')?.addEventListener('click', () => pushAcctPage('logout'));
   } else if (pageId === 'invite') {
     stack.innerHTML = `<h2 class="acct-title">💌 ${t('invite')}</h2>` + referralHtml(acctRef);
     wireReferral();
@@ -752,10 +932,48 @@ function renderAcctStack(pageId: string | null): void {
         <p>Version: 1.0.0<br/>© 2026 InnoArcade. All rights reserved.</p>
       </div>`;
   } else if (pageId === 'help') {
-    stack.innerHTML = `<h2 class="acct-title">❓ ${t('help')}</h2>
-      <div class="acct-card info-body">
-        <p>For support, please use the "Write your feedback" button in Settings, or contact the GoPlay support team via the official channels.</p>
-      </div>`;
+    stack.innerHTML = `
+      <h2 class="acct-title">❓ Help & Support</h2>
+      <p class="acct-muted" style="margin-bottom:1.5rem;font-size:0.95rem;">We're Here to Help. Our support service is available to assist customers with questions and issues.</p>
+      
+      <div class="acct-card" style="padding: 0; overflow:hidden;">
+        <button class="acct-menu-btn" data-nav="faq">
+          <div class="acct-menu-left"><span class="acct-menu-icon" style="background:#f5f6f8;">💬</span><span>FAQ</span></div>
+          <span class="acct-menu-chevron">›</span>
+        </button>
+        <button class="acct-menu-btn" data-nav="help_sub">
+          <div class="acct-menu-left"><span class="acct-menu-icon" style="background:#f5f6f8;">💳</span><span>Subscription & Charging</span></div>
+          <span class="acct-menu-chevron">›</span>
+        </button>
+        <button class="acct-menu-btn" data-nav="help_game">
+          <div class="acct-menu-left"><span class="acct-menu-icon" style="background:#f5f6f8;">🎮</span><span>Game & Tournament Help</span></div>
+          <span class="acct-menu-chevron">›</span>
+        </button>
+        <button class="acct-menu-btn" data-nav="help_tech">
+          <div class="acct-menu-left"><span class="acct-menu-icon" style="background:#f5f6f8;">⚙️</span><span>Account & Technical Support</span></div>
+          <span class="acct-menu-chevron">›</span>
+        </button>
+        <button class="acct-menu-btn" data-nav="help_contact" style="border-bottom:none;">
+          <div class="acct-menu-left"><span class="acct-menu-icon" style="background:#f5f6f8;">📞</span><span>Contact Support</span></div>
+          <span class="acct-menu-chevron">›</span>
+        </button>
+      </div>
+    `;
+    stack.querySelectorAll<HTMLButtonElement>('.acct-menu-btn').forEach((b) => {
+      b.addEventListener('click', () => pushAcctPage(b.dataset.nav!));
+    });
+  } else if (pageId === 'help_sub') {
+    stack.innerHTML = `<h2 class="acct-title">💳 Subscription Help</h2>
+      <div class="help-body">${HELP_SUB_HTML}</div>`;
+  } else if (pageId === 'help_game') {
+    stack.innerHTML = `<h2 class="acct-title">🎮 Game Help</h2>
+      <div class="help-body">${HELP_GAME_HTML}</div>`;
+  } else if (pageId === 'help_tech') {
+    stack.innerHTML = `<h2 class="acct-title">⚙️ Technical Help</h2>
+      <div class="help-body">${HELP_TECH_HTML}</div>`;
+  } else if (pageId === 'help_contact') {
+    stack.innerHTML = `<h2 class="acct-title">📞 Contact Support</h2>
+      <div class="help-body">${HELP_CONTACT_HTML}</div>`;
   } else if (pageId === 'faq') {
     stack.innerHTML = `<h2 class="acct-title">💬 ${t('faq')}</h2>
       <div class="faq-body">
@@ -777,9 +995,21 @@ function renderAcctStack(pageId: string | null): void {
       btn.addEventListener('click', () => {
         const item = btn.closest('.faq-item')!;
         const isOpen = item.classList.contains('open');
-        item.classList.toggle('open');
-        const icon = btn.querySelector('.faq-q-icon')!;
-        icon.textContent = isOpen ? '＋' : '−';
+        
+        if (!isOpen) {
+          item.classList.add('open');
+          btn.querySelector('.faq-q-icon')!.textContent = '−';
+          if (!history.state?.faqOpen) {
+            history.pushState({ acctModalOpen: true, acctPage: 'faq', faqOpen: true }, '', location.href);
+          }
+        } else {
+          item.classList.remove('open');
+          btn.querySelector('.faq-q-icon')!.textContent = '＋';
+          const anyOpen = stack.querySelectorAll('.faq-item.open').length > 0;
+          if (!anyOpen && history.state?.faqOpen) {
+            history.back(); // Triggers popstate to cleanly unwind the stack
+          }
+        }
       });
     });
   } else if (pageId === 'about') {
@@ -865,6 +1095,32 @@ function renderAcctStack(pageId: string | null): void {
         nextBtn.style.opacity = '1';
       }, 150);
     });
+  } else if (pageId === 'logout') {
+    stack.innerHTML = `
+      <h2 class="acct-title">🚪 ${t('signOut')}?</h2>
+      <p class="acct-muted" style="margin-top: 0.5rem; margin-bottom: 2rem;">${getLang() === 'am' ? 'እርግጠኛ ነዎት ከመለያዎ መውጣት ይፈልጋሉ?' : 'Are you sure you want to log out of your account?'}</p>
+      <div style="display: flex; gap: 1rem;">
+        <button class="btn-secondary" id="logoutCancel" style="flex: 1;">${getLang() === 'am' ? 'ሰርዝ' : 'Cancel'}</button>
+        <button class="btn-primary" id="logoutConfirm" style="flex: 1; background: #dc3545; color: white; border-color: #dc3545;">${t('signOut')}</button>
+      </div>
+      <p class="ref-msg err" id="logoutErr" style="display:none; margin-top:1rem;"></p>
+    `;
+    stack.querySelector('#logoutCancel')?.addEventListener('click', () => history.back());
+    stack.querySelector('#logoutConfirm')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget as HTMLButtonElement;
+      btn.disabled = true;
+      btn.textContent = '...';
+      try {
+        await signOut();
+        location.replace('/');
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = t('signOut');
+        const errEl = stack.querySelector('#logoutErr') as HTMLElement;
+        errEl.style.display = 'block';
+        errEl.textContent = getLang() === 'am' ? 'መውጣት አልተሳካም። እባክዎ ግንኙነትዎን ያረጋግጡና እንደገና ይሞክሩ።' : 'Logout failed. Please check your connection and try again.';
+      }
+    });
   } else if (pageId === 'rewards') {
     stack.innerHTML = `
       <div class="acct-success" style="padding-top:2rem;">
@@ -878,12 +1134,32 @@ function renderAcctStack(pageId: string | null): void {
 
 function handleAcctPopState(e: PopStateEvent): void {
   if (!acctModal) return;
-  const pageId = e.state?.acctPage || null;
-  renderAcctStack(pageId);
+
+  // Did we pop all the way out of the modal flow?
+  if (!e.state?.acctModalOpen) {
+    window.removeEventListener('popstate', handleAcctPopState);
+    acctModal.remove();
+    acctModal = null;
+    return;
+  }
+
+  const newPage = e.state.acctPage || null;
+  const currentPage = acctModal.dataset.pageId || null;
+
+  // Transient state handler for FAQ
+  if (newPage === 'faq' && currentPage === 'faq') {
+    if (!e.state.faqOpen) {
+      acctModal.querySelectorAll('.faq-item.open').forEach(f => f.classList.remove('open'));
+      acctModal.querySelectorAll('.faq-q-icon').forEach(i => i.textContent = '＋');
+    }
+    return; // Skip re-rendering to preserve scroll position
+  }
+
+  renderAcctStack(newPage);
 }
 
 function pushAcctPage(pageId: string): void {
-  history.pushState({ acctPage: pageId }, '', location.href);
+  history.pushState({ acctModalOpen: true, acctPage: pageId }, '', location.href);
   renderAcctStack(pageId);
 }
 
@@ -899,16 +1175,13 @@ function shell(inner?: string): HTMLElement {
     <div class="acct-stack">${inner ?? ''}</div>`;
   document.body.appendChild(acctModal);
   
+  // Ensure we don't bind multiple times if shell is re-invoked
+  window.removeEventListener('popstate', handleAcctPopState);
   window.addEventListener('popstate', handleAcctPopState);
   
   acctModal.querySelector('#closeAcctBtn')!.addEventListener('click', () => {
-    if (history.state?.acctPage) {
-      history.back();
-    } else {
-      window.removeEventListener('popstate', handleAcctPopState);
-      acctModal?.remove();
-      acctModal = null;
-    }
+    // We always have a history state pushed when shell is used, so history.back() is perfectly safe.
+    history.back();
   });
   return acctModal;
 }
@@ -929,6 +1202,7 @@ export async function openAccount(): Promise<void> {
   acctRef = acctUser ? await fetchReferral() : null;
   void sub;
   
+  history.pushState({ acctModalOpen: true, acctPage: null }, '', location.href);
   shell();
   renderAcctStack(null);
 }
@@ -1024,11 +1298,13 @@ function wireAccount(): void {
     const btn = document.querySelector<HTMLButtonElement>('#settingsBtn');
     if (btn) btn.click();
   });
+  m.querySelector('#aLogout')?.addEventListener('click', () => pushAcctPage('logout'));
 }
 
 const SUB_KEY: Record<SubPeriod, keyof typeof STR.en> = { daily: 'perDay', weekly: 'perWeek', monthly: 'perMonth' };
 
 export function openPlans(): void {
+  history.pushState({ acctModalOpen: true, acctPage: null }, '', location.href);
   let chosen: SubPeriod = 'daily';
   const m = shell(`
     <h2 class="acct-title">${t('choosePlan')}</h2>
@@ -1054,6 +1330,7 @@ export function openPlans(): void {
 }
 
 function openSubPay(period: SubPeriod): void {
+  history.pushState({ acctModalOpen: true, acctPage: null }, '', location.href);
   const methods = paymentMethodsEnabled();
   const avail = (['telebirr', 'topup'] as PayMethod[]).filter((mth) => methods[mth]);
   let chosen: PayMethod = avail[0] ?? 'telebirr';
@@ -1105,6 +1382,7 @@ function openSubPay(period: SubPeriod): void {
 }
 
 export function openFeedback(): void {
+  history.pushState({ acctModalOpen: true, acctPage: null }, '', location.href);
   let rating = 0;
   const m = shell(`
     <h2 class="acct-title">${t('feedback')}</h2>
