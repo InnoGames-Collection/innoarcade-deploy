@@ -1131,6 +1131,35 @@ function renderAcctStack(pageId: string | null): void {
         nextBtn.style.opacity = '1';
       }, 150);
     });
+  } else if (pageId === 'unsubscribe') {
+    const sub = currentSub();
+    if (!sub) {
+      stack.innerHTML = `
+        <h2 class="acct-title">Unsubscribe</h2>
+        <p class="acct-muted" style="margin-top: 0.5rem; margin-bottom: 2rem;">You do not have an active subscription to cancel.</p>
+        <button class="acct-primary" id="unsubBackBtn">Return to Settings</button>
+      `;
+      stack.querySelector('#unsubBackBtn')!.addEventListener('click', () => history.back());
+    } else {
+      const pLabel = periodLabel(sub.period);
+      stack.innerHTML = `
+        <h2 class="acct-title">Unsubscribe</h2>
+        <p class="acct-muted" style="margin-top: 0.5rem; margin-bottom: 2rem;">Are you sure you want to unsubscribe from your <strong>goPlay ${pLabel}</strong> subscription?</p>
+        <div class="acct-card profile-details" style="background:#f9f0f0; border-color:#fad5d5; margin-bottom:2rem;">
+          <p style="margin:0; font-size:0.9rem; color:#8c2b2b;">Unsubscribing will open your messaging app. Send the prepared message to cancel your plan.</p>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+          <button class="btn-secondary" id="unsubCancelBtn" style="flex: 1;">Cancel</button>
+          <button class="btn-primary" id="unsubConfirmBtn" style="flex: 1; background: #dc3545; color: white; border-color: #dc3545;">Continue</button>
+        </div>
+      `;
+      stack.querySelector('#unsubCancelBtn')!.addEventListener('click', () => history.back());
+      stack.querySelector('#unsubConfirmBtn')!.addEventListener('click', () => {
+        const commands: Record<string, string> = { daily: 'STOP 1', weekly: 'STOP 2', monthly: 'STOP 3' };
+        const cmd = commands[sub.period] || 'STOP';
+        window.location.href = \`sms:9402?body=\${encodeURIComponent(cmd)}\`;
+      });
+    }
   } else if (pageId === 'logout') {
     stack.innerHTML = `
       <h2 class="acct-title">🚪 ${t('signOut')}?</h2>
@@ -1241,6 +1270,12 @@ export async function openAccount(): Promise<void> {
   history.pushState({ acctModalOpen: true, acctPage: null }, '', location.href);
   shell();
   renderAcctStack(null);
+}
+
+export function openPublicAccountPage(pageId: string): void {
+  injectStyles();
+  shell();
+  pushAcctPage(pageId);
 }
 
 function accountCardHtml(user: AuthUser | null): string {

@@ -2,7 +2,7 @@ import '../styles/base.css';
 import './hub.css';
 import { applyTranslations, getLang, setLang, t, type I18nKey, type Lang } from '../i18n';
 import { mountSignInGate } from '../platform/signInGate';
-import { openAccount } from './account';
+import { openAccount, openPublicAccountPage } from './account';
 import { mountWallet } from './wallet';
 import { onAuthChange, currentUser, signOut, isSignedIn } from '../platform/auth';
 import { sfx } from '../engine/audio';
@@ -1211,25 +1211,64 @@ function mountSettings(): void {
   async function build(): Promise<void> {
     const user = await currentUser();
     menu.innerHTML = `
-      <div class="sm-row sm-static">
-        <span class="sm-label">${t('set.language')}</span>
-        <span class="sm-langbtns">
+      <div class="set-row-btn set-static">
+        <div class="set-row-left">
+          <div class="set-row-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg></div>
+          <span class="set-row-label">${t('set.language')}</span>
+        </div>
+        <div class="sm-langbtns">
           <button class="set-lang-btn" data-lang="en">EN</button>
           <button class="set-lang-btn" data-lang="am">አማ</button>
-        </span>
+        </div>
       </div>
-      <button class="sm-row" id="smSound"><span class="sm-label">${t('set.sound')}</span><span class="sm-toggle${sfx.muted ? '' : ' on'}"></span></button>
-      <a class="sm-row" href="#" id="smTerms"><span class="sm-label">${t('set.terms')}</span><span class="sm-chev">›</span></a>
-      <a class="sm-row" href="#" id="smFaq"><span class="sm-label">${t('set.faq')}</span><span class="sm-chev">›</span></a>
-      <button class="sm-row" id="smUnsub"><span class="sm-label">${t('set.unsub')}</span></button>
-      ${user ? `<button class="sm-row danger" id="smLogout"><span class="sm-label">${t('set.logout')}</span></button>` : ''}`;
+      
+      <button class="set-row-btn" id="smSound">
+        <div class="set-row-left">
+          <div class="set-row-icon"><svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></div>
+          <span class="set-row-label">${t('set.sound')}</span>
+        </div>
+        <span class="sm-toggle${sfx.muted ? '' : ' on'}"></span>
+      </button>
+      
+      <button class="set-row-btn" id="smTerms">
+        <div class="set-row-left">
+          <div class="set-row-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+          <span class="set-row-label">${t('set.terms')}</span>
+        </div>
+        <span class="sm-chev">›</span>
+      </button>
+      
+      <button class="set-row-btn" id="smFaq">
+        <div class="set-row-left">
+          <div class="set-row-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+          <span class="set-row-label">${t('set.faq')}</span>
+        </div>
+        <span class="sm-chev">›</span>
+      </button>
+      
+      <button class="set-row-btn" id="smUnsub">
+        <div class="set-row-left">
+          <div class="set-row-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg></div>
+          <span class="set-row-label">${t('set.unsub')}</span>
+        </div>
+        <span class="sm-chev">›</span>
+      </button>
+      
+      ${user ? `
+      <button class="set-row-btn danger" id="smLogout">
+        <div class="set-row-left">
+          <div class="set-row-icon"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></div>
+          <span class="set-row-label">${t('set.logout')}</span>
+        </div>
+      </button>` : ''}
+    `;
     syncLangButtons();
     menu.querySelectorAll<HTMLButtonElement>('.set-lang-btn').forEach((b) =>
       b.addEventListener('click', () => { pick(b.dataset.lang as Lang); void build(); }));
     menu.querySelector('#smSound')!.addEventListener('click', () => { sfx.toggleMute(); void build(); });
-    menu.querySelector('#smTerms')!.addEventListener('click', (e) => e.preventDefault());
-    menu.querySelector('#smFaq')!.addEventListener('click', (e) => e.preventDefault());
-    menu.querySelector('#smUnsub')!.addEventListener('click', close);
+    menu.querySelector('#smTerms')!.addEventListener('click', (e) => { e.preventDefault(); openPublicAccountPage('terms'); close(); });
+    menu.querySelector('#smFaq')!.addEventListener('click', (e) => { e.preventDefault(); openPublicAccountPage('faq'); close(); });
+    menu.querySelector('#smUnsub')!.addEventListener('click', (e) => { e.preventDefault(); openPublicAccountPage('unsubscribe'); close(); });
     menu.querySelector('#smLogout')?.addEventListener('click', async () => { await signOut(); close(); });
   }
 
