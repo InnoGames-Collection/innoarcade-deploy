@@ -33,6 +33,7 @@ const STR = {
     enterCode: 'Enter code', redeem: 'Redeem', refOk: '🎉 +10 coins! Your friend got 20.',
     refAlready: 'You’ve already redeemed a code.', refInvalid: 'That code isn’t valid.', refSelf: 'You can’t use your own code.',
     rewards: 'My Rewards / Awards', achievements: 'Achievements', notifs: 'Notifications', help: 'Help & Support', settings: 'Settings', legal: 'Terms & Privacy', profile: 'Profile',
+    about: 'About', pricing: 'Pricing', subscription: 'Subscription', identity: 'Identity',
   },
   am: {
     account: 'መለያ', back: 'ተመለስ', signedOut: 'አልገቡም', signIn: 'ግባ', signOut: 'ውጣ',
@@ -49,6 +50,7 @@ const STR = {
     enterCode: 'ኮድ ያስገቡ', redeem: 'ይቤዡ', refOk: '🎉 +10 ሳንቲም! ጓደኛዎ 20 አግኝቷል።',
     refAlready: 'ኮድ አስቀድመው ተቀብለዋል።', refInvalid: 'ይህ ኮድ ትክክል አይደለም።', refSelf: 'የራስዎን ኮድ መጠቀም አይችሉም።',
     rewards: 'የእኔ ሽልማቶች', achievements: 'ስኬቶች', notifs: 'ማሳወቂያዎች', help: 'እገዛ እና ድጋፍ', settings: 'ቅንብሮች', legal: 'ውሎች እና ግላዊነት', profile: 'መገለጫ',
+    about: 'ስለ እኛ', pricing: 'ዋጋ', subscription: 'ምዝገባ', identity: 'ማንነት',
   },
 };
 
@@ -273,60 +275,179 @@ const t = (k: keyof typeof STR.en): string => (STR[getLang()] ?? STR.en)[k];
 const esc = (s: string): string => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
 const periodLabel = (p: SubPeriod): string => t(p);
 
-function shell(inner: string): HTMLElement {
+let acctModal: HTMLElement | null = null;
+let acctUser: AuthUser | null = null;
+let acctRef: { code: string; redeemed: boolean } | null = null;
+
+function renderAcctStack(pageId: string | null): void {
+  if (!acctModal) return;
+  const stack = acctModal.querySelector('.acct-stack')!;
+  
+  if (!pageId) {
+    stack.innerHTML = `
+      <div class="acct-nav-sec">ACCOUNT</div>
+      <nav class="acct-menu-list">
+        ${accountRowHtml('aIdentity', '👤', t('identity'))}
+        ${accountRowHtml('aRewards', '🎁', t('rewards'))}
+        ${acctUser ? accountRowHtml('aInvite', '💌', t('invite')) : ''}
+      </nav>
+      
+      <div class="acct-nav-sec">SUPPORT</div>
+      <nav class="acct-menu-list">
+        ${accountRowHtml('aHelp', '❓', t('help'))}
+        ${accountRowHtml('aFaq', '💬', t('faq'))}
+      </nav>
+
+      <div class="acct-nav-sec">SERVICE</div>
+      <nav class="acct-menu-list">
+        ${accountRowHtml('aPricing', '🏷️', t('pricing'))}
+        ${accountRowHtml('aSubscription', '🔄', t('subscription'))}
+      </nav>
+
+      <div class="acct-nav-sec">INFORMATION</div>
+      <nav class="acct-menu-list">
+        ${accountRowHtml('aAbout', 'ℹ️', t('about'))}
+        ${accountRowHtml('aTerms', '📄', t('terms'))}
+      </nav>
+
+      <div class="acct-nav-sec">SETTINGS</div>
+      <nav class="acct-menu-list">
+        ${accountRowHtml('aSettings', '⚙️', t('settings'))}
+      </nav>
+    `;
+    wireAccount();
+  } else if (pageId === 'identity') {
+    stack.innerHTML = `
+      <h2 class="acct-title">👤 ${t('identity')}</h2>
+      ${!acctUser ? `
+        <div class="acct-card profile-details" style="text-align:center; padding: 2.4rem 1rem;">
+          <p class="acct-muted" style="margin-bottom: 1.5rem;">${t('signedOut')}</p>
+          <button class="btn-primary" id="subIdSignIn">${t('signIn')}</button>
+        </div>` 
+      : `
+        ${accountCardHtml(acctUser)}
+        <nav class="acct-menu-list" style="margin-top: 1.2rem;">
+          ${accountRowHtml('subIdSignOut', '🚪', t('signOut'), true, true)}
+        </nav>`}
+    `;
+    stack.querySelector('#subIdSignIn')?.addEventListener('click', () => { acctModal?.remove(); acctModal = null; openSignIn(); });
+    stack.querySelector('#subIdSignOut')?.addEventListener('click', async () => { await signOut(); history.back(); setTimeout(() => openAccount(), 500); });
+  } else if (pageId === 'invite') {
+    stack.innerHTML = `<h2 class="acct-title">💌 ${t('invite')}</h2>` + referralHtml(acctRef);
+    wireReferral();
+  } else if (pageId === 'about') {
+    stack.innerHTML = `<h2 class="acct-title">ℹ️ ${t('about')}</h2>
+      <div class="acct-card info-body tc-body">
+        <h3>InnoArcade</h3>
+        <p>InnoArcade is a premium HTML5 gaming platform delivering instant, high-quality games.</p>
+        <p>Built with modern web technologies, it provides a seamless, app-like experience directly in the browser.</p>
+        <p>Version: 1.0.0<br/>© 2026 InnoArcade. All rights reserved.</p>
+      </div>`;
+  } else if (pageId === 'help') {
+    stack.innerHTML = `<h2 class="acct-title">❓ ${t('help')}</h2>
+      <div class="acct-card info-body">
+        <p>For support, please use the "Write your feedback" button in Settings, or contact the GoPlay support team via the official channels.</p>
+      </div>`;
+  } else if (pageId === 'faq') {
+    const am = getLang() === 'am';
+    stack.innerHTML = `<h2 class="acct-title">💬 ${t('faq')}</h2>
+      <div class="acct-card info-body faq-body">
+        ${FAQ.map((f) => `<div class="faq-item"><p class="faq-q">${esc(am ? f.q.am : f.q.en)}</p><p class="faq-a">${esc(am ? f.a.am : f.a.en)}</p></div>`).join('')}
+      </div>`;
+  } else if (pageId === 'terms') {
+    stack.innerHTML = `<h2 class="acct-title">📄 ${t('terms')}</h2>
+      <div class="acct-card info-body tc-body">${TERMS_HTML}</div>`;
+  } else if (pageId === 'pricing' || pageId === 'subscription') {
+    stack.innerHTML = `
+      <h2 class="acct-title">${t('choosePlan')}</h2>
+      <div class="plan-list" id="acctPlanList"></div>
+      ${trialAvailable() ? `<p class="plan-trial">🎁 ${t('freeTrial')}</p>` : ''}
+      <button class="btn-primary" id="planNext">${t('subscribeNow')}</button>
+    `;
+    let chosen: SubPeriod = 'daily';
+    const list = stack.querySelector('#acctPlanList')!;
+    list.innerHTML = SUB_PLANS.map((p, i) => `
+      <button class="plan${i === 0 ? ' sel' : ''}" data-p="${p.period}">
+        <span class="plan-name">${periodLabel(p.period)}</span>
+        <span class="plan-price">ETB ${p.priceEtb}</span>
+        <span class="plan-sub">${t(SUB_KEY[p.period])}</span>
+        <span class="plan-radio"></span>
+      </button>`).join('');
+    
+    list.querySelectorAll<HTMLButtonElement>('.plan').forEach((b) => {
+      b.addEventListener('click', () => {
+        list.querySelectorAll('.plan').forEach((x) => x.classList.remove('sel'));
+        b.classList.add('sel');
+        chosen = b.dataset.p as SubPeriod;
+      });
+    });
+    stack.querySelector('#planNext')!.addEventListener('click', () => openSubPay(chosen));
+  } else if (pageId === 'rewards') {
+    stack.innerHTML = `
+      <div class="acct-success" style="padding-top:2rem;">
+        <div class="as-burst">🚧</div>
+        <h2 class="acct-title">${t('rewards')}</h2>
+        <p class="acct-muted" style="margin-top: 0.5rem; margin-bottom: 2rem;">${getLang() === 'am' ? 'በቅርብ ቀን!' : 'Coming Soon!'}</p>
+      </div>
+    `;
+  }
+}
+
+function handleAcctPopState(e: PopStateEvent): void {
+  if (!acctModal) return;
+  const pageId = e.state?.acctPage || null;
+  renderAcctStack(pageId);
+}
+
+function pushAcctPage(pageId: string): void {
+  history.pushState({ acctPage: pageId }, '', location.href);
+  renderAcctStack(pageId);
+}
+
+function shell(inner?: string): HTMLElement {
   document.querySelector('.acct-modal')?.remove();
-  const m = document.createElement('div');
-  m.className = 'acct-modal';
-  m.innerHTML = `
+  acctModal = document.createElement('div');
+  acctModal.className = 'acct-modal';
+  acctModal.innerHTML = `
     <div class="acct-topbar">
       <button class="btn-secondary" aria-label="${t('back')}" id="closeAcctBtn">← ${t('back')}</button>
       <img class="acct-logo" src="/brand/ethio-e.png" alt="Ethio Telecom" />
     </div>
-    <div class="acct-stack">${inner}</div>`;
-  document.body.appendChild(m);
-  m.querySelector('#closeAcctBtn')!.addEventListener('click', () => m.remove());
-  return m;
+    <div class="acct-stack">${inner ?? ''}</div>`;
+  document.body.appendChild(acctModal);
+  
+  window.addEventListener('popstate', handleAcctPopState);
+  
+  acctModal.querySelector('#closeAcctBtn')!.addEventListener('click', () => {
+    if (history.state?.acctPage) {
+      history.back();
+    } else {
+      window.removeEventListener('popstate', handleAcctPopState);
+      acctModal?.remove();
+      acctModal = null;
+    }
+  });
+  return acctModal;
 }
 
 function accountRowHtml(id: string, icon: string, label: string, isDanger: boolean = false, isAction: boolean = false): string {
   return `<button class="acct-menu-row ${isDanger ? 'danger' : ''}" id="${id}">
-    <span class="acct-menu-ico">${icon}</span>
+    <div class="acct-menu-ico-wrap"><span class="acct-menu-ico">${icon}</span></div>
     <span class="acct-menu-lbl">${label}</span>
-    ${!isAction && id !== 'aSignOut' && id !== 'aSignIn' ? `<svg class="acct-menu-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>` : ''}
+    ${!isAction ? `<svg class="acct-menu-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>` : ''}
   </button>`;
 }
 
 export async function openAccount(): Promise<void> {
   injectStyles();
-  const user = await currentUser();
+  acctUser = await currentUser();
   await loadSubscription();
   const sub = currentSub();
-  const ref = user ? await fetchReferral() : null;
+  acctRef = acctUser ? await fetchReferral() : null;
   void sub;
   
-  shell(`
-    <nav class="acct-menu-list">
-      <div class="acct-nav-sec">IDENTITY</div>
-      ${user ? accountRowHtml('aProfile', '👤', esc(user.name || user.phone)) : accountRowHtml('aSignIn', '👤', t('signIn'), false, true)}
-      <div id="profileExpand" class="acct-expand" style="display:none;">${user ? accountCardHtml(user) : ''}</div>
-      
-      <div class="acct-nav-sec">ENGAGEMENT</div>
-      ${accountRowHtml('aRewards', '🎁', t('rewards'))}
-      ${accountRowHtml('aAchievements', '🏆', t('achievements'))}
-      ${user ? accountRowHtml('aInvite', '💌', t('invite')) : ''}
-      <div id="inviteExpand" class="acct-expand" style="display:none;">${referralHtml(ref)}</div>
-
-      <div class="acct-nav-sec">SERVICE</div>
-      ${accountRowHtml('aNotifs', '🔔', t('notifs'))}
-      ${accountRowHtml('aHelp', '❓', t('help'))}
-
-      <div class="acct-nav-sec">PREFERENCES</div>
-      ${accountRowHtml('aSettings', '⚙️', t('settings'))}
-      ${accountRowHtml('aLegal', '📄', t('legal'))}
-
-      ${user ? `<div class="acct-nav-sec acct-nav-sec-exit"></div>` + accountRowHtml('aSignOut', '🚪', t('signOut'), true) : ''}
-    </nav>`);
-  wireAccount(user);
+  shell();
+  renderAcctStack(null);
 }
 
 function accountCardHtml(user: AuthUser | null): string {
@@ -401,55 +522,25 @@ function wireReferral(): void {
   });
 }
 
-function openComingSoonModal(titleKey: 'rewards' | 'achievements'): void {
-  const am = getLang() === 'am';
-  const title = titleKey === 'rewards' ? (am ? 'የእኔ ሽልማቶች' : 'My Rewards') : (am ? 'ስኬቶች' : 'Achievements');
-  const msg = am ? 'በቅርብ ቀን!' : 'Coming Soon!';
-  const m = shell(`
-    <div class="acct-success">
-      <div class="as-burst">🚧</div>
-      <h2 class="acct-title">${esc(title)}</h2>
-      <p class="acct-muted" style="margin-top: 0.5rem; margin-bottom: 1rem;">${msg}</p>
-      <button class="btn-primary" id="csDone">${t('close')}</button>
-    </div>
-  `);
-  m.querySelector('#csDone')!.addEventListener('click', () => m.remove());
-}
 
-function wireAccount(user: AuthUser | null): void {
-  document.querySelector('#aSignIn')?.addEventListener('click', () => openSignIn());
-  document.querySelector('#aSignOut')?.addEventListener('click', async () => { await signOut(); void openAccount(); });
+function wireAccount(): void {
+  const m = acctModal;
+  if (!m) return;
   
-  document.querySelector('#aProfile')?.addEventListener('click', () => {
-    const ex = document.querySelector<HTMLElement>('#profileExpand');
-    if (ex) ex.style.display = ex.style.display === 'none' ? 'block' : 'none';
-  });
-  document.querySelector('#aInvite')?.addEventListener('click', () => {
-    const ex = document.querySelector<HTMLElement>('#inviteExpand');
-    if (ex) ex.style.display = ex.style.display === 'none' ? 'block' : 'none';
-  });
+  m.querySelector('#aIdentity')?.addEventListener('click', () => pushAcctPage('identity'));
+  m.querySelector('#aRewards')?.addEventListener('click', () => pushAcctPage('rewards'));
+  m.querySelector('#aInvite')?.addEventListener('click', () => pushAcctPage('invite'));
+  m.querySelector('#aHelp')?.addEventListener('click', () => pushAcctPage('help'));
+  m.querySelector('#aFaq')?.addEventListener('click', () => pushAcctPage('faq'));
+  m.querySelector('#aPricing')?.addEventListener('click', () => pushAcctPage('pricing'));
+  m.querySelector('#aSubscription')?.addEventListener('click', () => pushAcctPage('subscription'));
+  m.querySelector('#aAbout')?.addEventListener('click', () => pushAcctPage('about'));
+  m.querySelector('#aTerms')?.addEventListener('click', () => pushAcctPage('terms'));
   
-  document.querySelector('#aRewards')?.addEventListener('click', () => {
-    document.querySelector('.acct-scrim')?.remove();
-    openComingSoonModal('rewards');
-  });
-  document.querySelector('#aAchievements')?.addEventListener('click', () => {
-    document.querySelector('.acct-scrim')?.remove();
-    openComingSoonModal('achievements');
-  });
-  document.querySelector('#aNotifs')?.addEventListener('click', () => {
-    document.querySelector('.acct-scrim')?.remove();
-    document.querySelector<HTMLButtonElement>('#notifBell')?.click();
-  });
-  
-  document.querySelector('#aSettings')?.addEventListener('click', () => { 
+  m.querySelector('#aSettings')?.addEventListener('click', () => { 
     const btn = document.querySelector<HTMLButtonElement>('#settingsBtn');
     if (btn) btn.click();
   });
-  document.querySelector('#aHelp')?.addEventListener('click', () => openInfo('faq'));
-  document.querySelector('#aLegal')?.addEventListener('click', () => openInfo('terms'));
-  wireReferral();
-  void user;
 }
 
 const SUB_KEY: Record<SubPeriod, keyof typeof STR.en> = { daily: 'perDay', weekly: 'perWeek', monthly: 'perMonth' };
@@ -552,17 +643,6 @@ export function openFeedback(): void {
   });
 }
 
-function openInfo(kind: 'terms' | 'faq'): void {
-  const title = kind === 'terms' ? t('terms') : t('faq');
-  const am = getLang() === 'am';
-  const body = kind === 'terms'
-    ? TERMS_HTML
-    : FAQ.map((f) => `<div class="faq-item"><p class="faq-q">${esc(am ? f.q.am : f.q.en)}</p><p class="faq-a">${esc(am ? f.a.am : f.a.en)}</p></div>`).join('');
-  const m = shell(`<h2 class="acct-title">${esc(title)}</h2>
-    <div class="acct-card info-body ${kind === 'terms' ? 'tc-body' : 'faq-body'}">${body}</div>
-    <button class="btn-primary" id="infoDone">${t('close')}</button>`);
-  m.querySelector('#infoDone')!.addEventListener('click', () => m.remove());
-}
 
 function injectStyles(): void {
   if (document.getElementById('acct-styles')) return;
@@ -586,25 +666,24 @@ function injectStyles(): void {
     .sub-cta { display: block; font-size: 1.05rem; color: var(--accent); }
     .sub-on .sub-badge { display: inline-block; background: var(--gold); color: #5a3d00; font-weight: 900; font-size: .8rem; padding: .12rem .6rem; border-radius: 999px; margin-bottom: 4px; }
     .acct-sec { color: rgba(255,255,255,.92); font-weight: 800; font-size: .82rem; text-transform: uppercase; letter-spacing: .08em; margin-top: 4px; }
-    .acct-menu-list { background: #fff; border-radius: 16px; border: 1px solid #e8eaed; box-shadow: 0 2px 8px rgba(0,0,0,.08); overflow: hidden; margin-top: 0.6rem; width: 100%; display: flex; flex-direction: column; }
+    .acct-menu-list { background: #fff; border-radius: 16px; border: 1px solid #e8eaed; box-shadow: 0 2px 8px rgba(0,0,0,.08); overflow: hidden; margin-bottom: 1.2rem; width: 100%; display: flex; flex-direction: column; }
     
-    .acct-menu-row { display: flex; align-items: center; gap: 0.8rem; width: 100%; padding: 0.9rem 1.1rem; border: none; background: #fff; font: inherit; font-size: 0.98rem; color: var(--text, #14271a); cursor: pointer; text-align: left; border-top: 1px solid #f0f1f3; position: relative; overflow: hidden; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1); -webkit-tap-highlight-color: transparent; }
-    .acct-menu-row:first-of-type, .acct-nav-sec + .acct-menu-row { border-top: none; }
+    .acct-menu-row { display: flex; align-items: center; gap: 0.8rem; width: 100%; height: 3.2rem; padding: 0 1.1rem; border: none; background: #fff; font: inherit; font-size: 0.98rem; color: var(--text, #14271a); cursor: pointer; text-align: left; border-top: 1px solid #f0f1f3; position: relative; overflow: hidden; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1); -webkit-tap-highlight-color: transparent; }
+    .acct-menu-row:first-of-type { border-top: none; }
     
     .acct-menu-row::after { content: ""; position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; padding-top: 100%; background: rgba(0, 0, 0, 0.08); border-radius: 50%; transform: translate(-50%, -50%) scale(0); opacity: 0; transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease; pointer-events: none; }
     .acct-menu-row:active { transform: scale(0.97); transition-duration: 0.1s; }
     .acct-menu-row:active::after { transform: translate(-50%, -50%) scale(1.5); opacity: 1; transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.1s ease; }
     
     .acct-menu-row.danger { color: #d64545; }
-    .acct-menu-row.danger .acct-menu-ico { color: #d64545; }
+    .acct-menu-row.danger .acct-menu-ico-wrap { background: rgba(214,69,69,0.1); color: #d64545; }
     
-    .acct-menu-ico { font-size: 1.25rem; flex-shrink: 0; width: 1.6rem; text-align: center; }
+    .acct-menu-ico-wrap { width: 2rem; height: 2rem; background: #f5f6f8; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; }
+    .acct-menu-ico { font-size: 1.1rem; }
     .acct-menu-lbl { font-weight: 600; flex: 1; }
     .acct-menu-chev { flex-shrink: 0; color: #a1a5ab; }
     
-    .acct-nav-sec { padding: 1.2rem 1.1rem 0.4rem; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #8e949a; background: #f5f6f8; border-top: 1px solid #e8eaed; }
-    .acct-menu-list .acct-nav-sec:first-child { border-top: none; }
-    .acct-nav-sec.acct-nav-sec-exit { padding: 0.6rem; border-top: none; }
+    .acct-nav-sec { padding: 0 0 0.4rem 0.6rem; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #8e949a; background: transparent; border: none; margin-top: 0.4rem; }
     
     .acct-expand { width: 100%; background: #f8f9fa; border-top: 1px solid #f0f1f3; padding: 0; }
     .acct-expand .acct-card { margin: 0; border: none; box-shadow: none; border-radius: 0; background: transparent; }
