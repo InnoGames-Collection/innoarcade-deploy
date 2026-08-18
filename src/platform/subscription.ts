@@ -22,7 +22,7 @@ export interface SubPlan {
 
 export const SUB_PLANS: SubPlan[] = [
   { period: 'daily', priceEtb: 3, days: 1 },
-  { period: 'weekly', priceEtb: 15, days: 7 },
+  { period: 'weekly', priceEtb: 10, days: 7 },
   { period: 'monthly', priceEtb: 35, days: 30 },
 ];
 

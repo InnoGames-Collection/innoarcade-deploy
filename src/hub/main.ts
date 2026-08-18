@@ -52,6 +52,8 @@ const PROMOS_FALLBACK: PromoSlide[] = [
   { img: '/brand/ad-banner-1.png', alt: 'Every Score Counts — climb the leaderboard', href: '#games' },
   { img: '/brand/ad-banner-3.png', alt: 'Monthly Memory Match Tournament', href: '#featuredTournaments' },
   { img: '/brand/ad-banner-4.png', alt: 'Win up to 50,000 ETB — Monthly & Weekly Tournaments', href: '#featuredTournaments' },
+  { img: '/brand/ad-banner-5.png', alt: 'Play and Compete', href: '#games' },
+  { img: '/brand/ad-banner-6.png', alt: 'Top Players Win Cash Every Week', href: '#featuredTournaments' },
 ];
 function promosFromConfig(): PromoSlide[] {
   const portal = config().portal;
