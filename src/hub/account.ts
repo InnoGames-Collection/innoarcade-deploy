@@ -419,6 +419,229 @@ const TERMS_HTML = `
   <p><strong>goPlay – Play. Compete. Enjoy.</strong></p>
 `;
 
+const ABOUT_HTML = `
+  <h3>About goPlay</h3>
+  <p><strong>Welcome to goPlay</strong></p>
+  <p>goPlay is a digital gaming and entertainment platform designed to bring engaging games, challenges, competitions and rewards together in one convenient experience.</p>
+  <p>Whether you enjoy fast-paced arcade games, brain challenges, puzzles, trivia, logic games or competitive tournaments, goPlay provides a variety of gaming experiences for different interests and playing styles.</p>
+  <p>goPlay is designed to provide customers with an enjoyable and interactive digital experience through games that challenge speed, accuracy, memory, logic, strategy and reflexes.</p>
+
+  <h4>A Variety of Games</h4>
+  <p>goPlay brings together a growing collection of games across multiple categories.</p>
+  <p>Customers can enjoy arcade games such as Ball Shooter, Ethiorunner, Brick Blitz, Sky Hopper and Helix Jump.</p>
+  <p>Puzzle and brain-game fans can play 2048, Sudoku, Target 24, Cross Sum, Logic Grid, Sequence, Water Sort, Block Blast, Tile Connect, Hexa Block, Ball Sort, Jewel Match and Slide Puzzle.</p>
+  <p>Customers who enjoy words and knowledge can explore Ethiopian Quiz, Spell Trivia, Vocabulary and Rhyme Time.</p>
+  <p>The platform also includes competitive games such as Fruit Slice and other games that may be introduced as the service develops.</p>
+
+  <h4>Play Your Way</h4>
+  <p>Each game provides its own gameplay experience.</p>
+  <p>Some games reward:</p>
+  <ul>
+    <li>Speed</li>
+    <li>Accuracy</li>
+    <li>Timing</li>
+    <li>Memory</li>
+    <li>Logical thinking</li>
+    <li>Strategic decisions</li>
+    <li>Reflexes</li>
+    <li>Problem-solving</li>
+    <li>Consistency</li>
+    <li>High scores</li>
+  </ul>
+  <p>This gives customers the opportunity to explore different types of games and develop their own preferred playing style.</p>
+
+  <h4>goPlay Tournament</h4>
+  <p>goPlay also provides a competitive tournament experience.</p>
+  <p>The tournament game is changed periodically to provide customers with a fresh competitive challenge.</p>
+  <p>The current tournament game is Fruit Slice (ፍሩት ስላይስ).</p>
+  <p>The tournament is held weekly, while the designated tournament game is changed monthly.</p>
+  <p>Players compete based on their recorded performance and final scores.</p>
+
+  <h4>Tournament Rewards</h4>
+  <p>The current weekly tournament rewards the top five ranked players:</p>
+  <ul>
+    <li>1st Place – 50,000 ETB</li>
+    <li>2nd Place – 25,000 ETB</li>
+    <li>3rd Place – 15,000 ETB</li>
+    <li>4th Place – 10,000 ETB</li>
+    <li>5th Place – 5,000 ETB</li>
+  </ul>
+  <p>The applicable prize structure may be updated for future tournaments or promotional periods.</p>
+
+  <h4>Instant Rewards</h4>
+  <p>goPlay may also provide instant prizes through applicable games and promotional activities.</p>
+  <p>The availability and value of instant prizes depend on the applicable game, promotion and eligibility conditions.</p>
+
+  <h4>Subscription Experience</h4>
+  <p>Customers can choose from available goPlay subscription packages according to their preferred usage frequency.</p>
+  <p>The current packages are:</p>
+  <ul>
+    <li>goPlay Daily – 5 ETB</li>
+    <li>goPlay Weekly – 15 ETB</li>
+    <li>goPlay Monthly – 35 ETB</li>
+  </ul>
+  <p>Subscription gives eligible customers access to the applicable goPlay service and its available features.</p>
+
+  <h4>Built for Entertainment</h4>
+  <p>goPlay is designed to make digital gaming simple, accessible and engaging.</p>
+  <p>Customers can move between different games, discover new challenges and participate in competitive activities through one gaming environment.</p>
+  <p>New games, features and tournament experiences may be introduced over time.</p>
+
+  <h4>Our Goal</h4>
+  <p>The goal of goPlay is to provide customers with a reliable, enjoyable and continuously evolving gaming experience while maintaining clear participation rules, transparent subscription information and fair competition.</p>
+  <p><strong>goPlay – Play. Compete. Enjoy.</strong></p>
+`;
+
+const PRICING_HTML = `
+  <p class="acct-muted" style="margin-bottom:1rem;font-size:0.95rem;">Choose the goPlay package that best fits your gaming experience.</p>
+  
+  <h3 class="acct-title" style="font-size:1.15rem; margin-top:0.5rem;">Subscription Packages</h3>
+  
+  <div class="acct-card pricing-card fluid-btn" data-p="daily">
+    <div class="pc-top" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+      <h4 class="pc-title" style="margin:0; font-size: 1.1rem; color: var(--accent);">goPlay Daily</h4>
+      <div class="pc-price-block" style="text-align: right;">
+        <span class="pc-price" style="display:block; font-weight:800; font-size:1.1rem;">5.00 ETB</span>
+        <span class="pc-freq" style="color:#5f6368; font-size:0.8rem;">Daily</span>
+      </div>
+    </div>
+    <p class="pc-desc" style="font-size:0.9rem; margin-bottom:1rem; color:#444;">The Daily package provides access to the applicable goPlay service according to the current service offering.</p>
+    <div class="pc-action-row" style="background:#f5f6f8; border-radius:8px; padding:0.8rem; margin-bottom:0.8rem;">
+      <div class="pc-action-col" style="display:flex; justify-content:space-between; margin-bottom: 0.4rem;">
+        <span class="pc-label" style="font-size:0.85rem; color:#5f6368;">Subscribe via SMS</span>
+        <span class="pc-value" style="font-size:0.9rem;">Send <strong>1</strong> to <strong>9402</strong></span>
+      </div>
+      <div class="pc-action-col" style="display:flex; justify-content:space-between;">
+        <span class="pc-label" style="font-size:0.85rem; color:#5f6368;">Unsubscribe</span>
+        <span class="pc-value" style="font-size:0.9rem;">Send <strong>STOP 1</strong> to <strong>9402</strong></span>
+      </div>
+    </div>
+    <button class="btn-primary" style="width:100%; pointer-events: none;">Subscribe Now</button>
+  </div>
+
+  <div class="acct-card pricing-card fluid-btn" data-p="weekly">
+    <div class="pc-top" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+      <h4 class="pc-title" style="margin:0; font-size: 1.1rem; color: var(--accent);">goPlay Weekly</h4>
+      <div class="pc-price-block" style="text-align: right;">
+        <span class="pc-price" style="display:block; font-weight:800; font-size:1.1rem;">15.00 ETB</span>
+        <span class="pc-freq" style="color:#5f6368; font-size:0.8rem;">Weekly</span>
+      </div>
+    </div>
+    <p class="pc-desc" style="font-size:0.9rem; margin-bottom:1rem; color:#444;">The Weekly package provides access to the applicable goPlay service according to the current service offering.</p>
+    <div class="pc-action-row" style="background:#f5f6f8; border-radius:8px; padding:0.8rem; margin-bottom:0.8rem;">
+      <div class="pc-action-col" style="display:flex; justify-content:space-between; margin-bottom: 0.4rem;">
+        <span class="pc-label" style="font-size:0.85rem; color:#5f6368;">Subscribe via SMS</span>
+        <span class="pc-value" style="font-size:0.9rem;">Send <strong>2</strong> to <strong>9402</strong></span>
+      </div>
+      <div class="pc-action-col" style="display:flex; justify-content:space-between;">
+        <span class="pc-label" style="font-size:0.85rem; color:#5f6368;">Unsubscribe</span>
+        <span class="pc-value" style="font-size:0.9rem;">Send <strong>STOP 2</strong> to <strong>9402</strong></span>
+      </div>
+    </div>
+    <button class="btn-primary" style="width:100%; pointer-events: none;">Subscribe Now</button>
+  </div>
+
+  <div class="acct-card pricing-card fluid-btn" data-p="monthly">
+    <div class="pc-top" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+      <h4 class="pc-title" style="margin:0; font-size: 1.1rem; color: var(--accent);">goPlay Monthly</h4>
+      <div class="pc-price-block" style="text-align: right;">
+        <span class="pc-price" style="display:block; font-weight:800; font-size:1.1rem;">35.00 ETB</span>
+        <span class="pc-freq" style="color:#5f6368; font-size:0.8rem;">Monthly</span>
+      </div>
+    </div>
+    <p class="pc-desc" style="font-size:0.9rem; margin-bottom:1rem; color:#444;">The Monthly package provides access to the applicable goPlay service according to the current service offering.</p>
+    <div class="pc-action-row" style="background:#f5f6f8; border-radius:8px; padding:0.8rem; margin-bottom:0.8rem;">
+      <div class="pc-action-col" style="display:flex; justify-content:space-between; margin-bottom: 0.4rem;">
+        <span class="pc-label" style="font-size:0.85rem; color:#5f6368;">Subscribe via SMS</span>
+        <span class="pc-value" style="font-size:0.9rem;">Send <strong>3</strong> to <strong>9402</strong></span>
+      </div>
+      <div class="pc-action-col" style="display:flex; justify-content:space-between;">
+        <span class="pc-label" style="font-size:0.85rem; color:#5f6368;">Unsubscribe</span>
+        <span class="pc-value" style="font-size:0.9rem;">Send <strong>STOP 3</strong> to <strong>9402</strong></span>
+      </div>
+    </div>
+    <button class="btn-primary" style="width:100%; pointer-events: none;">Subscribe Now</button>
+  </div>
+
+  <h3 class="acct-title" style="font-size:1.15rem; margin-top:1rem;">Important Pricing Information</h3>
+  <div class="acct-card info-body tc-body">
+    <p>Subscription charges are based on the package selected by the customer.</p>
+    <p>Customers should check the package name, price and frequency before confirming their subscription.</p>
+    <p>Applicable mobile data or internet charges for accessing goPlay may be charged separately according to the customer's telecommunications package and usage.</p>
+    <p>Pricing and package structures may be updated from time to time. Customers should refer to the latest information displayed on the official goPlay service channels.</p>
+  </div>
+
+  <h3 class="acct-title" style="font-size:1.15rem; margin-top:1rem;">Tournament Prizes</h3>
+  <div class="acct-card info-body tc-body">
+    <p>The current weekly tournament prize structure is:</p>
+    <div style="overflow-x:auto;">
+      <table class="tc-table">
+        <tr><th>Position</th><th>Prize</th></tr>
+        <tr><td>1st</td><td>50,000 ETB</td></tr>
+        <tr><td>2nd</td><td>25,000 ETB</td></tr>
+        <tr><td>3rd</td><td>15,000 ETB</td></tr>
+        <tr><td>4th</td><td>10,000 ETB</td></tr>
+        <tr><td>5th</td><td>5,000 ETB</td></tr>
+      </table>
+    </div>
+    <p>Tournament participation and prize eligibility are subject to the applicable goPlay Terms and Conditions.</p>
+    <p><em>All prices are in Ethiopian Birr (ETB).</em></p>
+  </div>
+`;
+
+const SUB_INFO_HTML = `
+  <h3 class="acct-title" style="font-size:1.15rem; margin-top:1.5rem;">What Happens After Subscription?</h3>
+  <div class="acct-card info-body tc-body">
+    <p>After a successful subscription request, the customer receives access to the applicable goPlay service according to the selected package.</p>
+    <p>Customers can explore the available games and participate in applicable gaming activities.</p>
+    <p>The available service features may include:</p>
+    <ul>
+      <li>Access to available games</li>
+      <li>Competitive gaming</li>
+      <li>Tournament participation where applicable</li>
+      <li>Instant-prize opportunities where applicable</li>
+      <li>Access to new games and features introduced to the platform</li>
+    </ul>
+  </div>
+
+  <h3 class="acct-title" style="font-size:1.15rem; margin-top:1.5rem;">Subscription Renewal</h3>
+  <div class="acct-card info-body tc-body">
+    <p>Where the selected package is recurring, the subscription may renew according to its applicable frequency.</p>
+    <p>The applicable subscription fee will be charged according to the selected package and the applicable Ethio Telecom charging process.</p>
+    <p>Customers should maintain sufficient balance for successful renewal.</p>
+  </div>
+
+  <h3 class="acct-title" style="font-size:1.15rem; margin-top:1.5rem;">How to Unsubscribe</h3>
+  <div class="acct-card info-body tc-body">
+    <p>Customers can stop their applicable subscription using the corresponding SMS command.</p>
+    <p>Daily: Send <strong>STOP 1</strong> to <strong>9402</strong></p>
+    <p>Weekly: Send <strong>STOP 2</strong> to <strong>9402</strong></p>
+    <p>Monthly: Send <strong>STOP 3</strong> to <strong>9402</strong></p>
+    <p>Customers should use the unsubscription command corresponding to their active package.</p>
+  </div>
+
+  <h3 class="acct-title" style="font-size:1.15rem; margin-top:1.5rem;">If You Have a Subscription Problem</h3>
+  <div class="acct-card info-body tc-body">
+    <p>If you subscribed but cannot access goPlay, first verify that:</p>
+    <ul>
+      <li>Your subscription request was successfully processed.</li>
+      <li>You are using the mobile number associated with the subscription.</li>
+      <li>Your service has not been unsubscribed or suspended.</li>
+      <li>Your internet connection is working properly.</li>
+      <li>The game or service is not temporarily unavailable.</li>
+    </ul>
+    <p>If the problem continues, contact goPlay customer support and provide your mobile number, subscription package, approximate subscription time and details of the problem.</p>
+  </div>
+
+  <h3 class="acct-title" style="font-size:1.15rem; margin-top:1.5rem;">Important Information</h3>
+  <div class="acct-card info-body tc-body">
+    <p>The subscription fee is separate from any applicable mobile-data or internet charges required to access the goPlay platform.</p>
+    <p>Subscription packages, prices, features and promotional benefits may be changed in accordance with the applicable service terms.</p>
+    <p>For the latest package information, always refer to the official goPlay portal.</p>
+  </div>
+`;
+
+
 // FAQ entries (EN/AM). Rendered as question/answer blocks.
 const FAQ: Array<{ q: string; a: string }> = [
   { q: '1. What is goPlay?', a: '<p>goPlay is a digital gaming and entertainment platform offering a variety of arcade, puzzle, brain, trivia, logic, casual and competitive games.</p>' },
@@ -559,16 +782,55 @@ function renderAcctStack(pageId: string | null): void {
         icon.textContent = isOpen ? '＋' : '−';
       });
     });
+  } else if (pageId === 'about') {
+    stack.innerHTML = `<h2 class="acct-title">ℹ️ ${t('about')}</h2>
+      <div class="acct-card info-body tc-body">${ABOUT_HTML}</div>`;
   } else if (pageId === 'terms') {
     stack.innerHTML = `<h2 class="acct-title">📄 ${t('terms')}</h2>
       <div class="acct-card info-body tc-body">${TERMS_HTML}</div>`;
-  } else if (pageId === 'pricing' || pageId === 'subscription') {
+  } else if (pageId === 'pricing') {
+    stack.innerHTML = `<h2 class="acct-title">🏷️ Pricing</h2>
+      <div class="pricing-body">${PRICING_HTML}</div>`;
+    stack.querySelectorAll<HTMLElement>('.pricing-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        const p = card.dataset.p as SubPeriod;
+        openSubPay(p);
+      });
+    });
+  } else if (pageId === 'subscription') {
+    const sub = currentSub();
+    let subStatusHtml = '';
+
+    if (sub) {
+      const plan = SUB_PLANS.find(p => p.period === sub.period);
+      const price = plan ? plan.priceEtb : 0;
+      subStatusHtml = `
+        <h3 class="acct-title" style="font-size:1.15rem; margin-top:0.5rem; margin-bottom:0.8rem;">Current Subscription</h3>
+        <div class="acct-card" style="border-left: 4px solid var(--accent); margin-bottom: 1.5rem;">
+          <div class="acct-row" style="margin-bottom:0.5rem;">
+            <span style="font-weight:800; font-size:1.1rem; color:var(--text, #14271a);">goPlay ${periodLabel(sub.period)}</span>
+            <span style="color:var(--accent); font-weight:800; font-size:0.85rem; text-transform:uppercase; background:rgba(0,186,81,0.1); padding:0.2rem 0.6rem; border-radius:6px; letter-spacing:0.05em;">Active</span>
+          </div>
+          <p style="font-size:0.95rem; color:#444; margin:0 0 0.4rem 0;">Price: <strong>${price} ETB</strong></p>
+          <p style="font-size:0.95rem; color:#444; margin:0 0 0.8rem 0;">Expires: <strong>${new Date(sub.expiresAt).toLocaleDateString()}</strong></p>
+          <p style="font-size:0.9rem; color:#5f6368; line-height:1.4; margin:0; padding-top:0.6rem; border-top:1px solid #f0f1f3;">Enjoy full access to all premium games, leaderboards, and tournament eligibility.</p>
+        </div>
+      `;
+    }
+
     stack.innerHTML = `
-      <h2 class="acct-title">${t('choosePlan')}</h2>
+      <h2 class="acct-title" style="margin-bottom:1rem;">⭐ Subscription</h2>
+      ${subStatusHtml}
+      
+      <h3 class="acct-title" style="font-size:1.15rem; margin-top:0.5rem;">Available Subscriptions</h3>
+      <p class="acct-muted" style="margin-bottom:1rem; font-size:0.95rem; line-height:1.4;">Choose the package that matches your preferred subscription frequency and follow the corresponding SMS instruction.</p>
       <div class="plan-list" id="acctPlanList"></div>
       ${trialAvailable() ? `<p class="plan-trial">🎁 ${t('freeTrial')}</p>` : ''}
-      <button class="btn-primary" id="planNext">${t('subscribeNow')}</button>
+      <button class="btn-primary" id="planNext" style="margin-top:0.8rem; width:100%;">${t('subscribeNow')}</button>
+      
+      ${SUB_INFO_HTML}
     `;
+
     let chosen: SubPeriod = 'daily';
     const list = stack.querySelector('#acctPlanList')!;
     list.innerHTML = SUB_PLANS.map((p, i) => `
@@ -586,7 +848,23 @@ function renderAcctStack(pageId: string | null): void {
         chosen = b.dataset.p as SubPeriod;
       });
     });
-    stack.querySelector('#planNext')!.addEventListener('click', () => openSubPay(chosen));
+    
+    const nextBtn = stack.querySelector<HTMLButtonElement>('#planNext')!;
+    nextBtn.addEventListener('click', () => {
+      // Add a subtle loading/processing effect as required by the interaction rules
+      const origText = nextBtn.textContent;
+      nextBtn.innerHTML = '<span class="spinner" style="border-color:currentColor; border-right-color:transparent; width:1rem; height:1rem; display:inline-block; vertical-align:middle; margin-right:0.5rem;"></span>Processing...';
+      nextBtn.disabled = true;
+      nextBtn.style.opacity = '0.8';
+      
+      // Delay slightly for effect, then open real payment modal
+      setTimeout(() => {
+        openSubPay(chosen);
+        nextBtn.textContent = origText;
+        nextBtn.disabled = false;
+        nextBtn.style.opacity = '1';
+      }, 150);
+    });
   } else if (pageId === 'rewards') {
     stack.innerHTML = `
       <div class="acct-success" style="padding-top:2rem;">
@@ -866,6 +1144,8 @@ function injectStyles(): void {
     .tc-table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
     .tc-table th, .tc-table td { border: 1px solid #e8eaed; padding: 0.6rem; text-align: left; }
     .tc-table th { background: #f5f6f8; font-weight: 800; color: #5f6368; }
+    .pricing-card { cursor: pointer; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s; -webkit-tap-highlight-color: transparent; }
+    .pricing-card:active { transform: scale(0.98); box-shadow: 0 1px 4px rgba(0,0,0,.05); }
     .faq-body { padding: 0; width: 100%; }
     .faq-item { background: #fff; border-radius: 16px; margin-bottom: 0.6rem; border: 1px solid #e8eaed; box-shadow: 0 2px 8px rgba(0,0,0,.08); overflow: hidden; }
     .faq-q-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; padding: 1rem 1.1rem; background: transparent; border: none; font: inherit; color: var(--text, #14271a); font-weight: 800; font-size: 1.05rem; text-align: left; cursor: pointer; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background 0.15s; -webkit-tap-highlight-color: transparent; position: relative; }
