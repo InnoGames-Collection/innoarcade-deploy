@@ -1276,30 +1276,36 @@ html, body { max-width: 100%; overflow-x: hidden; }
   }
   .games-head {
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
     gap: 0.5rem;
     margin-bottom: 0.85rem;
   }
   .games-head .pill-tabs {
     order: 1;
-    align-self: stretch;
-    width: 100%;
+    align-self: center;
+    width: auto;
+    flex: 0 1 auto;
     min-width: 0;
-    justify-content: stretch;
+    justify-content: flex-start;
   }
   .games-head .pill-tab {
-    flex: 1 1 0;
-    padding: 0.42rem 0.5rem;
-    font-size: 0.74rem;
+    flex: 0 0 auto;
+    padding: 0.45rem 1.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
     text-align: center;
     white-space: nowrap;
   }
   .pill-tabs-indicator { transition-duration: 0.22s; }
   .games-head .cat-dropdown {
     order: 2;
-    align-self: flex-start;
-    max-width: 100%;
+    align-self: center;
+    flex: 0 1 auto;
+    max-width: 50%;
   }
   .cat-dropdown-lbl { display: none; }
   .cat-dropdown-btn {
@@ -1315,6 +1321,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
     max-width: none;
     min-width: 0;
     margin-left: 0;
+    margin-top: 0.2rem;
     height: 40px;
     padding: 0 0.65rem 0 0.55rem;
     border-radius: 14px;

@@ -858,7 +858,7 @@ function renderFeaturedTournaments(): void {
   const section = document.querySelector<HTMLElement>('#featuredTournaments');
   if (!host || !section) return;
   const cards: string[] = [];
-  for (const cadence of ['weekly', 'monthly'] as const) {
+  for (const cadence of ['weekly'] as const) {
     const tour = getLiveTournamentByCadence(cadence);
     const game = tour ? getGame(tour.gameId) : undefined;
     if (!tour || !game) continue;
@@ -1116,17 +1116,6 @@ function renderWinners(opts?: { fetch?: boolean }): void {
         </td>
         <td class="w-reward">${winnerPrizeForRank(winnerCadence, r.rank)}</td>
       </tr>`).join('');
-  });
-}
-
-function setupWinnersTabs(): void {
-  document.querySelectorAll<HTMLButtonElement>('#winnersSeg .seg-btn').forEach((b) => {
-    b.addEventListener('click', () => {
-      winnerCadence = (b.dataset.cadence as WinnerCadence) ?? 'daily';
-      document.querySelectorAll('#winnersSeg .seg-btn').forEach((x) => x.classList.remove('active'));
-      b.classList.add('active');
-      renderWinners({ fetch: true });
-    });
   });
 }
 
@@ -1489,7 +1478,6 @@ onCurrencyChange(() => { renderMyStats(); renderSidebar(); });
 setupBrowse();
 setupBrowsePersistence();
 setupLiveBoardTabs();
-setupWinnersTabs();
 setupDeferredSections();
 syncNavActive();
 mountSettings();

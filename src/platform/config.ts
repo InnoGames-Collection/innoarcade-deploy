@@ -122,7 +122,6 @@ export const DEFAULT_CONFIG: AppConfig = {
     promos: [
       { img: '/brand/ad-banner-2.png', altEn: 'Weekly Fruit Slice Tournament', altAm: 'Weekly Fruit Slice Tournament', href: '#featuredTournaments' },
       { img: '/brand/ad-banner-1.png', altEn: 'Every Score Counts — climb the leaderboard', altAm: 'Every Score Counts — climb the leaderboard', href: '#games' },
-      { img: '/brand/ad-banner-3.png', altEn: 'Monthly Memory Match Tournament', altAm: 'Monthly Memory Match Tournament', href: '#featuredTournaments' },
       { img: '/brand/ad-banner-4.png', altEn: 'Win up to 50,000 ETB', altAm: 'Win up to 50,000 ETB', href: '#featuredTournaments' },
     ],
     news: [
