@@ -420,58 +420,42 @@ const TERMS_HTML = `
 `;
 
 // FAQ entries (EN/AM). Rendered as question/answer blocks.
-const FAQ: Array<{ q: { en: string; am: string }; a: { en: string; am: string } }> = [
-  {
-    q: { en: 'What are Coins and what are Points?', am: 'ሳንቲም እና ነጥብ ምንድን ናቸው?' },
-    a: { en: 'Coins are the entry currency — you spend them to play and can buy more or earn free ones. Points are earned by playing well; they raise your level and your global leaderboard rank and have no cash value.',
-      am: 'ሳንቲም የመግቢያ ገንዘብ ነው — ለመጫወት ያውሉታል፣ መግዛት ወይም በነጻ ማግኘት ይችላሉ። ነጥብ በጥሩ አጨዋወት ይገኛል፤ ደረጃዎንና በዓለም አቀፍ ሰንጠረዥ ያለዎትን ቦታ ያሳድጋል፣ የገንዘብ ዋጋ የለውም።' },
-  },
-  {
-    q: { en: 'How much does it cost to play?', am: 'ለመጫወት ስንት ያስከፍላል?' },
-    a: { en: 'Each attempt costs a small number of Coins (shown on every game and on its intro screen). New players receive free starter Coins, and you can top up any time from the Buy Coins button.',
-      am: 'እያንዳንዱ ሙከራ ጥቂት ሳንቲም ያስከፍላል (በእያንዳንዱ ጨዋታና በመግቢያ ገጹ ይታያል)። አዲስ ተጫዋቾች ነጻ ሳንቲም ያገኛሉ፣ በማንኛውም ጊዜ “ሳንቲም ይግዙ” ቁልፍ መሙላት ይችላሉ።' },
-  },
-  {
-    q: { en: 'How is my score turned into Points?', am: 'ውጤቴ እንዴት ወደ ነጥብ ይቀየራል?' },
-    a: { en: 'The server computes Points from your performance, the game’s difficulty, and (for timed games) your speed. Scoring is uniform across games and calculated server-side, so it can’t be tampered with.',
-      am: 'አገልጋዩ ነጥብን ከአፈጻጸምዎ፣ ከጨዋታው አስቸጋሪነት እና (ለጊዜ-ተኮር ጨዋታዎች) ከፍጥነትዎ ያሰላል። ስሌቱ ለሁሉም ጨዋታዎች ተመሳሳይ ሆኖ በአገልጋዩ በኩል ስለሚሰራ ሊጭበረበር አይችልም።' },
-  },
-  {
-    q: { en: 'How do tournaments work?', am: 'ውድድሮች እንዴት ይሰራሉ?' },
-    a: { en: 'Each tournament game runs on a fixed schedule — EthioRunner daily, Memory Match weekly, Fruit Slice monthly. Windows reset automatically when the period ends. Your best score in the current window is ranked by RP on the live leaderboard. The Winners tab shows top finishers from the previous completed window.',
-      am: 'እያንዳንዱ የውድድር ጨዋታ በተወሰነ ጊዜ ይከናወናል — EthioRunner ዕለታዊ፣ Memory Match ሳምንታዊ፣ Fruit Slice ወርሃዊ። ጊዜው ሲያልቅ በራሱ ይታደሳል። በአሁኑ ጊዜ ምርጥ ውጤትዎ በ RP በቀጥታ ደረጃ ጠረጴዛ ላይ ይደረድራል። Winners ትር የቀድሞው የተጠናቀቀ ጊዜ 10 ከፍተኛ ያሳያል።' },
-  },
-  {
-    q: { en: 'What is my level and how do I level up?', am: 'ደረጃዬ ምንድን ነው፣ እንዴት እጨምራለሁ?' },
-    a: { en: 'Your level is based on your lifetime Points, which only ever go up. Keep playing and winning to raise it — higher levels unlock more games.',
-      am: 'ደረጃዎ በጠቅላላ ዕድሜ ነጥብዎ ላይ የተመሰረተ ሲሆን ሁልጊዜ ይጨምራል እንጂ አይቀንስም። እየተጫወቱና እያሸነፉ ያሳድጉት — ከፍ ያሉ ደረጃዎች ተጨማሪ ጨዋታዎችን ይከፍታሉ።' },
-  },
-  {
-    q: { en: 'Some games are locked. How do I unlock them?', am: 'አንዳንድ ጨዋታዎች ተቆልፈዋል። እንዴት እከፍታለሁ?' },
-    a: { en: 'Reach the required level to unlock a gated game for free, or unlock it early by spending Coins from the game’s unlock dialog.',
-      am: 'የተፈለገውን ደረጃ ሲደርሱ የተቆለፈ ጨዋታ በነጻ ይከፈታል፣ ወይም ከጨዋታው የመክፈቻ መስኮት ሳንቲም በማውጣት ቀድመው ይክፈቱት።' },
-  },
-  {
-    q: { en: 'How do referral rewards work?', am: 'የግብዣ ሽልማት እንዴት ይሰራል?' },
-    a: { en: 'Share your referral code from Account → Invite friends. When a friend redeems it, you both get bonus Coins. A code can be redeemed once per new player.',
-      am: 'ከመለያ → ጓደኞችን ይጋብዙ ላይ የግብዣ ኮድዎን ያጋሩ። ጓደኛዎ ሲጠቀምበት ሁለታችሁም ተጨማሪ ሳንቲም ታገኛላችሁ። አንድ ኮድ ለእያንዳንዱ አዲስ ተጫዋች አንዴ ብቻ ይሰራል።' },
-  },
-  {
-    q: { en: 'Do my Coins or rewards have real-world value?', am: 'ሳንቲሞቼ ወይም ሽልማቶቼ የገንዘብ ዋጋ አላቸው?' },
-    a: { en: 'Virtual items have no real-world monetary value unless explicitly stated. Rewards are non-transferable unless allowed, and balances may be adjusted in cases of fraud, abuse, or system errors.',
-      am: 'ቨርቹዋል እቃዎች በግልጽ ካልተገለጸ በስተቀር የገንዘብ ዋጋ የላቸውም። ሽልማቶች ካልተፈቀደ በስተቀር አይተላለፉም፣ በማጭበርበር ወይም በስርዓት ስህተት ጊዜ ሒሳቦች ሊስተካከሉ ይችላሉ።' },
-  },
-  {
-    q: { en: 'Why was my account restricted?', am: 'መለያዬ ለምን ተገደበ?' },
-    a: { en: 'Cheating, using bots or multiple accounts, exploiting glitches, or other abuse can lead to restriction or a permanent ban, and rewards gained illegitimately may be removed. See the Terms & Conditions for details.',
-      am: 'ማጭበርበር፣ ቦቶችን ወይም ብዙ መለያዎችን መጠቀም፣ ስህተቶችን መበዝበዝ ወይም ሌላ አላግባብ መጠቀም ወደ ገደብ ወይም ቋሚ እገዳ ሊያመራ ይችላል፣ ባልተገባ መንገድ የተገኙ ሽልማቶችም ሊወገዱ ይችላሉ። ዝርዝሩን በውሎችና ሁኔታዎች ይመልከቱ።' },
-  },
-  {
-    q: { en: 'I need help or want to report a problem.', am: 'እገዛ እፈልጋለሁ ወይም ችግር ማሳወቅ እፈልጋለሁ።' },
-    a: { en: 'Use “Write your feedback” in your Account, or contact the GoPlay support team via the official channels listed in the platform.',
-      am: 'በመለያዎ “አስተያየትዎን ይጻፉ” ይጠቀሙ፣ ወይም በመድረኩ ውስጥ በተዘረዘሩ ይፋዊ መንገዶች የGoPlay ድጋፍ ቡድንን ያግኙ።' },
-  },
+const FAQ: Array<{ q: string; a: string }> = [
+  { q: '1. What is goPlay?', a: '<p>goPlay is a digital gaming and entertainment platform offering a variety of arcade, puzzle, brain, trivia, logic, casual and competitive games.</p>' },
+  { q: '2. Who can use goPlay?', a: '<p>Eligible Ethio Telecom customers who can access the supported goPlay service channels can use the service, subject to the applicable Terms and Conditions.</p>' },
+  { q: '3. What games are available on goPlay?', a: '<p>goPlay offers a variety of games, including:</p><p>Ball Shooter, 2048, Ethiorunner, Brick Blitz, Fruit Slice, Sky Hopper, Bubble Pop, Memory Match, Tap Game, Candy Blast, Ethiopian Quiz, Sudoku, Spell Trivia, Vocabulary, Rhyme Time, Target 24, Cross Sum, Logic Grid, Sequence, Water Sort, Block Blast, Tile Connect, Hexa Block, Helix Jump, Ball Sort, Jewel Match and Slide Puzzle.</p><p>The available game list may change as new games are introduced or existing games are updated.</p>' },
+  { q: '4. Is goPlay available through a subscription?', a: '<p>Yes. Customers can subscribe to available goPlay packages.</p><p>The current packages are:</p><ul><li>Daily – 5 ETB</li><li>Weekly – 15 ETB</li><li>Monthly – 35 ETB</li></ul>' },
+  { q: '5. How do I subscribe to goPlay Daily?', a: '<p>Send:</p><p>1 to 9402</p><p>The Daily package costs 5 ETB.</p>' },
+  { q: '6. How do I subscribe to goPlay Weekly?', a: '<p>Send:</p><p>2 to 9402</p><p>The Weekly package costs 15 ETB.</p>' },
+  { q: '7. How do I subscribe to goPlay Monthly?', a: '<p>Send:</p><p>3 to 9402</p><p>The Monthly package costs 35 ETB.</p>' },
+  { q: '8. How do I unsubscribe from goPlay Daily?', a: '<p>Send:</p><p>STOP 1 to 9402</p>' },
+  { q: '9. How do I unsubscribe from goPlay Weekly?', a: '<p>Send:</p><p>STOP 2 to 9402</p>' },
+  { q: '10. How do I unsubscribe from goPlay Monthly?', a: '<p>Send:</p><p>STOP 3 to 9402</p>' },
+  { q: '11. Is the subscription recurring?', a: '<p>The applicable subscription package may renew according to its defined frequency until the customer unsubscribes or the service is otherwise stopped.</p>' },
+  { q: '12. What happens if I do not have enough balance?', a: '<p>A subscription or renewal may not be successfully processed if the required subscription amount is not available.</p><p>If you experience an unexpected charging or subscription issue, contact customer support for assistance.</p>' },
+  { q: '13. What is the goPlay tournament?', a: '<p>The goPlay tournament is a competitive gaming activity in which eligible players compete based on their performance and final scores.</p>' },
+  { q: '14. How often is the tournament held?', a: '<p>The tournament is held weekly.</p>' },
+  { q: '15. Which game is currently used for the tournament?', a: '<p>The current tournament game is:</p><p>Fruit Slice (ፍሩት ስላይስ)</p><p>The tournament game is planned to change on a monthly basis.</p>' },
+  { q: '16. What are the tournament prizes?', a: '<p>The current weekly tournament prizes are:</p><ul><li>1st Place – 50,000 ETB</li><li>2nd Place – 25,000 ETB</li><li>3rd Place – 15,000 ETB</li><li>4th Place – 10,000 ETB</li><li>5th Place – 5,000 ETB</li></ul>' },
+  { q: '17. How is the tournament winner determined?', a: '<p>Players are ranked according to the applicable final score recorded by the goPlay system.</p><p>The official ranking is based on validated system records and the applicable game and tournament rules.</p>' },
+  { q: '18. Can I play Fruit Slice without joining the tournament?', a: '<p>Game availability and tournament eligibility depend on the applicable goPlay service configuration.</p><p>The game may be available for normal gameplay while the tournament uses the designated tournament rules.</p>' },
+  { q: '19. What are instant prizes?', a: '<p>Instant prizes are rewards that may be awarded through applicable games or promotional activities without waiting for the end of a tournament.</p><p>Availability and prize types depend on the applicable promotion and service rules.</p>' },
+  { q: '20. How will I know if I win a prize?', a: '<p>Eligible winners may be contacted through the mobile number associated with their participation.</p><p>Additional verification may be required before prize delivery.</p>' },
+  { q: '21. What information may be required to claim a prize?', a: '<p>Depending on the prize, customers may be required to provide identification or other information necessary to verify their eligibility and process the prize.</p>' },
+  { q: '22. Can another person claim my prize?', a: '<p>Prize-claim procedures depend on the applicable prize and verification requirements.</p><p>Where representation by another person is permitted, appropriate authorization and identification may be required.</p>' },
+  { q: '23. Can prizes be transferred to another customer?', a: '<p>Unless explicitly permitted under the applicable prize rules, prizes should not be assumed to be transferable.</p>' },
+  { q: '24. What happens if there is an error in my score?', a: '<p>If you believe your score has not been recorded correctly, contact customer support as soon as possible.</p><p>Provide your mobile number, game name, approximate playing time and any available screenshot or relevant information.</p>' },
+  { q: '25. What should I do if the game stops working?', a: '<p>Check your internet connection and try accessing the game again.</p><p>If the problem continues, contact support and provide details of your device, game name and the issue you experienced.</p>' },
+  { q: '26. What should I do if I was charged but cannot access goPlay?', a: '<p>Contact customer support and provide:</p><ul><li>Your mobile number</li><li>Package subscribed to</li><li>Approximate subscription time</li><li>Charging information, if available</li><li>Description of the problem</li></ul><p>The issue can then be investigated through the applicable support process.</p>' },
+  { q: '27. Does playing goPlay use mobile data?', a: '<p>Accessing the online goPlay platform may consume mobile data.</p><p>Any applicable data charges are separate from the goPlay subscription fee unless otherwise stated.</p>' },
+  { q: '28. Can the games change?', a: '<p>Yes. goPlay may add new games, update existing games, replace games or temporarily remove games as part of service improvement.</p>' },
+  { q: '29. Can the tournament game change?', a: '<p>Yes. The tournament game is planned to change on a monthly basis.</p>' },
+  { q: '30. What happens if the service is temporarily unavailable?', a: '<p>Temporary interruptions may occur because of maintenance, upgrades, network issues or other technical circumstances.</p><p>The service will be restored as soon as reasonably practicable.</p>' },
+  { q: '31. How can I unsubscribe?', a: '<p>Use the corresponding SMS command:</p><p>Daily: STOP 1 to 9402</p><p>Weekly: STOP 2 to 9402</p><p>Monthly: STOP 3 to 9402</p>' },
+  { q: '32. Where can I get help?', a: '<p>For assistance with subscription, charging, games, tournament participation, scores, prizes or technical problems, contact goPlay customer support through the official support channel provided on the portal.</p>' },
+  { q: '33. Where can I find the Terms and Conditions?', a: '<p>The current Terms and Conditions are available through the goPlay portal.</p><p>Customers are encouraged to review them before subscribing or participating in promotional activities.</p>' },
 ];
+
 const t = (k: keyof typeof STR.en): string => (STR[getLang()] ?? STR.en)[k];
 const esc = (s: string): string => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
 const periodLabel = (p: SubPeriod): string => t(p);
@@ -550,11 +534,31 @@ function renderAcctStack(pageId: string | null): void {
         <p>For support, please use the "Write your feedback" button in Settings, or contact the GoPlay support team via the official channels.</p>
       </div>`;
   } else if (pageId === 'faq') {
-    const am = getLang() === 'am';
     stack.innerHTML = `<h2 class="acct-title">💬 ${t('faq')}</h2>
-      <div class="acct-card info-body faq-body">
-        ${FAQ.map((f) => `<div class="faq-item"><p class="faq-q">${esc(am ? f.q.am : f.q.en)}</p><p class="faq-a">${esc(am ? f.a.am : f.a.en)}</p></div>`).join('')}
+      <div class="faq-body">
+        ${FAQ.map((f) => `
+          <div class="faq-item">
+            <button class="faq-q-btn">
+              <span class="faq-q-text">${f.q}</span>
+              <span class="faq-q-icon">＋</span>
+            </button>
+            <div class="faq-a-content">
+              <div class="faq-a-wrapper">
+                <div class="faq-a-inner">${f.a}</div>
+              </div>
+            </div>
+          </div>
+        `).join('')}
       </div>`;
+    stack.querySelectorAll<HTMLButtonElement>('.faq-q-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.faq-item')!;
+        const isOpen = item.classList.contains('open');
+        item.classList.toggle('open');
+        const icon = btn.querySelector('.faq-q-icon')!;
+        icon.textContent = isOpen ? '＋' : '−';
+      });
+    });
   } else if (pageId === 'terms') {
     stack.innerHTML = `<h2 class="acct-title">📄 ${t('terms')}</h2>
       <div class="acct-card info-body tc-body">${TERMS_HTML}</div>`;
@@ -862,6 +866,18 @@ function injectStyles(): void {
     .tc-table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
     .tc-table th, .tc-table td { border: 1px solid #e8eaed; padding: 0.6rem; text-align: left; }
     .tc-table th { background: #f5f6f8; font-weight: 800; color: #5f6368; }
+    .faq-body { padding: 0; width: 100%; }
+    .faq-item { background: #fff; border-radius: 16px; margin-bottom: 0.6rem; border: 1px solid #e8eaed; box-shadow: 0 2px 8px rgba(0,0,0,.08); overflow: hidden; }
+    .faq-q-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; padding: 1rem 1.1rem; background: transparent; border: none; font: inherit; color: var(--text, #14271a); font-weight: 800; font-size: 1.05rem; text-align: left; cursor: pointer; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background 0.15s; -webkit-tap-highlight-color: transparent; position: relative; }
+    .faq-q-btn:active { transform: scale(0.98); background: #f9f9f9; }
+    .faq-q-icon { font-size: 1.4rem; font-weight: 400; color: var(--accent); flex-shrink: 0; }
+    .faq-a-content { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .faq-a-wrapper { overflow: hidden; }
+    .faq-a-inner { padding: 0 1.1rem 1rem; color: #5f6368; font-size: 0.95rem; line-height: 1.5; }
+    .faq-a-inner p, .faq-a-inner ul { margin: 0 0 0.8rem; }
+    .faq-a-inner ul { padding-left: 1.2rem; }
+    .faq-a-inner p:last-child, .faq-a-inner ul:last-child { margin-bottom: 0; }
+    .faq-item.open .faq-a-content { grid-template-rows: 1fr; }
     .acct-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .acct-muted { color: #5f6368; font-size: .88rem; }
     .acct-user { font-weight: 800; }
