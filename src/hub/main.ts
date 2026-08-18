@@ -16,8 +16,8 @@ import {
   type Tournament, type LeaderEntry,
 } from '../platform/tournaments';
 import { balance, balanceSync, onWalletChange, setBalanceFromServer } from '../platform/wallet';
-import { onCurrencyChange, setBalance, setLifetime, setRpWeekly, setRpMonthly, xpLifetime, rpWeekly, rpMonthly } from '../platform/currency';
-import { orderedCatalog, getGame, freeGamesInCategory, trendingGames, recentlyAddedGames, ratingFor, estMinutesFor, COMING_SOON, type GameMeta, type TournamentCadence, type GameCategory } from '../platform/catalog';
+import { onCurrencyChange, setBalance, setLifetime, setRpWeekly, setRpMonthly, xpLifetime, rpWeekly } from '../platform/currency';
+import { orderedCatalog, getGame, gamesInCategory, trendingGames, recentlyAddedGames, ratingFor, estMinutesFor, COMING_SOON, type GameMeta, type TournamentCadence, type GameCategory } from '../platform/catalog';
 import { getSupabase, isConfigured } from '../platform/supabase';
 import { bootstrapHubData, type HubBootstrapResult } from '../platform/hubBootstrap';
 import {
@@ -295,15 +295,13 @@ function renderMyStats(): void {
   const pct = Math.min(100, Math.round(((xp - floor) / span) * 100));
   const nextXp = ceiling;
   const levelStr = String(level);
-  const weeklyStr = fmtRp(rpWeekly());
-  const monthlyStr = fmtRp(rpMonthly());
+  const weeklyStr = `${rpWeekly()} ${t('hub.rpLabel')}`;
   const xpSubStr = `${xp.toLocaleString()} / ${nextXp.toLocaleString()}`;
 
   const strip = bar.querySelector('.player-strip');
   if (strip) {
     setCounterText(strip.querySelector<HTMLElement>('.ps-level .ps-val'), levelStr);
     setCounterText(strip.querySelector<HTMLElement>('.ps-rp-weekly .ps-val'), weeklyStr);
-    setCounterText(strip.querySelector<HTMLElement>('.ps-rp-monthly .ps-val'), monthlyStr);
     const fill = strip.querySelector<HTMLElement>('.ps-bar-fill');
     const barEl = strip.querySelector<HTMLElement>('.ps-bar');
     const sub = strip.querySelector<HTMLElement>('.ps-sub');
@@ -324,11 +322,6 @@ function renderMyStats(): void {
         <span class="ps-ico" aria-hidden="true">🏅</span>
         <span class="ps-lbl">${t('hub.rpWeekly')}</span>
         <strong class="ps-val">${fmtRp(rpWeekly())}</strong>
-      </div>
-      <div class="ps-seg ps-rp ps-rp-monthly">
-        <span class="ps-ico" aria-hidden="true">🏆</span>
-        <span class="ps-lbl">${t('hub.rpMonthly')}</span>
-        <strong class="ps-val">${fmtRp(rpMonthly())}</strong>
       </div>
       <div class="ps-seg ps-xp">
         <span class="ps-ico" aria-hidden="true">⭐</span>
@@ -605,13 +598,11 @@ function openComingSoonHowTo(id: string): void {
 
 // Browse state: segmented menu filters by tournament / free (default: tournament).
 let browseSnapshot = loadBrowseState();
-let gameFilter: 'tournament' | 'free' = browseSnapshot?.gameFilter ?? 'tournament';
 let categoryFilter: GameCategory | 'all' = browseSnapshot?.categoryFilter ?? 'all';
 let gameQuery = browseSnapshot?.gameQuery ?? '';
 
 function persistBrowseState(opts?: { focusedGameId?: string }): void {
   const snapshot: HubBrowseSnapshot = {
-    gameFilter,
     categoryFilter,
     gameQuery,
     scrollY: window.scrollY,
@@ -679,10 +670,8 @@ function renderGames(): void {
   if (q) {
     pool = orderedCatalog().filter((g) =>
       `${g.nameEn} ${g.nameAm} ${g.genreEn} ${g.genreAm}`.toLowerCase().includes(q));
-  } else if (gameFilter === 'tournament') {
-    pool = orderedCatalog().filter((g) => g.mode === 'tournament');
   } else {
-    pool = freeGamesInCategory(categoryFilter);
+    pool = gamesInCategory(categoryFilter);
   }
   const animate = gamesGridMounted;
   gamesGridMounted = true;
@@ -736,7 +725,6 @@ function renderGamesToolbar(): void {
   const focusSearch = prevSearch === document.activeElement;
   const selStart = prevSearch?.selectionStart ?? null;
   host.innerHTML = gamesToolbarHtml({
-    gameFilter,
     categoryFilter,
     langCode: lang(),
     searchQuery: gameQuery,
@@ -1391,15 +1379,13 @@ function setupBrowse(): void {
   gamesSection?.addEventListener('click', (e) => {
     const seg = (e.target as HTMLElement).closest<HTMLButtonElement>('#gameSeg .pill-tab');
     if (seg) {
-      gameFilter = (seg.dataset.filter as typeof gameFilter) ?? 'tournament';
-      if (gameFilter === 'tournament') categoryFilter = 'all';
       renderGamesToolbar();
       renderGames();
       persistBrowseState();
       return;
     }
     const ddBtn = (e.target as HTMLElement).closest('#catDropdownBtn');
-    if (ddBtn && gameFilter === 'free') {
+    if (ddBtn) {
       const menu = document.querySelector('#catDropdownMenu');
       if (!menu) return;
       const opening = menu.hasAttribute('hidden');

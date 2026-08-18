@@ -156,7 +156,7 @@ export const SEASON_POT_COINS =
 
 /** ETB cash prizes per tournament game (ranks 1–5). Real ETB — not coins. */
 export const TOURNAMENT_ETB_PRIZES: Record<string, readonly number[]> = {
-  'fruit-slice': [50_000, 20_000, 10_000, 5_000, 3_000],
+  'fruit-slice': [50_000, 25_000, 15_000, 10_000, 5_000],
   'memory-match': [150_000, 60_000, 30_000, 15_000, 9_000],
 };
 

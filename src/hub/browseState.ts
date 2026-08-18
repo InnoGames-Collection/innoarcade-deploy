@@ -8,7 +8,6 @@ const STORAGE_KEY = 'inno.hub.browse';
 const HSCROLL_SHELF_IDS = ['trendingShelf', 'recentShelf'] as const;
 
 export interface HubBrowseSnapshot {
-  gameFilter: 'tournament' | 'free';
   categoryFilter: GameCategory | 'all';
   gameQuery: string;
   scrollY: number;
@@ -21,7 +20,6 @@ export function loadBrowseState(): HubBrowseSnapshot | null {
     const raw = sessionStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as HubBrowseSnapshot;
-    if (parsed.gameFilter !== 'tournament' && parsed.gameFilter !== 'free') return null;
     if (typeof parsed.categoryFilter !== 'string') return null;
     if (typeof parsed.gameQuery !== 'string') return null;
     return parsed;
