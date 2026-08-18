@@ -401,6 +401,21 @@ function wireReferral(): void {
   });
 }
 
+function openComingSoonModal(titleKey: 'rewards' | 'achievements'): void {
+  const am = getLang() === 'am';
+  const title = titleKey === 'rewards' ? (am ? 'የእኔ ሽልማቶች' : 'My Rewards') : (am ? 'ስኬቶች' : 'Achievements');
+  const msg = am ? 'በቅርብ ቀን!' : 'Coming Soon!';
+  const m = shell(`
+    <div class="acct-success">
+      <div class="as-burst">🚧</div>
+      <h2 class="acct-title">${esc(title)}</h2>
+      <p class="acct-muted" style="margin-top: 0.5rem; margin-bottom: 1rem;">${msg}</p>
+      <button class="btn-primary" id="csDone">${t('close')}</button>
+    </div>
+  `);
+  m.querySelector('#csDone')!.addEventListener('click', () => m.remove());
+}
+
 function wireAccount(user: AuthUser | null): void {
   document.querySelector('#aSignIn')?.addEventListener('click', () => openSignIn());
   document.querySelector('#aSignOut')?.addEventListener('click', async () => { await signOut(); void openAccount(); });
@@ -414,10 +429,18 @@ function wireAccount(user: AuthUser | null): void {
     if (ex) ex.style.display = ex.style.display === 'none' ? 'block' : 'none';
   });
   
-  // Non-implemented placeholders
-  document.querySelector('#aRewards')?.addEventListener('click', () => {});
-  document.querySelector('#aAchievements')?.addEventListener('click', () => {});
-  document.querySelector('#aNotifs')?.addEventListener('click', () => {});
+  document.querySelector('#aRewards')?.addEventListener('click', () => {
+    document.querySelector('.acct-scrim')?.remove();
+    openComingSoonModal('rewards');
+  });
+  document.querySelector('#aAchievements')?.addEventListener('click', () => {
+    document.querySelector('.acct-scrim')?.remove();
+    openComingSoonModal('achievements');
+  });
+  document.querySelector('#aNotifs')?.addEventListener('click', () => {
+    document.querySelector('.acct-scrim')?.remove();
+    document.querySelector<HTMLButtonElement>('#notifBell')?.click();
+  });
   
   document.querySelector('#aSettings')?.addEventListener('click', () => { 
     const btn = document.querySelector<HTMLButtonElement>('#settingsBtn');
