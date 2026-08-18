@@ -75,14 +75,14 @@ function shell(inner: string, showBanner = true): HTMLElement {
   m.innerHTML = `
     <div class="auth-topbar">
       <img class="auth-logo-et" src="/brand/ethio-telecom-full.png" alt="Ethio Telecom" />
-      <button class="auth-back" aria-label="${t('close')}">✕</button>
+      <button class="btn-secondary" aria-label="${t('close')}" id="closeBtn">${t('close')}</button>
     </div>
     ${showBanner ? `<div class="auth-hero"><img class="auth-hero-img" src="/brand/goplay-banner.png" alt="GoPlay" /></div>` : ''}
     <div class="auth-stack">
       <div class="auth-card">${inner}</div>
     </div>`;
   document.body.appendChild(m);
-  m.querySelector('.auth-back')!.addEventListener('click', () => m.remove());
+  m.querySelector('#closeBtn')?.addEventListener('click', () => m.remove());
   return m;
 }
 
@@ -155,22 +155,21 @@ function openCode(): void {
   input.focus();
   void showDemoCode(m, input);
 
-  let left = 0;
   let iv: ReturnType<typeof setInterval> | undefined;
-  function startCountdown(): void {
-    left = 90;
+  const startCountdown = () => {
+    let left = 60;
     resend.disabled = true;
-    const tick = (): void => {
-      const ss = String(left % 60).padStart(2, '0');
-      timerEl.textContent = `(${Math.floor(left / 60)}:${ss})`;
-      if (left <= 0) { if (iv) clearInterval(iv); resend.disabled = false; timerEl.textContent = ''; }
+    timerEl.textContent = `(${left})`;
+    const tick = () => {
       left--;
+      if (left <= 0) { if (iv) clearInterval(iv); resend.disabled = false; timerEl.textContent = ''; }
+      else timerEl.textContent = `(${left})`;
     };
-    tick();
+    if (iv) clearInterval(iv);
     iv = setInterval(tick, 1000);
   }
   startCountdown();
-  m.querySelector('.auth-back')!.addEventListener('click', () => { if (iv) clearInterval(iv); });
+  m.querySelector('#closeBtn')!.addEventListener('click', () => { if (iv) clearInterval(iv); });
 
   go.addEventListener('click', async () => {
     const code = input.value.trim();
@@ -221,7 +220,7 @@ function openProfile(): void {
     <label>${t('name')}</label>
     <input class="auth-input" id="name" type="text" maxlength="24" value="${esc(user?.name ?? '')}" placeholder="${t('name')}" />
     <button class="btn-primary" id="save">${t('save')}</button>
-    <button class="auth-link danger" id="out">${t('signOut')}</button>`, false);
+    <button class="btn-secondary danger" id="out">${t('signOut')}</button>`, false);
   const input = m.querySelector<HTMLInputElement>('#name')!;
   input.focus();
   m.querySelector('#save')!.addEventListener('click', async () => {
@@ -258,10 +257,6 @@ function injectStyles(): void {
     .auth-topbar { width: 100%; display: flex; align-items: center; justify-content: space-between;
       padding: 0.8rem 1rem; background: transparent; flex-shrink: 0; }
     .auth-logo-et { height: 2.2rem; object-fit: contain; background: transparent; }
-    .auth-back { width: 2.2rem; height: 2.2rem; border-radius: 999px;
-      border: 1px solid #e6efdc; background: rgba(255,255,255,.9); color: #5f7262;
-      font-size: 1rem; cursor: pointer; display: grid; place-items: center; flex-shrink: 0; }
-    .auth-back:hover { background: #f2f6ee; }
 
     .auth-hero { width: 100%; flex-shrink: 0; }
     .auth-hero-img { width: 100%; display: block; object-fit: cover; max-height: 200px; }
@@ -293,10 +288,8 @@ function injectStyles(): void {
       font: inherit; font-size: 1rem; color: #14271a; background: #fff; }
     .auth-input:focus { outline: 2px solid #4f9e16; border-color: #4f9e16; }
 
-    .auth-link { background: none; border: none; color: var(--muted); font: inherit; cursor: pointer; padding: 4px; }
-    .auth-link.danger { color: #d64545; }
     .auth-terms { display: block; text-align: center; color: #4f9e16; font-size: 0.82rem; font-weight: 600;
-      text-decoration: underline; margin-top: 4px; }
+      text-decoration: none; margin-top: 6px; }
 
     .auth-hint { font-size: 0.82rem; color: #5f7262; }
     .auth-demo { font-size: 0.86rem; color: #1f6f43; background: #e9f8ef; border: 1px solid #bce8cf;

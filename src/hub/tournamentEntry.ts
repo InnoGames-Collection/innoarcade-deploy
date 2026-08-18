@@ -51,7 +51,7 @@ function injectStyles(): void {
       text-decoration:none; border:1px solid transparent; box-sizing:border-box; }
     .btn.primary { background:linear-gradient(135deg,#2f8fe6,#1f5fc4); color:#fff; border:none; }
     .btn.primary:disabled { opacity:.45; cursor:not-allowed; }
-    .btn.ghost { background:transparent; border:1px solid #e6efdc; color:#5f7262; }`;
+    /* removed local ghost CSS */`;
   document.head.appendChild(s);
 }
 
@@ -133,7 +133,7 @@ function renderEntryBody(
       <p class="entry-err" id="err"></p>
       <div class="entry-actions entry-actions-row">
         <button type="button" class="btn primary" id="confirm">${t('hub.ok')}</button>
-        <button type="button" class="btn ghost" id="cancel">${t('hub.cancel')}</button>
+        <button type="button" class="btn-secondary" id="cancel">${t('hub.cancel')}</button>
       </div>`;
 
     card.querySelector<HTMLButtonElement>('#confirm')!.addEventListener('click', async () => {
@@ -159,7 +159,7 @@ function renderEntryBody(
       <p class="entry-summary">${msg}</p>
       <p class="entry-bal">🪙 ${bal.toLocaleString()}</p>
       <div class="entry-actions entry-actions-row">
-        <button type="button" class="btn ghost" id="cancel">${t('hub.ok')}</button>
+        <button type="button" class="btn-secondary" id="cancel">${t('hub.ok')}</button>
       </div>`;
   }
 

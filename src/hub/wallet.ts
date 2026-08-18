@@ -163,7 +163,7 @@ export function openInlineCoinCheckout(
     </div>
     <p class="wallet-err" id="err"></p>
     <button class="btn-primary" id="pay">${t('payNow')} ${pkg.priceEtb} ETB</button>
-    <button class="wallet-link" id="back">${t('back')}</button>
+    <button class="btn-secondary" id="back">${t('back')}</button>
     <p class="wallet-sandbox">${t('sandbox')}</p>`;
   card.querySelectorAll<HTMLButtonElement>('.method').forEach((b) => {
     b.addEventListener('click', () => {
@@ -294,7 +294,6 @@ function injectStyles(): void {
       border-radius:12px; background:#fff; font:inherit; font-weight:700; cursor:pointer; }
     .method.sel { border-color:var(--accent); box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent); }
     .m-icon { font-size:1.2rem; }
-    .wallet-link { background:none; border:none; color:var(--muted); font:inherit; font-weight:700; cursor:pointer; padding:.4rem; }
     .wallet-hint, .wallet-sandbox { font-size:.78rem; color:var(--muted); text-align:center; margin:0; }
     .wallet-err { font-size:.8rem; color:#d64545; min-height:1em; margin:0; }
     .wallet-success { text-align:center; display:flex; flex-direction:column; gap:10px; align-items:center; padding:8px; }

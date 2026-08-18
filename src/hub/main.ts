@@ -570,7 +570,7 @@ function openHowToModal(title: string, bodyHtml: string): void {
       <h3 class="howto-name">${title}</h3>
       <p class="howto-sub">📖 ${t('hub.howToPlay')}</p>
       <div class="howto-body">${bodyHtml}</div>
-      <button type="button" class="btn ghost howto-close">${t('hub.cancel')}</button>
+      <button type="button" class="btn-secondary howto-close">${t('hub.cancel')}</button>
     </div>`;
   document.body.appendChild(m);
   const close = (): void => m.remove();

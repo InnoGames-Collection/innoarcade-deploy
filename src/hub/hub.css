@@ -212,6 +212,65 @@ body {
   background: rgba(0, 0, 0, 0.05);
 }
 
+/* ---- secondary CTA button ---- */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 3.2rem;
+  padding: 0 1.5rem;
+  border-radius: 12px;
+  background: #f0f2f5;
+  color: var(--text);
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, opacity 0.2s ease, color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 140px;
+}
+.btn-secondary:active {
+  transform: scale(0.96);
+  transition-duration: 0.08s;
+}
+.btn-secondary::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  padding-top: 100%;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease;
+  pointer-events: none;
+}
+.btn-secondary:active::after {
+  transform: translate(-50%, -50%) scale(2.5);
+  opacity: 1;
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.1s ease;
+}
+.btn-secondary:disabled, .btn-secondary.loading {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+/* danger variant */
+.btn-secondary.danger {
+  background: #fce8e8;
+  color: #d64545;
+}
+.btn-secondary.danger::after {
+  background: rgba(214, 69, 69, 0.15);
+}
+
 /* ---- layout ---- */
 .hub-main {
   max-width: 1120px;
@@ -314,8 +373,6 @@ body {
 .cat-block { margin-bottom: 1.8rem; }
 .cat-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 0.8rem; }
 .cat-head h3 { font-size: 1.05rem; font-weight: 800; display: flex; align-items: center; gap: 0.4rem; }
-.cat-head .view-all { color: var(--accent); text-decoration: none; font-size: 0.85rem; font-weight: 600; }
-.cat-head .view-all:hover { text-decoration: underline; }
 
 .game-grid, .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; }
 
@@ -373,8 +430,7 @@ body {
 .econ-badge.fee { background: #fff3d6; color: #9a6b12; }
 .econ-badge.pool { background: rgba(91, 108, 255, 0.12); color: var(--accent); }
 .fc-econ .econ-badge { background: rgba(255,255,255,0.18); color: #fff; }
-.btn.disabled { opacity: 0.55; pointer-events: none; background: var(--line); border-color: var(--line); color: var(--muted); }
-.btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); }
+.btn.sm { height: 2rem; padding: 0 1rem; font-size: 0.85rem; border-radius: 99px; }
 
 /* --- Player dashboard section -------------------------------------------- */
 .dashboard-section { margin-top: 1.5rem; }

@@ -280,11 +280,11 @@ function shell(inner: string): HTMLElement {
   m.innerHTML = `
     <div class="acct-topbar">
       <img class="acct-logo" src="/brand/ethio-e.png" alt="Ethio Telecom" />
-      <button class="acct-back" aria-label="${t('back')}">✕</button>
+      <button class="btn-secondary" aria-label="${t('close')}" id="closeAcctBtn">${t('close')}</button>
     </div>
     <div class="acct-stack">${inner}</div>`;
   document.body.appendChild(m);
-  m.querySelector('.acct-back')!.addEventListener('click', () => m.remove());
+  m.querySelector('#closeAcctBtn')!.addEventListener('click', () => m.remove());
   return m;
 }
 
@@ -348,7 +348,7 @@ function referralHtml(ref: { code: string; redeemed: boolean } | null): string {
       <span class="acct-muted">${t('haveCode')}</span>
       <div class="ref-redeem-row">
         <input id="refInput" class="ref-input" placeholder="${t('enterCode')}" maxlength="6" autocomplete="off" />
-        <button class="acct-btn" id="refRedeem">${t('redeem')}</button>
+        <button class="btn-primary" id="refRedeem">${t('redeem')}</button>
       </div>
       <p class="ref-msg" id="refMsg"></p>
     </div>`;
@@ -358,8 +358,8 @@ function referralHtml(ref: { code: string; redeemed: boolean } | null): string {
     <div class="ref-code-row">
       <span class="acct-muted">${t('yourCode')}</span>
       <code class="ref-code" id="refCode">${esc(ref.code)}</code>
-      <button class="acct-btn ghost" id="refCopy">${t('copy')}</button>
-      <button class="acct-btn" id="refShare">${t('share')}</button>
+      <button class="btn-secondary" id="refCopy">${t('copy')}</button>
+      <button class="btn-primary" id="refShare">${t('share')}</button>
     </div>
     ${redeemBox}
   </div>`;
@@ -572,12 +572,8 @@ function injectStyles(): void {
     .acct-modal { position: fixed; inset: 0; z-index: 9992; display: flex; flex-direction: column; align-items: center;
       justify-content: flex-start; overflow-y: auto; background: #f5f6f8; }
     .acct-topbar { width: 100%; display: flex; align-items: center; justify-content: space-between;
-      padding: 0.8rem 1rem; background: #fff; border-bottom: 1px solid #e8eaed; flex-shrink: 0; }
+      padding: 0.8rem 1rem; background: transparent; flex-shrink: 0; }
     .acct-logo { height: 1.6rem; object-fit: contain; }
-    .acct-back { width: 2.2rem; height: 2.2rem; border-radius: 999px;
-      border: 1px solid #e8eaed; background: #fff; color: #5f6368; font-size: 1rem; cursor: pointer;
-      display: grid; place-items: center; }
-    .acct-back:hover { background: #f0f0f0; }
     .acct-stack { width: min(440px, 100%); display: flex; flex-direction: column; gap: 0; padding: 0.8rem 1rem 2rem; }
     .acct-title { color: var(--text, #14271a); font-size: 1.3rem; margin: 0 0 0.6rem; }
     .acct-card { background: #fff; color: var(--text, #14271a); border-radius: 16px; padding: 1rem 1.1rem; box-shadow: 0 2px 8px rgba(0,0,0,.08);
@@ -585,8 +581,6 @@ function injectStyles(): void {
     .acct-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .acct-muted { color: #5f6368; font-size: .88rem; }
     .acct-user { font-weight: 800; }
-    .acct-btn { border: 1px solid var(--accent, #4f9e16); background: var(--accent, #4f9e16); color: #fff; border-radius: 999px; padding: .42rem 1rem; font: inherit; font-weight: 800; cursor: pointer; }
-    .acct-btn.ghost { background: #fff; color: #5f6368; border-color: #e8eaed; }
     .sub-off { display: flex; align-items: center; gap: 12px; cursor: pointer; }
     .sub-cart { width: 2.4rem; height: 2.4rem; display: grid; place-items: center; background: var(--accent); color: #fff; border-radius: 50%; font-size: 1.1rem; }
     .sub-cta { display: block; font-size: 1.05rem; color: var(--accent); }
