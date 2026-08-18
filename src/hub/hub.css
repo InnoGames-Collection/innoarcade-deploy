@@ -1264,12 +1264,44 @@ html, body { max-width: 100%; overflow-x: hidden; }
     box-shadow: 0 -4px 16px rgba(20, 60, 16, 0.08);
   }
   .bn-item {
-    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
-    background: none; border: none; color: var(--muted); font: inherit; font-size: 0.6rem; font-weight: 700;
-    text-decoration: none; cursor: pointer; padding: 0.25rem 0;
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    background: transparent; border: none; color: #8e949a; font: inherit; font-size: 0.62rem; font-weight: 600;
+    text-decoration: none; cursor: pointer; padding: 0.35rem 0;
+    position: relative; overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .bn-ico { font-size: 1.2rem; line-height: 1; }
-  .bn-item.active { color: var(--accent); }
+  .bn-ico { 
+    font-size: 1.3rem; line-height: 1; 
+    padding: 0.25rem 1rem;
+    border-radius: 12px;
+    transition: background-color 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 1;
+  }
+  .bn-item::after {
+    content: ""; position: absolute; top: 40%; left: 50%; width: 4rem; height: 4rem;
+    background: rgba(0, 0, 0, 0.05); border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0); opacity: 0;
+    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .bn-item:active {
+    transform: scale(0.96); transition-duration: 0.08s;
+  }
+  .bn-item:active::after {
+    transform: translate(-50%, -50%) scale(1.2); opacity: 1;
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.1s ease;
+  }
+  .bn-item.active { 
+    color: var(--accent, #4f9e16); 
+    font-weight: 800;
+  }
+  .bn-item.active .bn-ico {
+    background: rgba(79, 158, 22, 0.12);
+    transform: scale(1.05);
+  }
   .hub-main { padding-bottom: 4.5rem; }
   .hub-shell {
     padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
