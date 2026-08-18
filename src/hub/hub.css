@@ -1159,7 +1159,7 @@ body {
   width: 2.6rem;
   height: 2.6rem;
   border-radius: 999px;
-  border: 1px solid var(--line);
+  border: 1.5px solid #d1d5db;
   background: #fff;
   color: var(--text);
   font-size: 1.05rem;
@@ -1167,7 +1167,7 @@ body {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
   position: relative;
   overflow: hidden;
   transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, border-color 0.2s ease;
@@ -1249,7 +1249,6 @@ body {
   .ps-sub { font-size: 0.55rem; }
   .ps-bar { min-width: 0; }
   .auth-btn { font-size: 0.78rem !important; padding: 0.34rem 0.7rem !important; }
-  .settings-btn { width: 2rem; height: 2rem; }
 }
 html, body { max-width: 100%; overflow-x: hidden; }
 
