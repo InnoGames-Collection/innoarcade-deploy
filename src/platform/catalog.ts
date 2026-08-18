@@ -152,8 +152,8 @@ const ALL_GAMES: GameMeta[] = [
     id: 'memory-match',
     route: 'games/memory-match/',
     nameEn: 'Memory Match', nameAm: 'ማች ማስታወሻ',
-    genreEn: 'Puzzle · Tournament', genreAm: 'እንቆቅልሽ · ውድድር',
-    mode: 'tournament', tournament: 'monthly', stable: 'v1', icon: '🧩', accent: '#ff6b9d', thumb: ['#8c2b5c', '#0b1521'],
+    genreEn: 'Puzzle · Casual', genreAm: 'እንቆቅልሽ · ቀላል',
+    mode: 'free', /* tournament: 'monthly', */ stable: 'v1', icon: '🧩', accent: '#ff6b9d', thumb: ['#8c2b5c', '#0b1521'],
     cover: '/memory_match.webp',
     scoreEn: 'Score', scoreAm: 'ነጥብ',
     play: { winPoints: 180, winRate: 50 },
@@ -321,7 +321,7 @@ const ALL_GAMES: GameMeta[] = [
 // Storefront gating: free games ship by default; tournament games are opt-in via
 // ENABLED. Every game above is fully built — re-enable a tournament title by adding
 // its id here (a one-line change).
-const ENABLED_TOURNAMENT = new Set<string>(['memory-match', 'fruit-slice']);
+const ENABLED_TOURNAMENT = new Set<string>(['fruit-slice']); // 'memory-match' temporarily removed
 /** Hidden from the hub until re-enabled (game code may remain in the repo). */
 const HIDDEN_GAMES = new Set<string>([
   'candy-crunch',
@@ -493,9 +493,10 @@ for (const g of CATALOG) {
 //   3. except BOTTOM games, pinned to the very end.
 const FRONT = [
   // Tournament (enabled titles) — pinned first
-  'memory-match',
+  // 'memory-match',
   'fruit-slice',
   // Free games (hub order)
+  'memory-match',
   'popblast',
   'temple-dash',
   'helix-jump',
