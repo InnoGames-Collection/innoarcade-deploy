@@ -54,169 +54,370 @@ const STR = {
   },
 };
 
-// Full GoPlay Terms & Conditions. Legal copy is authoritative in English, so it
-// renders the same in both UI languages. Authored HTML (no user input) — safe to
-// inject. Per-game rules live under section 5; ⚠️ marks chance/high-risk games.
-const G = (title: string, body: string): string =>
-  `<h4 class="tc-game">${title}</h4>${body}`;
-const UL = (items: string[]): string => `<ul>${items.map((i) => `<li>${i}</li>`).join('')}</ul>`;
 
 const TERMS_HTML = `
-  <h3>GoPlay Terms &amp; Conditions</h3>
+  <h3>goPlay – Terms and Conditions</h3>
+  <p class="acct-muted">Service Provider: Ethio Telecom / Authorized goPlay Service Provider</p>
 
-  <h4>1. Acceptance of Terms</h4>
-  <p>By accessing or using the GoPlay platform, including all games, features, and services, the user agrees to be bound by these Terms &amp; Conditions. If the user does not agree, they must stop using the platform immediately.</p>
+  <h4>1. Introduction</h4>
+  <p>Welcome to goPlay, a digital gaming and entertainment service that provides customers with access to a variety of interactive games, skill-based challenges, puzzle games, arcade games, trivia games, tournaments and opportunities to receive prizes and rewards.</p>
+  <p>These Terms and Conditions ("Terms") govern your access to and use of the goPlay service, including the goPlay website, games, subscription packages, tournaments, leaderboards, promotional activities, rewards and related services.</p>
+  <p>By accessing, subscribing to, or using goPlay, you acknowledge that you have read, understood and agreed to these Terms and Conditions.</p>
+  <p>If you do not agree with these Terms, please do not subscribe to or use the paid goPlay service.</p>
 
-  <h4>2. Eligibility</h4>
-  ${UL([
-    'Users must meet the minimum legal age required in their jurisdiction (or have guardian consent where applicable).',
-    'The platform may restrict access to certain games based on age, region, or compliance requirements.',
-    'Users are responsible for ensuring their use is legally permitted in their location.',
-  ])}
+  <h4>2. About the goPlay Service</h4>
+  <p>goPlay is designed to provide customers with an engaging digital gaming experience through a collection of games across different categories, including arcade, puzzle, brain, logic, trivia, casual and skill-based games.</p>
+  <p>The available games may include:</p>
+  <ul>
+    <li>Ball Shooter (ቦል ሹተር)</li>
+    <li>2048</li>
+    <li>Ethiorunner (ኢትዮሯጭ)</li>
+    <li>Brick Blitz (ብሪክ ብሊትዝ)</li>
+    <li>Fruit Slice (ፍሩት ስላይስ)</li>
+    <li>Sky Hopper (ስካይ ሆፐር)</li>
+    <li>Bubble Pop (ባብል ፖፕ)</li>
+    <li>Memory Match (ማች ማስታወሻ)</li>
+    <li>Tap Game (ታፕ ጨዋታ)</li>
+    <li>Candy Blast (ካንዲ ብላስት)</li>
+    <li>Ethiopian Quiz (የኢትዮጵያ ጥያቄ)</li>
+    <li>Sudoku (ሱዶኩ)</li>
+    <li>Spell Trivia (ፊደል ጥያቄ)</li>
+    <li>Vocabulary (መዝገበ ቃላት)</li>
+    <li>Rhyme Time (ግጥም)</li>
+    <li>Target 24 (ኢላማ 24)</li>
+    <li>Cross Sum (ድምር)</li>
+    <li>Logic Grid (ሎጂክ)</li>
+    <li>Sequence (ቅደም ተከተል)</li>
+    <li>Water Sort (ውሃ መደርደር)</li>
+    <li>Block Blast</li>
+    <li>Tile Connect</li>
+    <li>Hexa Block</li>
+    <li>Helix Jump</li>
+    <li>Ball Sort</li>
+    <li>Jewel Match</li>
+    <li>Slide Puzzle</li>
+  </ul>
+  <p>The game portfolio may be updated, expanded, replaced or temporarily unavailable as goPlay continues to improve its service.</p>
 
-  <h4>3. Account Registration &amp; Security</h4>
-  ${UL([
-    'Users must provide accurate and complete information during registration.',
-    'Each user is responsible for maintaining confidentiality of account credentials.',
-    'Any activity under an account is considered the responsibility of the account holder.',
-    'GoPlay is not liable for losses due to unauthorized account access caused by user negligence.',
-  ])}
+  <h4>3. Eligibility</h4>
+  <p>goPlay is intended for eligible Ethio Telecom customers who are able to access and use the service through the supported channels.</p>
+  <p>Customers must provide accurate information where information is required for account management, prize verification or customer support.</p>
+  <p>Where a prize requires identity verification, the winner may be required to provide valid identification and other information necessary to complete the prize-redeeming process.</p>
+  <p>Ethio Telecom and/or the authorized service provider reserves the right to verify the eligibility of a participant before delivering a prize.</p>
 
-  <h4>4. License to Use Platform</h4>
-  <p>GoPlay grants users a limited, non-transferable, non-exclusive license to access and use the platform for personal entertainment purposes only. Users are prohibited from:</p>
-  ${UL([
-    'Copying, modifying, or reverse engineering any part of the platform',
-    'Using bots, scripts, or automation tools',
-    'Exploiting bugs or vulnerabilities for advantage',
-  ])}
+  <h4>4. Customer Account</h4>
+  <p>A customer's mobile number may be used as the identifier associated with their goPlay participation and subscription.</p>
+  <p>Customers are responsible for maintaining control of their mobile number and for activities performed through their account or mobile number.</p>
+  <p>Customers should immediately contact customer support if they believe that their account or service access has been used improperly.</p>
 
-  <h4>5. Games and Gameplay Rules</h4>
-  ${UL([
-    'Each game has its own mechanics, scoring system, and rules which must be followed.',
-    'GoPlay reserves the right to modify game rules, features, or availability at any time.',
-    'Abuse of gameplay systems (including exploitation of glitches) may result in penalties or account suspension.',
-  ])}
+  <h4>5. Subscription Packages</h4>
+  <p>goPlay provides subscription packages that allow customers to access the service according to the selected package.</p>
+  <p>The current subscription packages are:</p>
+  <div style="overflow-x:auto;">
+    <table class="tc-table">
+      <thead>
+        <tr>
+          <th>Package</th>
+          <th>Subscribe</th>
+          <th>Price</th>
+          <th>Frequency</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>goPlay Daily</td>
+          <td>SMS 1 to 9402</td>
+          <td>5.00 ETB</td>
+          <td>Daily</td>
+        </tr>
+        <tr>
+          <td>goPlay Weekly</td>
+          <td>SMS 2 to 9402</td>
+          <td>15.00 ETB</td>
+          <td>Weekly</td>
+        </tr>
+        <tr>
+          <td>goPlay Monthly</td>
+          <td>SMS 3 to 9402</td>
+          <td>35.00 ETB</td>
+          <td>Monthly</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Subscription fees are charged according to the selected package and applicable Ethio Telecom charging procedures.</p>
+  <p>Customers should ensure that sufficient balance is available for subscription or renewal.</p>
 
-  ${G('5.1 Candy Blast', `
-    <p>Users shall require five (5) Coins to initiate a single Candy Blast game session. Upon successful deduction of Coins, the user shall participate in a match-3 puzzle gameplay session. The objective is to strategically match three or more identical candies, form combinations, and achieve the highest possible score within the limited number of moves.</p>
-    <p><strong>5.1.1 Scoring Mechanism.</strong> The final score is automatically computed based on: (a) number of candies matched; (b) special candy combinations created; (c) cascading chain reactions; (d) remaining moves; (e) bonus multipliers and in-game achievements. The computed score is final and system authoritative.</p>
-    <p><strong>5.1.2 Rewards.</strong> Rewards may be granted based on performance tiers, including bonus Coins, airtime packages, and data bundles. Reward allocation is system-controlled and may be adjusted.</p>
-    <p><strong>5.1.3 Tournament Mode.</strong> Periodic tournaments may be conducted (daily/weekly/monthly). Rankings are determined by highest valid score per user during the tournament period.</p>
-    <p><strong>5.1.4 Prize Distribution.</strong> Tournament rewards may include telecom rewards and physical prizes. Winners are selected based on ranking or randomized draw mechanisms defined per campaign.</p>`)}
+  <h4>6. Subscription and Renewal</h4>
+  <p>A customer who subscribes to a goPlay package will receive access to the applicable service according to the selected package.</p>
+  <p>Where a package is recurring, the applicable subscription fee may be charged according to the package's subscription frequency until the customer unsubscribes or the service is otherwise suspended or terminated.</p>
+  <p>Subscription status and applicable service access may depend on successful processing of the subscription request.</p>
 
-  ${G('5.2 Temple Run', `<p>An endless runner survival game; avoid obstacles by jumping, sliding, and lane switching. The objective is to survive as long as possible while accumulating distance-based score. Scoring is based on distance traveled, obstacles avoided, coin collection, and a survival-time multiplier. No guaranteed rewards are issued; rewards (if enabled) are performance-based and subject to campaign rules.</p>`)}
+  <h4>7. Unsubscription</h4>
+  <p>Customers may unsubscribe from their selected goPlay package using the applicable SMS unsubscription mechanism.</p>
+  <div style="overflow-x:auto;">
+    <table class="tc-table">
+      <thead>
+        <tr>
+          <th>Package</th>
+          <th>Unsubscribe</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>goPlay Daily</td>
+          <td>Send STOP 1 to 9402</td>
+        </tr>
+        <tr>
+          <td>goPlay Weekly</td>
+          <td>Send STOP 2 to 9402</td>
+        </tr>
+        <tr>
+          <td>goPlay Monthly</td>
+          <td>Send STOP 3 to 9402</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Customers should ensure that the correct unsubscription keyword is used for the applicable package.</p>
+  <p>After successful unsubscription, the recurring subscription for the applicable package will be stopped in accordance with the service's subscription process.</p>
 
-  ${G('5.3 Ball Shooter', `<p>Fire projectiles at rotating or moving targets by timing shots accurately. Scoring depends on targets hit, accuracy percentage, combo streaks, and a level-completion bonus. Rewards, if enabled, follow predefined performance tiers and may include bonus coins or promotional prizes.</p>`)}
+  <h4>8. Games</h4>
+  <p>goPlay provides multiple games with different gameplay mechanics.</p>
+  <p>Each game may have its own:</p>
+  <ul>
+    <li>Gameplay rules</li>
+    <li>Time limits</li>
+    <li>Scoring mechanism</li>
+    <li>Number of attempts</li>
+    <li>Levels</li>
+    <li>Score calculation</li>
+    <li>Leaderboard mechanism</li>
+    <li>Tournament eligibility</li>
+    <li>Reward conditions</li>
+  </ul>
+  <p>Customers must follow the instructions displayed within each game.</p>
 
-  ${G('5.4 Lucky Slot <span class="tc-risk">⚠️ HIGH RISK</span>', `
-    <p>Users initiate a spin session by consuming Coins. The slot machine generates outcomes based on a predefined probability model, determined by a Random Number Generator (RNG) system.</p>
-    <p><strong>5.4.1 Outcome Types:</strong> no win; coin win; bonus reward; jackpot event (rare, probability-controlled).</p>
-    <p><strong>5.4.2 Compliance Note.</strong> All probabilities must be pre-defined, auditable, and non-modifiable per session. Failure to enforce this constitutes a gambling-classification risk.</p>`)}
+  <h4>9. Skill-Based Games</h4>
+  <p>Several goPlay games require customer skill, decision-making, timing, memory, logical reasoning, speed or accuracy.</p>
+  <p>Examples include:</p>
+  <ul>
+    <li>Ball Shooter</li>
+    <li>2048</li>
+    <li>Ethiorunner</li>
+    <li>Brick Blitz</li>
+    <li>Sudoku</li>
+    <li>Spell Trivia</li>
+    <li>Vocabulary</li>
+    <li>Rhyme Time</li>
+    <li>Target 24</li>
+    <li>Cross Sum</li>
+    <li>Logic Grid</li>
+    <li>Sequence</li>
+    <li>Water Sort</li>
+    <li>Block Blast</li>
+    <li>Tile Connect</li>
+    <li>Hexa Block</li>
+    <li>Helix Jump</li>
+    <li>Ball Sort</li>
+    <li>Jewel Match</li>
+    <li>Slide Puzzle</li>
+  </ul>
+  <p>The final score may depend on factors such as successful actions, time taken, levels completed, combinations, distance, accuracy, moves used, targets achieved or other game-specific scoring rules.</p>
 
-  ${G('5.5 2048', `<p>Slide numbered tiles on a grid; matching tiles merge into higher values. The objective is to reach the target tile (e.g., 2048 or higher). Scoring depends on highest tile achieved, total merges, and move efficiency.</p>`)}
+  <h4>10. Tournament</h4>
+  <p>goPlay provides a tournament experience where customers can compete through the designated tournament game.</p>
+  <p>The current tournament game is:</p>
+  <p><strong>Fruit Slice (ፍሩት ስላይስ)</strong></p>
+  <p>The tournament is conducted on a weekly basis.</p>
+  <p>The designated tournament game may be changed on a monthly basis.</p>
+  <p>Customers participating in the tournament compete based on their game performance and applicable scoring rules.</p>
 
-  ${G('5.6 Metro Rush', `<p>Control a character running through a track filled with obstacles and trains. Scoring is based on distance covered, obstacles avoided, and coin collection.</p>`)}
+  <h4>11. Current Tournament – Fruit Slice</h4>
+  <p>In Fruit Slice, customers slice fruits to earn points while avoiding bombs.</p>
+  <p>The game may include:</p>
+  <ul>
+    <li>Points for successfully sliced fruits</li>
+    <li>Combo bonuses</li>
+    <li>Penalties for hitting bombs</li>
+    <li>Combo resets</li>
+    <li>Time-based scoring</li>
+    <li>Survival-based scoring</li>
+    <li>Elimination after missing the applicable number of fruits</li>
+  </ul>
+  <p>Tournament ranking is based on the applicable final score recorded by the goPlay system.</p>
 
-  ${G('5.7 Memory Match', `<p>Flip cards to find matching pairs within limited moves. Scoring depends on the number of moves used, completion time, and accuracy efficiency.</p>`)}
+  <h4>12. Tournament Prizes</h4>
+  <p>The current weekly tournament prize structure is:</p>
+  <div style="overflow-x:auto;">
+    <table class="tc-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Prize</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1st Place</td>
+          <td>50,000 ETB</td>
+        </tr>
+        <tr>
+          <td>2nd Place</td>
+          <td>25,000 ETB</td>
+        </tr>
+        <tr>
+          <td>3rd Place</td>
+          <td>15,000 ETB</td>
+        </tr>
+        <tr>
+          <td>4th Place</td>
+          <td>10,000 ETB</td>
+        </tr>
+        <tr>
+          <td>5th Place</td>
+          <td>5,000 ETB</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>The applicable tournament prize structure may be changed for future promotional periods subject to the applicable service terms and announcements.</p>
 
-  ${G('5.8 Dice Roll', `<p>Roll virtual dice to generate outcomes. Scoring depends on matching pairs (doubles, triples), total roll outcomes, and bonus combinations. <span class="tc-risk">⚠️</span> If rewards are attached, this becomes a chance-based system and must be carefully controlled.</p>`)}
+  <h4>13. Instant Prizes</h4>
+  <p>goPlay may provide instant prizes to eligible customers through designated game or promotional mechanisms.</p>
+  <p>The availability, type, value and eligibility conditions of an instant prize may vary depending on the applicable game, promotion and customer participation.</p>
+  <p>Where an instant prize is offered, the relevant conditions will be communicated through the service.</p>
 
-  ${G('5.9 Lucky Box <span class="tc-risk">⚠️ HIGH RISK</span>', `<p>Select a closed box to reveal a hidden outcome. Outcomes are pre-defined reward tiers controlled by system probability distribution.</p>`)}
+  <h4>14. Prize Eligibility and Verification</h4>
+  <p>A customer who appears to qualify for a prize may be subject to verification before the prize is awarded.</p>
+  <p>The verification process may include:</p>
+  <ul>
+    <li>Confirmation of the customer's mobile number</li>
+    <li>Confirmation of participation</li>
+    <li>Verification of the recorded score</li>
+    <li>Verification of leaderboard position</li>
+    <li>Identity verification</li>
+    <li>Confirmation of other information reasonably required for prize processing</li>
+  </ul>
+  <p>Ethio Telecom and/or the authorized service provider may withhold prize delivery until the applicable verification process is successfully completed.</p>
 
-  ${G('5.10 Spin Wheel <span class="tc-risk">⚠️ HIGH RISK</span>', `<p>Spin a wheel to determine outcomes. Wheel segments correspond to predefined reward probabilities. The system must ensure fixed probability mapping and no dynamic manipulation per user behavior.</p>`)}
+  <h4>15. Winner Selection and Results</h4>
+  <p>Tournament results are determined using the records maintained by the goPlay system and the applicable scoring and ranking rules.</p>
+  <p>The system record will be used to determine the applicable ranking.</p>
+  <p>Where two or more customers have identical or potentially identical scores, the applicable tie-breaking mechanism used by the service will determine the final ranking.</p>
 
-  ${G('5.11 Ethiopian Quiz', `<p>Answer multiple-choice questions related to general knowledge. Scoring: correct answers; optional speed bonus; difficulty multiplier.</p>`)}
+  <h4>16. Fair Play</h4>
+  <p>Customers must participate fairly and must not attempt to manipulate, interfere with, exploit or compromise the goPlay service.</p>
+  <p>Prohibited activities may include:</p>
+  <ul>
+    <li>Use of automated tools or bots</li>
+    <li>Manipulation of scores</li>
+    <li>Exploitation of technical vulnerabilities</li>
+    <li>Unauthorized modification of game data</li>
+    <li>Interference with another customer's participation</li>
+    <li>Use of unauthorized software or tools</li>
+    <li>Any activity intended to obtain an unfair advantage</li>
+    <li>Any activity that compromises the integrity or security of the service</li>
+  </ul>
+  <p>Ethio Telecom and/or the service provider may investigate unusual or suspicious activity.</p>
 
-  ${G('5.12 Sudoku', `<p>Classic number-placement puzzle ensuring no repetition across rows, columns, and subgrids. Scoring based on completion time, hint usage, and error rate.</p>`)}
+  <h4>17. Disqualification</h4>
+  <p>A participant may be disqualified where the participant:</p>
+  <ul>
+    <li>Violates these Terms and Conditions</li>
+    <li>Attempts to manipulate the service</li>
+    <li>Uses unauthorized methods to obtain an advantage</li>
+    <li>Provides false or misleading information</li>
+    <li>Attempts to interfere with the tournament or leaderboard</li>
+    <li>Fails applicable prize verification requirements</li>
+    <li>Engages in conduct that compromises the integrity of the service</li>
+  </ul>
+  <p>Where a participant is disqualified, any associated prize may be cancelled or reassigned in accordance with the applicable rules.</p>
 
-  ${G('5.13 Fruit Slice', `<p>Swipe to slice objects while avoiding bombs. Scoring based on objects sliced, combo streaks, and bomb-avoidance accuracy.</p>`)}
+  <h4>18. Leaderboard</h4>
+  <p>Where a leaderboard is provided, it displays rankings based on the applicable game or tournament scoring mechanism.</p>
+  <p>Leaderboard information may be updated during or after gameplay.</p>
+  <p>The final official ranking is based on the validated records maintained by the goPlay system.</p>
 
-  ${G('5.14 Target 24', `<p>Combine numbers using arithmetic operators to reach the value 24. Scoring based on correct solutions, time efficiency, and attempt count.</p>`)}
+  <h4>19. Service Availability</h4>
+  <p>goPlay is provided subject to network, platform, system and technical availability.</p>
+  <p>Temporary interruption may occur because of:</p>
+  <ul>
+    <li>Planned maintenance</li>
+    <li>System upgrades</li>
+    <li>Network interruptions</li>
+    <li>Technical problems</li>
+    <li>Security activities</li>
+    <li>Third-party service interruptions</li>
+    <li>Circumstances outside the reasonable control of Ethio Telecom or the service provider</li>
+  </ul>
+  <p>Reasonable efforts will be made to restore the service as soon as practicable.</p>
 
-  ${G('5.15 Candy Saga', `<p>Match-3 puzzle similar to Candy Blast but with level-based objectives.</p>`)}
+  <h4>20. Game and Service Updates</h4>
+  <p>goPlay may periodically introduce:</p>
+  <ul>
+    <li>New games</li>
+    <li>New game versions</li>
+    <li>New features</li>
+    <li>New tournament games</li>
+    <li>New promotional activities</li>
+    <li>Improvements to gameplay</li>
+    <li>Technical updates</li>
+  </ul>
+  <p>A game may also be temporarily removed, replaced or modified to maintain service quality and security.</p>
 
-  ${G('5.16 Dot Link', `<p>Connect same-colored dots without crossing paths. Scoring based on completion efficiency and move optimization.</p>`)}
+  <h4>21. Data and Privacy</h4>
+  <p>Customer information may be processed as necessary to provide, administer, secure and support the goPlay service, including subscription management, gameplay administration, tournament management, customer support, prize verification and service improvement.</p>
+  <p>Customer information will be handled in accordance with applicable laws, regulations and Ethio Telecom's applicable privacy and data-protection requirements.</p>
 
-  ${G('5.17 Brick Blitz', `<p>Classic paddle-and-ball brick breaker. Scoring based on bricks destroyed, combo rebounds, and survival time.</p>`)}
+  <h4>22. Charges and Customer Responsibility</h4>
+  <p>Customers are responsible for charges associated with their selected goPlay subscription package and any applicable telecommunications or data charges required to access the service.</p>
+  <p>Customers should review the package price and frequency before subscribing.</p>
 
-  ${G('5.18 Sky Hopper', `<p>Vertical platform-jumping survival game. Scoring: height reached, platforms landed, survival duration.</p>`)}
+  <h4>23. Third-Party Network and Internet Charges</h4>
+  <p>Accessing goPlay through an internet connection may consume mobile data or other internet resources.</p>
+  <p>Any applicable data or internet charges are separate from the goPlay subscription fee unless explicitly stated otherwise.</p>
 
-  ${G('5.19 Tap Game', `<p>Tap rapidly within a time limit. Scoring: tap count, accuracy rate, speed consistency.</p>`)}
+  <h4>24. Intellectual Property</h4>
+  <p>The goPlay service, including its design, branding, content, software, graphics, interfaces, game presentation and other service materials, may be protected by applicable intellectual-property laws.</p>
+  <p>Customers may use the service for personal use in accordance with these Terms.</p>
+  <p>No customer may copy, reproduce, modify, distribute, reverse engineer or commercially exploit the service without appropriate authorization.</p>
 
-  ${G('5.20 Spell Quiz', `<p>Spell words correctly from clues. Scoring: accuracy and time efficiency.</p>`)}
+  <h4>25. Limitation of Liability</h4>
+  <p>Ethio Telecom and/or the authorized service provider will take reasonable measures to provide a reliable and secure service.</p>
+  <p>However, the service may occasionally be affected by circumstances outside reasonable control, including telecommunications failures, internet interruptions, technical faults, maintenance, system upgrades and third-party service interruptions.</p>
+  <p>Nothing in these Terms is intended to exclude or limit any liability that cannot legally be excluded or limited under applicable law.</p>
 
-  ${G('5.21 Vocabulary Trivia', `<p>Select correct word meanings. Scoring: correct answers and difficulty multiplier.</p>`)}
+  <h4>26. Changes to These Terms</h4>
+  <p>Ethio Telecom and/or the authorized service provider may update these Terms when necessary to reflect changes to the service, pricing, functionality, promotions, applicable requirements or operational processes.</p>
+  <p>Updated Terms may be published through the applicable goPlay service channels.</p>
+  <p>Customers should periodically review the Terms and Conditions.</p>
 
-  ${G('5.22 Rhyme Time', `<p>Identify rhyming words.</p>`)}
+  <h4>27. Suspension or Termination</h4>
+  <p>The goPlay service or any part of it may be temporarily suspended or permanently discontinued where necessary for operational, technical, security, regulatory or business reasons.</p>
+  <p>Where reasonably practicable, relevant information concerning material service changes may be communicated through appropriate customer channels.</p>
 
-  ${G('5.23 Cross Sum', `<p>Fill the grid so rows and columns match target sums.</p>`)}
+  <h4>28. Complaints and Disputes</h4>
+  <p>Customers who have questions, complaints or concerns regarding goPlay should first contact the designated customer support channel.</p>
+  <p>Customers should provide sufficient information to allow the issue to be investigated, including where applicable:</p>
+  <ul>
+    <li>Mobile number</li>
+    <li>Subscription package</li>
+    <li>Date and time of the issue</li>
+    <li>Game name</li>
+    <li>Transaction or charging information</li>
+    <li>Screenshot or other relevant information</li>
+  </ul>
+  <p>Complaints will be handled through the applicable Ethio Telecom customer-service and complaint-management procedures.</p>
 
-  ${G('5.24 Logic Grid', `<p>Deductive-reasoning puzzle using clues to solve grid relationships.</p>`)}
+  <h4>29. Governing Law</h4>
+  <p>These Terms and the use of the goPlay service shall be subject to the applicable laws and regulations of the Federal Democratic Republic of Ethiopia.</p>
 
-  ${G('5.25 Sequence', `<p>Identify the next item in a pattern sequence.</p>`)}
-
-  ${G('5.26 Scratch Card <span class="tc-risk">⚠️ HIGH RISK</span>', `<p>Scratch a virtual card to reveal hidden outcomes. The outcome must be pre-generated, probability-controlled, and not dynamically influenced.</p>`)}
-
-  ${G('5.27 Bubble Pop', `<p>Bubble-shooter mechanics requiring grouping of same colors.</p>`)}
-
-  <h4>6. Virtual Currency &amp; Rewards</h4>
-  ${UL([
-    'The platform may include virtual currency, points, or rewards.',
-    'Virtual items have no real-world monetary value unless explicitly stated.',
-    'GoPlay may adjust, reset, or remove virtual balances in cases of fraud, abuse, or system errors.',
-    'Rewards are non-transferable unless explicitly allowed.',
-  ])}
-
-  <h4>7. Payments &amp; Purchases (if applicable)</h4>
-  ${UL([
-    'All purchases are final unless otherwise required by law.',
-    'Pricing may change without prior notice.',
-    'Refunds are not guaranteed and are subject to review in cases of technical errors or unauthorized transactions.',
-    'Third-party payment processors may apply their own terms.',
-  ])}
-
-  <h4>8. Fair Use &amp; Prohibited Behavior</h4>
-  <p>Users must not:</p>
-  ${UL([
-    'Engage in cheating, hacking, or manipulation of game outcomes',
-    'Use multiple accounts to exploit rewards or promotions',
-    'Participate in fraud, collusion, or coordinated abuse',
-    'Interfere with system integrity or other users’ experience',
-  ])}
-  <p>Violation may lead to suspension or permanent account termination.</p>
-
-  <h4>9. Fraud Prevention &amp; Monitoring</h4>
-  <p>GoPlay may monitor user activity to detect fraud, abuse, or suspicious behavior; prevent system manipulation; and ensure fair gameplay across all users. Automated and manual review systems may be used. Decisions may include temporary restriction or permanent banning of accounts.</p>
-
-  <h4>10. Suspension &amp; Termination</h4>
-  <p>GoPlay reserves the right to:</p>
-  ${UL([
-    'Suspend or terminate accounts without prior notice in cases of abuse, fraud, or violation',
-    'Restrict access to specific games or features',
-    'Remove rewards obtained through illegitimate means',
-  ])}
-  <p>Users may lose access to all associated data and rewards upon termination.</p>
-
-  <h4>11. Intellectual Property</h4>
-  ${UL([
-    'All content, including games, graphics, logos, and code, belongs to GoPlay or its licensors.',
-    'Users may not reproduce or distribute platform content without permission.',
-  ])}
-
-  <h4>12. Limitation of Liability</h4>
-  <p>GoPlay is not responsible for loss of data, rewards, or virtual items due to technical failures; service interruptions or downtime; or indirect or consequential damages arising from platform use. Use of the platform is at the user’s own risk.</p>
-
-  <h4>13. Privacy</h4>
-  <p>User data is collected and processed in accordance with GoPlay’s Privacy Policy. By using the platform, users consent to such data handling.</p>
-
-  <h4>14. Changes to Terms</h4>
-  <p>GoPlay may update these Terms &amp; Conditions at any time. Continued use of the platform after changes means acceptance of the updated terms.</p>
-
-  <h4>15. Governing Law</h4>
-  <p>These Terms shall be governed by the applicable laws of the jurisdiction in which GoPlay operates, unless otherwise specified.</p>
-
-  <h4>16. Contact</h4>
-  <p>For support or disputes, users may contact the GoPlay support team via the official communication channels provided in the platform.</p>`;
+  <h4>30. Acceptance</h4>
+  <p>By subscribing to or using goPlay, the customer confirms that they have read and accepted these Terms and Conditions.</p>
+  <p>If the customer does not agree with these Terms, the customer should discontinue use of the applicable service and unsubscribe from any active paid package.</p>
+  <p><strong>goPlay – Play. Compete. Enjoy.</strong></p>
+`;
 
 // FAQ entries (EN/AM). Rendered as question/answer blocks.
 const FAQ: Array<{ q: { en: string; am: string }; a: { en: string; am: string } }> = [
@@ -658,6 +859,9 @@ function injectStyles(): void {
     .acct-title { color: var(--text, #14271a); font-size: 1.3rem; margin: 0 0 0.6rem; }
     .acct-card { background: #fff; color: var(--text, #14271a); border-radius: 16px; padding: 1rem 1.1rem; box-shadow: 0 2px 8px rgba(0,0,0,.08);
       border: 1px solid #e8eaed; font: inherit; text-align: left; width: 100%; margin-bottom: 0.6rem; }
+    .tc-table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+    .tc-table th, .tc-table td { border: 1px solid #e8eaed; padding: 0.6rem; text-align: left; }
+    .tc-table th { background: #f5f6f8; font-weight: 800; color: #5f6368; }
     .acct-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .acct-muted { color: #5f6368; font-size: .88rem; }
     .acct-user { font-weight: 800; }
