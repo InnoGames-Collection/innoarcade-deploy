@@ -32,7 +32,7 @@ export class SettingsPanel {
       <div class="ia-settings__scrim" data-close></div>
       <div class="ia-settings__card" role="dialog" aria-modal="true">
         <header><h2 data-i18n="set.title">Settings</h2>
-          <button class="ia-settings__x" data-close aria-label="Close">✕</button></header>
+          <button class="btn-close" data-close aria-label="Close"></button></header>
 
         <label class="ia-settings__row"><span data-i18n="set.master">Master volume</span>
           <input type="range" min="0" max="100" data-k="master"></label>
@@ -134,7 +134,7 @@ function injectStyles(): void {
       color: #f3efe4; font-family: system-ui, 'Noto Sans Ethiopic', sans-serif; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
     .ia-settings__card header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
     .ia-settings__card h2 { font-size: 1.2rem; color: #ffce54; }
-    .ia-settings__x { background: none; border: none; color: #9aa3c0; font-size: 1.1rem; cursor: pointer; }
+
     .ia-settings__row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 11px 0;
       border-top: 1px solid rgba(255,255,255,.06); font-size: .92rem; }
     .ia-settings__row span { color: #c9d2ec; }

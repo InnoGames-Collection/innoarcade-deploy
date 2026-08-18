@@ -163,7 +163,7 @@ export function openInlineCoinCheckout(
     </div>
     <p class="wallet-err" id="err"></p>
     <button class="btn-primary" id="pay">${t('payNow')} ${pkg.priceEtb} ETB</button>
-    <button class="btn-secondary" id="back">${t('back')}</button>
+    <button class="btn-secondary" id="back">← ${t('back')}</button>
     <p class="wallet-sandbox">${t('sandbox')}</p>`;
   card.querySelectorAll<HTMLButtonElement>('.method').forEach((b) => {
     b.addEventListener('click', () => {

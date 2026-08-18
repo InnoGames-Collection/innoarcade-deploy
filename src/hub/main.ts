@@ -566,7 +566,7 @@ function openHowToModal(title: string, bodyHtml: string): void {
   m.className = 'howto-modal';
   m.innerHTML = `<div class="howto-scrim"></div>
     <div class="howto-card howto-card-rules">
-      <button type="button" class="howto-x" aria-label="${t('hub.cancel')}">✕</button>
+      <button type="button" class="btn-close btn-close-corner howto-close-icon" aria-label="${t('hub.cancel')}"></button>
       <h3 class="howto-name">${title}</h3>
       <p class="howto-sub">📖 ${t('hub.howToPlay')}</p>
       <div class="howto-body">${bodyHtml}</div>
@@ -576,7 +576,7 @@ function openHowToModal(title: string, bodyHtml: string): void {
   const close = (): void => m.remove();
   m.querySelector('.howto-scrim')!.addEventListener('click', close);
   m.querySelector('.howto-close')!.addEventListener('click', close);
-  m.querySelector('.howto-x')!.addEventListener('click', close);
+  m.querySelector('.howto-close-icon')!.addEventListener('click', close);
 }
 
 function openHowTo(g: GameMeta): void {

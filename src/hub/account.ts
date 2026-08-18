@@ -19,7 +19,7 @@ import { balance } from '../platform/wallet';
 
 const STR = {
   en: {
-    account: 'Account', back: 'Close', signedOut: 'Not signed in', signIn: 'Sign in', signOut: 'Sign out',
+    account: 'Account', back: 'Back', signedOut: 'Not signed in', signIn: 'Sign in', signOut: 'Sign out',
     premium: 'Premium', expiresIn: 'Renews in', daysLeft: 'days left', notSub: "You're not subscribed yet",
     subscribeNow: 'Subscribe now', choosePlan: 'Choose your plan', daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly',
     perDay: 'Charged once a day', perWeek: 'Charged once a week', perMonth: 'Charged once a month',
@@ -35,7 +35,7 @@ const STR = {
     rewards: 'My Rewards / Awards', achievements: 'Achievements', notifs: 'Notifications', help: 'Help & Support', settings: 'Settings', legal: 'Terms & Privacy', profile: 'Profile',
   },
   am: {
-    account: 'መለያ', back: 'ዝጋ', signedOut: 'አልገቡም', signIn: 'ግባ', signOut: 'ውጣ',
+    account: 'መለያ', back: 'ተመለስ', signedOut: 'አልገቡም', signIn: 'ግባ', signOut: 'ውጣ',
     premium: 'ፕሪሚየም', expiresIn: 'ይታደሳል በ', daysLeft: 'ቀናት ቀርተዋል', notSub: 'እስካሁን አልተመዘገቡም',
     subscribeNow: 'አሁን ይመዝገቡ', choosePlan: 'ዕቅድ ይምረጡ', daily: 'ዕለታዊ', weekly: 'ሳምንታዊ', monthly: 'ወርሃዊ',
     perDay: 'በቀን አንዴ ይከፈላል', perWeek: 'በሳምንት አንዴ ይከፈላል', perMonth: 'በወር አንዴ ይከፈላል',
@@ -279,8 +279,8 @@ function shell(inner: string): HTMLElement {
   m.className = 'acct-modal';
   m.innerHTML = `
     <div class="acct-topbar">
+      <button class="btn-secondary" aria-label="${t('back')}" id="closeAcctBtn">← ${t('back')}</button>
       <img class="acct-logo" src="/brand/ethio-e.png" alt="Ethio Telecom" />
-      <button class="btn-secondary" aria-label="${t('close')}" id="closeAcctBtn">${t('close')}</button>
     </div>
     <div class="acct-stack">${inner}</div>`;
   document.body.appendChild(m);

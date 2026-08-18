@@ -20,7 +20,7 @@ const STR = {
     sent: 'Code sent. Check your SMS.',
     errSend: "Couldn't send the code. Check the number and try again.",
     errTimeout: 'Network is slow or unreachable. Check your connection and try again.',
-    errVerify: 'Wrong or expired code.', close: 'Close',
+    errVerify: 'Wrong or expired code.', close: 'Close', back: 'Back',
     errNotSubscribed: 'Text OK to the service shortcode to subscribe, then try again.',
     demoCode: 'Demo mode — your code is',
     otp: 'Code', terms: 'Terms & Conditions',
@@ -33,7 +33,7 @@ const STR = {
     sent: 'ኮድ ተልኳል። SMS ይመልከቱ።',
     errSend: 'ኮዱን መላክ አልተቻለም። ቁጥሩን አረጋግጠው እንደገና ይሞክሩ።',
     errTimeout: 'አውታረ መረቡ ቀርፋፋ ወይም አይገኝም። ግንኙነትዎን አረጋግጠው እንደገና ይሞክሩ።',
-    errVerify: 'የተሳሳተ ወይም ጊዜው ያለፈበት ኮድ።', close: 'ዝጋ',
+    errVerify: 'የተሳሳተ ወይም ጊዜው ያለፈበት ኮድ።', close: 'ዝጋ', back: 'ተመለስ',
     errNotSubscribed: 'ወደ አገልግሎቱ አጭር ኮድ OK በመላክ ይመዝገቡ፣ ከዚያ እንደገና ይሞክሩ።',
     demoCode: 'የማሳያ ሁነታ — ኮድዎ',
     otp: 'ኮድ', terms: 'ደንብ እና ሁኔታዎች',
@@ -74,8 +74,8 @@ function shell(inner: string, showBanner = true): HTMLElement {
   m.className = 'auth-modal';
   m.innerHTML = `
     <div class="auth-topbar">
+      <button class="btn-secondary" aria-label="${t('back')}" id="closeBtn">← ${t('back')}</button>
       <img class="auth-logo-et" src="/brand/ethio-telecom-full.png" alt="Ethio Telecom" />
-      <button class="btn-secondary" aria-label="${t('close')}" id="closeBtn">${t('close')}</button>
     </div>
     ${showBanner ? `<div class="auth-hero"><img class="auth-hero-img" src="/brand/goplay-banner.png" alt="GoPlay" /></div>` : ''}
     <div class="auth-stack">

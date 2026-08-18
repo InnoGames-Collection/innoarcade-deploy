@@ -1538,21 +1538,6 @@ html, body { max-width: 100%; overflow-x: hidden; }
   gap: 0.65rem;
 }
 
-.howto-card-rules .howto-x {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  width: 2rem;
-  height: 2rem;
-  border: 1px solid var(--line, #e6efdc);
-  border-radius: 999px;
-  background: #fff;
-  color: var(--muted, #5f7262);
-  font: inherit;
-  font-size: 0.95rem;
-  cursor: pointer;
-}
-
 .howto-card-rules .howto-name {
   font-size: 1.2rem;
   margin: 0.2rem 0 0;
