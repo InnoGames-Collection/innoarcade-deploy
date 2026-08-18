@@ -146,7 +146,7 @@ function openCode(): void {
       <button class="auth-otp-get" id="resend" disabled>${t('send')} <span id="timer"></span></button>
     </div>
     <p class="auth-err" id="err"></p>
-    <button class="auth-primary" id="go">${t('verify')}</button>
+    <button class="btn-primary" id="go">${t('verify')}</button>
     <a class="auth-terms" href="#">${t('terms')}</a>`);
   const input = m.querySelector<HTMLInputElement>('#code')!;
   const go = m.querySelector<HTMLButtonElement>('#go')!;
@@ -220,7 +220,7 @@ function openProfile(): void {
     <h3>👤 ${esc(user?.phone ?? '')}</h3>
     <label>${t('name')}</label>
     <input class="auth-input" id="name" type="text" maxlength="24" value="${esc(user?.name ?? '')}" placeholder="${t('name')}" />
-    <button class="auth-primary" id="save">${t('save')}</button>
+    <button class="btn-primary" id="save">${t('save')}</button>
     <button class="auth-link danger" id="out">${t('signOut')}</button>`, false);
   const input = m.querySelector<HTMLInputElement>('#name')!;
   input.focus();
@@ -292,12 +292,6 @@ function injectStyles(): void {
     .auth-input { width: 100%; padding: 0.7rem 0.8rem; border: 1px solid #e6efdc; border-radius: 10px;
       font: inherit; font-size: 1rem; color: #14271a; background: #fff; }
     .auth-input:focus { outline: 2px solid #4f9e16; border-color: #4f9e16; }
-
-    .auth-primary { margin-top: 4px; background: linear-gradient(135deg, #2f8fe6, #1f5fc4); color: #fff;
-      border: none; border-radius: 999px; padding: 0.8rem; font: inherit; font-weight: 700; font-size: 1rem;
-      cursor: pointer; box-shadow: 0 6px 18px rgba(31,95,196,.3); }
-    .auth-primary:disabled { opacity: .6; cursor: default; }
-    .auth-primary:hover:not(:disabled) { filter: brightness(1.05); }
 
     .auth-link { background: none; border: none; color: var(--muted); font: inherit; cursor: pointer; padding: 4px; }
     .auth-link.danger { color: #d64545; }

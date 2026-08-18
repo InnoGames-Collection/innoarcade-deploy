@@ -260,9 +260,9 @@ export function dailyChallengeHtml(progress?: ChallengeProgress | null): string 
   ).join('');
   const allDone = p?.allDone ?? false;
   const claimed = p?.claimed ?? false;
-  let cta = `<a class="btn primary dc-cta" href="#games" data-i18n="hub.playNow">${t('hub.playNow')}</a>`;
+  let cta = `<a class="btn-primary dc-cta" href="#games" data-i18n="hub.playNow">${t('hub.playNow')}</a>`;
   if (allDone && !claimed) {
-    cta = `<button type="button" class="btn primary dc-cta" id="claimChallengeBtn" data-i18n="hub.claimReward">${t('hub.claimReward')}</button>`;
+    cta = `<button type="button" class="btn-primary dc-cta" id="claimChallengeBtn" data-i18n="hub.claimReward">${t('hub.claimReward')}</button>`;
   } else if (claimed) {
     cta = `<p class="dc-claimed" data-i18n="hub.challengeClaimed">${t('hub.challengeClaimed')}</p>`;
   }

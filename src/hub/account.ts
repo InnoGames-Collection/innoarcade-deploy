@@ -445,7 +445,7 @@ export function openPlans(): void {
         </button>`).join('')}
     </div>
     ${trialAvailable() ? `<p class="plan-trial">🎁 ${t('freeTrial')}</p>` : ''}
-    <button class="acct-primary" id="planNext">${t('subscribeNow')}</button>`);
+    <button class="btn-primary" id="planNext">${t('subscribeNow')}</button>`);
   m.querySelectorAll<HTMLButtonElement>('.plan').forEach((b) => {
     b.addEventListener('click', () => {
       m.querySelectorAll('.plan').forEach((x) => x.classList.remove('sel'));
@@ -470,7 +470,7 @@ function openSubPay(period: SubPeriod): void {
         return `<button class="method${i === 0 ? ' sel' : ''}" data-m="${mth}"><span class="m-icon">${lab.icon}</span><span>${getLang() === 'am' ? lab.am : lab.en}</span></button>`;
       }).join('')}
     </div>
-    <button class="acct-primary" id="subPay">${t('subWith')} ${getLang() === 'am' ? PAY_METHOD_LABEL[chosen].am : PAY_METHOD_LABEL[chosen].en}</button>`);
+    <button class="btn-primary" id="subPay">${t('subWith')} ${getLang() === 'am' ? PAY_METHOD_LABEL[chosen].am : PAY_METHOD_LABEL[chosen].en}</button>`);
   const payBtn = m.querySelector<HTMLButtonElement>('#subPay')!;
   m.querySelectorAll<HTMLButtonElement>('.method').forEach((b) => {
     b.addEventListener('click', () => {
@@ -492,11 +492,11 @@ function openSubPay(period: SubPeriod): void {
           <div class="acct-success"><div class="as-burst">⏳</div>
           <h2 class="acct-title">${getLang() === 'am' ? 'በመጠባበቅ ላይ' : 'Text OK to subscribe'}</h2>
           <p class="acct-muted">${getLang() === 'am' ? pendingAm : pendingEn}</p>
-          <button class="acct-primary" id="subDone">${t('close')}</button></div>`;
+          <button class="btn-primary" id="subDone">${t('close')}</button></div>`;
       } else {
         m.querySelector('.acct-stack')!.innerHTML = `
           <div class="acct-success"><div class="as-burst">🎉</div><h2 class="acct-title">${t('subbed')}</h2>
-          <button class="acct-primary" id="subDone">${t('close')}</button></div>`;
+          <button class="btn-primary" id="subDone">${t('close')}</button></div>`;
       }
     } catch {
       payBtn.disabled = false;
@@ -513,7 +513,7 @@ export function openFeedback(): void {
     <h2 class="acct-title">${t('feedback')}</h2>
     <p class="acct-muted">${t('rateQ')}</p>
     <div class="rate-row" id="rateRow">${[1, 2, 3, 4, 5].map((n) => `<button class="rate-star" data-n="${n}">★</button>`).join('')}</div>
-    <button class="acct-primary" id="fbSubmit">${t('submit')}</button>`);
+    <button class="btn-primary" id="fbSubmit">${t('submit')}</button>`);
   m.querySelectorAll<HTMLButtonElement>('.rate-star').forEach((b) => {
     b.addEventListener('click', () => {
       rating = Number(b.dataset.n);
@@ -524,7 +524,7 @@ export function openFeedback(): void {
     try { localStorage.setItem('innoarcade.feedback.v1', JSON.stringify({ rating, at: Date.now() })); } catch { /* ignore */ }
     m.querySelector('.acct-stack')!.innerHTML = `
       <div class="acct-success"><div class="as-burst">🙏</div><h2 class="acct-title">${t('thanks')}</h2>
-      <button class="acct-primary" id="fbDone">${t('close')}</button></div>`;
+      <button class="btn-primary" id="fbDone">${t('close')}</button></div>`;
     m.querySelector('#fbDone')!.addEventListener('click', () => m.remove());
   });
 }
@@ -537,7 +537,7 @@ function openInfo(kind: 'terms' | 'faq'): void {
     : FAQ.map((f) => `<div class="faq-item"><p class="faq-q">${esc(am ? f.q.am : f.q.en)}</p><p class="faq-a">${esc(am ? f.a.am : f.a.en)}</p></div>`).join('');
   const m = shell(`<h2 class="acct-title">${esc(title)}</h2>
     <div class="acct-card info-body ${kind === 'terms' ? 'tc-body' : 'faq-body'}">${body}</div>
-    <button class="acct-primary" id="infoDone">${t('close')}</button>`);
+    <button class="btn-primary" id="infoDone">${t('close')}</button>`);
   m.querySelector('#infoDone')!.addEventListener('click', () => m.remove());
 }
 
