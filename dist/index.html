@@ -8,12 +8,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>" />
     <title>GoPlay — Play & Compete</title>
-    <script type="module" crossorigin src="./assets/hub-xJ6_Wl5P.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/index-B4JgQ-I_.js">
-    <link rel="modulepreload" crossorigin href="./assets/tournaments-DEOgsrgO.js">
-    <link rel="modulepreload" crossorigin href="./assets/signInGate-C_UuyQCf.js">
-    <link rel="stylesheet" crossorigin href="./assets/signInGate-CW9ugQCN.css">
-    <link rel="stylesheet" crossorigin href="./assets/hub-ED_jEoHv.css">
+    <script type="module" crossorigin src="./assets/hub-me4wGwO7.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/index-D5CChKdU.js">
+    <link rel="modulepreload" crossorigin href="./assets/tournaments-CF9zZRRX.js">
+    <link rel="modulepreload" crossorigin href="./assets/signInGate-DA1szd9n.js">
+    <link rel="stylesheet" crossorigin href="./assets/signInGate-CSYV0KxT.css">
+    <link rel="stylesheet" crossorigin href="./assets/hub-bIPFvPA3.css">
   </head>
   <body>
     <header class="topbar">
@@ -31,7 +31,7 @@
         <span id="notifBadge" class="notif-badge" hidden>0</span>
       </button>
       <button id="settingsBtn" class="settings-btn" aria-label="Settings">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
       </button>
     </header>
 
@@ -116,10 +116,6 @@
             <section id="topPlayers" class="leaderboard-section portal-section">
               <h2 class="section-title">🥇 <span data-i18n="hub.topPlayers">Top players</span></h2>
               <p class="section-sub" data-i18n="hub.topPlayersSub">Live tournament leaderboards — ranked by RP.</p>
-              <div id="liveBoardSeg" class="seg winners-seg" role="tablist">
-                <button type="button" class="seg-btn active" data-cadence="weekly" role="tab" data-i18n="hub.winTabWeekly">Weekly</button>
-                <button type="button" class="seg-btn" data-cadence="monthly" role="tab" data-i18n="hub.winTabMonthly">Monthly</button>
-              </div>
               <div id="liveBoardBanner" class="season-banner"></div>
               <div id="globalBoard" class="leaderboard-list"></div>
             </section>
@@ -128,10 +124,6 @@
               <div class="winners-panel">
                 <h2 class="winners-title" data-i18n="hub.winners">WINNERS</h2>
                 <p class="section-sub winners-sub" data-i18n="hub.winnersSub">Previous tournament window — top finishers.</p>
-                <div id="winnersSeg" class="seg winners-seg" role="tablist">
-                  <button type="button" class="seg-btn active" data-cadence="weekly" role="tab" data-i18n="hub.winTabWeekly">Weekly</button>
-                  <button type="button" class="seg-btn" data-cadence="monthly" role="tab" data-i18n="hub.winTabMonthly">Monthly</button>
-                </div>
                 <div class="winners-table-wrap">
                   <table class="winners-table" aria-label="Winners">
                     <thead>

@@ -10,6 +10,7 @@ import {
   devOtpEcho, fetchDevOtp,
 } from './auth';
 import { notifySignIn } from '../hub/signin';
+import { openPublicAccountPage } from '../hub/account';
 import { maskPhone } from './phone';
 import { t, getLang, setLang } from '../i18n';
 import { sfx } from '../engine/audio';
@@ -188,9 +189,16 @@ function openGateSettings(gate: HTMLElement): void {
     sfx.toggleMute();
     menu.remove();
   });
-  menu.querySelector('#sgmTerms')!.addEventListener('click', (e) => e.preventDefault());
-  menu.querySelector('#sgmFaq')!.addEventListener('click', (e) => e.preventDefault());
-
+  menu.querySelector('#sgmTerms')!.addEventListener('click', (e) => {
+    e.preventDefault();
+    openPublicAccountPage('terms');
+    menu.remove();
+  });
+  menu.querySelector('#sgmFaq')!.addEventListener('click', (e) => {
+    e.preventDefault();
+    openPublicAccountPage('faq');
+    menu.remove();
+  });
   const closeOnOutside = (e: MouseEvent): void => {
     if (!menu.contains(e.target as Node) && !(e.target as Element)?.closest('#sgSettingsBtn')) {
       menu.remove();

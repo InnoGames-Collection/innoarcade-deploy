@@ -1157,7 +1157,7 @@ function renderAcctStack(pageId: string | null): void {
       stack.querySelector('#unsubConfirmBtn')!.addEventListener('click', () => {
         const commands: Record<string, string> = { daily: 'STOP 1', weekly: 'STOP 2', monthly: 'STOP 3' };
         const cmd = commands[sub.period] || 'STOP';
-        window.location.href = \`sms:9402?body=\${encodeURIComponent(cmd)}\`;
+        window.location.href = `sms:9402?body=${encodeURIComponent(cmd)}`;
       });
     }
   } else if (pageId === 'logout') {
