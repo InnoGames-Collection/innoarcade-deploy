@@ -34,7 +34,7 @@ const STR = {
     back: 'ተመለስ',
   },
 };
-const t = (k: keyof typeof STR.en): string => (STR[getLang()] ?? STR.en)[k];
+const t = (k: keyof typeof STR.en): string => ((STR as any)[getLang()] ?? STR.en)[k];
 
 export async function mountWallet(opts?: { skipHydrate?: boolean }): Promise<void> {
   injectStyles();

@@ -77,7 +77,7 @@ const STR = {
 };
 
 export type AdminKey = keyof typeof STR.en;
-export const t = (k: AdminKey): string => (STR[getLang()] ?? STR.en)[k];
+export const t = (k: AdminKey): string => ((STR as any)[getLang()] ?? STR.en)[k];
 
 export const esc = (s: string): string =>
   String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));

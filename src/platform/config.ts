@@ -165,7 +165,7 @@ export const TOURNAMENT_ETB_PRIZES: Record<string, readonly number[]> = {
 /** ETB cash prizes for Winners tab by cadence (legacy daily kept for layout). */
 export type WinnerCadence = 'daily' | 'weekly' | 'monthly';
 
-export function formatEtbPrize(amount: number, lang: 'en' | 'am' = 'en'): string {
+export function formatEtbPrize(amount: number, lang: string = 'en'): string {
   if (amount <= 0) return '—';
   if (lang === 'am' && amount >= 1000) {
     const k = amount / 1000;

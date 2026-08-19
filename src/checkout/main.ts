@@ -40,7 +40,7 @@ const STR = {
     err: 'ክፍያው ሊጠናቀቅ አልቻለም። እባክዎ እንደገና ይሞክሩ።',
   },
 };
-const t = (k: keyof typeof STR.en): string => (STR[getLang()] ?? STR.en)[k];
+const t = (k: keyof typeof STR.en): string => ((STR as any)[getLang()] ?? STR.en)[k];
 
 function backTo(extra: string): void {
   const sep = returnUrl.includes('?') ? '&' : '?';

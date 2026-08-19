@@ -4,7 +4,9 @@
 // and speaks only to the subscription / auth / payments modules. Opened from the
 // bottom-nav "Account" tab. Strings are inline EN/AM.
 
-import { getLang } from '../i18n';
+import { getLang, setLang, type Lang } from '../i18n';
+import { settings } from '../engine/settings';
+import { sfx } from '../engine/audio';
 import { currentUser, signOut, type AuthUser } from '../platform/auth';
 import { openSignIn } from './signin';
 import {
@@ -821,7 +823,7 @@ const FAQ: Array<{ q: string; a: string }> = [
   { q: '33. Where can I find the Terms and Conditions?', a: '<p>The current Terms and Conditions are available through the goPlay portal.</p><p>Customers are encouraged to review them before subscribing or participating in promotional activities.</p>' },
 ];
 
-const t = (k: keyof typeof STR.en): string => (STR[getLang()] ?? STR.en)[k];
+const t = (k: keyof typeof STR.en): string => ((STR as any)[getLang()] ?? STR.en)[k];
 const esc = (s: string): string => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
 const periodLabel = (p: SubPeriod): string => t(p);
 
@@ -1091,6 +1093,76 @@ function renderAcctStack(pageId: string | null): void {
         nextBtn.style.opacity = '1';
       }, 150);
     });
+  } else if (pageId === 'settings') {
+    const langMap: Record<string, string> = { en: 'English', am: 'Amharic', or: 'Afaan Oromo' };
+    const curLang = getLang();
+    const sfxOn = settings.data.sfx > 0;
+
+    stack.innerHTML = `
+      <h2 class="acct-title">⚙️ ${t('settings')}</h2>
+      <div class="acct-menu-list">
+        ${settingsRowHtml('setLang', '🌍', 'Language', `<span style="color:#8892b0; font-size:0.9rem;">${langMap[curLang] || curLang}</span> ${chevHtml}`)}
+        ${settingsRowHtml('setSound', '🔊', 'Sound', toggleHtml(sfxOn))}
+        ${settingsRowHtml('setNotif', '🔔', 'Notifications', chevHtml)}
+        ${settingsRowHtml('setFaq', '💬', 'FAQ', chevHtml)}
+        ${settingsRowHtml('setTerms', '📄', 'Terms & Conditions', chevHtml)}
+        ${settingsRowHtml('setPrivacy', '🔒', 'Privacy Policy', chevHtml)}
+        ${settingsRowHtml('setAppInfo', '📱', 'App Version', `<span style="color:#8892b0; font-size:0.9rem;">1.0.0</span>`)}
+      </div>
+    `;
+
+    stack.querySelector('#setLang')?.addEventListener('click', () => pushAcctPage('settings-lang'));
+    stack.querySelector('#setSound')?.addEventListener('click', () => {
+      const isNowOn = !(settings.data.sfx > 0);
+      settings.set('sfx', isNowOn ? 0.9 : 0);
+      settings.set('music', isNowOn ? 0.6 : 0);
+      sfx.syncMusicVolume();
+      renderAcctStack('settings');
+    });
+    stack.querySelector('#setNotif')?.addEventListener('click', () => pushAcctPage('settings-notif'));
+    stack.querySelector('#setFaq')?.addEventListener('click', () => pushAcctPage('faq'));
+    stack.querySelector('#setTerms')?.addEventListener('click', () => pushAcctPage('terms'));
+    stack.querySelector('#setPrivacy')?.addEventListener('click', () => pushAcctPage('terms'));
+
+  } else if (pageId === 'settings-lang') {
+    const langMap: Record<string, string> = { en: 'English', am: 'Amharic', or: 'Afaan Oromo' };
+    const curLang = getLang();
+
+    stack.innerHTML = `
+      <h2 class="acct-title">🌍 Language</h2>
+      <div class="acct-menu-list">
+        ${['en', 'am', 'or'].map(l => 
+          settingsRowHtml(`lang-${l}`, '', langMap[l], curLang === l ? '✓' : '')
+        ).join('')}
+      </div>
+    `;
+    ['en', 'am', 'or'].forEach(l => {
+      stack.querySelector(`#lang-${l}`)?.addEventListener('click', () => {
+        setLang(l as Lang);
+        history.back();
+      });
+    });
+
+  } else if (pageId === 'settings-notif') {
+    const d = settings.data;
+    stack.innerHTML = `
+      <h2 class="acct-title">🔔 Notifications</h2>
+      <div class="acct-menu-list">
+        ${settingsRowHtml('ntfTourn', '🏆', 'Tournament', toggleHtml(d.notifTournament))}
+        ${settingsRowHtml('ntfChall', '🎯', 'Daily Challenge', toggleHtml(d.notifChallenge))}
+        ${settingsRowHtml('ntfReward', '🎁', 'Rewards', toggleHtml(d.notifRewards))}
+      </div>
+    `;
+    const bindToggle = (id: string, key: 'notifTournament'|'notifChallenge'|'notifRewards') => {
+      stack.querySelector(`#${id}`)?.addEventListener('click', () => {
+        settings.set(key, !settings.data[key]);
+        renderAcctStack('settings-notif');
+      });
+    };
+    bindToggle('ntfTourn', 'notifTournament');
+    bindToggle('ntfChall', 'notifChallenge');
+    bindToggle('ntfReward', 'notifRewards');
+
   } else if (pageId === 'logout') {
     stack.innerHTML = `
       <h2 class="acct-title">🚪 ${t('signOut')}?</h2>
@@ -1179,6 +1251,26 @@ function accountRowHtml(id: string, icon: string, label: string, isDanger: boole
     <div class="acct-menu-ico-wrap"><span class="acct-menu-ico">${icon}</span></div>
     <span class="acct-menu-lbl">${label}</span>
     ${!isAction ? `<svg class="acct-menu-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>` : ''}
+  </button>`;
+}
+
+const chevHtml = `<svg class="acct-menu-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+
+function toggleHtml(checked: boolean): string {
+  return `<div class="ia-toggle ${checked ? 'ia-toggle--on' : ''}" style="width: 44px; height: 24px; border-radius: 12px; background: ${checked ? 'var(--accent)' : 'rgba(136, 146, 176, 0.3)'}; position: relative; transition: background 0.3s; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
+    <div style="width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; top: 2px; left: ${checked ? '22px' : '2px'}; transition: left 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></div>
+  </div>`;
+}
+
+function settingsRowHtml(id: string, icon: string, label: string, valueHtml: string): string {
+  return `<button class="acct-menu-row" id="${id}" style="justify-content: space-between;">
+    <div style="display:flex; align-items:center;">
+      <div class="acct-menu-ico-wrap"><span class="acct-menu-ico">${icon}</span></div>
+      <span class="acct-menu-lbl">${label}</span>
+    </div>
+    <div style="display:flex; align-items:center; gap: 8px;">
+      ${valueHtml}
+    </div>
   </button>`;
 }
 
@@ -1288,8 +1380,7 @@ function wireAccount(): void {
   m.querySelector('#aTerms')?.addEventListener('click', () => pushAcctPage('terms'));
   
   m.querySelector('#aSettings')?.addEventListener('click', () => { 
-    const btn = document.querySelector<HTMLButtonElement>('#settingsBtn');
-    if (btn) btn.click();
+    pushAcctPage('settings');
   });
   m.querySelector('#aLogout')?.addEventListener('click', () => pushAcctPage('logout'));
 }

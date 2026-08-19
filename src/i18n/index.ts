@@ -1,7 +1,7 @@
 // Lightweight i18n for InnoArcade — English + Amharic.
 // Page text is tagged with data-i18n="key"; applyTranslations() swaps it in place.
 
-export type Lang = 'en' | 'am';
+export type Lang = 'en' | 'am' | 'or';
 
 const en = {
   'app.title': 'GoPlay',
@@ -1078,7 +1078,7 @@ const am: Dict = {
   'hub.onlinePlayers': '{n} ተጫዋቾች በመስመር ላይ',
 };
 
-const dicts: Record<Lang, Dict> = { en, am };
+const dicts: Record<Lang, Dict> = { en, am, or: en }; // Fallback to English for Afaan Oromo
 const STORAGE_KEY = 'innoarcade.lang';
 
 let lang: Lang = (localStorage.getItem(STORAGE_KEY) as Lang | null) ?? 'en';

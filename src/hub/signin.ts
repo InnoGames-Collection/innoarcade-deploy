@@ -39,7 +39,7 @@ const STR = {
     otp: 'ኮድ', terms: 'ደንብ እና ሁኔታዎች',
   },
 };
-const t = (k: keyof typeof STR.en): string => (STR[getLang()] ?? STR.en)[k];
+const t = (k: keyof typeof STR.en): string => ((STR as any)[getLang()] ?? STR.en)[k];
 const esc = (s: string): string => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
 
 let user: AuthUser | null = null;

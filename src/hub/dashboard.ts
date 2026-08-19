@@ -25,7 +25,7 @@ const STR = {
     purchase: 'የሳንቲም ግዢ', entry_fee: 'የመግቢያ ክፍያ', prize_: 'የሽልማት ክፍያ', admin_adjust: 'ማስተካከያ',
   },
 };
-const t = (k: keyof typeof STR.en): string => (STR[getLang()] ?? STR.en)[k];
+const t = (k: keyof typeof STR.en): string => ((STR as any)[getLang()] ?? STR.en)[k];
 const esc = (s: string): string => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
 
 function reasonLabel(reason: string): string {

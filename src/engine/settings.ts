@@ -15,6 +15,9 @@ export interface SettingsData {
   quality: Quality;
   palette: Palette;
   reducedMotion: boolean;
+  notifTournament: boolean;
+  notifChallenge: boolean;
+  notifRewards: boolean;
 }
 
 function osReducedMotion(): boolean {
@@ -30,6 +33,9 @@ function defaults(): SettingsData {
     quality: 'high',
     palette: 'default',
     reducedMotion: osReducedMotion(),
+    notifTournament: true,
+    notifChallenge: true,
+    notifRewards: true,
   };
 }
 
