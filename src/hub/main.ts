@@ -695,6 +695,19 @@ function syncSearchFieldUi(input?: HTMLInputElement | null): void {
   if (clear) clear.hidden = !hasValue;
 }
 
+function resetGamesSearch(): void {
+  const search = document.querySelector<HTMLInputElement>('#gameSearch');
+  if (search) search.blur();
+  if (!gameQuery) return;
+  gameQuery = '';
+  if (search) {
+    search.value = '';
+    syncSearchFieldUi(search);
+  }
+  renderGames();
+  persistBrowseState();
+}
+
 function wireSearchField(): void {
   const search = document.querySelector<HTMLInputElement>('#gameSearch');
   const clear = document.querySelector<HTMLButtonElement>('#gameSearchClear');
@@ -706,6 +719,12 @@ function wireSearchField(): void {
 
   search.addEventListener('focus', () => wrap.classList.add('is-focused'));
   search.addEventListener('blur', () => wrap.classList.remove('is-focused'));
+  search.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      search.blur();
+    }
+  });
 
   clear?.addEventListener('click', () => {
     gameQuery = '';
@@ -1426,6 +1445,11 @@ function setupBrowse(): void {
     if (!(e.target as HTMLElement).closest('#catDropdown')) {
       document.querySelector('#catDropdownMenu')?.setAttribute('hidden', '');
     }
+  });
+  document.querySelectorAll<HTMLElement>('.bn-item, .nav-link').forEach((nav) => {
+    nav.addEventListener('click', () => {
+      resetGamesSearch();
+    });
   });
   document.querySelector('#bnAccount')?.addEventListener('click', () => void openAccount());
   document.querySelector('#footerFaq')?.addEventListener('click', (e) => e.preventDefault());
