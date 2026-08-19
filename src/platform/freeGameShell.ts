@@ -483,7 +483,6 @@ function ensurePauseOverlay(stage: HTMLElement): {
   overlay.className = 'game-overlay hidden';
   overlay.innerHTML = `
     <div class="game-panel">
-      <button type="button" class="gp-close gp-close-corner" aria-label="Close">✕</button>
       <h2 data-i18n="td.paused">Paused</h2>
       <button id="resumeBtn" class="btn primary" data-i18n="td.resume">Resume</button>
       <button id="restartBtn" class="btn" data-i18n="td.restart">Play again</button>

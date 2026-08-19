@@ -96,16 +96,16 @@ body.game-shell.quiz-shell {
   cursor: pointer;
 }
 
-body.game-shell[data-game="merge-2048"]{--game-accent:#f0a832;--shell-accent:#f0a832;}</style>  <script type="module" crossorigin src="../../assets/merge2048-BN2sJ5Bh.js"></script>
+body.game-shell[data-game="merge-2048"]{--game-accent:#f0a832;--shell-accent:#f0a832;}</style>  <script type="module" crossorigin src="../../assets/merge2048-BbMtRuyP.js"></script>
   <link rel="modulepreload" crossorigin href="../../assets/index-D6jywaGm.js">
   <link rel="modulepreload" crossorigin href="../../assets/tournaments-CotCZXZz.js">
-  <link rel="modulepreload" crossorigin href="../../assets/signInGate-C9wyoKGd.js">
-  <link rel="modulepreload" crossorigin href="../../assets/freeShellNav-Bmz_Rns1.js">
-  <link rel="modulepreload" crossorigin href="../../assets/freeGameShell-Br8XdvHi.js">
+  <link rel="modulepreload" crossorigin href="../../assets/signInGate-DewhV2iB.js">
+  <link rel="modulepreload" crossorigin href="../../assets/freeShellNav-DSQwSSZZ.js">
+  <link rel="modulepreload" crossorigin href="../../assets/freeGameShell-BuyzNeY9.js">
   <link rel="modulepreload" crossorigin href="../../assets/loop-BDek7L7e.js">
   <link rel="modulepreload" crossorigin href="../../assets/input-DF-0NnhL.js">
   <link rel="modulepreload" crossorigin href="../../assets/fx-ccUjo7Ds.js">
-  <link rel="stylesheet" crossorigin href="../../assets/signInGate-JPbs9D6y.css">
+  <link rel="stylesheet" crossorigin href="../../assets/signInGate-0QUOWS2R.css">
   <link rel="stylesheet" crossorigin href="../../assets/freeShellNav-AJAOiSqF.css">
   <link rel="stylesheet" crossorigin href="../../assets/merge2048-Go4YY6Ka.css">
 </head>
@@ -115,14 +115,14 @@ body.game-shell[data-game="merge-2048"]{--game-accent:#f0a832;--shell-accent:#f0
 
       <div id="menuOverlay" class="game-overlay">
         <div class="game-panel panel-clean">
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          
           <div class="shell-free-menu" id="freeMenu"></div>
           <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
         </div>
       </div>
 
       <div id="m2-play-wrapper" class="m2-play-wrapper hidden">
-        <button id="closeBtn" type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+        
         <header id="hud" class="m2-hud">
           <div class="m2-stats">
             <div class="m2-stat">
@@ -144,7 +144,7 @@ body.game-shell[data-game="merge-2048"]{--game-accent:#f0a832;--shell-accent:#f0
 
       <div id="pauseOverlay" class="game-overlay hidden">
         <div class="game-panel">
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          
           <h2 data-i18n="td.paused">Paused</h2>
           <button id="resumeBtn" class="btn primary" data-i18n="td.resume">Resume</button>
           <button id="restartBtn" class="btn" data-i18n="td.restart">Play again</button>
@@ -153,7 +153,7 @@ body.game-shell[data-game="merge-2048"]{--game-accent:#f0a832;--shell-accent:#f0
 
       <div id="overOverlay" class="game-overlay hidden">
         <div class="game-panel">
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          
           <h2 data-i18n="m2.gameOver">Game over</h2>
           <p id="newBest" class="new-best hidden" data-i18n="m2.newBest"></p>
           <div class="shell-over-final">

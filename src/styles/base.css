@@ -82,7 +82,7 @@ body {
 }
 
 .gp-close {
-  display: none !important; /* Removed from game UI as requested */
+  display: inline-flex;
   align-items: center; justify-content: center; gap: 0.3rem;
   width: auto; height: 44px; padding: 0 14px;
   border-radius: 12px; border: 1px solid color-mix(in srgb, var(--game-accent, rgba(255, 255, 255, 0.4)) 50%, transparent);

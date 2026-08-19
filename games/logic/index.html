@@ -10,7 +10,7 @@
     <div id="stage" class="fq-stage game-shell-stage">
       <div id="fqBackdrop" class="fq-backdrop" aria-hidden="true"></div>
       <div id="fqPlayFrame" class="fq-playframe hidden">
-        <button id="closeBtn" class="gp-close gp-close-corner hidden" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+        
         <div class="fq-stats">
           <div class="fq-stat">
             <span class="fq-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></span>
@@ -43,14 +43,14 @@
       </div>
       <div id="menuOverlay" class="game-overlay">
         <div class="game-panel panel-clean">
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          
           <div class="shell-free-menu" id="freeMenu"></div>
           <button id="startBtn" class="btn primary" data-i18n="hub.play">Play</button>
         </div>
       </div>
       <div id="pauseOverlay" class="game-overlay hidden">
         <div class="game-panel">
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          
           <h2 data-i18n="td.paused">Paused</h2>
           <button id="resumeBtn" class="btn primary" data-i18n="td.resume">Resume</button>
           <button id="restartBtn" class="btn" data-i18n="td.restart">Play again</button>
@@ -58,7 +58,7 @@
       </div>
       <div id="overOverlay" class="game-overlay hidden" aria-hidden="true">
         <div class="game-panel">
-          <button type="button" class="gp-close gp-close-corner" aria-label="Close" onclick="if(history.length>1){history.back()}else{location.href='../../'}">✕</button>
+          
           <h2 data-i18n="td.gameOver">Game over</h2>
           <p id="fqOverSummary" class="fq-over-summary"></p>
           <p id="newBest" class="new-best hidden" data-i18n="td.newBest"></p>

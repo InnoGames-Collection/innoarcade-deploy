@@ -522,11 +522,6 @@ function checkMatch(): void {
 startBtn.addEventListener('click', () => { playSfx('click'); void onPlayOrEnter(); });
 $('#mmAgainBtn').addEventListener('click', () => { playSfx('click'); void onPlayOrEnter(); });
 $('#mmHomeBtn').addEventListener('click', () => { playSfx('click'); goMenuMM(); });
-$('#mmOverOverlay .gp-close-corner').addEventListener('click', (e) => {
-  e.preventDefault();
-  e.stopImmediatePropagation();
-  goMenuMM();
-});
 pauseBtn.addEventListener('click', () => { playSfx('click'); pauseRound(); });
 resumeBtn.addEventListener('click', () => { playSfx('click'); resumeRound(); });
 restartBtn.addEventListener('click', () => { playSfx('click'); void restartRoundMM(); });
