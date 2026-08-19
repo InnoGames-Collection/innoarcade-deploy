@@ -81,22 +81,23 @@ body {
   font-weight: 700;
 }
 
-/* Shared "← Back" close control for game windows. Returns to hub / previous page. */
 .gp-close {
-  display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
-  width: auto; height: 3.2rem; padding: 0 1.5rem;
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem;
+  width: auto; height: 44px; padding: 0 14px;
   border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2);
   background: var(--game-accent, rgba(0, 0, 0, 0.5)); color: #fff;
-  font-size: 0; cursor: pointer; flex: none;
+  font-size: 0; cursor: pointer; flex: 0 0 auto;
+  align-self: flex-start;
   backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   position: relative; overflow: hidden;
   transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, filter 0.2s ease;
   -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
 }
 .gp-close::before {
   content: "← Back";
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: inherit;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
@@ -137,7 +138,7 @@ body {
 .overlay > .panel { position: relative; padding-top: 2.35rem; }
 /* Game topbars — close always top-left regardless of DOM order. */
 .topbar { position: relative; }
-.topbar > .gp-close { position: absolute; top: 0; left: 0; }
+.topbar > .gp-close { position: absolute; top: 50%; left: max(10px, env(safe-area-inset-left)); transform: translateY(-50%); }
 /* Runner-style stage HUD close (outside the flex HUD column). */
 #stage > .gp-close-corner { z-index: 6; pointer-events: auto; }
 
