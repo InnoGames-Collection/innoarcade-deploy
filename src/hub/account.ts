@@ -967,7 +967,7 @@ function renderAcctStack(pageId: string | null): void {
         
         <button class="support-card" id="sTechHelp">
           <div class="support-icon">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <svg viewBox="0 0 24 24"><path d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z"></path><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path></svg>
           </div>
           <div class="support-content">
             <h3 class="support-title">Account Help</h3>
@@ -1124,35 +1124,6 @@ function renderAcctStack(pageId: string | null): void {
         nextBtn.style.opacity = '1';
       }, 150);
     });
-  } else if (pageId === 'unsubscribe') {
-    const sub = currentSub();
-    if (!sub) {
-      stack.innerHTML = `
-        <h2 class="acct-title">Unsubscribe</h2>
-        <p class="acct-muted" style="margin-top: 0.5rem; margin-bottom: 2rem;">You do not have an active subscription to cancel.</p>
-        <button class="acct-primary" id="unsubBackBtn">Return to Settings</button>
-      `;
-      stack.querySelector('#unsubBackBtn')!.addEventListener('click', () => history.back());
-    } else {
-      const pLabel = periodLabel(sub.period);
-      stack.innerHTML = `
-        <h2 class="acct-title">Unsubscribe</h2>
-        <p class="acct-muted" style="margin-top: 0.5rem; margin-bottom: 2rem;">Are you sure you want to unsubscribe from your <strong>goPlay ${pLabel}</strong> subscription?</p>
-        <div class="acct-card profile-details" style="background:#f9f0f0; border-color:#fad5d5; margin-bottom:2rem;">
-          <p style="margin:0; font-size:0.9rem; color:#8c2b2b;">Unsubscribing will open your messaging app. Send the prepared message to cancel your plan.</p>
-        </div>
-        <div style="display: flex; gap: 1rem;">
-          <button class="btn-secondary" id="unsubCancelBtn" style="flex: 1;">Cancel</button>
-          <button class="btn-primary" id="unsubConfirmBtn" style="flex: 1; background: #dc3545; color: white; border-color: #dc3545;">Continue</button>
-        </div>
-      `;
-      stack.querySelector('#unsubCancelBtn')!.addEventListener('click', () => history.back());
-      stack.querySelector('#unsubConfirmBtn')!.addEventListener('click', () => {
-        const commands: Record<string, string> = { daily: 'STOP 1', weekly: 'STOP 2', monthly: 'STOP 3' };
-        const cmd = commands[sub.period] || 'STOP';
-        window.location.href = `sms:9402?body=${encodeURIComponent(cmd)}`;
-      });
-    }
   } else if (pageId === 'logout') {
     stack.innerHTML = `
       <h2 class="acct-title">🚪 ${t('signOut')}?</h2>

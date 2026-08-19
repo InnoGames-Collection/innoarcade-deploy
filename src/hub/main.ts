@@ -1245,15 +1245,6 @@ function mountSettings(): void {
         </div>
         <span class="sm-chev">›</span>
       </button>
-      
-      <button class="set-row-btn" id="smUnsub">
-        <div class="set-row-left">
-          <div class="set-row-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg></div>
-          <span class="set-row-label">${t('set.unsub')}</span>
-        </div>
-        <span class="sm-chev">›</span>
-      </button>
-      
       ${user ? `
       <button class="set-row-btn danger" id="smLogout">
         <div class="set-row-left">
@@ -1268,7 +1259,6 @@ function mountSettings(): void {
     menu.querySelector('#smSound')!.addEventListener('click', () => { sfx.toggleMute(); void build(); });
     menu.querySelector('#smTerms')!.addEventListener('click', (e) => { e.preventDefault(); openPublicAccountPage('terms'); close(); });
     menu.querySelector('#smFaq')!.addEventListener('click', (e) => { e.preventDefault(); openPublicAccountPage('faq'); close(); });
-    menu.querySelector('#smUnsub')!.addEventListener('click', (e) => { e.preventDefault(); openPublicAccountPage('unsubscribe'); close(); });
     menu.querySelector('#smLogout')?.addEventListener('click', async () => { await signOut(); close(); });
   }
 
