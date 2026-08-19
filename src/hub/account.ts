@@ -8,12 +8,9 @@ import { getLang } from '../i18n';
 import { currentUser, signOut, type AuthUser } from '../platform/auth';
 import { openSignIn } from './signin';
 import {
-  SUB_PLANS, currentSub, trialAvailable, subscribe, loadSubscription,
-  isSubscribePending,
+  SUB_PLANS, currentSub, trialAvailable, loadSubscription,
   type SubPeriod,
 } from '../platform/subscription';
-import { paymentMethodsEnabled } from '../platform/config';
-import { PAY_METHOD_LABEL, type PayMethod } from '../platform/payments';
 import { fetchReferral, redeemReferralRemote } from '../platform/backend';
 import { balance } from '../platform/wallet';
 
@@ -1356,55 +1353,12 @@ export function openPlans(): void {
 }
 
 function openSubPay(period: SubPeriod): void {
-  history.pushState({ acctModalOpen: true, acctPage: null }, '', location.href);
-  const methods = paymentMethodsEnabled();
-  const avail = (['telebirr', 'topup'] as PayMethod[]).filter((mth) => methods[mth]);
-  let chosen: PayMethod = avail[0] ?? 'telebirr';
-  const plan = SUB_PLANS.find((p) => p.period === period)!;
-  const m = shell(`
-    <h2 class="acct-title">${t('payVia')}</h2>
-    <div class="acct-card"><div class="acct-row"><span>${periodLabel(period)}</span><strong>ETB ${plan.priceEtb}</strong></div></div>
-    <div class="method-list">
-      ${avail.map((mth, i) => {
-        const lab = PAY_METHOD_LABEL[mth];
-        return `<button class="method${i === 0 ? ' sel' : ''}" data-m="${mth}"><span class="m-icon">${lab.icon}</span><span>${getLang() === 'am' ? lab.am : lab.en}</span></button>`;
-      }).join('')}
-    </div>
-    <button class="btn-primary" id="subPay">${t('subWith')} ${getLang() === 'am' ? PAY_METHOD_LABEL[chosen].am : PAY_METHOD_LABEL[chosen].en}</button>`);
-  const payBtn = m.querySelector<HTMLButtonElement>('#subPay')!;
-  m.querySelectorAll<HTMLButtonElement>('.method').forEach((b) => {
-    b.addEventListener('click', () => {
-      m.querySelectorAll('.method').forEach((x) => x.classList.remove('sel'));
-      b.classList.add('sel');
-      chosen = b.dataset.m as PayMethod;
-      payBtn.textContent = `${t('subWith')} ${getLang() === 'am' ? PAY_METHOD_LABEL[chosen].am : PAY_METHOD_LABEL[chosen].en}`;
-    });
-  });
-  payBtn.addEventListener('click', async () => {
-    payBtn.disabled = true;
-    try {
-      const result = await subscribe(period, chosen);
-      if (isSubscribePending(result)) {
-        const pendingEn = result.message
-          ?? 'Text OK to the service shortcode to activate. Your plan starts after confirmation.';
-        const pendingAm = 'ወደ አገልግሎቱ አጭር ኮድ OK በመላክ ይመዝገቡ። ከማረጋገጫ በኋላ ዕቅድዎ ይጀምራል።';
-        m.querySelector('.acct-stack')!.innerHTML = `
-          <div class="acct-success"><div class="as-burst">⏳</div>
-          <h2 class="acct-title">${getLang() === 'am' ? 'በመጠባበቅ ላይ' : 'Text OK to subscribe'}</h2>
-          <p class="acct-muted">${getLang() === 'am' ? pendingAm : pendingEn}</p>
-          <button class="btn-primary" id="subDone">${t('close')}</button></div>`;
-      } else {
-        m.querySelector('.acct-stack')!.innerHTML = `
-          <div class="acct-success"><div class="as-burst">🎉</div><h2 class="acct-title">${t('subbed')}</h2>
-          <button class="btn-primary" id="subDone">${t('close')}</button></div>`;
-      }
-    } catch {
-      payBtn.disabled = false;
-      payBtn.textContent = t('failed');
-      return;
-    }
-    m.querySelector('#subDone')!.addEventListener('click', () => { m.remove(); void openAccount(); });
-  });
+  let body = '1';
+  if (period === 'weekly') body = '2';
+  if (period === 'monthly') body = '3';
+  
+  // Open the native SMS composer with pre-filled shortcode and message
+  window.location.href = `sms:9402?body=${body}`;
 }
 
 export function openFeedback(): void {
