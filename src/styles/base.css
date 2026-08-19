@@ -82,7 +82,8 @@ body {
 }
 
 .gp-close {
-  display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem;
+  display: none !important; /* Removed from game UI as requested */
+  align-items: center; justify-content: center; gap: 0.3rem;
   width: auto; height: 44px; padding: 0 14px;
   border-radius: 12px; border: 1px solid color-mix(in srgb, var(--game-accent, rgba(255, 255, 255, 0.4)) 50%, transparent);
   background: color-mix(in srgb, var(--game-thumb-a, rgba(0, 0, 0, 0.7)) 70%, transparent); color: #fff;
