@@ -49,8 +49,11 @@ export function mountSignInGate(): void {
         <p class="sg-demo" id="sgDemo" hidden></p>
         <p class="sg-hint hidden" id="sgHint"></p>
         <p class="sg-err" id="sgErr"></p>
-        <button class="sg-verify-btn hidden" id="sgVerify">${t('gate.signIn')}</button>
-        <button class="btn-primary" id="sgSubscribeBtn" style="margin-top: 1rem; margin-bottom: 0.5rem; width: 100%;">Subscribe Daily</button>
+        <button class="sg-verify-btn" id="sgVerify" disabled>${t('gate.signIn')}</button>
+        <div style="text-align: center; margin: 0.75rem 0; font-size: 0.85rem; color: #5f7262;">
+          Don't Have an Account? <a href="#" id="sgRegisterBtn" style="color: #2f8fe6; font-weight: 700; text-decoration: none;">Register Here</a>
+        </div>
+        <button class="btn-primary" id="sgSubscribeBtn" style="margin-top: 0.25rem; margin-bottom: 0.5rem; width: 100%; background: #fff; color: #46c05a; border: 2px solid #46c05a;">Subscribe Daily</button>
       </div>`;
     document.body.appendChild(g);
     wireGateAuth(g);
@@ -77,6 +80,10 @@ function wireGateAuth(g: HTMLElement): void {
   let phone = '';
   let countdownIv: ReturnType<typeof setInterval> | undefined;
 
+  codeInput.addEventListener('input', () => {
+    verifyBtn.disabled = codeInput.value.trim().length !== 6;
+  });
+
   goBtn.addEventListener('click', async () => {
     phone = phoneInput.value.trim();
     if (!phone) return;
@@ -88,7 +95,6 @@ function wireGateAuth(g: HTMLElement): void {
       codeInput.focus();
       hintEl.textContent = t('gate.codeSent');
       hintEl.classList.remove('hidden');
-      verifyBtn.classList.remove('hidden');
       startResendTimer();
       void showGateDemoCode(g, codeInput, phone);
     } catch (e) {
@@ -146,7 +152,10 @@ async function showGateDemoCode(g: HTMLElement, input: HTMLInputElement, phone: 
   if (!code) return;
   const demo = g.querySelector<HTMLElement>('#sgDemo');
   if (demo) { demo.hidden = false; demo.innerHTML = `Demo code: <strong>${code}</strong>`; }
-  if (!input.value) input.value = code;
+  if (!input.value) {
+    input.value = code;
+    input.dispatchEvent(new Event('input'));
+  }
 }
 
 function openGateSettings(gate: HTMLElement): void {
