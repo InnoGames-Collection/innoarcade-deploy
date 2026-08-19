@@ -986,6 +986,8 @@ body {
 }
 .game-card--poster .gc-thumb {
   position: relative;
+  width: 100%;
+  display: block;
   aspect-ratio: 4 / 3;
   background: linear-gradient(160deg, #eaf8d8 0%, #cdeda4 55%, #b6e487 100%);
   overflow: hidden;
