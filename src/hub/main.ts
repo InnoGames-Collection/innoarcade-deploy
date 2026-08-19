@@ -296,14 +296,13 @@ function renderMyStats(): void {
   const span = Math.max(1, ceiling - floor);
   const pct = Math.min(100, Math.round(((xp - floor) / span) * 100));
   const nextXp = ceiling;
-  const levelStr = String(level);
-  const weeklyStr = `${rpWeekly()} ${t('hub.rpLabel')}`;
+
   const xpSubStr = `${xp.toLocaleString()} / ${nextXp.toLocaleString()}`;
 
   const strip = bar.querySelector('.player-strip');
   if (strip) {
-    setCounterText(strip.querySelector<HTMLElement>('.ps-level .ps-val'), levelStr);
-    setCounterText(strip.querySelector<HTMLElement>('.ps-rp-weekly .ps-val'), weeklyStr);
+    setCounterText(strip.querySelector<HTMLElement>('.ps-level-val'), String(level));
+    setCounterText(strip.querySelector<HTMLElement>('.ps-rp-val'), `${fmtRp(rpWeekly())} RP`);
     const fill = strip.querySelector<HTMLElement>('.ps-bar-fill');
     const barEl = strip.querySelector<HTMLElement>('.ps-bar');
     const sub = strip.querySelector<HTMLElement>('.ps-sub');
@@ -314,26 +313,24 @@ function renderMyStats(): void {
   }
 
   bar.innerHTML = `
-    <div class="player-strip">
-      <div class="ps-seg ps-level">
-        <span class="ps-ico" aria-hidden="true">🛡️</span>
-        <span class="ps-lbl">${t('hub.statLevel')}</span>
-        <strong class="ps-val">${level}</strong>
+    <div class="player-strip player-progression-card">
+      <div class="ppc-top">
+        <div class="ppc-top-col ppc-level-col">
+          <span class="ps-ico" aria-hidden="true">🛡️</span>
+          <span class="ps-lbl">${t('hub.statLevel')} <strong class="ps-level-val">${level}</strong></span>
+        </div>
+        <div class="ppc-top-col ppc-rp-col">
+          <span class="ps-lbl">Rank Point</span>
+          <strong class="ps-val ps-rp-val">${fmtRp(rpWeekly())} RP</strong>
+        </div>
       </div>
-      <div class="ps-seg ps-rp ps-rp-weekly">
-        <span class="ps-ico" aria-hidden="true">🏅</span>
-        <span class="ps-lbl">${t('hub.rpWeekly')}</span>
-        <strong class="ps-val">${fmtRp(rpWeekly())}</strong>
-      </div>
-      <div class="ps-seg ps-xp">
-        <span class="ps-ico" aria-hidden="true">⭐</span>
-        <span class="ps-lbl">${t('hub.progress')}</span>
+      <div class="ppc-bottom">
         <div class="ps-bar-wrap">
           <div class="ps-bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
             <div class="ps-bar-fill" style="width:${pct}%"></div>
           </div>
-          <span class="ps-sub">${xp.toLocaleString()} / ${nextXp.toLocaleString()}</span>
         </div>
+        <span class="ps-sub">${xp.toLocaleString()} / ${nextXp.toLocaleString()}</span>
       </div>
     </div>`;
 
