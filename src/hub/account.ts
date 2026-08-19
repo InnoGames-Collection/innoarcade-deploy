@@ -871,7 +871,7 @@ function renderAcctStack(pageId: string | null): void {
       <div class="acct-nav-sec">ACCOUNT</div>
       <nav class="acct-menu-list">
         ${accountRowHtml('aIdentity', '👤', t('identity'))}
-        ${accountRowHtml('aRewards', '🎁', t('rewards'))}
+
         ${acctUser ? accountRowHtml('aInvite', '💌', t('invite')) : ''}
       </nav>
       
@@ -1150,14 +1150,6 @@ function renderAcctStack(pageId: string | null): void {
         errEl.textContent = getLang() === 'am' ? 'መውጣት አልተሳካም። እባክዎ ግንኙነትዎን ያረጋግጡና እንደገና ይሞክሩ።' : 'Logout failed. Please check your connection and try again.';
       }
     });
-  } else if (pageId === 'rewards') {
-    stack.innerHTML = `
-      <div class="acct-success" style="padding-top:2rem;">
-        <div class="as-burst">🚧</div>
-        <h2 class="acct-title">${t('rewards')}</h2>
-        <p class="acct-muted" style="margin-top: 0.5rem; margin-bottom: 2rem;">${getLang() === 'am' ? 'በቅርብ ቀን!' : 'Coming Soon!'}</p>
-      </div>
-    `;
   }
 }
 
@@ -1320,7 +1312,6 @@ function wireAccount(): void {
   if (!m) return;
   
   m.querySelector('#aIdentity')?.addEventListener('click', () => pushAcctPage('identity'));
-  m.querySelector('#aRewards')?.addEventListener('click', () => pushAcctPage('rewards'));
   m.querySelector('#aInvite')?.addEventListener('click', () => pushAcctPage('invite'));
   m.querySelector('#aHelp')?.addEventListener('click', () => pushAcctPage('help'));
   m.querySelector('#aFaq')?.addEventListener('click', () => pushAcctPage('faq'));
