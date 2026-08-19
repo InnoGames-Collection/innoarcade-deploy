@@ -1199,7 +1199,7 @@ function shell(inner?: string): HTMLElement {
   acctModal.innerHTML = `
     <div class="acct-topbar">
       <button class="btn-secondary" aria-label="${t('back')}" id="closeAcctBtn">← ${t('back')}</button>
-      <img class="acct-logo" src="/brand/ethio-e.png" alt="Ethio Telecom" />
+      <img class="acct-logo" src="/brand/goplay-logo.png" alt="GoPlay" />
     </div>
     <div class="acct-stack">${inner ?? ''}</div>`;
   document.body.appendChild(acctModal);
