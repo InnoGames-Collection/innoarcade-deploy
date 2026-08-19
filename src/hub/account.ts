@@ -925,12 +925,7 @@ function renderAcctStack(pageId: string | null): void {
     wireReferral();
   } else if (pageId === 'about') {
     stack.innerHTML = `<h2 class="acct-title">ℹ️ ${t('about')}</h2>
-      <div class="acct-card info-body tc-body">
-        <h3>InnoArcade</h3>
-        <p>InnoArcade is a premium HTML5 gaming platform delivering instant, high-quality games.</p>
-        <p>Built with modern web technologies, it provides a seamless, app-like experience directly in the browser.</p>
-        <p>Version: 1.0.0<br/>© 2026 InnoArcade. All rights reserved.</p>
-      </div>`;
+      <div class="acct-card info-body tc-body">${ABOUT_HTML}</div>`;
   } else if (pageId === 'help') {
     stack.innerHTML = `
       <h2 class="acct-title">Help & Support</h2>
@@ -1048,9 +1043,7 @@ function renderAcctStack(pageId: string | null): void {
         }
       });
     });
-  } else if (pageId === 'about') {
-    stack.innerHTML = `<h2 class="acct-title">ℹ️ ${t('about')}</h2>
-      <div class="acct-card info-body tc-body">${ABOUT_HTML}</div>`;
+
   } else if (pageId === 'terms') {
     stack.innerHTML = `<h2 class="acct-title">📄 ${t('terms')}</h2>
       <div class="acct-card info-body tc-body">${TERMS_HTML}</div>`;
