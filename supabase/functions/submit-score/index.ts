@@ -219,8 +219,11 @@ Deno.serve(async (req: Request) => {
     if (!ok) return json({ error: 'invalid round token' }, 403);
   }
 
-  const { data: tid } = await admin.rpc('active_game_tournament', { p_game: gameId });
-  const tournamentId = String(tid ?? '');
+  let tournamentId = String(body.tournamentId ?? '');
+  if (!tournamentId) {
+    const { data: tid } = await admin.rpc('active_game_tournament', { p_game: gameId });
+    tournamentId = String(tid ?? '');
+  }
   if (!tournamentId) {
     // No live tournament — treat as practice, still earn XP + coins
     const award = computeXp(score, gameId);
