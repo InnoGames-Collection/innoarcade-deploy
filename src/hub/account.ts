@@ -489,76 +489,45 @@ const ABOUT_HTML = `
   <p><strong>goPlay – Play. Compete. Enjoy.</strong></p>
 `;
 
-const PRICING_HTML = `
+function getPricingHtml(): string {
+  const cardsHtml = SUB_PLANS.map(plan => {
+    const p = plan.period;
+    let smsBody = '1';
+    if (p === 'weekly') smsBody = '2';
+    if (p === 'monthly') smsBody = '3';
+    
+    const capPeriod = p.charAt(0).toUpperCase() + p.slice(1);
+    
+    return `
+  <div class="acct-card pricing-card fluid-btn" data-p="${p}">
+    <div class="pc-top" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+      <h4 class="pc-title" style="margin:0; font-size: 1.1rem; color: var(--accent);">goPlay ${capPeriod}</h4>
+      <div class="pc-price-block" style="text-align: right;">
+        <span class="pc-price" style="display:block; font-weight:800; font-size:1.1rem;">${plan.priceEtb.toFixed(2)} ETB</span>
+        <span class="pc-freq" style="color:#5f6368; font-size:0.8rem;">${capPeriod}</span>
+      </div>
+    </div>
+    <p class="pc-desc" style="font-size:0.9rem; margin-bottom:1rem; color:#444;">The ${capPeriod} package provides access to the applicable goPlay service according to the current service offering.</p>
+    <div class="pc-action-row" style="background:#f5f6f8; border-radius:8px; padding:0.8rem; margin-bottom:0.8rem;">
+      <div class="pc-action-col" style="display:flex; justify-content:space-between; margin-bottom: 0.4rem;">
+        <span class="pc-label" style="font-size:0.85rem; color:#5f6368;">Subscribe via SMS</span>
+        <span class="pc-value" style="font-size:0.9rem;">Send <strong>${smsBody}</strong> to <strong>9402</strong></span>
+      </div>
+      <div class="pc-action-col" style="display:flex; justify-content:space-between;">
+        <span class="pc-label" style="font-size:0.85rem; color:#5f6368;">Unsubscribe</span>
+        <span class="pc-value" style="font-size:0.9rem;">Send <strong>STOP ${smsBody}</strong> to <strong>9402</strong></span>
+      </div>
+    </div>
+    <button class="btn-primary" style="width:100%; pointer-events: none;">Subscribe Now</button>
+  </div>`;
+  }).join('');
+
+  return `
   <p class="acct-muted" style="margin-bottom:1rem;font-size:0.95rem;">Choose the goPlay package that best fits your gaming experience.</p>
   
   <h3 class="acct-title" style="font-size:1.15rem; margin-top:0.5rem;">Subscription Packages</h3>
   
-  <div class="acct-card pricing-card fluid-btn" data-p="daily">
-    <div class="pc-top" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
-      <h4 class="pc-title" style="margin:0; font-size: 1.1rem; color: var(--accent);">goPlay Daily</h4>
-      <div class="pc-price-block" style="text-align: right;">
-        <span class="pc-price" style="display:block; font-weight:800; font-size:1.1rem;">5.00 ETB</span>
-        <span class="pc-freq" style="color:#5f6368; font-size:0.8rem;">Daily</span>
-      </div>
-    </div>
-    <p class="pc-desc" style="font-size:0.9rem; margin-bottom:1rem; color:#444;">The Daily package provides access to the applicable goPlay service according to the current service offering.</p>
-    <div class="pc-action-row" style="background:#f5f6f8; border-radius:8px; padding:0.8rem; margin-bottom:0.8rem;">
-      <div class="pc-action-col" style="display:flex; justify-content:space-between; margin-bottom: 0.4rem;">
-        <span class="pc-label" style="font-size:0.85rem; color:#5f6368;">Subscribe via SMS</span>
-        <span class="pc-value" style="font-size:0.9rem;">Send <strong>1</strong> to <strong>9402</strong></span>
-      </div>
-      <div class="pc-action-col" style="display:flex; justify-content:space-between;">
-        <span class="pc-label" style="font-size:0.85rem; color:#5f6368;">Unsubscribe</span>
-        <span class="pc-value" style="font-size:0.9rem;">Send <strong>STOP 1</strong> to <strong>9402</strong></span>
-      </div>
-    </div>
-    <button class="btn-primary" style="width:100%; pointer-events: none;">Subscribe Now</button>
-  </div>
-
-  <div class="acct-card pricing-card fluid-btn" data-p="weekly">
-    <div class="pc-top" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
-      <h4 class="pc-title" style="margin:0; font-size: 1.1rem; color: var(--accent);">goPlay Weekly</h4>
-      <div class="pc-price-block" style="text-align: right;">
-        <span class="pc-price" style="display:block; font-weight:800; font-size:1.1rem;">15.00 ETB</span>
-        <span class="pc-freq" style="color:#5f6368; font-size:0.8rem;">Weekly</span>
-      </div>
-    </div>
-    <p class="pc-desc" style="font-size:0.9rem; margin-bottom:1rem; color:#444;">The Weekly package provides access to the applicable goPlay service according to the current service offering.</p>
-    <div class="pc-action-row" style="background:#f5f6f8; border-radius:8px; padding:0.8rem; margin-bottom:0.8rem;">
-      <div class="pc-action-col" style="display:flex; justify-content:space-between; margin-bottom: 0.4rem;">
-        <span class="pc-label" style="font-size:0.85rem; color:#5f6368;">Subscribe via SMS</span>
-        <span class="pc-value" style="font-size:0.9rem;">Send <strong>2</strong> to <strong>9402</strong></span>
-      </div>
-      <div class="pc-action-col" style="display:flex; justify-content:space-between;">
-        <span class="pc-label" style="font-size:0.85rem; color:#5f6368;">Unsubscribe</span>
-        <span class="pc-value" style="font-size:0.9rem;">Send <strong>STOP 2</strong> to <strong>9402</strong></span>
-      </div>
-    </div>
-    <button class="btn-primary" style="width:100%; pointer-events: none;">Subscribe Now</button>
-  </div>
-
-  <div class="acct-card pricing-card fluid-btn" data-p="monthly">
-    <div class="pc-top" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
-      <h4 class="pc-title" style="margin:0; font-size: 1.1rem; color: var(--accent);">goPlay Monthly</h4>
-      <div class="pc-price-block" style="text-align: right;">
-        <span class="pc-price" style="display:block; font-weight:800; font-size:1.1rem;">35.00 ETB</span>
-        <span class="pc-freq" style="color:#5f6368; font-size:0.8rem;">Monthly</span>
-      </div>
-    </div>
-    <p class="pc-desc" style="font-size:0.9rem; margin-bottom:1rem; color:#444;">The Monthly package provides access to the applicable goPlay service according to the current service offering.</p>
-    <div class="pc-action-row" style="background:#f5f6f8; border-radius:8px; padding:0.8rem; margin-bottom:0.8rem;">
-      <div class="pc-action-col" style="display:flex; justify-content:space-between; margin-bottom: 0.4rem;">
-        <span class="pc-label" style="font-size:0.85rem; color:#5f6368;">Subscribe via SMS</span>
-        <span class="pc-value" style="font-size:0.9rem;">Send <strong>3</strong> to <strong>9402</strong></span>
-      </div>
-      <div class="pc-action-col" style="display:flex; justify-content:space-between;">
-        <span class="pc-label" style="font-size:0.85rem; color:#5f6368;">Unsubscribe</span>
-        <span class="pc-value" style="font-size:0.9rem;">Send <strong>STOP 3</strong> to <strong>9402</strong></span>
-      </div>
-    </div>
-    <button class="btn-primary" style="width:100%; pointer-events: none;">Subscribe Now</button>
-  </div>
+  ${cardsHtml}
 
   <h3 class="acct-title" style="font-size:1.15rem; margin-top:1rem;">Important Pricing Information</h3>
   <div class="acct-card info-body tc-body">
@@ -585,6 +554,7 @@ const PRICING_HTML = `
     <p><em>All prices are in Ethiopian Birr (ETB).</em></p>
   </div>
 `;
+}
 
 const SUB_INFO_HTML = `
   <h3 class="acct-title" style="font-size:1.15rem; margin-top:1.5rem;">What Happens After Subscription?</h3>
@@ -1046,7 +1016,7 @@ function renderAcctStack(pageId: string | null): void {
       <div class="acct-card info-body tc-body">${TERMS_HTML}</div>`;
   } else if (pageId === 'pricing') {
     stack.innerHTML = `<h2 class="acct-title">🏷️ Pricing</h2>
-      <div class="pricing-body">${PRICING_HTML}</div>`;
+      <div class="pricing-body">${getPricingHtml()}</div>`;
     stack.querySelectorAll<HTMLElement>('.pricing-card').forEach((card) => {
       card.addEventListener('click', () => {
         const p = card.dataset.p as SubPeriod;
